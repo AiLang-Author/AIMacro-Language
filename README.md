@@ -104,13 +104,145 @@ The AIMacro parser (v3.2) is written in pure AILang and includes:
 | Whitespace sensitive | Semicolon terminated | No silent errors |
 | No escape hatch | `ailang { }` blocks | Performance when needed |
 
-### Coming Soon
+# AIMacro Python Feature Checklist
 
-- Full Python stdlib compatibility layer
-- List comprehensions
-- Generators via coroutines
-- Class definitions
-- Type hints (that actually do something)
+## CONTROL FLOW
+
+| Feature | Parser | CodeGen | Runtime | Notes |
+|---------|--------|---------|---------|-------|
+| `if/elif/else` | ✅ | ✅ | ✅ | Working |
+| `while` | ✅ | ✅ | ✅ | Working |
+| `for x in range()` | ✅ | ✅ | ✅ | Optimized to WhileLoop |
+| `for x in list` | ✅ | ⚠️ | ❌ | Emits ForEvery, needs runtime |
+| `break` | ✅ | ✅ | ✅ | Working |
+| `continue` | ✅ | ✅ | ✅ | Working |
+| `pass` | ✅ | ❌ | - | Need to emit nothing/comment |
+
+## FUNCTIONS
+
+| Feature | Parser | CodeGen | Runtime | Notes |
+|---------|--------|---------|---------|-------|
+| `def func():` | ✅ | ✅ | ✅ | Working |
+| `def func(a, b):` | ✅ | ✅ | ✅ | Working |
+| `return value` | ✅ | ✅ | ✅ | Working |
+| `return` (no value) | ✅ | ✅ | ✅ | Returns 0 |
+| Type hints `def f(x: int) -> int:` | ✅ | ⚠️ | - | Parsed, ignored |
+| Default args `def f(x=5):` | ❌ | ❌ | - | **MISSING** |
+| `*args` | ❌ | ❌ | - | Not planned |
+| `**kwargs` | ❌ | ❌ | - | Not planned |
+| Lambda `lambda x: x+1` | ❌ | ❌ | - | **MISSING** - useful |
+| Nested functions | ❌ | ❌ | - | Complex, skip for now |
+
+## OPERATORS
+
+| Feature | Parser | CodeGen | Runtime | Notes |
+|---------|--------|---------|---------|-------|
+| `+ - * / %` | ✅ | ✅ | ✅ | Working |
+| `//` floor div | ✅ | ⚠️ | ❌ | Parser has it, needs codegen |
+| `**` power | ✅ | ✅ | ✅ | Working |
+| `== != < > <= >=` | ✅ | ✅ | ✅ | Working |
+| `and or not` | ✅ | ✅ | ✅ | Working |
+| `in` (membership) | ❌ | ❌ | ❌ | **MISSING** - `x in list` |
+| `is` (identity) | ⚠️ | ❌ | - | Parsed, not implemented |
+| Unary `-` | ✅ | ✅ | ✅ | `Subtract(0, x)` |
+| `+=  -=  *=  /=` | ✅ | ✅ | ✅ | Working |
+
+## DATA STRUCTURES
+
+| Feature | Parser | CodeGen | Runtime | Notes |
+|---------|--------|---------|---------|-------|
+| List literal `[1,2,3]` | ✅ | ✅ | ✅ | XArray.XCreate + XPush |
+| Dict literal `{a:1}` | ✅ | ✅ | ⚠️ | XSHash, needs testing |
+| Tuple `(1, 2)` | ❌ | ❌ | ⚠️ | **MISSING** parser |
+| Index `a[i]` | ✅ | ✅ | ✅ | XArray.XGet |
+| Index assign `a[i] = x` | ✅ | ✅ | ✅ | XArray.XSet |
+| Slice `a[1:3]` | ❌ | ❌ | ❌ | **MISSING** - useful |
+| Dict access `d[key]` | ❌ | ❌ | ⚠️ | Need to differentiate from list |
+| Negative index `a[-1]` | ❌ | ❌ | ❌ | **MISSING** - useful |
+
+## BUILT-IN FUNCTIONS
+
+| Feature | Parser | CodeGen | Runtime | Notes |
+|---------|--------|---------|---------|-------|
+| `print()` | ✅ | ✅ | ✅ | Special-cased |
+| `len()` | ✅ | ✅ | ✅ | AIMacro.Len |
+| `range()` | ✅ | ✅ | ✅ | Optimized in for-loops |
+| `str()` | ✅ | ✅ | ✅ | AIMacro.Str |
+| `int()` | ✅ | ✅ | ✅ | AIMacro.Int |
+| `abs()` | ✅ | ✅ | ✅ | AIMacro.Abs |
+| `max()` | ✅ | ✅ | ✅ | AIMacro.Max (2 args only) |
+| `min()` | ✅ | ✅ | ✅ | AIMacro.Min (2 args only) |
+| `sum()` | ✅ | ✅ | ✅ | AIMacro.Sum |
+| `input()` | ✅ | ✅ | ✅ | AIMacro.Input |
+| `bool()` | ⚠️ | ⚠️ | ✅ | Exists but not mapped |
+| `type()` | ❌ | ❌ | ❌ | **MISSING** |
+| `isinstance()` | ❌ | ❌ | ❌ | Not planned (no types) |
+| `sorted()` | ❌ | ❌ | ❌ | **MISSING** - useful |
+| `reversed()` | ❌ | ❌ | ❌ | **MISSING** |
+| `enumerate()` | ❌ | ❌ | ✅ | Runtime exists, need codegen |
+| `zip()` | ❌ | ❌ | ✅ | Runtime exists, need codegen |
+| `map()` | ❌ | ❌ | ❌ | Needs lambda first |
+| `filter()` | ❌ | ❌ | ❌ | Needs lambda first |
+| `any()` / `all()` | ❌ | ❌ | ❌ | **MISSING** - easy |
+| `chr()` / `ord()` | ❌ | ❌ | ❌ | **MISSING** - easy |
+
+## STRING METHODS
+
+| Feature | Parser | CodeGen | Runtime | Notes |
+|---------|--------|---------|---------|-------|
+| `.upper()` | ✅ | ✅ | ✅ | Working |
+| `.lower()` | ✅ | ✅ | ✅ | Working |
+| `.split()` | ✅ | ✅ | ✅ | Working |
+| `.find()` | ✅ | ✅ | ✅ | StringIndexOf |
+| `.strip()` | ❌ | ❌ | ❌ | **MISSING** |
+| `.replace()` | ❌ | ❌ | ❌ | **MISSING** |
+| `.startswith()` | ❌ | ❌ | ❌ | **MISSING** |
+| `.endswith()` | ❌ | ❌ | ❌ | **MISSING** |
+| `.join()` | ❌ | ❌ | ❌ | **MISSING** |
+| `f"string {var}"` | ❌ | ❌ | ❌ | **MISSING** - very useful |
+| String concat `+` | ❌ | ❌ | ❌ | **MISSING** |
+
+## LIST METHODS
+
+| Feature | Parser | CodeGen | Runtime | Notes |
+|---------|--------|---------|---------|-------|
+| `.append()` | ✅ | ✅ | ✅ | XArray.XPush |
+| `.pop()` | ✅ | ✅ | ✅ | XArray.XPop |
+| `.insert()` | ⚠️ | ⚠️ | ⚠️ | Stub only |
+| `.remove()` | ⚠️ | ⚠️ | ✅ | Runtime exists |
+| `.index()` | ❌ | ❌ | ❌ | **MISSING** |
+| `.count()` | ❌ | ❌ | ❌ | **MISSING** |
+| `.sort()` | ❌ | ❌ | ❌ | **MISSING** |
+| `.reverse()` | ❌ | ❌ | ❌ | **MISSING** |
+| `.copy()` | ❌ | ❌ | ❌ | **MISSING** |
+| `.clear()` | ❌ | ❌ | ❌ | **MISSING** |
+| `.extend()` | ❌ | ❌ | ❌ | **MISSING** |
+
+## MISSING BUT IMPORTANT
+
+### High Priority (core Python feel)
+1. **String concatenation** - `"hello" + " " + "world"`
+2. **f-strings** - `f"Value is {x}"`
+3. **`in` operator** - `if x in mylist:`
+4. **Negative indexing** - `arr[-1]`
+5. **Slicing** - `arr[1:3]`
+6. **`any()` / `all()`** - trivial to add
+7. **`chr()` / `ord()`** - trivial to add
+
+### Medium Priority (nice to have)
+1. **Lambda expressions** - `lambda x: x * 2`
+2. **List comprehensions** - `[x*2 for x in range(10)]`
+3. **Default arguments** - `def f(x=5):`
+4. **`sorted()`** - return sorted copy
+5. **String `.strip()`, `.replace()`, `.join()`**
+
+### Low Priority (can skip)
+1. Classes/objects
+2. Exceptions (try/except)
+3. Generators/yield
+4. Decorators
+5. Context managers (with)
+6. Multiple assignment `a, b = 1, 2`
 
 ### Philosophy
 
