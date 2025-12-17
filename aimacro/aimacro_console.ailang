@@ -1,0 +1,826 @@
+// aimacro_console.ailang
+// TUI Console Application for AIMacro Compiler
+// Uses Linux syscalls for file I/O
+
+LibraryImport.XArrays
+LibraryImport.AIMacroCore
+LibraryImport.AIMacroParserCore
+LibraryImport.AIMacroCodeGen
+
+// =============================================================================
+// SYSCALL NUMBERS (Linux x86_64)
+// Using raw numbers directly with SystemCall() built-in
+// =============================================================================
+// SYS_read    = 0
+// SYS_write   = 1  
+// SYS_open    = 2
+// SYS_close   = 3
+// SYS_fstat   = 5
+// SYS_lseek   = 8
+
+// Open flags (for SYS_open)
+// O_RDONLY = 0
+// O_WRONLY = 1
+// O_RDWR   = 2
+// O_CREAT  = 64
+// O_TRUNC  = 512
+
+// Seek whence (for SYS_lseek)
+// SEEK_SET = 0
+// SEEK_CUR = 1
+// SEEK_END = 2
+
+// =============================================================================
+// CONSOLE STATE
+// =============================================================================
+FixedPool.Console {
+    "running": Initialize=1, CanChange=True
+    "debug_mode": Initialize=0, CanChange=True
+    "show_tokens": Initialize=0, CanChange=True
+    "show_ast": Initialize=0, CanChange=True
+    "input_buf": Initialize=0, CanChange=True
+    "input_size": Initialize=4096
+    "line_buf": Initialize=0, CanChange=True
+    "line_size": Initialize=1024
+    "multiline_buf": Initialize=0, CanChange=True
+    "multiline_pos": Initialize=0, CanChange=True
+    "last_output": Initialize=0, CanChange=True
+    "last_output_len": Initialize=0, CanChange=True
+}
+
+// =============================================================================
+// FILE I/O USING SYSCALLS
+// Linux x86_64 syscall numbers:
+//   read=0, write=1, open=2, close=3, fstat=5, lseek=8
+// =============================================================================
+Function.File_Open {
+    Input: filename: Address
+    Input: flags: Integer
+    Output: Integer
+    Body: {
+        // SYS_open (2): open(filename, flags, mode)
+        // mode = 0644 (420 decimal) for created files
+        fd = SystemCall(2, filename, flags, 420)
+        ReturnValue(fd)
+    }
+}
+
+Function.File_Close {
+    Input: fd: Integer
+    Output: Integer
+    Body: {
+        // SYS_close (3): close(fd)
+        result = SystemCall(3, fd)
+        ReturnValue(result)
+    }
+}
+
+Function.File_Read {
+    Input: fd: Integer
+    Input: buffer: Address
+    Input: count: Integer
+    Output: Integer
+    Body: {
+        // SYS_read (0): read(fd, buf, count)
+        bytes_read = SystemCall(0, fd, buffer, count)
+        ReturnValue(bytes_read)
+    }
+}
+
+Function.File_Write {
+    Input: fd: Integer
+    Input: buffer: Address
+    Input: count: Integer
+    Output: Integer
+    Body: {
+        // SYS_write (1): write(fd, buf, count)
+        bytes_written = SystemCall(1, fd, buffer, count)
+        ReturnValue(bytes_written)
+    }
+}
+
+Function.File_GetSize {
+    Input: fd: Integer
+    Output: Integer
+    Body: {
+        // Use lseek to get file size:
+        // 1. Seek to end, get position (= size)
+        // 2. Seek back to start
+        
+        // SYS_lseek (8): lseek(fd, offset, whence)
+        // SEEK_END = 2, SEEK_SET = 0
+        
+        // lseek(fd, 0, SEEK_END) returns file size
+        size = SystemCall(8, fd, 0, 2)
+        
+        // lseek(fd, 0, SEEK_SET) returns to start
+        SystemCall(8, fd, 0, 0)
+        
+        ReturnValue(size)
+    }
+}
+
+// =============================================================================
+// CONSOLE INITIALIZATION
+// =============================================================================
+Function.Console_Init {
+    Body: {
+        Console.input_buf = Allocate(Console.input_size)
+        Console.line_buf = Allocate(Console.line_size)
+        Console.multiline_buf = Allocate(Console.input_size)
+        Console.multiline_pos = 0
+        Console.running = 1
+        Console.debug_mode = 0
+        Console.show_tokens = 0
+        Console.show_ast = 0
+    }
+}
+
+Function.Console_Free {
+    Body: {
+        IfCondition NotEqual(Console.input_buf, 0) ThenBlock: {
+            Deallocate(Console.input_buf, Console.input_size)
+        }
+        IfCondition NotEqual(Console.line_buf, 0) ThenBlock: {
+            Deallocate(Console.line_buf, Console.line_size)
+        }
+        IfCondition NotEqual(Console.multiline_buf, 0) ThenBlock: {
+            Deallocate(Console.multiline_buf, Console.input_size)
+        }
+    }
+}
+
+Function.Console_Banner {
+    Body: {
+        PrintMessage("\n")
+        PrintMessage("========================================================\n")
+        PrintMessage("    AIMacro Compiler Console - Pure AILang Edition\n")
+        PrintMessage("                   Version 1.0.0\n")
+        PrintMessage("========================================================\n")
+        PrintMessage("  Type 'help' for commands, 'quit' to exit\n")
+        PrintMessage("  Use 'load <file>' to compile an .aim file\n")
+        PrintMessage("========================================================\n")
+        PrintMessage("\n")
+    }
+}
+
+Function.Console_Help {
+    Body: {
+        PrintMessage("\n")
+        PrintMessage("COMMANDS:\n")
+        PrintMessage("  load <file>   - Load and compile an .aim file\n")
+        PrintMessage("  save <file>   - Save last compiled output to .ailang file\n")
+        PrintMessage("  help          - Show this help message\n")
+        PrintMessage("  quit / exit   - Exit the console\n")
+        PrintMessage("  clear         - Clear multiline buffer\n")
+        PrintMessage("  debug on/off  - Toggle debug mode\n")
+        PrintMessage("  tokens on/off - Show/hide token output\n")
+        PrintMessage("  ast on/off    - Show/hide AST output\n")
+        PrintMessage("  status        - Show current settings\n")
+        PrintMessage("  example       - Show example AIMacro code\n")
+        PrintMessage("\n")
+    }
+}
+
+Function.Console_Example {
+    Body: {
+        PrintMessage("\nEXAMPLE AIMACRO CODE:\n")
+        PrintMessage("  def factorial(n):\n")
+        PrintMessage("      if n <= 1:\n")
+        PrintMessage("          return 1\n")
+        PrintMessage("      end\n")
+        PrintMessage("      return n * factorial(n - 1)\n")
+        PrintMessage("  end\n\n")
+    }
+}
+
+Function.Console_Status {
+    Body: {
+        PrintMessage("\nCurrent Settings:\n")
+        PrintMessage("  Debug mode:  ")
+        IfCondition EqualTo(Console.debug_mode, 1) ThenBlock: {
+            PrintMessage("ON\n")
+        } ElseBlock: {
+            PrintMessage("OFF\n")
+        }
+        PrintMessage("  Show tokens: ")
+        IfCondition EqualTo(Console.show_tokens, 1) ThenBlock: {
+            PrintMessage("ON\n")
+        } ElseBlock: {
+            PrintMessage("OFF\n")
+        }
+        PrintMessage("  Show AST:    ")
+        IfCondition EqualTo(Console.show_ast, 1) ThenBlock: {
+            PrintMessage("ON\n")
+        } ElseBlock: {
+            PrintMessage("OFF\n")
+        }
+        PrintMessage("\n")
+    }
+}
+
+// =============================================================================
+// STRING UTILITIES
+// =============================================================================
+Function.Console_StrStartsWith {
+    Input: str: Address
+    Input: prefix: Address
+    Output: Integer
+    Body: {
+        prefix_len = StringLength(prefix)
+        str_len = StringLength(str)
+        
+        IfCondition LessThan(str_len, prefix_len) ThenBlock: {
+            ReturnValue(0)
+        }
+        
+        i = 0
+        WhileLoop LessThan(i, prefix_len) {
+            c1 = GetByte(str, i)
+            c2 = GetByte(prefix, i)
+            IfCondition NotEqual(c1, c2) ThenBlock: {
+                ReturnValue(0)
+            }
+            i = Add(i, 1)
+        }
+        
+        ReturnValue(1)
+    }
+}
+
+Function.Console_Trim {
+    Input: str: Address
+    Output: Address
+    Body: {
+        len = StringLength(str)
+        
+        IfCondition EqualTo(len, 0) ThenBlock: {
+            result = Allocate(1)
+            SetByte(result, 0, 0)
+            ReturnValue(result)
+        }
+        
+        start = 0
+        WhileLoop LessThan(start, len) {
+            c = GetByte(str, start)
+            IfCondition And(NotEqual(c, 32), NotEqual(c, 9)) ThenBlock: {
+                IfCondition And(NotEqual(c, 10), NotEqual(c, 13)) ThenBlock: {
+                    BreakLoop
+                }
+            }
+            start = Add(start, 1)
+        }
+        
+        end_pos = Subtract(len, 1)
+        WhileLoop GreaterEqual(end_pos, start) {
+            c = GetByte(str, end_pos)
+            IfCondition And(NotEqual(c, 32), NotEqual(c, 9)) ThenBlock: {
+                IfCondition And(NotEqual(c, 10), NotEqual(c, 13)) ThenBlock: {
+                    BreakLoop
+                }
+            }
+            end_pos = Subtract(end_pos, 1)
+        }
+        
+        new_len = Add(Subtract(end_pos, start), 1)
+        IfCondition LessEqual(new_len, 0) ThenBlock: {
+            result = Allocate(1)
+            SetByte(result, 0, 0)
+            ReturnValue(result)
+        }
+        
+        result = Allocate(Add(new_len, 1))
+        i = 0
+        WhileLoop LessThan(i, new_len) {
+            c = GetByte(str, Add(start, i))
+            SetByte(result, i, c)
+            i = Add(i, 1)
+        }
+        SetByte(result, new_len, 0)
+        
+        ReturnValue(result)
+    }
+}
+
+Function.Console_GetArg {
+    Input: str: Address
+    Input: start_pos: Integer
+    Output: Address
+    Body: {
+        len = StringLength(str)
+        arg_len = Subtract(len, start_pos)
+        
+        IfCondition LessEqual(arg_len, 0) ThenBlock: {
+            result = Allocate(1)
+            SetByte(result, 0, 0)
+            ReturnValue(result)
+        }
+        
+        result = Allocate(Add(arg_len, 1))
+        i = 0
+        WhileLoop LessThan(i, arg_len) {
+            c = GetByte(str, Add(start_pos, i))
+            SetByte(result, i, c)
+            i = Add(i, 1)
+        }
+        SetByte(result, arg_len, 0)
+        
+        trimmed = Console_Trim(result)
+        Deallocate(result, 0)
+        ReturnValue(trimmed)
+    }
+}
+
+// =============================================================================
+// DEBUG OUTPUT
+// =============================================================================
+Function.Console_ShowTokens {
+    Input: count: Integer
+    Body: {
+        PrintMessage("--- TOKENS ---\n")
+        i = 0
+        WhileLoop LessThan(i, count) {
+            t = Lex_GetType(i)
+            v = Lex_GetVal(i)
+            
+            PrintMessage("[")
+            PrintNumber(i)
+            PrintMessage("] T=")
+            PrintNumber(t)
+            
+            IfCondition EqualTo(t, Token.IDENTIFIER) ThenBlock: {
+                PrintMessage(" ")
+                PrintString(v)
+            }
+            IfCondition EqualTo(t, Token.NUMBER) ThenBlock: {
+                PrintMessage(" =")
+                PrintNumber(v)
+            }
+            IfCondition EqualTo(t, Token.STRING) ThenBlock: {
+                PrintMessage(" \"")
+                PrintString(v)
+                PrintMessage("\"")
+            }
+            
+            PrintMessage("\n")
+            i = Add(i, 1)
+        }
+    }
+}
+
+Function.Console_ShowAST {
+    Input: ast: Address
+    Body: {
+        PrintMessage("--- AST ---\n")
+        
+        decls = ArrayGet(ast, 3)
+        n = XArray.XSize(decls)
+        
+        i = 0
+        WhileLoop LessThan(i, n) {
+            decl = XArray.XGet(decls, i)
+            dt = AST_Type(decl)
+            
+            PrintMessage("Decl ")
+            PrintNumber(i)
+            PrintMessage(": Type=")
+            PrintNumber(dt)
+            
+            IfCondition EqualTo(dt, Node.FUNCTION) ThenBlock: {
+                fname = ArrayGet(decl, 3)
+                PrintMessage(" (")
+                PrintString(fname)
+                PrintMessage(")")
+            }
+            
+            PrintMessage("\n")
+            i = Add(i, 1)
+        }
+    }
+}
+
+// =============================================================================
+// COMPILATION
+// =============================================================================
+Function.Console_Compile {
+    Input: source: Address
+    Body: {
+        len = StringLength(source)
+        
+        IfCondition LessEqual(len, 0) ThenBlock: {
+            PrintMessage("Error: Empty source\n")
+            ReturnValue(0)
+        }
+        
+        PrintMessage("\n--- COMPILING ---\n")
+        
+        Lex_Init(source, len)
+        tok_count = Lex_Tokenize()
+        
+        IfCondition LessEqual(tok_count, 0) ThenBlock: {
+            PrintMessage("ERROR: Lexer failed\n")
+            Lex_Free()
+            ReturnValue(0)
+        }
+        
+        PrintMessage("Lexer: ")
+        PrintNumber(tok_count)
+        PrintMessage(" tokens\n")
+        
+        IfCondition EqualTo(Console.show_tokens, 1) ThenBlock: {
+            Console_ShowTokens(tok_count)
+        }
+        
+        Parse_Init()
+        ast = Parse_Program()
+        
+        IfCondition EqualTo(Parse.err, 1) ThenBlock: {
+            PrintMessage("ERROR: Parse failed at line ")
+            PrintNumber(Parse.err_line)
+            PrintMessage("\n")
+            Lex_Free()
+            ReturnValue(0)
+        }
+        
+        decls = ArrayGet(ast, 3)
+        num_decls = XArray.XSize(decls)
+        PrintMessage("Parser: ")
+        PrintNumber(num_decls)
+        PrintMessage(" declarations\n")
+        
+        IfCondition EqualTo(Console.show_ast, 1) ThenBlock: {
+            Console_ShowAST(ast)
+        }
+        
+        Gen_Init()
+        Gen_Program(ast)
+        output = Gen_GetOutput()
+        
+        out_len = StringLength(output)
+        PrintMessage("CodeGen: ")
+        PrintNumber(out_len)
+        PrintMessage(" bytes output\n")
+        
+        // Store output for save command
+        // Free previous output if exists
+        IfCondition NotEqual(Console.last_output, 0) ThenBlock: {
+            Deallocate(Console.last_output, Console.last_output_len)
+        }
+        
+        // Copy output to console storage
+        Console.last_output = Allocate(Add(out_len, 1))
+        Console.last_output_len = out_len
+        i = 0
+        WhileLoop LessThan(i, out_len) {
+            c = GetByte(output, i)
+            SetByte(Console.last_output, i, c)
+            i = Add(i, 1)
+        }
+        SetByte(Console.last_output, out_len, 0)
+        
+        PrintMessage("\n=== OUTPUT ===\n")
+        PrintString(output)
+        PrintMessage("=== END ===\n\n")
+        
+        Deallocate(output, 0)
+        Gen_Free()
+        Lex_Free()
+    }
+}
+
+// =============================================================================
+// SAVE OUTPUT TO FILE
+// =============================================================================
+Function.Console_SaveOutput {
+    Input: filename: Address
+    Body: {
+        IfCondition EqualTo(Console.last_output, 0) ThenBlock: {
+            PrintMessage("ERROR: No compiled output to save. Use 'load' first.\n")
+            ReturnValue(0)
+        }
+        
+        IfCondition EqualTo(Console.last_output_len, 0) ThenBlock: {
+            PrintMessage("ERROR: Output is empty.\n")
+            ReturnValue(0)
+        }
+        
+        PrintMessage("Saving to: ")
+        PrintString(filename)
+        PrintMessage("\n")
+        
+        // Open file for writing (O_WRONLY | O_CREAT | O_TRUNC = 1 | 64 | 512 = 577)
+        fd = File_Open(filename, 577)
+        IfCondition LessThan(fd, 0) ThenBlock: {
+            PrintMessage("ERROR: Could not create file (errno: ")
+            err_code = Subtract(0, fd)
+            PrintNumber(err_code)
+            PrintMessage(")\n")
+            ReturnValue(0)
+        }
+        
+        // Write output
+        bytes_written = File_Write(fd, Console.last_output, Console.last_output_len)
+        File_Close(fd)
+        
+        IfCondition LessThan(bytes_written, 0) ThenBlock: {
+            PrintMessage("ERROR: Write failed\n")
+            ReturnValue(0)
+        }
+        
+        PrintMessage("Saved ")
+        PrintNumber(bytes_written)
+        PrintMessage(" bytes\n")
+    }
+}
+
+// =============================================================================
+// FILE LOADING (using syscalls)
+// =============================================================================
+Function.Console_LoadFile {
+    Input: filename: Address
+    Body: {
+        PrintMessage("\nLoading: ")
+        PrintString(filename)
+        PrintMessage("\n")
+        
+        // Open file read-only (O_RDONLY = 0)
+        fd = File_Open(filename, 0)
+        IfCondition LessThan(fd, 0) ThenBlock: {
+            PrintMessage("ERROR: Could not open file (errno: ")
+            // fd is negative errno
+            err_code = Subtract(0, fd)
+            PrintNumber(err_code)
+            PrintMessage(")\n")
+            ReturnValue(0)
+        }
+        
+        // Get file size using lseek
+        file_size = File_GetSize(fd)
+        IfCondition LessEqual(file_size, 0) ThenBlock: {
+            PrintMessage("ERROR: Empty file or size error\n")
+            File_Close(fd)
+            ReturnValue(0)
+        }
+        
+        PrintMessage("File size: ")
+        PrintNumber(file_size)
+        PrintMessage(" bytes\n")
+        
+        // Allocate buffer
+        buffer = Allocate(Add(file_size, 1))
+        
+        // Read file contents
+        bytes_read = File_Read(fd, buffer, file_size)
+        File_Close(fd)
+        
+        IfCondition LessEqual(bytes_read, 0) ThenBlock: {
+            PrintMessage("ERROR: Failed to read file\n")
+            Deallocate(buffer, Add(file_size, 1))
+            ReturnValue(0)
+        }
+        
+        // Null-terminate
+        SetByte(buffer, bytes_read, 0)
+        
+        PrintMessage("Read ")
+        PrintNumber(bytes_read)
+        PrintMessage(" bytes\n")
+        
+        // Compile
+        Console_Compile(buffer)
+        
+        Deallocate(buffer, Add(file_size, 1))
+    }
+}
+
+// =============================================================================
+// COMMAND PROCESSING
+// =============================================================================
+Function.Console_ProcessCommand {
+    Input: cmd: Address
+    Output: Integer
+    Body: {
+        trimmed = Console_Trim(cmd)
+        trimmed_len = StringLength(trimmed)
+        
+        IfCondition EqualTo(trimmed_len, 0) ThenBlock: {
+            Deallocate(trimmed, 0)
+            ReturnValue(0)
+        }
+        
+        cmp = StringCompare(trimmed, "quit")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Console.running = 0
+            Deallocate(trimmed, 0)
+            ReturnValue(1)
+        }
+        
+        cmp = StringCompare(trimmed, "exit")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Console.running = 0
+            Deallocate(trimmed, 0)
+            ReturnValue(1)
+        }
+        
+        cmp = StringCompare(trimmed, "help")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Console_Help()
+            Deallocate(trimmed, 0)
+            ReturnValue(1)
+        }
+        
+        cmp = StringCompare(trimmed, "clear")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Console.multiline_pos = 0
+            PrintMessage("Buffer cleared.\n")
+            Deallocate(trimmed, 0)
+            ReturnValue(1)
+        }
+        
+        cmp = StringCompare(trimmed, "status")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Console_Status()
+            Deallocate(trimmed, 0)
+            ReturnValue(1)
+        }
+        
+        cmp = StringCompare(trimmed, "example")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Console_Example()
+            Deallocate(trimmed, 0)
+            ReturnValue(1)
+        }
+        
+        cmp = StringCompare(trimmed, "debug on")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Console.debug_mode = 1
+            Console.show_tokens = 1
+            Console.show_ast = 1
+            PrintMessage("Debug mode ON\n")
+            Deallocate(trimmed, 0)
+            ReturnValue(1)
+        }
+        
+        cmp = StringCompare(trimmed, "debug off")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Console.debug_mode = 0
+            Console.show_tokens = 0
+            Console.show_ast = 0
+            PrintMessage("Debug mode OFF\n")
+            Deallocate(trimmed, 0)
+            ReturnValue(1)
+        }
+        
+        cmp = StringCompare(trimmed, "tokens on")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Console.show_tokens = 1
+            PrintMessage("Token display ON\n")
+            Deallocate(trimmed, 0)
+            ReturnValue(1)
+        }
+        
+        cmp = StringCompare(trimmed, "tokens off")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Console.show_tokens = 0
+            PrintMessage("Token display OFF\n")
+            Deallocate(trimmed, 0)
+            ReturnValue(1)
+        }
+        
+        cmp = StringCompare(trimmed, "ast on")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Console.show_ast = 1
+            PrintMessage("AST display ON\n")
+            Deallocate(trimmed, 0)
+            ReturnValue(1)
+        }
+        
+        cmp = StringCompare(trimmed, "ast off")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Console.show_ast = 0
+            PrintMessage("AST display OFF\n")
+            Deallocate(trimmed, 0)
+            ReturnValue(1)
+        }
+        
+        starts_load = Console_StrStartsWith(trimmed, "load ")
+        IfCondition EqualTo(starts_load, 1) ThenBlock: {
+            filename = Console_GetArg(trimmed, 5)
+            Console_LoadFile(filename)
+            Deallocate(filename, 0)
+            Deallocate(trimmed, 0)
+            ReturnValue(1)
+        }
+        
+        starts_save = Console_StrStartsWith(trimmed, "save ")
+        IfCondition EqualTo(starts_save, 1) ThenBlock: {
+            filename = Console_GetArg(trimmed, 5)
+            Console_SaveOutput(filename)
+            Deallocate(filename, 0)
+            Deallocate(trimmed, 0)
+            ReturnValue(1)
+        }
+        
+        Deallocate(trimmed, 0)
+        ReturnValue(0)
+    }
+}
+
+// =============================================================================
+// MULTILINE INPUT HANDLING
+// =============================================================================
+Function.Console_AddToBuffer {
+    Input: line: Address
+    Body: {
+        len = StringLength(line)
+        
+        i = 0
+        WhileLoop LessThan(i, len) {
+            c = GetByte(line, i)
+            SetByte(Console.multiline_buf, Console.multiline_pos, c)
+            Console.multiline_pos = Add(Console.multiline_pos, 1)
+            i = Add(i, 1)
+        }
+        
+        SetByte(Console.multiline_buf, Console.multiline_pos, 10)
+        Console.multiline_pos = Add(Console.multiline_pos, 1)
+        SetByte(Console.multiline_buf, Console.multiline_pos, 0)
+    }
+}
+
+Function.Console_CheckEndMarker {
+    Input: line: Address
+    Output: Integer
+    Body: {
+        trimmed = Console_Trim(line)
+        
+        cmp = StringCompare(trimmed, "end")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Deallocate(trimmed, 0)
+            ReturnValue(1)
+        }
+        
+        cmp = StringCompare(trimmed, "end;")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Deallocate(trimmed, 0)
+            ReturnValue(1)
+        }
+        
+        Deallocate(trimmed, 0)
+        ReturnValue(0)
+    }
+}
+
+// =============================================================================
+// MAIN ENTRY POINT
+// =============================================================================
+SubRoutine.Main {
+    Console_Init()
+    Console_Banner()
+    
+    in_multiline = 0
+    
+    WhileLoop EqualTo(Console.running, 1) {
+        IfCondition EqualTo(in_multiline, 0) ThenBlock: {
+            PrintMessage("aim> ")
+        } ElseBlock: {
+            PrintMessage("...> ")
+        }
+        
+        line = ReadInput()
+        
+        IfCondition EqualTo(line, 0) ThenBlock: {
+            Console.running = 0
+            ContinueLoop
+        }
+        
+        IfCondition EqualTo(in_multiline, 0) ThenBlock: {
+            is_cmd = Console_ProcessCommand(line)
+            IfCondition EqualTo(is_cmd, 1) ThenBlock: {
+                ContinueLoop
+            }
+        }
+        
+        starts_def = Console_StrStartsWith(line, "def ")
+        IfCondition EqualTo(starts_def, 1) ThenBlock: {
+            Console.multiline_pos = 0
+            in_multiline = 1
+        }
+        
+        Console_AddToBuffer(line)
+        
+        is_end = Console_CheckEndMarker(line)
+        IfCondition EqualTo(is_end, 1) ThenBlock: {
+            IfCondition EqualTo(in_multiline, 1) ThenBlock: {
+                Console_Compile(Console.multiline_buf)
+                Console.multiline_pos = 0
+                in_multiline = 0
+            }
+        }
+    }
+    
+    PrintMessage("\nGoodbye!\n")
+    Console_Free()
+}
+
+RunTask(Main)

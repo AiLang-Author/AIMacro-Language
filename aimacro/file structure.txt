@@ -1,0 +1,17 @@
+ailang/
+├── aimacro/
+│   |
+│   ├── bin/
+│   │   └── aimacro_console.ailang
+│   ├── examples/
+│   │   ├── hello.aim
+│   │   ├── factorial.aim
+│   │   ├── fizzbuzz.aim
+│   │   └── game_loop.aim
+│   └── tests/
+│       ├── test_lexer.aim
+│       └── test_parser.aim
+├── Librarys/
+│      ├── Library.AIMacroCore.ailang
+│      ├── Library.AIMacroParserCore.ailang
+│      └── Library.AIMacroCodeGen.ailang
