@@ -1,4 +1,4 @@
-# AILang & AIMacro
+# AIMacro
 
 **A compiled language stack for people who are done with Python's whitespace bullshit.**
 
