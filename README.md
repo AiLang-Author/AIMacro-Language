@@ -4,7 +4,7 @@
 
 ## What Is This?
 
-- **AILang** - A low-level compiled language that generates native x86-64 Linux executables
+- **AILang** - A low-level compiled language that generates native x86-64 Linux executables https://github.com/AiLang-Author/AiLang
 - **AIMacro** - A Python-like language that transpiles to AILang
 
 Write code that reads like Python, compiles to native binaries, and never breaks because someone's editor converted tabs to spaces.
