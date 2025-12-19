@@ -1,0 +1,281 @@
+# AIMacro Transpiler - Verified Punch List
+
+**Date:** December 18, 2025  
+**Floor Test Result:** 121/121 (100%)  
+**Status:** Floor Established
+
+---
+
+## ✅ VERIFIED WORKING (Floor Test Passing)
+
+### Section 1: Arithmetic (12/12)
+| Feature | Status | Notes |
+|---------|--------|-------|
+| `+` addition | ✅ | |
+| `-` subtraction | ✅ | |
+| `*` multiplication | ✅ | |
+| `/` division | ✅ | |
+| `%` modulo | ✅ | |
+| Negative operands | ✅ | |
+| Negative results | ✅ | |
+| Precedence (mul before add) | ✅ | |
+| Parentheses override | ✅ | |
+| Left associative subtraction | ✅ | |
+| Variables in expressions | ✅ | |
+| Mixed var/literal expressions | ✅ | |
+
+### Section 2: Augmented Assignment (5/5)
+| Feature | Status | Notes |
+|---------|--------|-------|
+| `+=` operator | ✅ | |
+| `-=` operator | ✅ | |
+| `*=` operator | ✅ | |
+| `/=` operator | ✅ | |
+| `%=` operator | ✅ | |
+
+### Section 3: Comparisons (12/12)
+| Feature | Status | Notes |
+|---------|--------|-------|
+| `>` greater than (true) | ✅ | |
+| `>` greater than (false) | ✅ | |
+| `<` less than (true) | ✅ | |
+| `<` less than (false) | ✅ | |
+| `>=` greater equal (equal) | ✅ | |
+| `>=` greater equal (greater) | ✅ | |
+| `<=` less equal (equal) | ✅ | |
+| `<=` less equal (less) | ✅ | |
+| `==` equal (true) | ✅ | |
+| `==` equal (false) | ✅ | |
+| `!=` not equal (true) | ✅ | |
+| `!=` not equal (false) | ✅ | |
+
+### Section 4: Logical Operators (12/12)
+| Feature | Status | Notes |
+|---------|--------|-------|
+| `and` T and T | ✅ | |
+| `and` T and F | ✅ | |
+| `and` F and T | ✅ | |
+| `and` F and F | ✅ | |
+| `or` T or T | ✅ | |
+| `or` T or F | ✅ | |
+| `or` F or T | ✅ | |
+| `or` F or F | ✅ | |
+| `not` False | ✅ | |
+| `not` True | ✅ | |
+| Combined: `(T and T) or F` | ✅ | |
+| Combined: `not (F and T)` | ✅ | |
+
+### Section 5: Conditionals (7/7)
+| Feature | Status | Notes |
+|---------|--------|-------|
+| `if` true executes | ✅ | |
+| `if` false skips | ✅ | |
+| `else` branch | ✅ | |
+| `elif` branch | ✅ | |
+| First match wins | ✅ | |
+| `else` as default | ✅ | |
+| Nested `if` | ✅ | |
+
+### Section 6: While Loops (5/5)
+| Feature | Status | Notes |
+|---------|--------|-------|
+| Count to N | ✅ | |
+| Zero iterations | ✅ | |
+| Sum accumulator | ✅ | |
+| Nested while (3x4) | ✅ | |
+| While with `and` condition | ✅ | |
+
+### Section 7: For Loops (6/6)
+| Feature | Status | Notes |
+|---------|--------|-------|
+| `for i in range(n)` | ✅ | |
+| `for i in range(start, end)` | ✅ | |
+| `for i in range(start, end, step)` | ✅ | |
+| List iteration (while workaround) | ✅ | See known issues |
+| Nested for loops | ✅ | |
+| Loop variable capture | ✅ | |
+
+### Section 8: Functions (7/7)
+| Feature | Status | Notes |
+|---------|--------|-------|
+| Basic function def/call | ✅ | |
+| Multiple parameters | ✅ | |
+| Recursion (factorial) | ✅ | |
+| Factorial base case (0) | ✅ | |
+| Fibonacci | ✅ | |
+| Nested function calls | ✅ | |
+| Function calls in expressions | ✅ | |
+
+### Section 9: Lists (12/12)
+| Feature | Status | Notes |
+|---------|--------|-------|
+| List creation `[1,2,3]` | ✅ | Via TArray |
+| `len(list)` | ✅ | |
+| Index `[0]` | ✅ | |
+| Index `[n]` | ✅ | |
+| Negative index `[-1]` | ✅ | Via SmartSize computation |
+| Index assignment `[0] = x` | ✅ | |
+| `list.append(x)` | ✅ | |
+| Append value verification | ✅ | |
+| `list.pop()` | ✅ | |
+| Pop reduces length | ✅ | |
+| Empty list `[]` | ✅ | |
+| Append to empty list | ✅ | |
+
+### Section 10: List Operations (10/10)
+| Feature | Status | Notes |
+|---------|--------|-------|
+| `sorted()` returns sorted list | ✅ | |
+| Sorted element access | ✅ | |
+| `reversed()` returns reversed | ✅ | |
+| Reversed element access | ✅ | |
+| `list.copy()` | ✅ | |
+| Copy independence | ✅ | Deep copy works |
+| `sum(list)` | ✅ | |
+| `min(a, b)` | ✅ | |
+| `max(a, b)` | ✅ | |
+
+### Section 11: Type System (9/9)
+| Feature | Status | Notes |
+|---------|--------|-------|
+| `isinstance(x, int)` | ✅ | |
+| `isinstance(x, str)` | ✅ | |
+| `isinstance(x, list)` | ✅ | Uses TArray magic number |
+| Int is not str | ✅ | |
+| Str is not int | ✅ | |
+| Int is not list | ✅ | |
+| `sorted()` returns list type | ✅ | |
+| `reversed()` returns list type | ✅ | |
+| `copy()` returns list type | ✅ | |
+
+### Section 12: Strings (3/3)
+| Feature | Status | Notes |
+|---------|--------|-------|
+| `len(string)` | ✅ | |
+| `isinstance(s, str)` | ✅ | |
+| String print | ✅ | |
+
+### Section 13: Builtins (11/11)
+| Feature | Status | Notes |
+|---------|--------|-------|
+| `abs(-n)` | ✅ | |
+| `abs(n)` | ✅ | |
+| `abs(0)` | ✅ | |
+| `min(a, b)` | ✅ | |
+| `max(a, b)` | ✅ | |
+| `len(list)` | ✅ | |
+| `len(string)` | ✅ | |
+| `bool(0)` → 0 | ✅ | |
+| `bool(1)` → 1 | ✅ | |
+| `bool(n)` → 1 | ✅ | |
+| `int(n)` | ✅ | Fixed: missing import |
+
+### Section 14: Math (5/5)
+| Feature | Status | Notes |
+|---------|--------|-------|
+| `**` power (2³=8) | ✅ | Via Math.Power |
+| `**` power (2⁰=1) | ✅ | |
+| `**` power (3²=9) | ✅ | |
+| `//` floor div (7//2=3) | ✅ | Via Math.FloorDiv |
+| `//` floor div (10//3=3) | ✅ | |
+
+### Section 15: Complex Expressions (5/5)
+| Feature | Status | Notes |
+|---------|--------|-------|
+| Deeply nested arithmetic | ✅ | |
+| Function results in expressions | ✅ | Temp lifting works |
+| Chained `and` conditions | ✅ | |
+| List index in expressions | ✅ | |
+| Conditional computation | ✅ | |
+
+---
+
+## ⚠️ KNOWN ISSUES / WORKAROUNDS
+
+| Issue | Severity | Workaround |
+|-------|----------|------------|
+| `global` keyword hangs parser | MED | Not implemented - avoid |
+| `break` / `continue` | MED | Use flag variable pattern |
+| PrintMessage newline formatting | LOW | Cosmetic only |
+
+### Bug Fixed: `AIMacro.SmartLen` XArray Heuristic
+
+**Problem:** SmartLen used flawed heuristic checking `field0 < 10000` to detect XArray, which misidentified strings as arrays.
+
+**Fix:** Simplified to only check TArray magic number, then assume string:
+```ailang
+Function.AIMacro.SmartLen {
+    Input: container: Address
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(container, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        is_tarray = TArray.TIsArray(container)
+        IfCondition EqualTo(is_tarray, 1) ThenBlock: {
+            ReturnValue(TArray.TSize(container))
+        }
+        ReturnValue(StringLength(container))
+    }
+}
+```
+
+---
+
+## ✅ NEWLY VERIFIED (Floor Test 2)
+
+| Feature | Status | Notes |
+|---------|--------|-------|
+| `for x in list:` | ✅ | Fixed - uses SmartLen/SmartGet |
+| Nested `for x in list:` | ✅ | Works correctly |
+| `int("123")` | ✅ | String to integer |
+| `str(42)` | ✅ | Integer to string |
+| `str()` returns correct len | ✅ | After SmartLen fix |
+| `"a" + "b"` concatenation | ✅ | Via String.Concat |
+| `"" + "test"` empty concat | ✅ | After SmartLen fix |
+| Multi-concat `a + " " + b` | ✅ | Chains correctly |
+
+---
+
+## 🔧 NOT YET TESTED / NOT IMPLEMENTED
+
+| Feature | Priority | Status |
+|---------|----------|--------|
+| List slicing `l[1:3]` | MED | May hang parser |
+| String slicing `s[1:3]` | LOW | May hang parser |
+| `in` operator `x in list` | MED | May hang parser |
+| `enumerate()` | MED | Tuple unpacking issue |
+| `zip()` | MED | Tuple unpacking issue |
+| Dict literals `{}` | LOW | Needs THash |
+| Default function arguments | LOW | Likely not implemented |
+| `break` / `continue` | MED | Needs AILang support |
+
+---
+
+## 📋 LIBRARY DEPENDENCIES
+
+**Required import chain for full functionality:**
+
+```ailang
+LibraryImport.TArrays        // Typed arrays with magic numbers
+LibraryImport.AIMacroTypes   // Type checking (Types.Is*)
+LibraryImport.AIMacro        // Core runtime (SmartGet, SmartLen, etc.)
+LibraryImport.AIMacroString  // String operations
+```
+
+**Critical fix applied:** `Library.AIMacro.ailang` must import `AIMacroTypes` for `AIMacro.Int` to resolve `Types.IsString`.
+
+---
+
+## 🎯 NEXT PRIORITIES
+
+1. **Fix `for x in list:`** - Update CodeGen2 to use Smart functions
+2. **Test `int("123")`** - String-to-number coercion
+3. **Test string concatenation** - `"hello" + "world"`
+4. **Consider `break`/`continue`** - Would require AILang additions
+
+---
+
+**Floor Status: ESTABLISHED**  
+**121/121 tests passing**  
+**Transpiler ready for development use**
