@@ -1,0 +1,1044 @@
+# AIMacro Transpiler - OOP Implementation Specification
+
+**Date:** December 19, 2025  
+**Status:** Implementation Ready  
+**Dependencies:** Library.OOP, Library.HashMap, Library.XArrays
+
+---
+
+## Table of Contents
+
+1. [Architecture Overview](#1-architecture-overview)
+2. [Lexer Extensions](#2-lexer-extensions)
+3. [Parser Extensions](#3-parser-extensions)
+4. [AST Node Definitions](#4-ast-node-definitions)
+5. [Code Generator: OOPGen Module](#5-code-generator-oopgen-module)
+6. [Generation Patterns](#6-generation-patterns)
+7. [Runtime Support](#7-runtime-support)
+8. [Test Cases](#8-test-cases)
+9. [Implementation Checklist](#9-implementation-checklist)
+
+---
+
+## 1. Architecture Overview
+
+### Data Flow
+
+```
+Python Source (.aim)
+       │
+       ▼
+   ┌───────┐
+   │ Lexer │  ← Add: TOKEN_CLASS, TOKEN_DOT
+   └───┬───┘
+       │ Tokens
+       ▼
+   ┌────────┐
+   │ Parser │  ← Add: class_def, attribute, method_call nodes
+   └───┬────┘
+       │ AST
+       ▼
+   ┌─────────┐
+   │ CodeGen │  ← Add: OOPGen module
+   └───┬─────┘
+       │ AILang
+       ▼
+   Output (.ailang)
+```
+
+### Generated Code Structure
+
+For each class in the source:
+
+```
+1. Method function definitions (Function.ClassName_methodName)
+2. Class registration block (OOP.ClassDefine, ClassField, ClassMethod)
+3. Instance usage code (ObjectNew, MethodCall, etc.)
+```
+
+---
+
+## 2. Lexer Extensions
+
+### 2.1 New Token Types
+
+```ailang
+// Add to AIMacroLexer token types
+FixedPool.TokenType {
+    // ... existing tokens ...
+    "CLASS": Initialize=50        // 'class' keyword
+    "DOT": Initialize=51          // '.' operator
+    "SELF": Initialize=52         // 'self' keyword (optional, can treat as IDENT)
+    "SUPER": Initialize=53        // 'super' keyword
+    "PASS": Initialize=54         // 'pass' keyword
+}
+```
+
+### 2.2 Keyword Recognition
+
+```ailang
+// In Lexer_IdentifyKeyword or equivalent
+Function.Lexer_CheckClassKeywords {
+    Input: text: Address
+    Output: Integer
+    Body: {
+        cmp = StringCompare(text, "class")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            ReturnValue(TokenType.CLASS)
+        }
+        
+        cmp = StringCompare(text, "self")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            ReturnValue(TokenType.SELF)
+        }
+        
+        cmp = StringCompare(text, "super")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            ReturnValue(TokenType.SUPER)
+        }
+        
+        cmp = StringCompare(text, "pass")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            ReturnValue(TokenType.PASS)
+        }
+        
+        ReturnValue(0)  // Not a class keyword
+    }
+}
+```
+
+### 2.3 Dot Operator
+
+```ailang
+// In main lexer switch/tokenization
+// When encountering '.'
+IfCondition EqualTo(char, 46) ThenBlock: {  // ASCII '.'
+    Lexer_EmitToken(TokenType.DOT, ".")
+    // Continue...
+}
+```
+
+---
+
+## 3. Parser Extensions
+
+### 3.1 Grammar Rules
+
+```
+program := (class_def | function_def | statement)*
+
+class_def := 'class' IDENTIFIER ['(' base_list ')'] ':' NEWLINE 
+             INDENT class_body DEDENT
+
+base_list := IDENTIFIER (',' IDENTIFIER)*
+
+class_body := (method_def | class_var_assign | 'pass')+
+
+method_def := 'def' IDENTIFIER '(' param_list ')' ['->' type] ':' NEWLINE
+              INDENT body DEDENT
+
+param_list := [param (',' param)*]
+param := IDENTIFIER [':' type] ['=' default_value]
+
+# Expression extensions
+primary := atom trailer*
+trailer := '(' [arg_list] ')'      # function/method call
+        | '[' subscript ']'         # index
+        | '.' IDENTIFIER            # attribute access
+
+atom := IDENTIFIER | NUMBER | STRING | '(' expr ')' | list_literal | dict_literal
+```
+
+### 3.2 Class Definition Parser
+
+```ailang
+Function.Parser_ClassDef {
+    // Expects: 'class' IDENTIFIER ['(' bases ')'] ':' NEWLINE INDENT body DEDENT
+    Output: Address
+    Body: {
+        // Consume 'class'
+        Parser_Expect(TokenType.CLASS)
+        
+        // Get class name
+        class_name = Parser_ExpectIdent()
+        
+        // Check for base classes
+        bases = XArray.XCreate(4)
+        IfCondition Parser_Match(TokenType.LPAREN) ThenBlock: {
+            // Parse base class list
+            IfCondition Not(Parser_Check(TokenType.RPAREN)) ThenBlock: {
+                base = Parser_ExpectIdent()
+                XArray.XPush(bases, base)
+                
+                WhileLoop Parser_Match(TokenType.COMMA) {
+                    base = Parser_ExpectIdent()
+                    XArray.XPush(bases, base)
+                }
+            }
+            Parser_Expect(TokenType.RPAREN)
+        }
+        
+        // Expect colon and newline
+        Parser_Expect(TokenType.COLON)
+        Parser_Expect(TokenType.NEWLINE)
+        Parser_Expect(TokenType.INDENT)
+        
+        // Parse class body (methods and class variables)
+        body = XArray.XCreate(16)
+        WhileLoop Not(Parser_Check(TokenType.DEDENT)) {
+            IfCondition Parser_Check(TokenType.DEF) ThenBlock: {
+                method = Parser_MethodDef()
+                XArray.XPush(body, method)
+            } ElseBlock: {
+                IfCondition Parser_Match(TokenType.PASS) ThenBlock: {
+                    // Empty class body
+                    Parser_Expect(TokenType.NEWLINE)
+                } ElseBlock: {
+                    // Could be class variable assignment
+                    stmt = Parser_Statement()
+                    XArray.XPush(body, stmt)
+                }
+            }
+        }
+        
+        Parser_Expect(TokenType.DEDENT)
+        
+        // Build AST node
+        node = AST_CreateNode(NodeType.CLASS_DEF)
+        AST_SetField(node, "name", class_name)
+        AST_SetField(node, "bases", bases)
+        AST_SetField(node, "body", body)
+        
+        ReturnValue(node)
+    }
+}
+```
+
+### 3.3 Method Definition Parser
+
+```ailang
+Function.Parser_MethodDef {
+    // Same as function_def but marks as method
+    Output: Address
+    Body: {
+        Parser_Expect(TokenType.DEF)
+        
+        method_name = Parser_ExpectIdent()
+        
+        Parser_Expect(TokenType.LPAREN)
+        params = Parser_ParamList()
+        Parser_Expect(TokenType.RPAREN)
+        
+        // Optional return type annotation
+        return_type = 0
+        IfCondition Parser_Match(TokenType.ARROW) ThenBlock: {
+            return_type = Parser_ExpectIdent()
+        }
+        
+        Parser_Expect(TokenType.COLON)
+        Parser_Expect(TokenType.NEWLINE)
+        Parser_Expect(TokenType.INDENT)
+        
+        body = Parser_Body()
+        
+        Parser_Expect(TokenType.DEDENT)
+        
+        // Build method node (like function but flagged)
+        node = AST_CreateNode(NodeType.METHOD_DEF)
+        AST_SetField(node, "name", method_name)
+        AST_SetField(node, "params", params)
+        AST_SetField(node, "return_type", return_type)
+        AST_SetField(node, "body", body)
+        
+        ReturnValue(node)
+    }
+}
+```
+
+### 3.4 Attribute Access Parser
+
+```ailang
+Function.Parser_Trailer {
+    // Parse trailers after primary: .attr, [index], (args)
+    Input: left: Address
+    Output: Address
+    Body: {
+        result = left
+        
+        WhileLoop Parser_HasTrailer() {
+            IfCondition Parser_Match(TokenType.DOT) ThenBlock: {
+                attr_name = Parser_ExpectIdent()
+                
+                // Check if it's a method call: obj.method(...)
+                IfCondition Parser_Check(TokenType.LPAREN) ThenBlock: {
+                    Parser_Expect(TokenType.LPAREN)
+                    args = Parser_ArgList()
+                    Parser_Expect(TokenType.RPAREN)
+                    
+                    node = AST_CreateNode(NodeType.METHOD_CALL)
+                    AST_SetField(node, "object", result)
+                    AST_SetField(node, "method", attr_name)
+                    AST_SetField(node, "args", args)
+                    result = node
+                } ElseBlock: {
+                    // Plain attribute access: obj.attr
+                    node = AST_CreateNode(NodeType.ATTRIBUTE)
+                    AST_SetField(node, "object", result)
+                    AST_SetField(node, "attr", attr_name)
+                    result = node
+                }
+            }
+            
+            IfCondition Parser_Match(TokenType.LBRACKET) ThenBlock: {
+                // Existing subscript handling
+                index = Parser_Expr()
+                Parser_Expect(TokenType.RBRACKET)
+                
+                node = AST_CreateNode(NodeType.SUBSCRIPT)
+                AST_SetField(node, "object", result)
+                AST_SetField(node, "index", index)
+                result = node
+            }
+            
+            IfCondition Parser_Match(TokenType.LPAREN) ThenBlock: {
+                // Function call (not method)
+                args = Parser_ArgList()
+                Parser_Expect(TokenType.RPAREN)
+                
+                node = AST_CreateNode(NodeType.CALL)
+                AST_SetField(node, "func", result)
+                AST_SetField(node, "args", args)
+                result = node
+            }
+        }
+        
+        ReturnValue(result)
+    }
+}
+```
+
+### 3.5 Attribute Assignment Parser
+
+```ailang
+Function.Parser_AttrAssignment {
+    // Handle: self.field = value  or  obj.attr = value
+    Input: target: Address  // The attribute node
+    Output: Address
+    Body: {
+        // target is already an ATTRIBUTE node from Parser_Trailer
+        Parser_Expect(TokenType.ASSIGN)
+        value = Parser_Expr()
+        
+        node = AST_CreateNode(NodeType.ATTR_ASSIGN)
+        AST_SetField(node, "object", AST_GetField(target, "object"))
+        AST_SetField(node, "attr", AST_GetField(target, "attr"))
+        AST_SetField(node, "value", value)
+        
+        ReturnValue(node)
+    }
+}
+```
+
+---
+
+## 4. AST Node Definitions
+
+### 4.1 Node Type Constants
+
+```ailang
+FixedPool.NodeType {
+    // ... existing nodes ...
+    "CLASS_DEF": Initialize=100
+    "METHOD_DEF": Initialize=101
+    "ATTRIBUTE": Initialize=102
+    "ATTR_ASSIGN": Initialize=103
+    "METHOD_CALL": Initialize=104
+    "SUPER_CALL": Initialize=105
+}
+```
+
+### 4.2 Node Structures
+
+```
+CLASS_DEF:
+  name: String          - "Dog"
+  bases: XArray         - ["Animal"] or []
+  body: XArray          - [METHOD_DEF, METHOD_DEF, ...]
+
+METHOD_DEF:
+  name: String          - "__init__" or "speak"
+  params: XArray        - [("self", null), ("name", "str"), ...]
+  return_type: String   - "int" or null
+  body: XArray          - statements
+
+ATTRIBUTE:
+  object: Node          - identifier or expression
+  attr: String          - "name"
+
+ATTR_ASSIGN:
+  object: Node          - typically "self"
+  attr: String          - "name"
+  value: Node           - expression
+
+METHOD_CALL:
+  object: Node          - expression evaluating to object
+  method: String        - "speak"
+  args: XArray          - [arg1, arg2, ...]
+
+SUPER_CALL:
+  method: String        - method to call on parent
+  args: XArray          - arguments
+```
+
+---
+
+## 5. Code Generator: OOPGen Module
+
+### 5.1 State Management
+
+```ailang
+// Library.AIMacroCodeGenOOP.ailang
+
+LibraryImport.XArrays
+LibraryImport.AIMacroCore
+LibraryImport.AIMacroCodeGen1
+
+FixedPool.OOPGen {
+    "classes": Initialize=0           // XArray of class definitions
+    "current_class": Initialize=0     // String: class currently being processed
+    "discovered_fields": Initialize=0 // XArray of (name, type) for current class
+    "class_init_code": Initialize=0   // Buffer for class registration code
+}
+
+Function.OOPGen_Init {
+    Body: {
+        OOPGen.classes = XArray.XCreate(32)
+        OOPGen.discovered_fields = XArray.XCreate(16)
+        OOPGen.class_init_code = XArray.XCreate(64)
+    }
+}
+
+Function.OOPGen_Reset {
+    Body: {
+        OOPGen.current_class = 0
+        XArray.XClear(OOPGen.discovered_fields)
+    }
+}
+```
+
+### 5.2 Class Definition Generator
+
+```ailang
+Function.OOPGen_ClassDef {
+    Input: node: Address
+    Body: {
+        class_name = AST_GetField(node, "name")
+        bases = AST_GetField(node, "bases")
+        body = AST_GetField(node, "body")
+        
+        // Set current class context
+        OOPGen.current_class = class_name
+        XArray.XClear(OOPGen.discovered_fields)
+        
+        // Determine parent class
+        parent = 0
+        num_bases = XArray.XSize(bases)
+        IfCondition GreaterThan(num_bases, 0) ThenBlock: {
+            parent = XArray.XGet(bases, 0)
+        }
+        
+        // PASS 1: Generate method implementations
+        num_methods = XArray.XSize(body)
+        i = 0
+        WhileLoop LessThan(i, num_methods) {
+            item = XArray.XGet(body, i)
+            item_type = AST_GetType(item)
+            
+            IfCondition EqualTo(item_type, NodeType.METHOD_DEF) ThenBlock: {
+                OOPGen_MethodImpl(class_name, item)
+            }
+            i = Add(i, 1)
+        }
+        
+        // PASS 2: Generate class registration code (deferred to init section)
+        OOPGen_EmitClassRegistration(class_name, parent, bases, body)
+        
+        // Clear context
+        OOPGen.current_class = 0
+    }
+}
+```
+
+### 5.3 Method Implementation Generator
+
+```ailang
+Function.OOPGen_MethodImpl {
+    Input: class_name: Address
+    Input: method_node: Address
+    Body: {
+        method_name = AST_GetField(method_node, "name")
+        params = AST_GetField(method_node, "params")
+        body = AST_GetField(method_node, "body")
+        
+        // Build function name: ClassName_methodName
+        func_name = StringConcat(class_name, "_")
+        func_name = StringConcat(func_name, method_name)
+        
+        // Emit function header
+        Gen_Emit("Function.")
+        Gen_Emit(func_name)
+        Gen_Emit(" {\n")
+        
+        // Emit parameters (first is always self)
+        num_params = XArray.XSize(params)
+        i = 0
+        WhileLoop LessThan(i, num_params) {
+            param = XArray.XGet(params, i)
+            param_name = XArray.XGet(param, 0)
+            param_type = XArray.XGet(param, 1)
+            
+            Gen_Emit("    Input: ")
+            Gen_Emit(param_name)
+            Gen_Emit(": ")
+            
+            // Map Python type to AILang type
+            IfCondition EqualTo(i, 0) ThenBlock: {
+                Gen_Emit("Address")  // self is always Address
+            } ElseBlock: {
+                ailang_type = OOPGen_MapType(param_type)
+                Gen_Emit(ailang_type)
+            }
+            Gen_Emit("\n")
+            
+            i = Add(i, 1)
+        }
+        
+        // Determine return type
+        return_type = AST_GetField(method_node, "return_type")
+        IfCondition EqualTo(return_type, 0) ThenBlock: {
+            // Default to Integer for __init__, Address otherwise
+            cmp = StringCompare(method_name, "__init__")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                Gen_Emit("    Output: Integer\n")
+            } ElseBlock: {
+                Gen_Emit("    Output: Address\n")
+            }
+        } ElseBlock: {
+            Gen_Emit("    Output: ")
+            Gen_Emit(OOPGen_MapType(return_type))
+            Gen_Emit("\n")
+        }
+        
+        // Emit body
+        Gen_Emit("    Body: {\n")
+        Gen.indent = 2
+        
+        // Process body statements with OOP awareness
+        OOPGen_MethodBody(body)
+        
+        // For __init__, ensure ReturnValue(1)
+        cmp = StringCompare(method_name, "__init__")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitIndent()
+            Gen_Emit("ReturnValue(1)\n")
+        }
+        
+        Gen.indent = 0
+        Gen_Emit("    }\n")
+        Gen_Emit("}\n\n")
+    }
+}
+```
+
+### 5.4 Field Discovery
+
+```ailang
+Function.OOPGen_DiscoverFields {
+    Input: init_body: Address
+    Output: Address  // XArray of (field_name, field_type)
+    Body: {
+        fields = XArray.XCreate(16)
+        
+        num_stmts = XArray.XSize(init_body)
+        i = 0
+        WhileLoop LessThan(i, num_stmts) {
+            stmt = XArray.XGet(init_body, i)
+            stmt_type = AST_GetType(stmt)
+            
+            IfCondition EqualTo(stmt_type, NodeType.ATTR_ASSIGN) ThenBlock: {
+                obj = AST_GetField(stmt, "object")
+                
+                // Check if it's self.xxx = ...
+                obj_type = AST_GetType(obj)
+                IfCondition EqualTo(obj_type, NodeType.IDENTIFIER) ThenBlock: {
+                    obj_name = AST_GetField(obj, "name")
+                    cmp = StringCompare(obj_name, "self")
+                    IfCondition EqualTo(cmp, 0) ThenBlock: {
+                        field_name = AST_GetField(stmt, "attr")
+                        value = AST_GetField(stmt, "value")
+                        field_type = OOPGen_InferType(value)
+                        
+                        // Add to fields list
+                        field_info = XArray.XCreate(2)
+                        XArray.XPush(field_info, field_name)
+                        XArray.XPush(field_info, field_type)
+                        XArray.XPush(fields, field_info)
+                    }
+                }
+            }
+            i = Add(i, 1)
+        }
+        
+        ReturnValue(fields)
+    }
+}
+
+Function.OOPGen_InferType {
+    Input: expr: Address
+    Output: Address
+    Body: {
+        expr_type = AST_GetType(expr)
+        
+        IfCondition EqualTo(expr_type, NodeType.NUMBER) ThenBlock: {
+            ReturnValue("Integer")
+        }
+        
+        IfCondition EqualTo(expr_type, NodeType.STRING) ThenBlock: {
+            ReturnValue("String")
+        }
+        
+        IfCondition EqualTo(expr_type, NodeType.LIST) ThenBlock: {
+            ReturnValue("Array")
+        }
+        
+        IfCondition EqualTo(expr_type, NodeType.DICT) ThenBlock: {
+            ReturnValue("Hash")
+        }
+        
+        // Default
+        ReturnValue("Address")
+    }
+}
+```
+
+### 5.5 Class Registration Generator
+
+```ailang
+Function.OOPGen_EmitClassRegistration {
+    Input: class_name: Address
+    Input: parent: Address
+    Input: bases: Address
+    Input: body: Address
+    Body: {
+        // This code goes into the initialization section
+        
+        // OOP.ClassDefine("ClassName", parent_or_0)
+        reg = StringConcat("OOP.ClassDefine(\"", class_name)
+        reg = StringConcat(reg, "\", ")
+        IfCondition EqualTo(parent, 0) ThenBlock: {
+            reg = StringConcat(reg, "0")
+        } ElseBlock: {
+            reg = StringConcat(reg, "\"")
+            reg = StringConcat(reg, parent)
+            reg = StringConcat(reg, "\"")
+        }
+        reg = StringConcat(reg, ")\n")
+        XArray.XPush(OOPGen.class_init_code, reg)
+        
+        // Handle additional bases as mixins
+        num_bases = XArray.XSize(bases)
+        IfCondition GreaterThan(num_bases, 1) ThenBlock: {
+            j = 1
+            WhileLoop LessThan(j, num_bases) {
+                mixin = XArray.XGet(bases, j)
+                mixin_code = StringConcat("OOP.ClassMixin(\"", class_name)
+                mixin_code = StringConcat(mixin_code, "\", \"")
+                mixin_code = StringConcat(mixin_code, mixin)
+                mixin_code = StringConcat(mixin_code, "\")\n")
+                XArray.XPush(OOPGen.class_init_code, mixin_code)
+                j = Add(j, 1)
+            }
+        }
+        
+        // Discover and emit fields
+        init_method = OOPGen_FindMethod(body, "__init__")
+        IfCondition NotEqual(init_method, 0) ThenBlock: {
+            init_body = AST_GetField(init_method, "body")
+            fields = OOPGen_DiscoverFields(init_body)
+            
+            num_fields = XArray.XSize(fields)
+            k = 0
+            WhileLoop LessThan(k, num_fields) {
+                field_info = XArray.XGet(fields, k)
+                field_name = XArray.XGet(field_info, 0)
+                field_type = XArray.XGet(field_info, 1)
+                
+                field_code = StringConcat("OOP.ClassField(\"", class_name)
+                field_code = StringConcat(field_code, "\", \"")
+                field_code = StringConcat(field_code, field_name)
+                field_code = StringConcat(field_code, "\", \"")
+                field_code = StringConcat(field_code, field_type)
+                field_code = StringConcat(field_code, "\")\n")
+                XArray.XPush(OOPGen.class_init_code, field_code)
+                
+                k = Add(k, 1)
+            }
+        }
+        
+        // Emit method registrations
+        num_items = XArray.XSize(body)
+        m = 0
+        WhileLoop LessThan(m, num_items) {
+            item = XArray.XGet(body, m)
+            item_type = AST_GetType(item)
+            
+            IfCondition EqualTo(item_type, NodeType.METHOD_DEF) ThenBlock: {
+                method_name = AST_GetField(item, "name")
+                func_name = StringConcat(class_name, "_")
+                func_name = StringConcat(func_name, method_name)
+                
+                method_code = StringConcat("OOP.ClassMethod(\"", class_name)
+                method_code = StringConcat(method_code, "\", \"")
+                method_code = StringConcat(method_code, method_name)
+                method_code = StringConcat(method_code, "\", AddressOf(")
+                method_code = StringConcat(method_code, func_name)
+                method_code = StringConcat(method_code, "))\n")
+                XArray.XPush(OOPGen.class_init_code, method_code)
+            }
+            m = Add(m, 1)
+        }
+        
+        // Add blank line after class registration
+        XArray.XPush(OOPGen.class_init_code, "\n")
+    }
+}
+```
+
+---
+
+## 6. Generation Patterns
+
+### 6.1 Instance Creation
+
+**Python:**
+```python
+dog = Dog("Fido", 3, "Labrador")
+```
+
+**Generated AILang:**
+```ailang
+// Create args array
+__oop_args_0 = XArray.XCreate(3)
+XArray.XPush(__oop_args_0, "Fido")
+XArray.XPush(__oop_args_0, 3)
+XArray.XPush(__oop_args_0, "Labrador")
+
+// Create instance with init
+dog = OOP.ObjectNewInit("Dog", __oop_args_0)
+
+// Cleanup
+XArray.XDestroy(__oop_args_0)
+```
+
+### 6.2 Method Call
+
+**Python:**
+```python
+result = dog.speak()
+msg = dog.fetch("ball")
+```
+
+**Generated AILang:**
+```ailang
+// No-arg method call
+__oop_args_1 = XArray.XCreate(0)
+result = OOP.MethodCall(dog, "speak", __oop_args_1)
+XArray.XDestroy(__oop_args_1)
+
+// Method call with args
+__oop_args_2 = XArray.XCreate(1)
+XArray.XPush(__oop_args_2, "ball")
+msg = OOP.MethodCall(dog, "fetch", __oop_args_2)
+XArray.XDestroy(__oop_args_2)
+```
+
+### 6.3 Attribute Access
+
+**Python:**
+```python
+name = dog.name
+dog.age = 5
+```
+
+**Generated AILang:**
+```ailang
+name = OOP.ObjectGet(dog, "name")
+OOP.ObjectSet(dog, "age", 5)
+```
+
+### 6.4 Self Attribute in Methods
+
+**Python:**
+```python
+def speak(self):
+    return f"{self.name} says Woof!"
+```
+
+**Generated AILang:**
+```ailang
+Function.Dog_speak {
+    Input: self: Address
+    Output: Address
+    Body: {
+        __t0 = OOP.ObjectGet(self, "name")
+        __t1 = StringConcat(__t0, " says Woof!")
+        ReturnValue(__t1)
+    }
+}
+```
+
+### 6.5 isinstance()
+
+**Python:**
+```python
+if isinstance(dog, Animal):
+    print("Is animal")
+```
+
+**Generated AILang:**
+```ailang
+__oop_isinstance_0 = OOP.ObjectIsInstance(dog, "Animal")
+IfCondition EqualTo(__oop_isinstance_0, 1) ThenBlock: {
+    PrintMessage("Is animal")
+    PrintMessage("\n")
+}
+```
+
+### 6.6 super() Call
+
+**Python:**
+```python
+def speak(self):
+    base = super().speak()
+    return f"Dog: {base}"
+```
+
+**Generated AILang:**
+```ailang
+Function.Dog_speak {
+    Input: self: Address
+    Output: Address
+    Body: {
+        __oop_super_args = XArray.XCreate(0)
+        base = OOP.SuperCall(self, "Dog", "speak", __oop_super_args)
+        XArray.XDestroy(__oop_super_args)
+        
+        __t0 = StringConcat("Dog: ", base)
+        ReturnValue(__t0)
+    }
+}
+```
+
+---
+
+## 7. Runtime Support
+
+### 7.1 Required Library Imports
+
+When classes are detected, automatically add:
+
+```ailang
+LibraryImport.OOP
+LibraryImport.XArrays
+LibraryImport.HashMap
+```
+
+### 7.2 Initialization Block
+
+Class registrations must run before main code. Generate:
+
+```ailang
+SubRoutine.__OOP_ClassInit {
+    // All OOP.ClassDefine, ClassField, ClassMethod calls
+    // Generated from OOPGen.class_init_code
+}
+
+SubRoutine.Main {
+    __OOP_ClassInit()  // Initialize classes first
+    
+    // ... rest of main code ...
+}
+```
+
+### 7.3 Temp Variable Naming
+
+Use unique prefixes to avoid collisions:
+
+```
+__oop_args_N      - method call argument arrays
+__oop_isinstance_N - isinstance result temps
+__oop_super_args   - super call argument arrays
+__oop_t_N         - general temporaries
+```
+
+---
+
+## 8. Test Cases
+
+### 8.1 Minimal Class
+
+```python
+class Empty:
+    pass
+
+e = Empty()
+```
+
+### 8.2 Single Class with Fields
+
+```python
+class Point:
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+    
+    def magnitude(self):
+        return self.x * self.x + self.y * self.y
+
+p = Point(3, 4)
+print(p.magnitude())  # 25
+```
+
+### 8.3 Inheritance
+
+```python
+class Animal:
+    def __init__(self, name):
+        self.name = name
+    
+    def speak(self):
+        return "..."
+
+class Dog(Animal):
+    def speak(self):
+        return "Woof!"
+
+d = Dog("Fido")
+print(d.speak())       # Woof!
+print(d.name)          # Fido
+print(isinstance(d, Animal))  # 1
+```
+
+### 8.4 Multiple Methods
+
+```python
+class Counter:
+    def __init__(self, start):
+        self.count = start
+    
+    def increment(self):
+        self.count = self.count + 1
+        return self.count
+    
+    def decrement(self):
+        self.count = self.count - 1
+        return self.count
+    
+    def get(self):
+        return self.count
+
+c = Counter(10)
+print(c.increment())  # 11
+print(c.increment())  # 12
+print(c.decrement())  # 11
+print(c.get())        # 11
+```
+
+### 8.5 Multiple Inheritance (Mixins)
+
+```python
+class Printable:
+    def to_string(self):
+        return "[Printable]"
+
+class Serializable:
+    def serialize(self):
+        return "{}"
+
+class Widget(Base, Printable, Serializable):
+    pass
+
+w = Widget()
+print(w.to_string())
+print(w.serialize())
+```
+
+---
+
+## 9. Implementation Checklist
+
+### Phase 1: Parser (MVP)
+- [ ] Add TOKEN_CLASS to lexer
+- [ ] Add TOKEN_DOT to lexer  
+- [ ] Add TOKEN_PASS to lexer
+- [ ] Implement Parser_ClassDef
+- [ ] Implement Parser_MethodDef
+- [ ] Implement attribute access in Parser_Trailer
+- [ ] Implement attribute assignment detection
+- [ ] Add NodeType constants for OOP nodes
+- [ ] Test: Parse simple class definition
+
+### Phase 2: Code Generator (MVP)
+- [ ] Create OOPGen state pool
+- [ ] Implement OOPGen_Init / OOPGen_Reset
+- [ ] Implement OOPGen_ClassDef dispatcher
+- [ ] Implement OOPGen_MethodImpl
+- [ ] Implement OOPGen_DiscoverFields
+- [ ] Implement OOPGen_EmitClassRegistration
+- [ ] Generate method function definitions
+- [ ] Generate class registration code
+- [ ] Test: Compile simple class
+
+### Phase 3: Instance & Method Calls
+- [ ] Implement instance creation generation
+- [ ] Implement method call generation
+- [ ] Implement attribute get/set generation
+- [ ] Handle self.attr in method bodies
+- [ ] Test: Create instance, call methods
+
+### Phase 4: Inheritance & isinstance
+- [ ] Handle parent class in ClassDefine
+- [ ] Generate isinstance() as ObjectIsInstance
+- [ ] Test: Inheritance hierarchy
+
+### Phase 5: Advanced Features
+- [ ] Multiple inheritance via ClassMixin
+- [ ] super() call generation
+- [ ] Class-level variables (stretch)
+- [ ] Full test suite passes
+
+### Integration
+- [ ] Auto-add library imports when classes detected
+- [ ] Generate __OOP_ClassInit subroutine
+- [ ] Ensure class init runs before main
+- [ ] All existing 141 tests still pass
+- [ ] New OOP test suite passes
+
+---
+
+## Appendix: Type Mapping
+
+| Python Type | AILang Type |
+|-------------|-------------|
+| `int` | `Integer` |
+| `str` | `String` / `Address` |
+| `list` | `Array` / `Address` |
+| `dict` | `Hash` / `Address` |
+| `bool` | `Integer` |
+| `None` | `Integer` (0) |
+| `float` | `Integer` (scaled) |
+| Custom class | `Address` |
+
+---
+
+*End of Implementation Specification*
