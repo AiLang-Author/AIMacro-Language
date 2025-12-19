@@ -5,7 +5,10 @@
 LibraryImport.XArrays
 LibraryImport.AIMacroCore
 LibraryImport.AIMacroParserCore
-LibraryImport.AIMacroCodeGen
+LibraryImport.AIMacroCodeGen1
+LibraryImport.AIMacroCodeGen2
+LibraryImport.AIMacroCodeGen3
+LibraryImport.AIMacroCodeGen4
 
 // =============================================================================
 // SYSCALL NUMBERS (Linux x86_64)
