@@ -4,7 +4,774 @@
 
 // Import required libraries
 LibraryImport.XArrays
+LibraryImport.TArrays
 LibraryImport.FixedPointTrig
+LibraryImport.AIMacroString
+LibraryImport.TArrays
+LibraryImport.AIMacroTypes
+
+
+// TYPE CONSTANTS for isinstance()
+// These match what we can detect at runtime
+FixedPool.TypeID {
+    "INT": Initialize=1
+    "STR": Initialize=2  
+    "LIST": Initialize=3
+    "DICT": Initialize=4
+    "BOOL": Initialize=5
+    "NONE": Initialize=6
+}
+
+
+// =============================================================================
+// TYPED LIST CREATION - Use for user-visible lists that might be type-checked
+// Creates TArray (with magic number) instead of XArray
+// =============================================================================
+Function.AIMacro.TypedListCreate {
+    Input: capacity: Integer
+    Output: Address
+    Body: {
+        list = TArray.TCreate(capacity)
+        ReturnValue(list)
+    }
+}
+
+Function.AIMacro.TypedListPush {
+    Input: list: Address
+    Input: item: Address
+    Body: {
+        TArray.TPush(list, item)
+    }
+}
+
+Function.AIMacro.TypedListGet {
+    Input: list: Address
+    Input: index: Integer
+    Output: Address
+    Body: {
+        ReturnValue(TArray.TGet(list, index))
+    }
+}
+
+Function.AIMacro.TypedListSet {
+    Input: list: Address
+    Input: index: Integer
+    Input: value: Address
+    Body: {
+        TArray.TSet(list, index, value)
+    }
+}
+
+Function.AIMacro.TypedListSize {
+    Input: list: Address
+    Output: Integer
+    Body: {
+        ReturnValue(TArray.TSize(list))
+    }
+}
+
+Function.AIMacro.TypedListPop {
+    Input: list: Address
+    Output: Address
+    Body: {
+        ReturnValue(TArray.TPop(list))
+    }
+}
+
+// =============================================================================
+// SMART LEN - Works with both XArray and TArray
+// Checks magic number to determine which size function to call
+// =============================================================================
+Function.AIMacro.SmartLen {
+    Input: container: Address
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(container, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        
+        // Check if it's a TArray (has magic number)
+        is_tarray = TArray.TIsArray(container)
+        IfCondition EqualTo(is_tarray, 1) ThenBlock: {
+            ReturnValue(TArray.TSize(container))
+        }
+        
+        // Not a TArray, treat as string
+        ReturnValue(StringLength(container))
+    }
+}
+
+// =============================================================================
+// SMART GET - Works with both XArray and TArray
+// =============================================================================
+Function.AIMacro.SmartGet {
+    Input: container: Address
+    Input: index: Integer
+    Output: Address
+    Body: {
+        IfCondition EqualTo(container, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        
+        is_tarray = TArray.TIsArray(container)
+        IfCondition EqualTo(is_tarray, 1) ThenBlock: {
+            ReturnValue(TArray.TGet(container, index))
+        }
+        
+        // Default to XArray
+        ReturnValue(XArray.XGet(container, index))
+    }
+}
+
+// =============================================================================
+// SMART SET - Works with both XArray and TArray
+// =============================================================================
+Function.AIMacro.SmartSet {
+    Input: container: Address
+    Input: index: Integer
+    Input: value: Address
+    Body: {
+        IfCondition EqualTo(container, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        
+        is_tarray = TArray.TIsArray(container)
+        IfCondition EqualTo(is_tarray, 1) ThenBlock: {
+            TArray.TSet(container, index, value)
+            ReturnValue(0)
+        }
+        
+        XArray.XSet(container, index, value)
+    }
+}
+
+// =============================================================================
+// SMART PUSH - Works with both XArray and TArray
+// =============================================================================
+Function.AIMacro.SmartPush {
+    Input: container: Address
+    Input: item: Address
+    Body: {
+        IfCondition EqualTo(container, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        
+        is_tarray = TArray.TIsArray(container)
+        IfCondition EqualTo(is_tarray, 1) ThenBlock: {
+            TArray.TPush(container, item)
+            ReturnValue(0)
+        }
+        
+        XArray.XPush(container, item)
+    }
+}
+
+// =============================================================================
+// TYPED SORTED - Returns TArray for type-safe result
+// =============================================================================
+Function.AIMacro.TypedSorted {
+    Input: list: Address
+    Output: Address
+    Body: {
+        IfCondition EqualTo(list, 0) ThenBlock: {
+            ReturnValue(TArray.TCreate(0))
+        }
+        
+        // Get size - handle both XArray and TArray input
+        is_tarray = TArray.TIsArray(list)
+        IfCondition EqualTo(is_tarray, 1) ThenBlock: {
+            size = TArray.TSize(list)
+        } ElseBlock: {
+            size = XArray.XSize(list)
+        }
+        
+        IfCondition EqualTo(size, 0) ThenBlock: {
+            ReturnValue(TArray.TCreate(0))
+        }
+        
+        // Create typed result
+        result = TArray.TCreate(size)
+        
+        // Copy elements
+        i = 0
+        WhileLoop LessThan(i, size) {
+            IfCondition EqualTo(is_tarray, 1) ThenBlock: {
+                item = TArray.TGet(list, i)
+            } ElseBlock: {
+                item = XArray.XGet(list, i)
+            }
+            TArray.TPush(result, item)
+            i = Add(i, 1)
+        }
+        
+        // Insertion sort
+        i = 1
+        WhileLoop LessThan(i, size) {
+            key = TArray.TGet(result, i)
+            j = Subtract(i, 1)
+            
+            continue_shift = 1
+            WhileLoop EqualTo(continue_shift, 1) {
+                IfCondition LessThan(j, 0) ThenBlock: {
+                    continue_shift = 0
+                } ElseBlock: {
+                    curr_val = TArray.TGet(result, j)
+                    IfCondition GreaterThan(curr_val, key) ThenBlock: {
+                        TArray.TSet(result, Add(j, 1), curr_val)
+                        j = Subtract(j, 1)
+                    } ElseBlock: {
+                        continue_shift = 0
+                    }
+                }
+            }
+            
+            TArray.TSet(result, Add(j, 1), key)
+            i = Add(i, 1)
+        }
+        
+        ReturnValue(result)
+    }
+}
+
+// =============================================================================
+// TYPED REVERSED - Returns TArray
+// =============================================================================
+Function.AIMacro.TypedReversed {
+    Input: list: Address
+    Output: Address
+    Body: {
+        IfCondition EqualTo(list, 0) ThenBlock: {
+            ReturnValue(TArray.TCreate(0))
+        }
+        
+        is_tarray = TArray.TIsArray(list)
+        IfCondition EqualTo(is_tarray, 1) ThenBlock: {
+            size = TArray.TSize(list)
+        } ElseBlock: {
+            size = XArray.XSize(list)
+        }
+        
+        result = TArray.TCreate(size)
+        
+        i = Subtract(size, 1)
+        WhileLoop GreaterEqual(i, 0) {
+            IfCondition EqualTo(is_tarray, 1) ThenBlock: {
+                item = TArray.TGet(list, i)
+            } ElseBlock: {
+                item = XArray.XGet(list, i)
+            }
+            TArray.TPush(result, item)
+            i = Subtract(i, 1)
+        }
+        
+        ReturnValue(result)
+    }
+}
+
+// =============================================================================
+// TYPED LIST COPY - Returns TArray
+// =============================================================================
+Function.AIMacro.TypedListCopy {
+    Input: list: Address
+    Output: Address
+    Body: {
+        IfCondition EqualTo(list, 0) ThenBlock: {
+            ReturnValue(TArray.TCreate(0))
+        }
+        
+        is_tarray = TArray.TIsArray(list)
+        IfCondition EqualTo(is_tarray, 1) ThenBlock: {
+            size = TArray.TSize(list)
+        } ElseBlock: {
+            size = XArray.XSize(list)
+        }
+        
+        result = TArray.TCreate(size)
+        
+        i = 0
+        WhileLoop LessThan(i, size) {
+            IfCondition EqualTo(is_tarray, 1) ThenBlock: {
+                item = TArray.TGet(list, i)
+            } ElseBlock: {
+                item = XArray.XGet(list, i)
+            }
+            TArray.TPush(result, item)
+            i = Add(i, 1)
+        }
+        
+        ReturnValue(result)
+    }
+}
+
+
+// =============================================================================
+// SMART POP - Works with both array types
+// =============================================================================
+Function.AIMacro.SmartPop {
+    Input: list: Address
+    Output: Address
+    Body: {
+        IfCondition EqualTo(list, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        
+        is_tarray = TArray.TIsArray(list)
+        IfCondition EqualTo(is_tarray, 1) ThenBlock: {
+            ReturnValue(TArray.TPop(list))
+        }
+        
+        // XArray
+        len = XArray.XSize(list)
+        IfCondition GreaterThan(len, 0) ThenBlock: {
+            item = XArray.XGet(list, Subtract(len, 1))
+            XArray.XPop(list)
+            ReturnValue(item)
+        }
+        ReturnValue(0)
+    }
+}
+
+// =============================================================================
+// SMART CLEAR - Works with both array types
+// =============================================================================
+Function.AIMacro.SmartClear {
+    Input: list: Address
+    Body: {
+        IfCondition EqualTo(list, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        
+        is_tarray = TArray.TIsArray(list)
+        IfCondition EqualTo(is_tarray, 1) ThenBlock: {
+            TArray.TClear(list)
+            ReturnValue(0)
+        }
+        
+        XArray.XClear(list)
+    }
+}
+
+
+// =============================================================================
+// SMART POP AT INDEX - Remove and return item at position
+// Works with both array types
+// =============================================================================
+Function.AIMacro.SmartPopAt {
+    Input: list: Address
+    Input: index: Integer
+    Output: Address
+    Body: {
+        IfCondition EqualTo(list, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        
+        is_tarray = TArray.TIsArray(list)
+        IfCondition EqualTo(is_tarray, 1) ThenBlock: {
+            size = TArray.TSize(list)
+        } ElseBlock: {
+            size = XArray.XSize(list)
+        }
+        
+        IfCondition EqualTo(size, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        
+        // Handle negative index
+        IfCondition LessThan(index, 0) ThenBlock: {
+            index = Add(size, index)
+        }
+        
+        // Bounds check
+        IfCondition LessThan(index, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition GreaterEqual(index, size) ThenBlock: {
+            ReturnValue(0)
+        }
+        
+        // Get the item to return
+        IfCondition EqualTo(is_tarray, 1) ThenBlock: {
+            item = TArray.TGet(list, index)
+        } ElseBlock: {
+            item = XArray.XGet(list, index)
+        }
+        
+        // Shift everything left from index+1 to end
+        i = index
+        WhileLoop LessThan(i, Subtract(size, 1)) {
+            IfCondition EqualTo(is_tarray, 1) ThenBlock: {
+                next_item = TArray.TGet(list, Add(i, 1))
+                TArray.TSet(list, i, next_item)
+            } ElseBlock: {
+                next_item = XArray.XGet(list, Add(i, 1))
+                XArray.XSet(list, i, next_item)
+            }
+            i = Add(i, 1)
+        }
+        
+        // Remove the last element
+        IfCondition EqualTo(is_tarray, 1) ThenBlock: {
+            TArray.TPop(list)
+        } ElseBlock: {
+            XArray.XPop(list)
+        }
+        
+        ReturnValue(item)
+    }
+}
+// =============================================================================
+// SMART SIZE - Works with both array types
+// =============================================================================
+Function.AIMacro.SmartSize {
+    Input: list: Address
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(list, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        
+        is_tarray = TArray.TIsArray(list)
+        IfCondition EqualTo(is_tarray, 1) ThenBlock: {
+            ReturnValue(TArray.TSize(list))
+        }
+        
+        ReturnValue(XArray.XSize(list))
+    }
+}
+
+
+// =============================================================================
+// SMART ANY - Works with both array types
+// =============================================================================
+Function.AIMacro.SmartAny {
+    Input: list: Address
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(list, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        
+        is_tarray = TArray.TIsArray(list)
+        IfCondition EqualTo(is_tarray, 1) ThenBlock: {
+            size = TArray.TSize(list)
+        } ElseBlock: {
+            size = XArray.XSize(list)
+        }
+        
+        i = 0
+        WhileLoop LessThan(i, size) {
+            IfCondition EqualTo(is_tarray, 1) ThenBlock: {
+                item = TArray.TGet(list, i)
+            } ElseBlock: {
+                item = XArray.XGet(list, i)
+            }
+            IfCondition NotEqual(item, 0) ThenBlock: {
+                ReturnValue(1)
+            }
+            i = Add(i, 1)
+        }
+        
+        ReturnValue(0)
+    }
+}
+
+// =============================================================================
+// SMART ALL - Works with both array types
+// =============================================================================
+Function.AIMacro.SmartAll {
+    Input: list: Address
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(list, 0) ThenBlock: {
+            ReturnValue(1)
+        }
+        
+        is_tarray = TArray.TIsArray(list)
+        IfCondition EqualTo(is_tarray, 1) ThenBlock: {
+            size = TArray.TSize(list)
+        } ElseBlock: {
+            size = XArray.XSize(list)
+        }
+        
+        IfCondition EqualTo(size, 0) ThenBlock: {
+            ReturnValue(1)
+        }
+        
+        i = 0
+        WhileLoop LessThan(i, size) {
+            IfCondition EqualTo(is_tarray, 1) ThenBlock: {
+                item = TArray.TGet(list, i)
+            } ElseBlock: {
+                item = XArray.XGet(list, i)
+            }
+            IfCondition EqualTo(item, 0) ThenBlock: {
+                ReturnValue(0)
+            }
+            i = Add(i, 1)
+        }
+        
+        ReturnValue(1)
+    }
+}
+
+// =============================================================================
+// SMART SUM - Works with both array types
+// =============================================================================
+Function.AIMacro.SmartSum {
+    Input: list: Address
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(list, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        
+        is_tarray = TArray.TIsArray(list)
+        IfCondition EqualTo(is_tarray, 1) ThenBlock: {
+            size = TArray.TSize(list)
+        } ElseBlock: {
+            size = XArray.XSize(list)
+        }
+        
+        total = 0
+        i = 0
+        WhileLoop LessThan(i, size) {
+            IfCondition EqualTo(is_tarray, 1) ThenBlock: {
+                item = TArray.TGet(list, i)
+            } ElseBlock: {
+                item = XArray.XGet(list, i)
+            }
+            total = Add(total, item)
+            i = Add(i, 1)
+        }
+        
+        ReturnValue(total)
+    }
+}
+
+// =============================================================================
+// SMART LIST INDEX - Find position of item in either array type
+// =============================================================================
+Function.AIMacro.SmartListIndex {
+    Input: list: Address
+    Input: item: Integer
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(list, 0) ThenBlock: {
+            ReturnValue(-1)
+        }
+        
+        is_tarray = TArray.TIsArray(list)
+        IfCondition EqualTo(is_tarray, 1) ThenBlock: {
+            size = TArray.TSize(list)
+        } ElseBlock: {
+            size = XArray.XSize(list)
+        }
+        
+        i = 0
+        WhileLoop LessThan(i, size) {
+            IfCondition EqualTo(is_tarray, 1) ThenBlock: {
+                current = TArray.TGet(list, i)
+            } ElseBlock: {
+                current = XArray.XGet(list, i)
+            }
+            IfCondition EqualTo(current, item) ThenBlock: {
+                ReturnValue(i)
+            }
+            i = Add(i, 1)
+        }
+        
+        ReturnValue(-1)
+    }
+}
+
+// =============================================================================
+// SMART LIST CONTAINS - Check if item exists in either array type
+// =============================================================================
+Function.AIMacro.SmartListContains {
+    Input: list: Address
+    Input: item: Integer
+    Output: Integer
+    Body: {
+        idx = AIMacro.SmartListIndex(list, item)
+        IfCondition GreaterEqual(idx, 0) ThenBlock: {
+            ReturnValue(1)
+        }
+        ReturnValue(0)
+    }
+}
+
+// =============================================================================
+// SMART LIST COUNT - Count occurrences in either array type
+// =============================================================================
+Function.AIMacro.SmartListCount {
+    Input: list: Address
+    Input: item: Integer
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(list, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        
+        is_tarray = TArray.TIsArray(list)
+        IfCondition EqualTo(is_tarray, 1) ThenBlock: {
+            size = TArray.TSize(list)
+        } ElseBlock: {
+            size = XArray.XSize(list)
+        }
+        
+        count = 0
+        i = 0
+        WhileLoop LessThan(i, size) {
+            IfCondition EqualTo(is_tarray, 1) ThenBlock: {
+                current = TArray.TGet(list, i)
+            } ElseBlock: {
+                current = XArray.XGet(list, i)
+            }
+            IfCondition EqualTo(current, item) ThenBlock: {
+                count = Add(count, 1)
+            }
+            i = Add(i, 1)
+        }
+        
+        ReturnValue(count)
+    }
+}
+// =============================================================================
+// ISINSTANCE - Check if value matches a type
+// Usage: isinstance(value, type_id)
+// Returns: 1 if match, 0 if not
+//
+// Note: In our system, we can't truly distinguish types at runtime since
+// everything is an integer/address. This uses heuristics:
+// - Small values (0-1000000) are likely integers
+// - Large values are likely addresses (strings, lists)
+// - We can check XArray header for lists
+// - We can check string structure for strings
+// =============================================================================
+Function.AIMacro.IsInstance {
+    Input: value: Address
+    Input: type_id: Integer
+    Output: Integer
+    Body: {
+        // NONE check - value is 0
+        IfCondition EqualTo(type_id, TypeID.NONE) ThenBlock: {
+            IfCondition EqualTo(value, 0) ThenBlock: {
+                ReturnValue(1)
+            }
+            ReturnValue(0)
+        }
+        
+        // BOOL check - value is 0 or 1
+        IfCondition EqualTo(type_id, TypeID.BOOL) ThenBlock: {
+            IfCondition Or(EqualTo(value, 0), EqualTo(value, 1)) ThenBlock: {
+                ReturnValue(1)
+            }
+            ReturnValue(0)
+        }
+        
+        // INT check - small value that's not an address
+        IfCondition EqualTo(type_id, TypeID.INT) ThenBlock: {
+            // Heuristic: integers are typically < 1000000 or negative
+            // Addresses are typically > 4000000 (heap region)
+            IfCondition LessThan(value, 4000000) ThenBlock: {
+                ReturnValue(1)
+            }
+            ReturnValue(0)
+        }
+        
+        // For STR, LIST, DICT - need to check if it's a valid address
+        // and then inspect the structure
+        
+        // STR check - must be valid address with printable chars
+        IfCondition EqualTo(type_id, TypeID.STR) ThenBlock: {
+            IfCondition LessThan(value, 4000000) ThenBlock: {
+                ReturnValue(0)  // Not an address
+            }
+            // Try to read first byte - if it's printable ASCII, likely string
+            first_byte = GetByte(value, 0)
+            IfCondition And(GreaterEqual(first_byte, 32), LessEqual(first_byte, 126)) ThenBlock: {
+                ReturnValue(1)
+            }
+            // Could also be empty string (null terminator)
+            IfCondition EqualTo(first_byte, 0) ThenBlock: {
+                ReturnValue(1)
+            }
+            ReturnValue(0)
+        }
+        
+        // LIST check - XArray has specific header structure
+        // XArray: [capacity, size, data_ptr]
+        IfCondition EqualTo(type_id, TypeID.LIST) ThenBlock: {
+            IfCondition LessThan(value, 4000000) ThenBlock: {
+                ReturnValue(0)  // Not an address
+            }
+            // Check if it looks like an XArray header
+            // capacity should be reasonable (1-10000)
+            // size should be <= capacity
+            capacity = Dereference(value)
+            size = Dereference(Add(value, 8))
+            
+            IfCondition And(GreaterThan(capacity, 0), LessEqual(capacity, 10000)) ThenBlock: {
+                IfCondition LessEqual(size, capacity) ThenBlock: {
+                    ReturnValue(1)
+                }
+            }
+            ReturnValue(0)
+        }
+        
+        // DICT check - similar to list but different structure
+        IfCondition EqualTo(type_id, TypeID.DICT) ThenBlock: {
+            // For now, same heuristic as list
+            // Could be refined with hash table structure check
+            IfCondition LessThan(value, 4000000) ThenBlock: {
+                ReturnValue(0)
+            }
+            ReturnValue(1)  // Assume dict if address
+        }
+        
+        // Unknown type
+        ReturnValue(0)
+    }
+}
+
+// =============================================================================
+// TYPE - Return type ID of a value
+// =============================================================================
+Function.AIMacro.Type {
+    Input: value: Address
+    Output: Integer
+    Body: {
+        // Check in order of likelihood
+        
+        // None
+        IfCondition EqualTo(value, 0) ThenBlock: {
+            ReturnValue(TypeID.NONE)
+        }
+        
+        // Small integer
+        IfCondition LessThan(value, 4000000) ThenBlock: {
+            ReturnValue(TypeID.INT)
+        }
+        
+        // Check if it looks like a list (XArray)
+        capacity = Dereference(value)
+        size = Dereference(Add(value, 8))
+        IfCondition And(GreaterThan(capacity, 0), LessEqual(capacity, 10000)) ThenBlock: {
+            IfCondition LessEqual(size, capacity) ThenBlock: {
+                ReturnValue(TypeID.LIST)
+            }
+        }
+        
+        // Check if it looks like a string
+        first_byte = GetByte(value, 0)
+        IfCondition Or(EqualTo(first_byte, 0), And(GreaterEqual(first_byte, 32), LessEqual(first_byte, 126))) ThenBlock: {
+            ReturnValue(TypeID.STR)
+        }
+        
+        // Default to int for unknown
+        ReturnValue(TypeID.INT)
+    }
+}
 
 // =============================================================================
 // CORE BUILT-IN FUNCTIONS
@@ -23,30 +790,43 @@ Function.AIMacro.Print {
 Function.AIMacro.SmartPrint {
     Input: value: Address
     Body: {
-        // This is the adapter layer logic.
-        // AILang uses a simple heuristic: small numbers are treated as integers,
-        // large numbers are treated as pointers to strings.
-        // A value of 0x400000 is a common start for memory-mapped regions.
-        IfCondition LessThan(value, 1000000) ThenBlock: {
-            // It's likely a number.
+        // Bump the threshold higher - strings are usually at addresses > 0x400000 (4194304)
+        IfCondition LessThan(value, 4000000) ThenBlock: {
             PrintNumber(value)
         } ElseBlock: {
-            // It's likely a string pointer.
             PrintString(value)
         }
     }
 }
 
-// In Library.AIMacro.ailang, the Len function:
 Function.AIMacro.Len {
     Input: container: Address
     Output: Integer
     Body: {
-        // For now, assume it's an array-like structure
-        // Use XArray.XSize for dynamic arrays
-        ReturnValue(XArray.XSize(container))
+        IfCondition EqualTo(container, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        
+        // Get first byte as a character
+        first_byte = GetByte(container, 0)
+        
+     
+        
+        field0 = ArrayGet(container, 0)
+        
+       
+        
+        IfCondition And(GreaterEqual(field0, 0), LessThan(field0, 1000000)) ThenBlock: {
+            
+            
+            ReturnValue(field0)
+        } ElseBlock: {
+            // Large value means it's string data interpreted as int
+            ReturnValue(StringLength(container))
+        }
     }
 }
+
 
 Function.AIMacro.Str {
     Input: value: Address
@@ -61,8 +841,11 @@ Function.AIMacro.Int {
     Input: value: Address
     Output: Integer
     Body: {
-        // Convert string to number
-        ReturnValue(StringToNumber(value))
+        is_str = Types.IsString(value)
+        IfCondition EqualTo(is_str, 1) ThenBlock: {
+            ReturnValue(StringToNumber(value))
+        }
+        ReturnValue(value)
     }
 }
 
@@ -92,6 +875,184 @@ Function.AIMacro.Set {
     Body: {
         // Use XArray's set function
         XArray.XSet(container, index, value)
+    }
+}
+
+// =============================================================================
+// ANY - Return 1 if any element is truthy
+// =============================================================================
+Function.AIMacro.Any {
+    Input: list: Address
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(list, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        
+        size = XArray.XSize(list)
+        i = 0
+        WhileLoop LessThan(i, size) {
+            item = XArray.XGet(list, i)
+            IfCondition NotEqual(item, 0) ThenBlock: {
+                ReturnValue(1)
+            }
+            i = Add(i, 1)
+        }
+        
+        ReturnValue(0)
+    }
+}
+
+// =============================================================================
+// ALL - Return 1 if all elements are truthy (0 if any falsy)
+// =============================================================================
+Function.AIMacro.All {
+    Input: list: Address
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(list, 0) ThenBlock: {
+            ReturnValue(1)  // Empty is truthy for all()
+        }
+        
+        size = XArray.XSize(list)
+        IfCondition EqualTo(size, 0) ThenBlock: {
+            ReturnValue(1)  // Empty list returns True for all()
+        }
+        
+        i = 0
+        WhileLoop LessThan(i, size) {
+            item = XArray.XGet(list, i)
+            IfCondition EqualTo(item, 0) ThenBlock: {
+                ReturnValue(0)
+            }
+            i = Add(i, 1)
+        }
+        
+        ReturnValue(1)
+    }
+}
+
+// =============================================================================
+// LIST INDEX - Find position of item (returns -1 if not found)
+// =============================================================================
+Function.AIMacro.ListIndex {
+    Input: list: Address
+    Input: item: Integer
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(list, 0) ThenBlock: {
+            ReturnValue(-1)
+        }
+        
+        size = XArray.XSize(list)
+        i = 0
+        WhileLoop LessThan(i, size) {
+            current = XArray.XGet(list, i)
+            IfCondition EqualTo(current, item) ThenBlock: {
+                ReturnValue(i)
+            }
+            i = Add(i, 1)
+        }
+        
+        ReturnValue(-1)
+    }
+}
+
+// =============================================================================
+// LIST COUNT - Count occurrences of item
+// =============================================================================
+Function.AIMacro.ListCount {
+    Input: list: Address
+    Input: item: Integer
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(list, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        
+        size = XArray.XSize(list)
+        count = 0
+        i = 0
+        WhileLoop LessThan(i, size) {
+            current = XArray.XGet(list, i)
+            IfCondition EqualTo(current, item) ThenBlock: {
+                count = Add(count, 1)
+            }
+            i = Add(i, 1)
+        }
+        
+        ReturnValue(count)
+    }
+}
+
+
+// =============================================================================
+// LIST COPY - Shallow copy of list
+// =============================================================================
+Function.AIMacro.ListCopy {
+    Input: list: Address
+    Output: Address
+    Body: {
+        IfCondition EqualTo(list, 0) ThenBlock: {
+            ReturnValue(XArray.XCreate(0))
+        }
+        
+        size = XArray.XSize(list)
+        result = XArray.XCreate(size)
+        
+        i = 0
+        WhileLoop LessThan(i, size) {
+            item = XArray.XGet(list, i)
+            XArray.XPush(result, item)
+            i = Add(i, 1)
+        }
+        
+        ReturnValue(result)
+    }
+}
+
+// =============================================================================
+// LIST EXTEND - Add all items from another list
+// =============================================================================
+Function.AIMacro.ListExtend {
+    Input: list: Address
+    Input: other: Address
+    Body: {
+        IfCondition EqualTo(other, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        
+        size = XArray.XSize(other)
+        i = 0
+        WhileLoop LessThan(i, size) {
+            item = XArray.XGet(other, i)
+            XArray.XPush(list, item)
+            i = Add(i, 1)
+        }
+    }
+}
+
+
+Function.AIMacro.ListContains {
+    Input: list: Address
+    Input: item: Integer
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(list, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        
+        size = XArray.XSize(list)
+        i = 0
+        WhileLoop LessThan(i, size) {
+            current = XArray.XGet(list, i)
+            IfCondition EqualTo(current, item) ThenBlock: {
+                ReturnValue(1)
+            }
+            i = Add(i, 1)
+        }
+        
+        ReturnValue(0)
     }
 }
 
@@ -131,6 +1092,170 @@ Function.AIMacro.CreateList5 {
     }
 }
 
+
+// =============================================================================
+// LIST REMOVE - Remove first occurrence of value
+// =============================================================================
+Function.AIMacro.ListRemove {
+    Input: list: Address
+    Input: item: Integer
+    Body: {
+        IfCondition EqualTo(list, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        
+        size = XArray.XSize(list)
+        found_idx = -1
+        
+        // Find the item
+        i = 0
+        WhileLoop LessThan(i, size) {
+            current = XArray.XGet(list, i)
+            IfCondition EqualTo(current, item) ThenBlock: {
+                found_idx = i
+                BreakLoop
+            }
+            i = Add(i, 1)
+        }
+        
+        // If found, shift everything left
+        IfCondition GreaterEqual(found_idx, 0) ThenBlock: {
+            j = found_idx
+            WhileLoop LessThan(j, Subtract(size, 1)) {
+                next_item = XArray.XGet(list, Add(j, 1))
+                XArray.XSet(list, j, next_item)
+                j = Add(j, 1)
+            }
+            XArray.XPop(list)
+        }
+    }
+}
+
+// =============================================================================
+// LIST INSERT - Insert item at index
+// =============================================================================
+Function.AIMacro.ListInsert {
+    Input: list: Address
+    Input: index: Integer
+    Input: item: Integer
+    Body: {
+        IfCondition EqualTo(list, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        
+        size = XArray.XSize(list)
+        
+        // Clamp index to valid range
+        IfCondition LessThan(index, 0) ThenBlock: {
+            index = 0
+        }
+        IfCondition GreaterThan(index, size) ThenBlock: {
+            index = size
+        }
+        
+        // Add a placeholder at the end
+        XArray.XPush(list, 0)
+        
+        // Shift everything right from the end
+        j = size
+        WhileLoop GreaterThan(j, index) {
+            prev_item = XArray.XGet(list, Subtract(j, 1))
+            XArray.XSet(list, j, prev_item)
+            j = Subtract(j, 1)
+        }
+        
+        // Set the item at index
+        XArray.XSet(list, index, item)
+    }
+}
+
+// =============================================================================
+// LIST POP AT INDEX - Remove and return item at position
+// =============================================================================
+Function.AIMacro.ListPopAt {
+    Input: list: Address
+    Input: index: Integer
+    Output: Address
+    Body: {
+        IfCondition EqualTo(list, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        
+        size = XArray.XSize(list)
+        IfCondition EqualTo(size, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        
+        // Handle negative index
+        IfCondition LessThan(index, 0) ThenBlock: {
+            index = Add(size, index)
+        }
+        
+        // Bounds check
+        IfCondition LessThan(index, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition GreaterEqual(index, size) ThenBlock: {
+            ReturnValue(0)
+        }
+        
+        // Get the item to return
+        item = XArray.XGet(list, index)
+        
+        // Shift everything left from index+1 to end
+        i = index
+        WhileLoop LessThan(i, Subtract(size, 1)) {
+            next_item = XArray.XGet(list, Add(i, 1))
+            XArray.XSet(list, i, next_item)
+            i = Add(i, 1)
+        }
+        
+        // Remove the last element
+        XArray.XPop(list)
+        
+        ReturnValue(item)
+    }
+}
+
+// =============================================================================
+// REVERSED - Return new list in reverse order
+// =============================================================================
+Function.AIMacro.Reversed {
+    Input: list: Address
+    Output: Address
+    Body: {
+        IfCondition EqualTo(list, 0) ThenBlock: {
+            ReturnValue(XArray.XCreate(0))
+        }
+        
+        size = XArray.XSize(list)
+        result = XArray.XCreate(size)
+        
+        i = Subtract(size, 1)
+        WhileLoop GreaterEqual(i, 0) {
+            item = XArray.XGet(list, i)
+            XArray.XPush(result, item)
+            i = Subtract(i, 1)
+        }
+        
+        ReturnValue(result)
+    }
+}
+
+// =============================================================================
+// ROUND - Round to nearest integer (no decimal places in our int world)
+// For positive: add 0.5 equivalent, for negative: subtract 0.5 equivalent
+// Since we're integers, this is basically a no-op, but we support it for compat
+// =============================================================================
+Function.AIMacro.Round {
+    Input: value: Integer
+    Output: Integer
+    Body: {
+        // In integer land, round() just returns the value
+        // This exists for Python compatibility
+        ReturnValue(value)
+    }
+}
 // =============================================================================
 // MATHEMATICAL FUNCTIONS
 // =============================================================================
@@ -192,6 +1317,111 @@ Function.AIMacro.Sum {
     }
 }
 
+
+// =============================================================================
+// POWER FUNCTION - base ** exp
+// =============================================================================
+Function.Math.Power {
+    Input: base: Integer
+    Input: exp: Integer
+    Output: Integer
+    Body: {
+        // Handle edge cases
+        IfCondition EqualTo(exp, 0) ThenBlock: {
+            ReturnValue(1)
+        }
+        IfCondition LessThan(exp, 0) ThenBlock: {
+            // Negative exponents return 0 for integers (would be fraction)
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(base, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(base, 1) ThenBlock: {
+            ReturnValue(1)
+        }
+        IfCondition EqualTo(exp, 1) ThenBlock: {
+            ReturnValue(base)
+        }
+        
+        // Iterative power calculation
+        result = 1
+        i = 0
+        WhileLoop LessThan(i, exp) {
+            result = Multiply(result, base)
+            i = Add(i, 1)
+        }
+        
+        ReturnValue(result)
+    }
+}
+
+
+// =============================================================================
+// FLOOR DIVISION - Python-style // that floors toward negative infinity
+// =============================================================================
+Function.Math.FloorDiv {
+    Input: a: Integer
+    Input: b: Integer
+    Output: Integer
+    Body: {
+        // Handle divide by zero
+        IfCondition EqualTo(b, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        
+        // Standard truncating division
+        q = Divide(a, b)
+        r = Modulo(a, b)
+        
+        // If remainder is non-zero and signs differ, adjust
+        // Signs differ when: (a < 0 XOR b < 0)
+        IfCondition NotEqual(r, 0) ThenBlock: {
+            a_neg = LessThan(a, 0)
+            b_neg = LessThan(b, 0)
+            
+            // XOR: signs differ if exactly one is negative
+            IfCondition NotEqual(a_neg, b_neg) ThenBlock: {
+                q = Subtract(q, 1)
+            }
+        }
+        
+        ReturnValue(q)
+    }
+}
+
+// =============================================================================
+// ORD - Get ASCII value of first character in string
+// =============================================================================
+Function.AIMacro.Ord {
+    Input: str: Address
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(str, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        
+        // Get the first byte (ASCII value)
+        c = GetByte(str, 0)
+        ReturnValue(c)
+    }
+}
+
+// =============================================================================
+// CHR - Create single-character string from ASCII value
+// =============================================================================
+Function.AIMacro.Chr {
+    Input: code: Integer
+    Output: Address
+    Body: {
+        // Allocate 2 bytes: [char, null terminator]
+        result = Allocate(2)
+        SetByte(result, 0, code)
+        SetByte(result, 1, 0)
+        ReturnValue(result)
+    }
+}
+
 // =============================================================================
 // DATA STRUCTURE CONSTRUCTORS
 // =============================================================================
@@ -228,6 +1458,184 @@ Function.AIMacro.Tuple {
         }
         
         ReturnValue(tuple)
+    }
+}
+
+
+// =============================================================================
+// SORTED - Return new sorted list (ascending)
+// Uses simple insertion sort - good enough for small lists
+// =============================================================================
+Function.AIMacro.Sorted {
+    Input: list: Address
+    Output: Address
+    Body: {
+        IfCondition EqualTo(list, 0) ThenBlock: {
+            ReturnValue(XArray.XCreate(0))
+        }
+        
+        size = XArray.XSize(list)
+        IfCondition EqualTo(size, 0) ThenBlock: {
+            ReturnValue(XArray.XCreate(0))
+        }
+        
+        // Create copy
+        result = XArray.XCreate(size)
+        i = 0
+        WhileLoop LessThan(i, size) {
+            item = XArray.XGet(list, i)
+            XArray.XPush(result, item)
+            i = Add(i, 1)
+        }
+        
+        // Insertion sort the copy - FIXED VERSION
+        // 
+        // BUG WAS: WhileLoop And(GreaterEqual(j, 0), GreaterThan(XArray.XGet(result, j), key))
+        // 
+        // AILang's And() is NOT short-circuit evaluated!
+        // Both arguments are computed BEFORE the And operation.
+        // When j becomes -1, XArray.XGet(result, -1) causes undefined behavior.
+        //
+        // FIX: Check j >= 0 BEFORE accessing the array, using nested if-else.
+        
+        i = 1
+        WhileLoop LessThan(i, size) {
+            key = XArray.XGet(result, i)
+            j = Subtract(i, 1)
+            
+            // Use flag-controlled loop instead of And() with array access
+            continue_shift = 1
+            WhileLoop EqualTo(continue_shift, 1) {
+                // FIRST: Check if j is still in bounds
+                IfCondition LessThan(j, 0) ThenBlock: {
+                    // j went negative, stop shifting
+                    continue_shift = 0
+                } ElseBlock: {
+                    // NOW it's safe to access result[j]
+                    curr_val = XArray.XGet(result, j)
+                    IfCondition GreaterThan(curr_val, key) ThenBlock: {
+                        // Shift element right
+                        XArray.XSet(result, Add(j, 1), curr_val)
+                        j = Subtract(j, 1)
+                    } ElseBlock: {
+                        // Found correct position, stop
+                        continue_shift = 0
+                    }
+                }
+            }
+            
+            // Insert key at position j+1
+            XArray.XSet(result, Add(j, 1), key)
+            i = Add(i, 1)
+        }
+        
+        ReturnValue(result)
+    }
+}
+
+// =============================================================================
+// LIST SLICE - Return sublist from start to end (exclusive)
+// =============================================================================
+Function.AIMacro.ListSlice {
+    Input: list: Address
+    Input: start: Integer
+    Input: end_idx: Integer
+    Output: Address
+    Body: {
+        IfCondition EqualTo(list, 0) ThenBlock: {
+            ReturnValue(XArray.XCreate(0))
+        }
+        
+        size = XArray.XSize(list)
+        
+        // Handle negative indices
+        IfCondition LessThan(start, 0) ThenBlock: {
+            start = Add(size, start)
+            IfCondition LessThan(start, 0) ThenBlock: {
+                start = 0
+            }
+        }
+        
+        IfCondition LessThan(end_idx, 0) ThenBlock: {
+            end_idx = Add(size, end_idx)
+        }
+        
+        // Clamp to bounds
+        IfCondition GreaterThan(start, size) ThenBlock: {
+            start = size
+        }
+        IfCondition GreaterThan(end_idx, size) ThenBlock: {
+            end_idx = size
+        }
+        IfCondition LessThan(end_idx, start) ThenBlock: {
+            end_idx = start
+        }
+        
+        // Create result
+        new_size = Subtract(end_idx, start)
+        result = XArray.XCreate(new_size)
+        
+        i = start
+        WhileLoop LessThan(i, end_idx) {
+            item = XArray.XGet(list, i)
+            XArray.XPush(result, item)
+            i = Add(i, 1)
+        }
+        
+        ReturnValue(result)
+    }
+}
+
+// String slice
+Function.AIMacro.StringSlice {
+    Input: str: Address
+    Input: start: Integer
+    Input: end_idx: Integer
+    Output: Address
+    Body: {
+        IfCondition EqualTo(str, 0) ThenBlock: {
+            result = Allocate(1)
+            SetByte(result, 0, 0)
+            ReturnValue(result)
+        }
+        
+        size = StringLength(str)
+        
+        // Handle negative indices
+        IfCondition LessThan(start, 0) ThenBlock: {
+            start = Add(size, start)
+            IfCondition LessThan(start, 0) ThenBlock: {
+                start = 0
+            }
+        }
+        
+        IfCondition LessThan(end_idx, 0) ThenBlock: {
+            end_idx = Add(size, end_idx)
+        }
+        
+        // Clamp
+        IfCondition GreaterThan(start, size) ThenBlock: {
+            start = size
+        }
+        IfCondition GreaterThan(end_idx, size) ThenBlock: {
+            end_idx = size
+        }
+        IfCondition LessThan(end_idx, start) ThenBlock: {
+            end_idx = start
+        }
+        
+        new_len = Subtract(end_idx, start)
+        result = Allocate(Add(new_len, 1))
+        
+        i = 0
+        WhileLoop LessThan(i, new_len) {
+            c = GetByte(str, Add(start, i))
+            SetByte(result, i, c)
+            i = Add(i, 1)
+        }
+        SetByte(result, new_len, 0)
+        
+        ReturnValue(result)
     }
 }
 
@@ -273,10 +1681,10 @@ Function.AIMacro.Enumerate {
         i = 0
         WhileLoop LessThan(i, len) {
             item = XArray.XGet(iterable, i)
-            // Create tuple (index, item) as a simple array
-            pair = ArrayCreate(2)
-            ArraySet(pair, 0, i)
-            ArraySet(pair, 1, item)
+            // Create pair as XArray so XArray.XGet works on it
+            pair = XArray.XCreate(2)
+            XArray.XPush(pair, i)
+            XArray.XPush(pair, item)
             XArray.XPush(result, pair)
             i = Add(i, 1)
         }
@@ -284,6 +1692,7 @@ Function.AIMacro.Enumerate {
         ReturnValue(result)
     }
 }
+
 
 Function.AIMacro.Zip {
     Input: list1: Address
@@ -300,10 +1709,10 @@ Function.AIMacro.Zip {
         WhileLoop LessThan(i, min_len) {
             item1 = XArray.XGet(list1, i)
             item2 = XArray.XGet(list2, i)
-            // Create tuple (item1, item2)
-            pair = ArrayCreate(2)
-            ArraySet(pair, 0, item1)
-            ArraySet(pair, 1, item2)
+            // Create pair as XArray so XArray.XGet works on it
+            pair = XArray.XCreate(2)
+            XArray.XPush(pair, item1)
+            XArray.XPush(pair, item2)
             XArray.XPush(result, pair)
             i = Add(i, 1)
         }
@@ -333,75 +1742,37 @@ Function.AIMacro.Input {
     Body: {
         // Print prompt if provided
         IfCondition NotEqual(prompt, 0) ThenBlock: {
-            PrintMessage(prompt)
+            plen = StringLength(prompt)
+            IfCondition GreaterThan(plen, 0) ThenBlock: {
+                // syscall write(1, prompt, len)
+                SystemCall(1, 1, prompt, plen)
+            }
         }
         
-        // Actually read from stdin
-        ReturnValue(ReadInput())
-    }
-}
-
-// =============================================================================
-// STRING METHODS (as functions)
-// =============================================================================
-
-Function.AIMacro.StrUpper {
-    Input: text: Address
-    Output: Address
-    Body: {
-        ReturnValue(StringToUpper(text))
-    }
-}
-
-Function.AIMacro.StrLower {
-    Input: text: Address
-    Output: Address
-    Body: {
-        ReturnValue(StringToLower(text))
-    }
-}
-
-Function.AIMacro.StrSplit {
-    Input: text: Address
-    Input: delimiter: Address
-    Output: Address
-    Body: {
-        // The built-in StringSplit primitive is buggy. This manual implementation is correct
-        // and serves as a reference for the eventual fix in the compiler's native code.
-        results = XArray.XCreate(8) // Start with a reasonable capacity
-        text_len = StringLength(text)
-        delim_len = StringLength(delimiter)
-
-        // Edge Case: Empty input string should result in a list with one empty string.
-        IfCondition EqualTo(text_len, 0) ThenBlock: {
-            XArray.XPush(results, "")
-            ReturnValue(results)
-        }
-
-        last_pos = 0
-        current_pos = 0
-
-        // Loop through the string to find all occurrences of the delimiter.
-        WhileLoop LessThan(current_pos, text_len) {
-            found_pos = StringIndexOf(text, delimiter, current_pos)
-
-            IfCondition EqualTo(found_pos, -1) ThenBlock: {
-                // No more delimiters, the rest of the string is the final segment.
-                // This also handles the case where there are no delimiters at all.
-                break
+        buf = Allocate(256)
+        pos = 0
+        
+        // Read char by char until newline
+        WhileLoop LessThan(pos, 255) {
+            // syscall read(0, buf+pos, 1)
+            bytes = SystemCall(0, 0, Add(buf, pos), 1)
+            IfCondition LessEqual(bytes, 0) ThenBlock: {
+                BreakLoop
             }
-
-            segment = StringSubstring(text, last_pos, found_pos)
-            XArray.XPush(results, segment)
-            last_pos = Add(found_pos, delim_len)
-            current_pos = last_pos
+            ch = GetByte(buf, pos)
+            // Stop on newline (10) or carriage return (13)
+            IfCondition EqualTo(ch, 10) ThenBlock: {
+                BreakLoop
+            }
+            IfCondition EqualTo(ch, 13) ThenBlock: {
+                BreakLoop
+            }
+            pos = Add(pos, 1)
         }
-
-        // Add the final segment after the last delimiter (or the whole string if no delimiter was found).
-        final_segment = StringSubstring(text, last_pos, text_len)
-        XArray.XPush(results, final_segment)
-
-        ReturnValue(results)
+        
+        // Null terminate (without the newline)
+        SetByte(buf, pos, 0)
+        ReturnValue(buf)
     }
 }
 
@@ -527,6 +1898,10 @@ Function.AIMacro.GetCommandLineArgs {
         ReturnValue(args)
     }
 }
+
+
+
+
 
 // =============================================================================
 // LIBRARY INITIALIZATION

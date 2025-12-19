@@ -44,6 +44,7 @@ FixedPool.Token {
     "SLASH_EQ": Initialize=64
     "MOD_EQ": Initialize=65
     "POWER_EQ": Initialize=66
+    "FLOOR_DIV_EQ": Initialize=68
     "EQ": Initialize=70
     "NE": Initialize=71
     "LT": Initialize=72
@@ -65,6 +66,7 @@ FixedPool.Token {
     "EOF": Initialize=101
     "COMMENT": Initialize=102
     "ERROR": Initialize=199
+      
 }
 
 FixedPool.Node {
@@ -91,6 +93,8 @@ FixedPool.Node {
     "BREAK_STMT": Initialize=21
     "CONTINUE_STMT": Initialize=22
     "AUG_ASSIGN": Initialize=23
+    "PASS_STMT": Initialize=24
+    "SLICE_ACCESS": Initialize=25
 }
 
 FixedPool.Lex {
@@ -555,83 +559,117 @@ Function.Lex_Tokenize {
                 }
                 ContinueLoop
             }
+
+            // PEEK AHEAD - Do this BEFORE checking multi-char operators!
+            next_ch = Lex_Peek(1)
+            third_ch = Lex_Peek(2)
+
+            // THREE-CHARACTER OPERATORS (check first!)
+            matched_three = 0
+            
+            // **=
+            IfCondition And(EqualTo(ch, 42), And(EqualTo(next_ch, 42), EqualTo(third_ch, 61))) ThenBlock: {
+                Lex_EmitSimple(Token.POWER_EQ)
+                Lex_Advance()
+                Lex_Advance()
+                Lex_Advance()
+                matched_three = 1
+            }
+            // //=
+            IfCondition And(EqualTo(matched_three, 0), And(EqualTo(ch, 47), And(EqualTo(next_ch, 47), EqualTo(third_ch, 61)))) ThenBlock: {
+                Lex_EmitSimple(Token.FLOOR_DIV_EQ)
+                Lex_Advance()
+                Lex_Advance()
+                Lex_Advance()
+                matched_three = 1
+            }
+            
+            IfCondition EqualTo(matched_three, 1) ThenBlock: {
+                ContinueLoop
+            }
             
             // Two-character operators
-            next = Lex_Peek(1)
             matched_two = 0
             
             // ==
-            IfCondition And(EqualTo(ch, 61), EqualTo(next, 61)) ThenBlock: {
+            IfCondition And(EqualTo(ch, 61), EqualTo(next_ch, 61)) ThenBlock: {
                 Lex_EmitSimple(Token.EQ)
                 Lex_Advance()
                 Lex_Advance()
                 matched_two = 1
             }
             // !=
-            IfCondition And(EqualTo(matched_two, 0), And(EqualTo(ch, 33), EqualTo(next, 61))) ThenBlock: {
+            IfCondition And(EqualTo(matched_two, 0), And(EqualTo(ch, 33), EqualTo(next_ch, 61))) ThenBlock: {
                 Lex_EmitSimple(Token.NE)
                 Lex_Advance()
                 Lex_Advance()
                 matched_two = 1
             }
             // <=
-            IfCondition And(EqualTo(matched_two, 0), And(EqualTo(ch, 60), EqualTo(next, 61))) ThenBlock: {
+            IfCondition And(EqualTo(matched_two, 0), And(EqualTo(ch, 60), EqualTo(next_ch, 61))) ThenBlock: {
                 Lex_EmitSimple(Token.LE)
                 Lex_Advance()
                 Lex_Advance()
                 matched_two = 1
             }
             // >=
-            IfCondition And(EqualTo(matched_two, 0), And(EqualTo(ch, 62), EqualTo(next, 61))) ThenBlock: {
+            IfCondition And(EqualTo(matched_two, 0), And(EqualTo(ch, 62), EqualTo(next_ch, 61))) ThenBlock: {
                 Lex_EmitSimple(Token.GE)
                 Lex_Advance()
                 Lex_Advance()
                 matched_two = 1
             }
             // **
-            IfCondition And(EqualTo(matched_two, 0), And(EqualTo(ch, 42), EqualTo(next, 42))) ThenBlock: {
+            IfCondition And(EqualTo(matched_two, 0), And(EqualTo(ch, 42), EqualTo(next_ch, 42))) ThenBlock: {
                 Lex_EmitSimple(Token.POWER)
                 Lex_Advance()
                 Lex_Advance()
                 matched_two = 1
             }
             // //
-            IfCondition And(EqualTo(matched_two, 0), And(EqualTo(ch, 47), EqualTo(next, 47))) ThenBlock: {
+            IfCondition And(EqualTo(matched_two, 0), And(EqualTo(ch, 47), EqualTo(next_ch, 47))) ThenBlock: {
                 Lex_EmitSimple(Token.FLOOR_DIV)
                 Lex_Advance()
                 Lex_Advance()
                 matched_two = 1
             }
             // +=
-            IfCondition And(EqualTo(matched_two, 0), And(EqualTo(ch, 43), EqualTo(next, 61))) ThenBlock: {
+            IfCondition And(EqualTo(matched_two, 0), And(EqualTo(ch, 43), EqualTo(next_ch, 61))) ThenBlock: {
                 Lex_EmitSimple(Token.PLUS_EQ)
                 Lex_Advance()
                 Lex_Advance()
                 matched_two = 1
             }
             // -=
-            IfCondition And(EqualTo(matched_two, 0), And(EqualTo(ch, 45), EqualTo(next, 61))) ThenBlock: {
+            IfCondition And(EqualTo(matched_two, 0), And(EqualTo(ch, 45), EqualTo(next_ch, 61))) ThenBlock: {
                 Lex_EmitSimple(Token.MINUS_EQ)
                 Lex_Advance()
                 Lex_Advance()
                 matched_two = 1
             }
             // *=
-            IfCondition And(EqualTo(matched_two, 0), And(EqualTo(ch, 42), EqualTo(next, 61))) ThenBlock: {
+            IfCondition And(EqualTo(matched_two, 0), And(EqualTo(ch, 42), EqualTo(next_ch, 61))) ThenBlock: {
                 Lex_EmitSimple(Token.STAR_EQ)
                 Lex_Advance()
                 Lex_Advance()
                 matched_two = 1
             }
             // /=
-            IfCondition And(EqualTo(matched_two, 0), And(EqualTo(ch, 47), EqualTo(next, 61))) ThenBlock: {
+            IfCondition And(EqualTo(matched_two, 0), And(EqualTo(ch, 47), EqualTo(next_ch, 61))) ThenBlock: {
                 Lex_EmitSimple(Token.SLASH_EQ)
                 Lex_Advance()
                 Lex_Advance()
                 matched_two = 1
             }
+            // %= 
+            IfCondition And(EqualTo(matched_two, 0), And(EqualTo(ch, 37), EqualTo(next_ch, 61))) ThenBlock: {
+                Lex_EmitSimple(Token.MOD_EQ)
+                Lex_Advance()
+                Lex_Advance()
+                matched_two = 1
+            }
             // ->
-            IfCondition And(EqualTo(matched_two, 0), And(EqualTo(ch, 45), EqualTo(next, 62))) ThenBlock: {
+            IfCondition And(EqualTo(matched_two, 0), And(EqualTo(ch, 45), EqualTo(next_ch, 62))) ThenBlock: {
                 Lex_EmitSimple(Token.ARROW)
                 Lex_Advance()
                 Lex_Advance()

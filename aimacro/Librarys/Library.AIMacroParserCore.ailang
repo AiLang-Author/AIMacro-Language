@@ -384,6 +384,13 @@ Function.Parse_Stmt {
             ReturnValue(node)
         }
         
+        // NEW: Handle pass statement
+        IfCondition EqualTo(t, Token.PASS) ThenBlock: {
+            Parse_Advance()
+            node = AST_Create(Node.PASS_STMT, 0)
+            ReturnValue(node)
+        }
+        
         // Default: assignment or expression
         node = Parse_AssignOrExpr()
         ReturnValue(node)
@@ -682,6 +689,12 @@ Function.Parse_GetAugOp {
         IfCondition EqualTo(t, Token.MOD_EQ) ThenBlock: {
             ReturnValue(Token.PERCENT)
         }
+        IfCondition EqualTo(t, Token.POWER_EQ) ThenBlock: {
+            ReturnValue(Token.POWER)
+        }
+        IfCondition EqualTo(t, Token.FLOOR_DIV_EQ) ThenBlock: {
+            ReturnValue(Token.FLOOR_DIV)
+        }
         
         ReturnValue(0)
     }
@@ -733,7 +746,7 @@ Function.Parse_Or {
 Function.Parse_And {
     Output: Address
     Body: {
-        left = Parse_Equality()
+        left = Parse_Not()      // <-- CHANGED from Parse_Equality
         
         WhileLoop EqualTo(1, 1) {
             is_and = Parse_Match(Token.AND)
@@ -745,7 +758,7 @@ Function.Parse_And {
             col = Parse_Col()
             Parse_Advance()
             
-            right = Parse_Equality()
+            right = Parse_Not()  // <-- CHANGED from Parse_Equality
             
             node = AST_Create(Node.BINARY_OP, 3)
             ArraySet(node, 1, line)
@@ -760,6 +773,38 @@ Function.Parse_And {
         ReturnValue(left)
     }
 }
+
+
+Function.Parse_Not {
+    Output: Address
+    Body: {
+        t = Parse_Type()
+        
+        // Handle 'not' operator
+        IfCondition EqualTo(t, Token.NOT) ThenBlock: {
+            line = Parse_Line()
+            col = Parse_Col()
+            Parse_Advance()
+            
+            // Recursively parse - 'not' is right-associative
+            // not not x  ->  not (not x)
+            operand = Parse_Not()
+            
+            node = AST_Create(Node.UNARY_OP, 2)
+            ArraySet(node, 1, line)
+            ArraySet(node, 2, col)
+            ArraySet(node, 3, Token.NOT)
+            ArraySet(node, 4, operand)
+            
+            ReturnValue(node)
+        }
+        
+        // No 'not', continue to comparison
+        result = Parse_Equality()
+        ReturnValue(result)
+    }
+}
+
 
 Function.Parse_Equality {
     Output: Address
@@ -809,11 +854,25 @@ Function.Parse_Comparison {
         WhileLoop EqualTo(1, 1) {
             t = Parse_Type()
             op = 0
+            is_negated = 0
             
             IfCondition EqualTo(t, Token.LT) ThenBlock: { op = Token.LT }
             IfCondition EqualTo(t, Token.LE) ThenBlock: { op = Token.LE }
             IfCondition EqualTo(t, Token.GT) ThenBlock: { op = Token.GT }
             IfCondition EqualTo(t, Token.GE) ThenBlock: { op = Token.GE }
+            IfCondition EqualTo(t, Token.IN) ThenBlock: { op = Token.IN }
+            
+            // Check for "not in"
+            IfCondition EqualTo(t, Token.NOT) ThenBlock: {
+                // Peek ahead to see if next is IN
+                next_pos = Add(Parse.pos, 1)
+                next_t = Lex_GetType(next_pos)
+                IfCondition EqualTo(next_t, Token.IN) ThenBlock: {
+                    op = Token.IN
+                    is_negated = 1
+                    Parse_Advance()  // Skip the NOT
+                }
+            }
             
             IfCondition EqualTo(op, 0) ThenBlock: {
                 BreakLoop
@@ -832,12 +891,23 @@ Function.Parse_Comparison {
             ArraySet(node, 4, op)
             ArraySet(node, 5, right)
             
-            left = node
+            // If negated, wrap in NOT
+            IfCondition EqualTo(is_negated, 1) ThenBlock: {
+                not_node = AST_Create(Node.UNARY_OP, 2)
+                ArraySet(not_node, 1, line)
+                ArraySet(not_node, 2, col)
+                ArraySet(not_node, 3, Token.NOT)
+                ArraySet(not_node, 4, node)
+                left = not_node
+            } ElseBlock: {
+                left = node
+            }
         }
         
         ReturnValue(left)
     }
 }
+
 
 Function.Parse_Addition {
     Output: Address
@@ -887,6 +957,7 @@ Function.Parse_Multiplication {
             IfCondition EqualTo(t, Token.STAR) ThenBlock: { op = Token.STAR }
             IfCondition EqualTo(t, Token.SLASH) ThenBlock: { op = Token.SLASH }
             IfCondition EqualTo(t, Token.PERCENT) ThenBlock: { op = Token.PERCENT }
+            IfCondition EqualTo(t, Token.FLOOR_DIV) ThenBlock: { op = Token.FLOOR_DIV }
             
             IfCondition EqualTo(op, 0) ThenBlock: {
                 BreakLoop
@@ -945,22 +1016,9 @@ Function.Parse_Unary {
     Body: {
         t = Parse_Type()
         
-        IfCondition EqualTo(t, Token.NOT) ThenBlock: {
-            line = Parse_Line()
-            col = Parse_Col()
-            Parse_Advance()
-            
-            operand = Parse_Unary()
-            
-            node = AST_Create(Node.UNARY_OP, 2)
-            ArraySet(node, 1, line)
-            ArraySet(node, 2, col)
-            ArraySet(node, 3, Token.NOT)
-            ArraySet(node, 4, operand)
-            
-            ReturnValue(node)
-        }
+        // REMOVED: not handling (now in Parse_Not)
         
+        // Unary minus only
         IfCondition EqualTo(t, Token.MINUS) ThenBlock: {
             line = Parse_Line()
             col = Parse_Col()
@@ -1032,6 +1090,17 @@ Function.Parse_Primary {
             Parse_Advance()
             
             node = AST_Create(Node.BOOL_LIT, 1)
+            ArraySet(node, 3, 0)
+            
+            result = Parse_Postfix(node)
+            ReturnValue(result)
+        }
+        
+        // NEW: None - treat as 0
+        IfCondition EqualTo(t, Token.NONE) ThenBlock: {
+            Parse_Advance()
+            
+            node = AST_Create(Node.NUM_LIT, 1)
             ArraySet(node, 3, 0)
             
             result = Parse_Postfix(node)
@@ -1119,20 +1188,57 @@ Function.Parse_Postfix {
                 BreakLoop
             }
             
-            // Index access
+            // Index access OR slice
             IfCondition EqualTo(t, Token.LBRACKET) ThenBlock: {
                 line = Parse_Line()
                 col = Parse_Col()
                 
                 Parse_Advance()  // Skip [
-                index = Parse_Expr()
+                
+                // Check for slice syntax: [start:end] or [:end] or [start:] or [:]
+                // First, try to parse start expression (might be empty)
+                start_expr = 0
+                is_colon = Parse_Match(Token.COLON)
+                
+                IfCondition EqualTo(is_colon, 0) ThenBlock: {
+                    // There's a start expression
+                    start_expr = Parse_Expr()
+                    is_colon = Parse_Match(Token.COLON)
+                }
+                
+                IfCondition EqualTo(is_colon, 1) ThenBlock: {
+                    // This is a SLICE!
+                    Parse_Advance()  // Skip :
+                    
+                    // Check for end expression
+                    end_expr = 0
+                    is_rbracket = Parse_Match(Token.RBRACKET)
+                    IfCondition EqualTo(is_rbracket, 0) ThenBlock: {
+                        end_expr = Parse_Expr()
+                    }
+                    
+                    Parse_Consume(Token.RBRACKET)
+                    
+                    // Create SLICE node: [SLICE_ACCESS, line, col, expr, start, end]
+                    slice_node = AST_Create(Node.SLICE_ACCESS, 3)
+                    ArraySet(slice_node, 1, line)
+                    ArraySet(slice_node, 2, col)
+                    ArraySet(slice_node, 3, result)
+                    ArraySet(slice_node, 4, start_expr)
+                    ArraySet(slice_node, 5, end_expr)
+                    
+                    result = slice_node
+                    ContinueLoop
+                }
+                
+                // Regular index access
                 Parse_Consume(Token.RBRACKET)
                 
                 idx_node = AST_Create(Node.INDEX_ACCESS, 2)
                 ArraySet(idx_node, 1, line)
                 ArraySet(idx_node, 2, col)
                 ArraySet(idx_node, 3, result)
-                ArraySet(idx_node, 4, index)
+                ArraySet(idx_node, 4, start_expr)  // start_expr is the index
                 
                 result = idx_node
                 ContinueLoop
