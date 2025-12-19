@@ -1,0 +1,13 @@
+def main():
+    # Test str() output
+    s = str(42)
+    print("str(42):")
+    print(s)
+    print("len:", len(s))
+    
+    # Test empty string concat
+    c = "" + "test"
+    print("empty + test:")
+    print(c)
+    print("len:", len(c))
+end
