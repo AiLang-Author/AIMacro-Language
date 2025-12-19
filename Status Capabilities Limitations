@@ -1,8 +1,8 @@
 # AIMacro Transpiler - Verified Punch List
 
-**Date:** December 18, 2025  
-**Floor Test Result:** 121/121 (100%)  
-**Status:** Floor Established
+**Date:** December 19, 2025  
+**Floor Test Result:** 141/141 (100%)  
+**Status:** Floor Established + Dict Support
 
 ---
 
@@ -91,7 +91,7 @@
 | `for i in range(n)` | ✅ | |
 | `for i in range(start, end)` | ✅ | |
 | `for i in range(start, end, step)` | ✅ | |
-| List iteration (while workaround) | ✅ | See known issues |
+| `for x in list` | ✅ | Uses SmartLen/SmartGet |
 | Nested for loops | ✅ | |
 | Loop variable capture | ✅ | |
 
@@ -134,8 +134,33 @@
 | `sum(list)` | ✅ | |
 | `min(a, b)` | ✅ | |
 | `max(a, b)` | ✅ | |
+| `x in list` | ✅ | Via TArray.TContains |
 
-### Section 11: Type System (9/9)
+### Section 11: Dictionaries (20/20) ✨ NEW
+| Feature | Status | Notes |
+|---------|--------|-------|
+| Dict literal `{"k": v}` | ✅ | Via THash.Create + Set |
+| Empty dict `{}` | ✅ | |
+| Dict access `d["key"]` | ✅ | Via THash.Get |
+| Dict assignment `d["key"] = v` | ✅ | Via THash.Set |
+| `len(dict)` | ✅ | Via THash.Size |
+| `"key" in dict` | ✅ | Via THash.Contains |
+| `"key" not in dict` | ✅ | |
+| `d.keys()` | ✅ | Returns TArray |
+| `d.values()` | ✅ | Returns TArray |
+| `d.items()` | ✅ | Returns TArray of pairs |
+| `d.clear()` | ✅ | |
+| `for k in d.keys()` | ✅ | |
+| `for v in d.values()` | ✅ | |
+| `for k, v in d.items()` | ✅ | Tuple unpacking |
+| Dict as function argument | ✅ | Runtime type dispatch |
+| Multiple independent dicts | ✅ | |
+| Dict + list coexistence | ✅ | |
+| Counter pattern (read-modify-write) | ✅ | |
+| Expression values in dict | ✅ | |
+| Large dict (20+ entries) | ✅ | Auto-resize via THash.Resize |
+
+### Section 12: Type System (9/9)
 | Feature | Status | Notes |
 |---------|--------|-------|
 | `isinstance(x, int)` | ✅ | |
@@ -148,14 +173,17 @@
 | `reversed()` returns list type | ✅ | |
 | `copy()` returns list type | ✅ | |
 
-### Section 12: Strings (3/3)
+### Section 13: Strings (6/6)
 | Feature | Status | Notes |
 |---------|--------|-------|
 | `len(string)` | ✅ | |
 | `isinstance(s, str)` | ✅ | |
 | String print | ✅ | |
+| `int("123")` | ✅ | String to integer |
+| `str(42)` | ✅ | Integer to string |
+| `"a" + "b"` concatenation | ✅ | Via String.Concat |
 
-### Section 13: Builtins (11/11)
+### Section 14: Builtins (11/11)
 | Feature | Status | Notes |
 |---------|--------|-------|
 | `abs(-n)` | ✅ | |
@@ -168,9 +196,9 @@
 | `bool(0)` → 0 | ✅ | |
 | `bool(1)` → 1 | ✅ | |
 | `bool(n)` → 1 | ✅ | |
-| `int(n)` | ✅ | Fixed: missing import |
+| `int(n)` | ✅ | |
 
-### Section 14: Math (5/5)
+### Section 15: Math (5/5)
 | Feature | Status | Notes |
 |---------|--------|-------|
 | `**` power (2³=8) | ✅ | Via Math.Power |
@@ -179,7 +207,7 @@
 | `//` floor div (7//2=3) | ✅ | Via Math.FloorDiv |
 | `//` floor div (10//3=3) | ✅ | |
 
-### Section 15: Complex Expressions (5/5)
+### Section 16: Complex Expressions (5/5)
 | Feature | Status | Notes |
 |---------|--------|-------|
 | Deeply nested arithmetic | ✅ | |
@@ -198,43 +226,6 @@
 | `break` / `continue` | MED | Use flag variable pattern |
 | PrintMessage newline formatting | LOW | Cosmetic only |
 
-### Bug Fixed: `AIMacro.SmartLen` XArray Heuristic
-
-**Problem:** SmartLen used flawed heuristic checking `field0 < 10000` to detect XArray, which misidentified strings as arrays.
-
-**Fix:** Simplified to only check TArray magic number, then assume string:
-```ailang
-Function.AIMacro.SmartLen {
-    Input: container: Address
-    Output: Integer
-    Body: {
-        IfCondition EqualTo(container, 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        is_tarray = TArray.TIsArray(container)
-        IfCondition EqualTo(is_tarray, 1) ThenBlock: {
-            ReturnValue(TArray.TSize(container))
-        }
-        ReturnValue(StringLength(container))
-    }
-}
-```
-
----
-
-## ✅ NEWLY VERIFIED (Floor Test 2)
-
-| Feature | Status | Notes |
-|---------|--------|-------|
-| `for x in list:` | ✅ | Fixed - uses SmartLen/SmartGet |
-| Nested `for x in list:` | ✅ | Works correctly |
-| `int("123")` | ✅ | String to integer |
-| `str(42)` | ✅ | Integer to string |
-| `str()` returns correct len | ✅ | After SmartLen fix |
-| `"a" + "b"` concatenation | ✅ | Via String.Concat |
-| `"" + "test"` empty concat | ✅ | After SmartLen fix |
-| Multi-concat `a + " " + b` | ✅ | Chains correctly |
-
 ---
 
 ## 🔧 NOT YET TESTED / NOT IMPLEMENTED
@@ -243,39 +234,53 @@ Function.AIMacro.SmartLen {
 |---------|----------|--------|
 | List slicing `l[1:3]` | MED | May hang parser |
 | String slicing `s[1:3]` | LOW | May hang parser |
-| `in` operator `x in list` | MED | May hang parser |
 | `enumerate()` | MED | Tuple unpacking issue |
 | `zip()` | MED | Tuple unpacking issue |
-| Dict literals `{}` | LOW | Needs THash |
 | Default function arguments | LOW | Likely not implemented |
 | `break` / `continue` | MED | Needs AILang support |
+| Nested dict `d["a"]["b"]` | LOW | Needs testing |
+| Dict comprehension | LOW | Not implemented |
 
 ---
 
 ## 📋 LIBRARY DEPENDENCIES
 
 **Required import chain for full functionality:**
-
 ```ailang
 LibraryImport.TArrays        // Typed arrays with magic numbers
 LibraryImport.AIMacroTypes   // Type checking (Types.Is*)
 LibraryImport.AIMacro        // Core runtime (SmartGet, SmartLen, etc.)
 LibraryImport.AIMacroString  // String operations
+LibraryImport.THash          // Typed hash tables for dicts
+LibraryImport.AIMacroDict    // Dict runtime (DictGen_Smart*)
 ```
-
-**Critical fix applied:** `Library.AIMacro.ailang` must import `AIMacroTypes` for `AIMacro.Int` to resolve `Types.IsString`.
 
 ---
 
-## 🎯 NEXT PRIORITIES
+## 🏗️ ARCHITECTURE NOTES
 
-1. **Fix `for x in list:`** - Update CodeGen2 to use Smart functions
-2. **Test `int("123")`** - String-to-number coercion
-3. **Test string concatenation** - `"hello" + "world"`
-4. **Consider `break`/`continue`** - Would require AILang additions
+### Runtime Type Dispatch
+
+The `DictGen_Smart*` functions provide unified access to both dicts and lists:
+
+- `DictGen_SmartGet(container, key)` - THash.Get or TArray.TGet based on magic number
+- `DictGen_SmartSet(container, key, value)` - THash.Set or TArray.TSet
+- `DictGen_SmartLen(container)` - THash.Size, TArray.TSize, or StringLength
+- `DictGen_SmartContains(container, item)` - THash.Contains or TArray.TContains
+
+### Magic Numbers
+
+| Type | Magic Number | Check Function |
+|------|--------------|----------------|
+| TArray (list) | 6022087695 | TArray.TIsArray |
+| THash (dict) | 8244561397 | THash.IsHash |
+
+### Code Generator Fix (Dec 19, 2025)
+
+Changed emission layer to use `DictGen_Smart*` instead of `AIMacro.Smart*` for subscript access. This enables proper runtime dispatch for function parameters where compile-time type information is unavailable.
 
 ---
 
 **Floor Status: ESTABLISHED**  
-**121/121 tests passing**  
-**Transpiler ready for development use**
+**141/141 tests passing**  
+**Transpiler ready for development use with full dict support**
