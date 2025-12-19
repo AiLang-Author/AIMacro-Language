@@ -58,28 +58,60 @@ Function.factorial {
 ## Supported Python Features
 
 ### Working Now ✅
+
+**Control Flow:**
+- `if` / `elif` / `else` conditionals
+- `while` loops with `break` / `continue`
+- `for x in range()` (all variants)
+- `for x in list:`
+- `for i, v in enumerate(list):`
+- `for a, b in zip(list1, list2):`
+- Tuple unpacking: `a, b = 1, 2`
+
+**Functions:**
 - Functions with parameters and return values
-- `if`/`elif`/`else` conditionals
-- `while` loops with `break`/`continue`
-- `for x in range()` loops (optimized)
-- Lists: `[1, 2, 3]`, indexing, `.append()`, `.pop()`
-- Operators: `+ - * / % **`, comparisons, `and`/`or`/`not`
-- Augmented assignment: `+=`, `-=`, `*=`, `/=`
-- Built-ins: `print()`, `len()`, `range()`, `abs()`, `max()`, `min()`, `sum()`, `str()`, `int()`, `input()`
-- String methods: `.upper()`, `.lower()`, `.split()`, `.find()`
 - Recursive functions
-- Nested expressions with automatic temp variable extraction
+- Nested/chained calls
+
+**Operators:**
+- Arithmetic: `+` `-` `*` `/` `%` `**` `//`
+- Comparison: `>` `<` `>=` `<=` `==` `!=`
+- Logical: `and` `or` `not`
+- Augmented: `+=` `-=` `*=` `/=` `%=`
+- Membership: `x in list`
+
+**Lists:**
+- Literals: `[1, 2, 3]`
+- Indexing: `list[0]`, `list[-1]`
+- Assignment: `list[0] = x`
+- Slicing: `list[1:4]`
+- Methods: `.append()`, `.pop()`, `.insert()`, `.remove()`, `.index()`, `.count()`, `.extend()`, `.copy()`, `.clear()`
+- Built-ins: `len()`, `sorted()`, `reversed()`, `sum()`, `min()`, `max()`
+
+**Strings:**
+- Literals and `len()`
+- Concatenation: `"a" + "b"`
+- Repetition: `"x" * 3`
+- Indexing: `s[0]`, `s[-1]`
+- Methods: `.upper()`, `.lower()`, `.strip()`, `.split()`, `.join()`, `.replace()`, `.find()`, `.startswith()`, `.endswith()`, `.count()`
+- Conversion: `str()`, `int()`
+
+**Built-ins:**
+- `print()`, `len()`, `abs()`, `min()`, `max()`, `sum()`
+- `range()`, `enumerate()`, `zip()`, `sorted()`, `reversed()`
+- `str()`, `int()`, `bool()`, `chr()`, `ord()`
+- `isinstance()`, `input()`
+
+**Type System:**
+- `isinstance(x, int)`, `isinstance(x, str)`, `isinstance(x, list)`
 
 ### Not Yet Implemented
-- String concatenation (`"hello" + "world"`)
-- `in` operator (`if x in list`)
-- Negative indexing (`arr[-1]`)
-- Slicing (`arr[1:3]`)
+- Dict literals `{}`
+- Default function arguments
 - Lambda expressions
 - List comprehensions
-- Default arguments
 - Classes/objects
-- Exceptions
+- Full exception handling (try/except partial)
 
 ## Why?
 
