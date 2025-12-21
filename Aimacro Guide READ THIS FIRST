@@ -1,0 +1,689 @@
+# AIMacro Language Guide
+
+**For Python developers who want their code to actually compile.**
+
+AIMacro is a Python-like language that transpiles to AILang and compiles to native x86-64 Linux executables. It looks like Python, but with explicit block endings and actual compilation. No more invisible whitespace bugs.
+
+---
+
+## The Deal
+
+AIMacro supports a practical subset of Python. If you write clean, straightforward code, it'll compile. If you rely on Python's more exotic features, clean up your code first.
+
+**What's here:** The stuff you actually need for real programs.  
+**What's not:** Lambda spaghetti, list comprehension one-liners, and other "clever" code that nobody can read anyway.
+
+---
+
+## Syntax: Do This, Not That
+
+### Block Endings
+
+Every block needs an explicit `end`. No more whitespace bugs.
+
+```python
+# ✅ AIMacro
+def factorial(n: int) -> int:
+    if n <= 1:
+        return 1
+    end
+    return n * factorial(n - 1)
+end
+
+# ❌ Python (invisible bugs waiting to happen)
+def factorial(n):
+    if n <= 1:
+        return 1
+    return n * factorial(n - 1)
+```
+
+**Blocks that need `end`:** `def`, `if`, `elif`, `else`, `while`, `for`, `class`
+
+---
+
+### Type Annotations
+
+Function parameters need type annotations. This isn't optional - it's how the compiler knows what you mean.
+
+```python
+# ✅ Do This
+def add(a: int, b: int) -> int:
+    return a + b
+end
+
+def greet(name: str) -> str:
+    return "Hello " + name
+end
+
+def process(items: list) -> int:
+    return len(items)
+end
+
+# ❌ Not That - will cause type comparison failures
+def add(a, b):
+    return a + b
+end
+```
+
+---
+
+### Program Structure
+
+Define classes and functions first. Put your main code in a `main()` function.
+
+```python
+# ✅ Do This
+class Counter:
+    def __init__(self):
+        self.count = 0
+    end
+    
+    def increment(self):
+        self.count = self.count + 1
+    end
+end
+
+def helper(x: int) -> int:
+    return x * 2
+end
+
+def main():
+    c = Counter()
+    c.increment()
+    print(c.count)
+end
+
+# ❌ Not That - mixing definitions and executable code
+class Counter:
+    def __init__(self):
+        self.count = 0
+    end
+end
+
+c = Counter()  # Top-level code between definitions = problems
+print(c.count)
+
+class Other:
+    # ...
+end
+```
+
+---
+
+## What Works
+
+### Arithmetic & Operators
+
+All the basics, plus some.
+
+```python
+# Arithmetic
+result = a + b
+result = a - b
+result = a * b
+result = a / b
+result = a // b     # Floor division
+result = a % b      # Modulo
+result = a ** b     # Power
+
+# Comparisons
+if a == b:
+if a != b:
+if a > b:
+if a < b:
+if a >= b:
+if a <= b:
+
+# Logical
+if a and b:
+if a or b:
+if not a:
+
+# Augmented assignment
+x += 1
+x -= 1
+x *= 2
+x /= 2
+x %= 3
+```
+
+---
+
+### Control Flow
+
+```python
+# If/elif/else
+if x > 100:
+    print("big")
+elif x > 10:
+    print("medium")
+else:
+    print("small")
+end
+
+# While loops
+i = 0
+while i < 10:
+    print(i)
+    i = i + 1
+end
+
+# For loops
+for i in range(10):
+    print(i)
+end
+
+for i in range(2, 10):
+    print(i)
+end
+
+for i in range(0, 10, 2):
+    print(i)
+end
+
+# For over lists
+items = [1, 2, 3]
+for item in items:
+    print(item)
+end
+
+# Break and continue work
+for i in range(100):
+    if i == 5:
+        break
+    end
+end
+```
+
+---
+
+### Functions
+
+```python
+def add(a: int, b: int) -> int:
+    return a + b
+end
+
+def greet(name: str):
+    print("Hello", name)
+end
+
+# Recursion works
+def factorial(n: int) -> int:
+    if n <= 1:
+        return 1
+    end
+    return n * factorial(n - 1)
+end
+
+# Nested calls work
+result = add(multiply(2, 3), 4)
+```
+
+**Not supported:** Default arguments, `*args`, `**kwargs`, lambda, nested function definitions.
+
+---
+
+### Lists
+
+```python
+# Creation and basics
+nums = [1, 2, 3, 4, 5]
+empty = []
+length = len(nums)
+
+# Indexing
+first = nums[0]
+last = nums[-1]
+nums[0] = 100
+
+# Slicing
+subset = nums[1:4]
+
+# Methods
+nums.append(6)
+last = nums.pop()
+nums.insert(0, 100)
+nums.remove(3)
+idx = nums.index(4)
+count = nums.count(2)
+nums.extend([7, 8, 9])
+copied = nums.copy()
+nums.clear()
+
+# Built-in functions
+s = sorted(nums)
+r = reversed(nums)
+total = sum(nums)
+
+# Membership
+if 5 in nums:
+    print("found")
+end
+```
+
+**Not supported:** List comprehensions. Use a loop with `append()`.
+
+```python
+# ✅ Do This
+result = []
+for i in range(10):
+    result.append(i * 2)
+end
+
+# ❌ Not That
+result = [i * 2 for i in range(10)]
+```
+
+---
+
+### Strings
+
+```python
+# Basics
+s = "Hello World"
+length = len(s)
+
+# Concatenation
+greeting = "Hello" + " " + name
+
+# Repetition
+stars = "*" * 10
+
+# Indexing
+first = s[0]
+last = s[-1]
+
+# Methods
+upper = s.upper()
+lower = s.lower()
+stripped = s.strip()
+parts = s.split(" ")
+joined = "-".join(parts)
+replaced = s.replace("World", "AIMacro")
+pos = s.find("World")
+count = s.count("l")
+
+# Checks
+if s.startswith("Hello"):
+if s.endswith("World"):
+
+# Conversion
+num_str = str(42)
+num = int("42")
+c = chr(65)      # "A"
+code = ord("A")  # 65
+```
+
+**Not supported:** f-strings, format(), % formatting. Use concatenation.
+
+```python
+# ✅ Do This
+message = "Name: " + name + ", Age: " + str(age)
+
+# ❌ Not That
+message = f"Name: {name}, Age: {age}"
+```
+
+---
+
+### Dictionaries
+
+```python
+# Creation
+person = {"name": "Alice", "age": 30}
+empty = {}
+
+# Access and modification
+name = person["name"]
+person["score"] = 95
+person["age"] = 31
+
+# Length
+size = len(person)
+
+# Membership
+if "name" in person:
+    print("has name")
+end
+
+if "email" not in person:
+    print("no email")
+end
+
+# Methods
+keys = person.keys()
+vals = person.values()
+items = person.items()
+person.clear()
+
+# Iteration
+for k in person.keys():
+    print(k)
+end
+
+for v in person.values():
+    print(v)
+end
+
+for k, v in person.items():
+    print(k, v)
+end
+```
+
+**Not supported:** `.get()` with default, dict comprehensions. Check membership first.
+
+```python
+# ✅ Do This
+if "key" in d:
+    value = d["key"]
+else:
+    value = default
+end
+
+# ❌ Not That
+value = d.get("key", default)
+```
+
+---
+
+### Classes (OOP)
+
+```python
+class Point:
+    def __init__(self, x: int, y: int):
+        self.x = x
+        self.y = y
+    end
+    
+    def magnitude(self) -> int:
+        return self.x * self.x + self.y * self.y
+    end
+end
+
+class Counter:
+    def __init__(self):
+        self.count = 0
+    end
+    
+    def increment(self):
+        self.count = self.count + 1
+    end
+    
+    def get(self) -> int:
+        return self.count
+    end
+end
+
+# Usage
+p = Point(3, 4)
+print(p.x)
+print(p.magnitude())
+
+c = Counter()
+c.increment()
+print(c.get())
+```
+
+**Works:**
+- Classes with `__init__`
+- Instance attributes (`self.x`)
+- Methods with parameters and return values
+- Multiple instances (independent state)
+- Objects as parameters and return values
+- Chained attribute access (`box.corner.x`)
+- Nested objects
+
+**Not supported:** Class-level field declarations (causes compiler hang), inheritance (yet), `@property`, `@staticmethod`, `@classmethod`.
+
+```python
+# ❌ This hangs the compiler
+class Point:
+    x: int      # Don't do this
+    y: int      # Don't do this
+    
+    def __init__(self):
+        self.x = 0
+    end
+end
+
+# ✅ Just use __init__
+class Point:
+    def __init__(self):
+        self.x = 0
+        self.y = 0
+    end
+end
+```
+
+---
+
+### Tuple Unpacking
+
+```python
+# Basic unpacking
+a, b = 1, 2
+
+# With enumerate
+for i, v in enumerate(items):
+    print(i, v)
+end
+
+# With zip
+for a, b in zip(list1, list2):
+    print(a, b)
+end
+
+# With dict items
+for k, v in d.items():
+    print(k, v)
+end
+
+# Swap
+temp = a
+a = b
+b = temp
+```
+
+**Not supported:** `a, b = b, a` (use temp variable)
+
+---
+
+### Built-in Functions
+
+**Supported:**
+```python
+print("Hello", value, "World")
+len(collection)
+range(stop)
+range(start, stop)
+range(start, stop, step)
+str(value)
+int(string)
+bool(value)
+abs(number)
+min(a, b)
+max(a, b)
+sum(list)
+sorted(list)
+reversed(list)
+enumerate(list)
+zip(list1, list2)
+isinstance(obj, type)
+chr(code)
+ord(char)
+input()
+input("prompt")
+```
+
+**Not supported:**
+```python
+type()
+map()
+filter()
+any()
+all()
+round()
+open()
+eval()
+exec()
+# And most other exotic built-ins
+```
+
+---
+
+### Type Checking
+
+```python
+if isinstance(x, int):
+    print("integer")
+end
+
+if isinstance(s, str):
+    print("string")
+end
+
+if isinstance(arr, list):
+    print("list")
+end
+```
+
+---
+
+## Quick Reference
+
+| Python | AIMacro | Notes |
+|--------|---------|-------|
+| Indentation only | `end` keyword | Required for all blocks |
+| Optional types | Required on params | `def foo(x: int):` |
+| Anywhere code | In `main()` | Or after all definitions |
+| `f"Hello {x}"` | `"Hello " + str(x)` | Concatenation only |
+| `[x*2 for x in y]` | Loop with append | No comprehensions |
+| `d.get(k, default)` | Check `in` first | No default get |
+| `a, b = b, a` | Use temp variable | No tuple swap |
+| `lambda x: x+1` | Define a function | No lambdas |
+| `None` | `0` or `""` | No None type |
+| `try/except` | Validate first | No exceptions |
+| `import` | Built-in | Coming soon |
+
+---
+
+## Common Gotchas
+
+### 1. Missing `end`
+```python
+# Compiler will complain or hang
+def foo():
+    return 1
+# ← Missing end
+```
+
+### 2. Missing type annotations
+```python
+# Comparisons may fail silently
+def compare(a, b):  # ← Needs types
+    return a == b
+end
+```
+
+### 3. Class field declarations
+```python
+# Causes compiler hang
+class Foo:
+    x: int  # ← Don't do this
+end
+```
+
+### 4. Top-level code between definitions
+```python
+class A:
+end
+
+x = A()  # ← Move this to main()
+
+class B:
+end
+```
+
+---
+
+## Complete Example
+
+```python
+class TodoItem:
+    def __init__(self, title: str, priority: int):
+        self.title = title
+        self.priority = priority
+        self.done = 0
+    end
+    
+    def complete(self):
+        self.done = 1
+    end
+    
+    def is_done(self) -> int:
+        return self.done
+    end
+end
+
+class TodoList:
+    def __init__(self):
+        self.items = []
+    end
+    
+    def add(self, item: TodoItem):
+        self.items.append(item)
+    end
+    
+    def count_pending(self) -> int:
+        pending = 0
+        for i in range(len(self.items)):
+            if self.items[i].is_done() == 0:
+                pending = pending + 1
+            end
+        end
+        return pending
+    end
+end
+
+def main():
+    todos = TodoList()
+    
+    todos.add(TodoItem("Learn AIMacro", 1))
+    todos.add(TodoItem("Build project", 2))
+    todos.add(TodoItem("Write tests", 2))
+    
+    print("Total:", len(todos.items))
+    print("Pending:", todos.count_pending())
+    
+    todos.items[0].complete()
+    print("After completing first:")
+    print("Pending:", todos.count_pending())
+end
+```
+
+---
+
+## Philosophy
+
+AIMacro isn't trying to be Python. It's trying to be a practical, compiled language that Python developers can pick up immediately.
+
+**What you get:**
+- Familiar syntax
+- Native compilation
+- Explicit structure (no whitespace bugs)
+- Fast executables
+
+**What you give up:**
+- Some Python conveniences
+- Dynamic typing magic
+- The "there's a library for that" ecosystem
+
+If you need the full Python experience, use Python. If you want something that compiles to a native binary and you're willing to write straightforward code, AIMacro is here.
+
+---
+
+PR's and Controbutions welcome !
+---
+
+*AIMacro: Write clean code. Get native binaries. Stop debugging whitespace.*
