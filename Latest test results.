@@ -1,0 +1,949 @@
+somewhere on a hard drive in a galaxy far far away /Ailang/ailang$ ./super_test_exec
+TArrays Library Loaded (Typed Arrays with Magic Numbers)
+Loading Fixed-Point Trigonometry Library v1.0
+==============================================
+Library loaded successfully!
+Fixed-point scale: 10000 (4 decimal places)
+AIMacroTypes Library Loaded
+AIMacro Core Library Loaded
+THash Library Loaded (Typed Hash with Magic Numbers)
+AIMacroDict Runtime Library Loaded
+
+
+################################################################
+
+#                                                              #
+
+#        AIMACRO SUPER TEST - ULTIMATE TEST SUITE             #
+
+#                                                              #
+
+################################################################
+
+
+
+=== SECTION 1: Integer Literals ===
+
+  PASS:
+
+zero
+  PASS:
+
+positive
+  PASS:
+
+negative
+  PASS:
+
+large number
+Integer literals:
+
+4
+
+/ 4
+
+
+
+=== SECTION 2: Boolean Literals ===
+
+  PASS:
+
+True literal
+  PASS:
+
+False literal
+Boolean literals:
+
+2
+
+/ 2
+
+
+
+=== SECTION 3: Arithmetic ===
+
+  PASS:
+
+addition
+  PASS:
+
+subtraction
+  PASS:
+
+multiplication
+  PASS:
+
+division
+  PASS:
+
+modulo
+  PASS:
+
+power
+  PASS:
+
+floor division
+  PASS:
+
+negative operand
+  PASS:
+
+negative result
+  PASS:
+
+negative multiply
+  PASS:
+
+precedence: mul before add
+  PASS:
+
+parentheses override
+  PASS:
+
+left associative
+  PASS:
+
+complex expression
+  PASS:
+
+variables in expr
+  PASS:
+
+mixed var expr
+Arithmetic:
+
+16
+
+/ 16
+
+
+
+=== SECTION 4: Augmented Assignment ===
+
+  PASS:
+
++= operator
+  PASS:
+
+-= operator
+  PASS:
+
+*= operator
+  PASS:
+
+/= operator
+  PASS:
+
+%= operator
+  PASS:
+
+augmented chain
+Augmented assignment:
+
+6
+
+/ 6
+
+
+
+=== SECTION 5: Comparisons ===
+
+  PASS:
+
+greater than true
+  PASS:
+
+greater than false
+  PASS:
+
+less than true
+  PASS:
+
+less than false
+  PASS:
+
+greater equal (equal)
+  PASS:
+
+greater equal (greater)
+  PASS:
+
+less equal (equal)
+  PASS:
+
+less equal (less)
+  PASS:
+
+equal true
+  PASS:
+
+equal false
+  PASS:
+
+not equal true
+  PASS:
+
+not equal false
+Comparisons:
+
+12
+
+/ 12
+
+
+
+=== SECTION 6: String Comparisons ===
+
+  PASS:
+
+string equal same
+  PASS:
+
+string equal diff
+  PASS:
+
+string not equal
+  PASS:
+
+dynamic string equal
+String comparisons:
+
+4
+
+/ 4
+
+
+
+=== SECTION 7: Logical Operators ===
+
+  PASS:
+
+and: T and T
+  PASS:
+
+and: T and F
+  PASS:
+
+and: F and T
+  PASS:
+
+and: F and F
+  PASS:
+
+or: T or T
+  PASS:
+
+or: T or F
+  PASS:
+
+or: F or T
+  PASS:
+
+or: F or F
+  PASS:
+
+not: not F
+  PASS:
+
+not: not T
+  PASS:
+
+combined: (T and T) or F
+  PASS:
+
+combined: not (F and T)
+  PASS:
+
+T and not F
+  PASS: not with parens
+
+Logical operators:
+
+14
+
+/ 14
+
+
+
+=== SECTION 8: Conditionals ===
+
+  PASS:
+
+if true executes
+  PASS:
+
+if false skips
+  PASS:
+
+else branch
+  PASS:
+
+elif branch
+  PASS:
+
+first match wins
+  PASS:
+
+nested if
+  PASS:
+
+deeply nested if
+Conditionals:
+
+7
+
+/ 7
+
+
+
+=== SECTION 9: Long Elif Chain ===
+
+  PASS:
+
+elif chain x=7
+  PASS:
+
+elif chain x=11 (else)
+Long elif chain:
+
+2
+
+/ 2
+
+
+
+=== SECTION 10: While Loops ===
+
+  PASS:
+
+while count to 5
+  PASS:
+
+while zero iterations
+  PASS:
+
+while sum 1-10
+  PASS:
+
+nested while 3x4
+  PASS:
+
+while with and
+  PASS:
+
+while with break
+  PASS:
+
+while decrement
+While loops:
+
+7
+
+/ 7
+
+
+
+=== SECTION 11: For Loops ===
+
+  PASS:
+
+for range(5)
+  PASS:
+
+for range(2,6)
+  PASS:
+
+for range step=2
+  PASS:
+
+for range(0)
+  PASS:
+
+for range(1)
+  PASS:
+
+nested for 3x4
+  PASS:
+
+deeply nested 2^4
+  PASS:
+
+for var capture
+For loops:
+
+8
+
+/ 8
+
+
+
+=== SECTION 12: For In List ===
+
+  PASS:
+
+for in list sum
+  PASS:
+
+for in list append
+  PASS:
+
+doubled[0]
+  PASS:
+
+doubled[4]
+For in list:
+
+4
+
+/ 4
+
+
+
+=== SECTION 13: Break and Continue ===
+
+  PASS:
+
+break in for
+  PASS:
+
+break in while
+  PASS:
+
+break in nested
+  PASS:
+
+continue in for (odd sum)
+  PASS:
+
+continue in while
+  PASS:
+
+return in loop
+  PASS:
+
+return in nested loop
+Break and continue:
+
+7
+
+/ 7
+
+
+
+=== SECTION 14: Functions ===
+
+  PASS:
+
+basic function
+  PASS:
+
+two params
+  PASS:
+
+three params
+  PASS:
+
+eight params
+  PASS:
+
+no params
+  PASS:
+
+param modification
+  PASS:
+
+factorial(5)
+  PASS:
+
+factorial(0)
+  PASS:
+
+fib(10)
+  PASS:
+
+nested calls
+  PASS:
+
+calls in expr
+  PASS:
+
+triple nested
+  PASS:
+
+deeply nested calls
+Functions:
+
+13
+
+/ 13
+
+
+
+=== SECTION 15: Recursion ===
+
+  PASS:
+
+factorial(10)
+  PASS:
+
+recursion depth 50
+  PASS:
+
+gcd(48,18)
+  PASS:
+
+gcd(100,25)
+Recursion:
+
+4
+
+/ 4
+
+
+
+=== SECTION 16: Lists ===
+
+  PASS:
+
+list len
+  PASS:
+
+index [0]
+  PASS:
+
+index [2]
+  PASS:
+
+index [4]
+  PASS:
+
+index [-1]
+  PASS:
+
+index assign
+  PASS:
+
+append len
+  PASS:
+
+append value
+  PASS:
+
+pop returns value
+  PASS:
+
+pop reduces len
+  PASS:
+
+empty list len
+  PASS:
+
+append to empty
+  PASS:
+
+built list len
+  PASS:
+
+built list value
+Lists:
+
+14
+
+/ 14
+
+
+
+=== SECTION 17: List Operations ===
+
+  PASS:
+
+sorted[0]
+  PASS:
+
+sorted[5]
+  PASS:
+
+reversed[0]
+  PASS:
+
+reversed[2]
+  PASS:
+
+copy[0]
+  PASS:
+
+copy independence
+  PASS:
+
+sum
+  PASS:
+
+min(3,7)
+  PASS:
+
+max(3,7)
+  PASS:
+
+list as param
+  PASS:
+
+modify list in func
+List operations:
+
+11
+
+/ 11
+
+
+
+=== SECTION 18: Strings ===
+
+  PASS:
+
+string len
+  PASS:
+
+empty string len
+  PASS:
+
+concat len
+  PASS:
+
+repeat len
+  PASS:
+
+str(42) len
+  PASS:
+
+str(-100) len
+  PASS:
+
+int from string
+  PASS:
+
+int('0')
+  PASS:
+
+long concat
+  PASS:
+
+concat in loop
+Strings:
+
+10
+
+/ 10
+
+
+
+=== SECTION 19: String Methods ===
+
+  PASS:
+
+strip
+  PASS:
+
+upper
+  PASS:
+
+lower
+  PASS:
+
+find
+  PASS: startswith
+
+  PASS: endswith
+
+  PASS:
+
+replace
+  PASS:
+
+count
+String methods:
+
+8
+
+/ 8
+
+
+
+=== SECTION 20: Dictionaries ===
+
+  PASS:
+
+dict access string
+  PASS:
+
+dict access int
+  PASS:
+
+dict add key
+  PASS:
+
+dict len after add
+  PASS:
+
+dict update
+  PASS:
+
+dict len after update
+  PASS:
+
+empty dict len
+  PASS:
+
+dict len after first add
+  PASS: key in dict
+
+  PASS: key not in dict
+
+  PASS:
+
+keys len
+  PASS:
+
+values len
+  PASS:
+
+items len
+  PASS:
+
+clear
+Dictionaries:
+
+14
+
+/ 14
+
+
+
+=== SECTION 21: Type System ===
+
+  PASS:
+
+isinstance int
+  PASS:
+
+isinstance str
+  PASS:
+
+isinstance list
+  PASS:
+
+int not str
+  PASS:
+
+str not int
+  PASS:
+
+int not list
+  PASS:
+
+sorted is list
+Type system:
+
+7
+
+/ 7
+
+
+
+=== SECTION 22: Builtins ===
+
+  PASS:
+
+abs(-5)
+  PASS:
+
+abs(5)
+  PASS:
+
+abs(0)
+  PASS:
+
+min
+  PASS:
+
+max
+  PASS:
+
+len list
+  PASS:
+
+len string
+  PASS:
+
+bool(0)
+  PASS:
+
+bool(1)
+  PASS:
+
+bool(42)
+  PASS:
+
+int(42)
+Builtins:
+
+11
+
+/ 11
+
+
+
+=== SECTION 23: Algorithms ===
+
+  PASS:
+
+is_prime(2)
+  PASS:
+
+is_prime(17)
+  PASS:
+
+is_prime(15)
+  PASS:
+
+is_prime(1)
+  PASS:
+
+sqrt(144)
+  PASS:
+
+sqrt(100)
+  PASS:
+
+sum_digits
+  PASS:
+
+reverse_number
+  PASS:
+
+gcd
+  PASS:
+
+bubble sort first
+  PASS:
+
+bubble sort last
+Algorithms:
+
+11
+
+/ 11
+
+
+
+=== SECTION 24: Edge Cases ===
+
+  PASS:
+
+empty function
+  PASS:
+
+only assignment
+  PASS:
+
+zero multiply
+  PASS:
+
+divide by 1
+  PASS:
+
+large add
+  PASS:
+
+large multiply
+  PASS:
+
+empty string
+  PASS:
+
+multiple returns
+  PASS:
+
+multiple returns 2
+  PASS:
+
+multiple returns 3
+Edge cases:
+
+10
+
+/ 10
+
+
+
+=== SECTION 25: Practical Programs ===
+
+  PASS:
+
+mean
+  PASS:
+
+filter len
+  PASS:
+
+filter first
+  PASS:
+
+map first
+  PASS:
+
+map last
+  PASS:
+
+reverse first
+  PASS:
+
+reverse last
+Practical programs:
+
+7
+
+/ 7
+
+
+
+################################################################
+
+#                      FINAL RESULTS                          #
+
+################################################################
+
+
+
+Total Tests:
+
+213
+
+Passed:
+
+213
+
+Failed:
+
+0
+
+
+
+*******************************************************
+
+*                                                     *
+
+*     ALL
+
+213
+
+TESTS PASSED - TRANSPILER VERIFIED!    *
+
+*                                                     *
+
+*******************************************************
+
+
+
+################################################################
+
+sean@DESKTOP-3EKCN32:/mnt/c/Users/Sean/Documents/Ailang/ailang$
