@@ -155,6 +155,16 @@ Function.AST_Type {
 
 // Add to Library.AIMacroParserCore.ailang
 
+// =============================================================================
+// AST_GetField - EXTENDED VERSION with OOP node support
+// =============================================================================
+// Add this to Library.AIMacroParserCore.ailang
+// Replace the existing AST_GetField function
+// 
+// This version handles ATTRIBUTE and ATTR_ASSIGN nodes that were causing
+// the segfault in code generation
+// =============================================================================
+
 Function.AST_GetField {
     Input: node: Address
     Input: field: Address
@@ -194,6 +204,115 @@ Function.AST_GetField {
             }
         }
         
+        // =====================================================================
+        // OOP NODE TYPES - Added to fix code generation segfault
+        // =====================================================================
+        
+        // ATTRIBUTE: [type, line, col, object, attr]
+        IfCondition EqualTo(node_type, Node.ATTRIBUTE) ThenBlock: {
+            cmp = StringCompare(field, "object")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                ReturnValue(ArrayGet(node, 3))
+            }
+            cmp = StringCompare(field, "attr")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                ReturnValue(ArrayGet(node, 4))
+            }
+        }
+        
+        // ATTR_ASSIGN: [type, line, col, object, attr, value]
+        IfCondition EqualTo(node_type, Node.ATTR_ASSIGN) ThenBlock: {
+            cmp = StringCompare(field, "object")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                ReturnValue(ArrayGet(node, 3))
+            }
+            cmp = StringCompare(field, "attr")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                ReturnValue(ArrayGet(node, 4))
+            }
+            cmp = StringCompare(field, "value")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                ReturnValue(ArrayGet(node, 5))
+            }
+        }
+        
+        // METHOD_CALL: [type, line, col, object, method, args]
+        IfCondition EqualTo(node_type, Node.METHOD_CALL) ThenBlock: {
+            cmp = StringCompare(field, "object")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                ReturnValue(ArrayGet(node, 3))
+            }
+            cmp = StringCompare(field, "method")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                ReturnValue(ArrayGet(node, 4))
+            }
+            cmp = StringCompare(field, "args")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                ReturnValue(ArrayGet(node, 5))
+            }
+        }
+        
+        // CLASS_DEF: [type, line, col, name, bases, body]
+        IfCondition EqualTo(node_type, Node.CLASS_DEF) ThenBlock: {
+            cmp = StringCompare(field, "name")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                ReturnValue(ArrayGet(node, 3))
+            }
+            cmp = StringCompare(field, "bases")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                ReturnValue(ArrayGet(node, 4))
+            }
+            cmp = StringCompare(field, "body")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                ReturnValue(ArrayGet(node, 5))
+            }
+        }
+        
+        // METHOD_DEF: [type, line, col, name, params, return_type, body]
+        IfCondition EqualTo(node_type, Node.METHOD_DEF) ThenBlock: {
+            cmp = StringCompare(field, "name")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                ReturnValue(ArrayGet(node, 3))
+            }
+            cmp = StringCompare(field, "params")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                ReturnValue(ArrayGet(node, 4))
+            }
+            cmp = StringCompare(field, "return_type")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                ReturnValue(ArrayGet(node, 5))
+            }
+            cmp = StringCompare(field, "body")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                ReturnValue(ArrayGet(node, 6))
+            }
+        }
+        
+        // SUPER_CALL: [type, line, col, method, args]
+        IfCondition EqualTo(node_type, Node.SUPER_CALL) ThenBlock: {
+            cmp = StringCompare(field, "method")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                ReturnValue(ArrayGet(node, 3))
+            }
+            cmp = StringCompare(field, "args")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                ReturnValue(ArrayGet(node, 4))
+            }
+        }
+        
+        // =====================================================================
+        // END OOP NODE TYPES
+        // =====================================================================
+        
+        // RETURN_STMT: [type, line, col, value]
+        IfCondition EqualTo(node_type, Node.RETURN_STMT) ThenBlock: {
+            cmp = StringCompare(field, "value")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                ReturnValue(ArrayGet(node, 3))
+            }
+        }
+
+
         // Generic fallback - field not found
         ReturnValue(0)
     }
@@ -812,8 +931,10 @@ Function.Parse_AssignOrExpr {
             // Check what we're assigning to
             expr_type = AST_Type(expr)
             
+            // -----------------------------------------------------------------
+            // Simple variable assignment: x = value
+            // -----------------------------------------------------------------
             IfCondition EqualTo(expr_type, Node.IDENT) ThenBlock: {
-                // Simple assignment
                 name = ArrayGet(expr, 3)
                 
                 node = AST_Create(Node.ASSIGNMENT, 2)
@@ -825,8 +946,10 @@ Function.Parse_AssignOrExpr {
                 ReturnValue(node)
             }
             
+            // -----------------------------------------------------------------
+            // Index assignment: list[i] = value
+            // -----------------------------------------------------------------
             IfCondition EqualTo(expr_type, Node.INDEX_ACCESS) ThenBlock: {
-                // Index assignment
                 idx_expr = ArrayGet(expr, 3)
                 idx_idx = ArrayGet(expr, 4)
                 
@@ -835,6 +958,28 @@ Function.Parse_AssignOrExpr {
                 ArraySet(node, 2, col)
                 ArraySet(node, 3, idx_expr)
                 ArraySet(node, 4, idx_idx)
+                ArraySet(node, 5, value)
+                
+                ReturnValue(node)
+            }
+            
+            // =================================================================
+            // ATTRIBUTE ASSIGNMENT: self.x = value (NEW FIX!)
+            // Node.ATTRIBUTE = 102, Node.ATTR_ASSIGN = 103
+            // =================================================================
+            IfCondition EqualTo(expr_type, Node.ATTRIBUTE) ThenBlock: {
+                // expr is [ATTRIBUTE, line, col, object, attr_name]
+                obj = ArrayGet(expr, 3)       // the object (e.g., 'self')
+                attr_name = ArrayGet(expr, 4) // the attribute name (e.g., 'x')
+                
+                // Create ATTR_ASSIGN node
+                // Structure: [type, line, col, object, attr, value]
+                node = ArrayCreate(6)
+                ArraySet(node, 0, Node.ATTR_ASSIGN)
+                ArraySet(node, 1, line)
+                ArraySet(node, 2, col)
+                ArraySet(node, 3, obj)
+                ArraySet(node, 4, attr_name)
                 ArraySet(node, 5, value)
                 
                 ReturnValue(node)
@@ -1550,33 +1695,57 @@ Function.Parse_Postfix {
                 ContinueLoop
             }
             
-            // Method call
+            // =================================================================
+            // DOT - could be method call OR attribute access
+            // FIXED: Check for LPAREN before assuming method call
+            // =================================================================
             IfCondition EqualTo(t, Token.DOT) ThenBlock: {
                 line = Parse_Line()
                 col = Parse_Col()
                 
                 Parse_Advance()  // Skip .
                 
-                method_ptr = Parse_Val()
-                method = Parse_CopyStr(method_ptr)
+                // Get the attribute/method name
+                attr_ptr = Parse_Val()
+                attr_name = Parse_CopyStr(attr_ptr)
                 Parse_Consume(Token.IDENTIFIER)
                 
-                Parse_Consume(Token.LPAREN)
-                args = Parse_ArgList()
-                Parse_Consume(Token.RPAREN)
-                
-                mcall = AST_Create(Node.METHOD_CALL, 3)
-                ArraySet(mcall, 1, line)
-                ArraySet(mcall, 2, col)
-                ArraySet(mcall, 3, result)
-                ArraySet(mcall, 4, method)
-                ArraySet(mcall, 5, args)
-                
-                result = mcall
-                ContinueLoop
+                // NOW CHECK: Is this a method call or plain attribute?
+                next_t = Parse_Type()
+                IfCondition EqualTo(next_t, Token.LPAREN) ThenBlock: {
+                    // =========================================================
+                    // METHOD CALL: obj.method(args)
+                    // =========================================================
+                    Parse_Advance()  // Skip (
+                    args = Parse_ArgList()
+                    Parse_Consume(Token.RPAREN)
+                    
+                    mcall = AST_Create(Node.METHOD_CALL, 3)
+                    ArraySet(mcall, 1, line)
+                    ArraySet(mcall, 2, col)
+                    ArraySet(mcall, 3, result)      // object
+                    ArraySet(mcall, 4, attr_name)   // method name
+                    ArraySet(mcall, 5, args)        // arguments
+                    
+                    result = mcall
+                    ContinueLoop
+                } ElseBlock: {
+                    // =========================================================
+                    // PLAIN ATTRIBUTE ACCESS: obj.attr
+                    // Creates ATTRIBUTE node (Node.ATTRIBUTE = 102)
+                    // =========================================================
+                    attr_node = AST_Create(Node.ATTRIBUTE, 2)
+                    ArraySet(attr_node, 1, line)
+                    ArraySet(attr_node, 2, col)
+                    ArraySet(attr_node, 3, result)      // object
+                    ArraySet(attr_node, 4, attr_name)   // attribute name
+                    
+                    result = attr_node
+                    ContinueLoop
+                }
             }
             
-            // No more postfix
+            // No more postfix operators
             BreakLoop
         }
         

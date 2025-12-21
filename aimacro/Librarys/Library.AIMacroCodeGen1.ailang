@@ -20,6 +20,11 @@ FixedPool.Gen {
     "list_vars": Initialize=0, CanChange=True
     "dict_vars": Initialize=0, CanChange=True
     "packed_funcs": Initialize=0, CanChange=True
+
+    "deferred_functions": Initialize=0
+    "deferred_stmts": Initialize=0
+    "collect_mode": Initialize=0
+
 }
 
 // =============================================================================
@@ -35,6 +40,11 @@ Function.Gen_Init {
         Gen.list_vars = XArray.XCreate(32)
         Gen.dict_vars = XArray.XCreate(32)
         Gen.packed_funcs = XArray.XCreate(16)
+
+        Gen.deferred_functions = XArray.XCreate(64)
+        Gen.deferred_stmts = XArray.XCreate(128)
+        Gen.collect_mode = 0
+
     }
 }
 

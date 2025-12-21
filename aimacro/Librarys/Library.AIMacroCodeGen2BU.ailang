@@ -36,26 +36,6 @@ Function.Gen_Program {
         
         decls = ArrayGet(ast, 3)
         n = XArray.XSize(decls)
-
-
-         // =========== PRE-SCAN FOR CLASSES ===========
-        i = 0
-        WhileLoop LessThan(i, n) {
-            decl = XArray.XGet(decls, i)
-            t = AST_Type(decl)
-            IfCondition EqualTo(t, Node.CLASS_DEF) ThenBlock: {
-                OOPGen.has_classes = 1
-            }
-            i = Add(i, 1)
-        }
-        // =========== END PRE-SCAN ===========
-        
-        // =========== EMIT OOP INIT CALL (if needed) ===========
-        IfCondition EqualTo(OOPGen.has_classes, 1) ThenBlock: {
-            Gen_EmitLine("__OOP_ClassInit()")
-            Gen_Emit("\n")
-        }
-        // =========== END OOP INIT ===========
         
         // =========== FIRST PASS: Scan for >6 param functions ===========
         i = 0

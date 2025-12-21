@@ -732,7 +732,49 @@ Function.Gen_FlattenExpr {
         IfCondition EqualTo(t, Node.IDENT) ThenBlock: {
             ReturnValue(node)
         }
+        // =========== OOP ATTRIBUTE - flatten to temp ===========
+        IfCondition EqualTo(t, Node.ATTRIBUTE) ThenBlock: {
+            obj = AST_GetField(node, "object")
+            attr = AST_GetField(node, "attr")
+            
+            // Flatten the object first if needed
+            flat_obj = Gen_FlattenExpr(obj)
+            
+            temp = Gen_TempName()
+            Gen_EmitIndent()
+            Gen_Emit(temp)
+            Gen_Emit(" = OOP.ObjectGet(")
+            Gen_Expr(flat_obj)
+            Gen_Emit(", \"")
+            Gen_Emit(attr)
+            Gen_Emit("\")\n")
+            
+            ReturnValue(Gen_MakeIdent(temp))
+        }
+        // =========== END OOP ATTRIBUTE ===========
         
+           // =========== OOP ATTRIBUTE - flatten to temp ===========
+        IfCondition EqualTo(t, Node.ATTRIBUTE) ThenBlock: {
+            // ATTRIBUTE: [type, line, col, object, attr]
+            obj = ArrayGet(node, 3)
+            attr = ArrayGet(node, 4)
+            
+            // Flatten the object first if needed
+            flat_obj = Gen_FlattenExpr(obj)
+            
+            temp = Gen_TempName()
+            Gen_EmitIndent()
+            Gen_Emit(temp)
+            Gen_Emit(" = OOP.ObjectGet(")
+            Gen_Expr(flat_obj)
+            Gen_Emit(", \"")
+            Gen_Emit(attr)
+            Gen_Emit("\")\n")
+            
+            ReturnValue(Gen_MakeIdent(temp))
+        }
+        // =========== END OOP ATTRIBUTE ===========
+
         // CALL - flatten args, then extract to temp
         IfCondition EqualTo(t, Node.CALL) ThenBlock: {
             // Check if this is a packed function call

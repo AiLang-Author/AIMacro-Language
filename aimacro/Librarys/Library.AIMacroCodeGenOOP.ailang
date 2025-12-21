@@ -49,10 +49,28 @@ Function.OOPGen_Init {
 
 Function.OOPGen_Reset {
     Body: {
-        OOPGen.current_class = 0
-        OOPGen.current_method = 0
-        IfCondition NotEqual(OOPGen.discovered_fields, 0) ThenBlock: {
-            XArray.XClear(OOPGen.discovered_fields)
+        // Only reset if initialized
+        IfCondition EqualTo(OOPGen.initialized, 1) ThenBlock: {
+            // Clear class list
+            IfCondition NotEqual(OOPGen.classes, 0) ThenBlock: {
+                XArray.XClear(OOPGen.classes)
+            }
+            
+            // Clear class init code
+            IfCondition NotEqual(OOPGen.class_init_code, 0) ThenBlock: {
+                XArray.XClear(OOPGen.class_init_code)
+            }
+            
+            // Clear discovered fields
+            IfCondition NotEqual(OOPGen.discovered_fields, 0) ThenBlock: {
+                XArray.XClear(OOPGen.discovered_fields)
+            }
+            
+            // Reset flags
+            OOPGen.has_classes = 0
+            OOPGen.current_class = 0
+            OOPGen.current_method = 0
+            OOPGen.temp_counter = 0
         }
     }
 }
@@ -78,6 +96,146 @@ Function.OOPGen_Free {
         OOPGen.initialized = 0
     }
 }
+
+
+// =============================================================================
+// FLATTEN OOP EXPRESSIONS (extracts to temp variables)
+// =============================================================================
+
+Function.OOPGen_FlattenExpr {
+    Input: node: Address
+    Output: Address
+    Body: {
+        IfCondition EqualTo(node, 0) ThenBlock: {
+            ReturnValue(node)
+        }
+        
+        node_type = AST_Type(node)
+        
+        // Literals and identifiers - return as-is
+        IfCondition EqualTo(node_type, Node.NUM_LIT) ThenBlock: {
+            ReturnValue(node)
+        }
+        IfCondition EqualTo(node_type, Node.STR_LIT) ThenBlock: {
+            ReturnValue(node)
+        }
+        IfCondition EqualTo(node_type, Node.BOOL_LIT) ThenBlock: {
+            ReturnValue(node)
+        }
+        IfCondition EqualTo(node_type, Node.IDENT) ThenBlock: {
+            ReturnValue(node)
+        }
+        
+        // ATTRIBUTE: obj.attr -> temp = OOP.ObjectGet(obj, "attr")
+        IfCondition EqualTo(node_type, Node.ATTRIBUTE) ThenBlock: {
+            obj = AST_GetField(node, "object")
+            attr = AST_GetField(node, "attr")
+            
+            // Flatten the object first if needed
+            obj = OOPGen_FlattenExpr(obj)
+            
+            temp = Gen_TempName()
+            Gen_EmitIndent()
+            Gen_Emit(temp)
+            Gen_Emit(" = OOP.ObjectGet(")
+            OOPGen_Expr(obj)
+            Gen_Emit(", \"")
+            Gen_Emit(attr)
+            Gen_Emit("\")\n")
+            
+            ReturnValue(Gen_MakeIdent(temp))
+        }
+        
+        // METHOD_CALL: obj.method(args) -> temp = OOP.MethodCall(...)
+        IfCondition EqualTo(node_type, Node.METHOD_CALL) ThenBlock: {
+            obj = AST_GetField(node, "object")
+            method = AST_GetField(node, "method")
+            args = AST_GetField(node, "args")
+            
+            // Flatten object
+            obj = OOPGen_FlattenExpr(obj)
+            
+            num_args = XArray.XSize(args)
+            
+            // Generate args array
+            args_var = OOPGen_TempVar("args")
+            
+            Gen_EmitIndent()
+            Gen_Emit(args_var)
+            Gen_Emit(" = TArray.TCreate(")
+            Gen_EmitNumber(num_args)
+            Gen_Emit(")\n")
+            
+            // Push each argument (flattened)
+            i = 0
+            WhileLoop LessThan(i, num_args) {
+                arg = XArray.XGet(args, i)
+                arg = OOPGen_FlattenExpr(arg)
+                
+                Gen_EmitIndent()
+                Gen_Emit("TArray.TPush(")
+                Gen_Emit(args_var)
+                Gen_Emit(", ")
+                OOPGen_Expr(arg)
+                Gen_Emit(")\n")
+                
+                i = Add(i, 1)
+            }
+            
+            // Emit method call to temp
+            temp = Gen_TempName()
+            Gen_EmitIndent()
+            Gen_Emit(temp)
+            Gen_Emit(" = OOP.MethodCall(")
+            OOPGen_Expr(obj)
+            Gen_Emit(", \"")
+            Gen_Emit(method)
+            Gen_Emit("\", ")
+            Gen_Emit(args_var)
+            Gen_Emit(")\n")
+            
+            // Cleanup args
+            Gen_EmitIndent()
+            Gen_Emit("TArray.TDestroy(")
+            Gen_Emit(args_var)
+            Gen_Emit(")\n")
+            
+            ReturnValue(Gen_MakeIdent(temp))
+        }
+        
+        // BINARY_OP - flatten both sides
+        IfCondition EqualTo(node_type, Node.BINARY_OP) ThenBlock: {
+            left = ArrayGet(node, 3)
+            op = ArrayGet(node, 4)
+            right = ArrayGet(node, 5)
+            
+            flat_left = OOPGen_FlattenExpr(left)
+            flat_right = OOPGen_FlattenExpr(right)
+            
+            temp = Gen_TempName()
+            Gen_EmitIndent()
+            Gen_Emit(temp)
+            Gen_Emit(" = ")
+            Gen_Emit(Gen_OpName(op))
+            Gen_Emit("(")
+            OOPGen_Expr(flat_left)
+            Gen_Emit(", ")
+            OOPGen_Expr(flat_right)
+            Gen_Emit(")\n")
+            
+            ReturnValue(Gen_MakeIdent(temp))
+        }
+        
+        // CALL - use standard flattening
+        IfCondition EqualTo(node_type, Node.CALL) ThenBlock: {
+            ReturnValue(Gen_FlattenExpr(node))
+        }
+        
+        // Default - return as-is
+        ReturnValue(node)
+    }
+}
+
 
 // =============================================================================
 // TEMP VARIABLE GENERATION
@@ -244,32 +402,74 @@ Function.OOPGen_InferType {
 Function.OOPGen_ClassDef {
     Input: node: Address
     Body: {
+        // DEBUG START
+        PrintMessage("[OOPGen_ClassDef] Start\n")
+        
         OOPGen_Init()
+        // DEBUG
+        PrintMessage("[OOPGen_ClassDef] After Init\n")
+        
         OOPGen.has_classes = 1
         
         class_name = AST_GetField(node, "name")
+        // DEBUG
+        PrintMessage("[OOPGen_ClassDef] Got class_name\n")
+        
         bases = AST_GetField(node, "bases")
+        // DEBUG
+        PrintMessage("[OOPGen_ClassDef] Got bases\n")
+        
         body = AST_GetField(node, "body")
+        // DEBUG
+        PrintMessage("[OOPGen_ClassDef] Got body\n")
         
         // Set current class context
         OOPGen.current_class = class_name
+        // DEBUG
+        PrintMessage("[OOPGen_ClassDef] Calling XArray.XClear\n")
+        
         XArray.XClear(OOPGen.discovered_fields)
+        // DEBUG
+        PrintMessage("[OOPGen_ClassDef] After XClear\n")
         
         // Determine parent class (first base or 0)
         parent = 0
+        // DEBUG
+        PrintMessage("[OOPGen_ClassDef] Calling XArray.XSize on bases\n")
+        
         num_bases = XArray.XSize(bases)
+        // DEBUG
+        PrintMessage("[OOPGen_ClassDef] num_bases done\n")
+        
         IfCondition GreaterThan(num_bases, 0) ThenBlock: {
             parent = XArray.XGet(bases, 0)
         }
         
         // PASS 1: Find __init__ and discover fields
+        // DEBUG
+        PrintMessage("[OOPGen_ClassDef] PASS 1 - FindMethod\n")
+        
         init_method = OOPGen_FindMethod(body, "__init__")
+        // DEBUG
+        PrintMessage("[OOPGen_ClassDef] FindMethod returned\n")
+        
         IfCondition NotEqual(init_method, 0) ThenBlock: {
+            // DEBUG
+            PrintMessage("[OOPGen_ClassDef] Getting init body\n")
+            
             init_body = AST_GetField(init_method, "body")
+            // DEBUG
+            PrintMessage("[OOPGen_ClassDef] Discovering fields\n")
+            
             OOPGen_DiscoverFieldsFromBody(init_body)
+            // DEBUG
+            PrintMessage("[OOPGen_ClassDef] Fields done\n")
         }
         
         // PASS 2: Generate method implementations
+        // DEBUG
+        PrintMessage("[OOPGen_ClassDef] PASS 2 - Methods\n")
+        
         num_items = XArray.XSize(body)
         i = 0
         WhileLoop LessThan(i, num_items) {
@@ -277,13 +477,21 @@ Function.OOPGen_ClassDef {
             item_type = AST_Type(item)
             
             IfCondition EqualTo(item_type, Node.METHOD_DEF) ThenBlock: {
+                // DEBUG
+                PrintMessage("[OOPGen_ClassDef] Generating method impl\n")
+                
                 OOPGen_MethodImpl(class_name, item)
             }
             i = Add(i, 1)
         }
         
         // PASS 3: Generate class registration (deferred)
+        // DEBUG
+        PrintMessage("[OOPGen_ClassDef] PASS 3 - Registration\n")
+        
         OOPGen_EmitClassRegistration(class_name, parent, bases, body)
+        // DEBUG
+        PrintMessage("[OOPGen_ClassDef] Registration done\n")
         
         // Store class info for later reference
         class_info = XArray.XCreate(3)
@@ -294,6 +502,8 @@ Function.OOPGen_ClassDef {
         
         // Reset context
         OOPGen.current_class = 0
+        // DEBUG
+        PrintMessage("[OOPGen_ClassDef] Done\n")
     }
 }
 
@@ -416,8 +626,13 @@ Function.OOPGen_MethodImpl {
         i = 0
         WhileLoop LessThan(i, num_params) {
             param = XArray.XGet(params, i)
-            param_name = AST_GetField(param, "name")
-            param_type = AST_GetField(param, "type")
+            
+            // =============================================================
+            // FIX: Params are simple arrays [name, type, default, name]
+            // NOT AST nodes! Access directly via ArrayGet, not AST_GetField
+            // =============================================================
+            param_name = ArrayGet(param, 0)   // slot 0 = name
+            param_type = ArrayGet(param, 1)   // slot 1 = type (may be 0)
             
             Gen_Emit("    Input: ")
             Gen_Emit(param_name)
@@ -427,8 +642,13 @@ Function.OOPGen_MethodImpl {
             IfCondition EqualTo(i, 0) ThenBlock: {
                 Gen_Emit("Address")
             } ElseBlock: {
-                mapped_type = OOPGen_MapType(param_type)
-                Gen_Emit(mapped_type)
+                IfCondition EqualTo(param_type, 0) ThenBlock: {
+                    // No type annotation - default to Address
+                    Gen_Emit("Address")
+                } ElseBlock: {
+                    mapped_type = OOPGen_MapType(param_type)
+                    Gen_Emit(mapped_type)
+                }
             }
             Gen_Emit("\n")
             
@@ -458,14 +678,32 @@ Function.OOPGen_MethodImpl {
         old_indent = Gen.indent
         Gen.indent = 2
         
-        // Generate method body with OOP-aware transformations
+       // Generate method body with OOP-aware transformations
         OOPGen_MethodBody(body)
         
-        // For __init__, ensure ReturnValue(1) at end
-        cmp = StringCompare(method_name, "__init__")
-        IfCondition EqualTo(cmp, 0) ThenBlock: {
-            Gen_EmitIndent()
-            Gen_Emit("ReturnValue(1)\n")
+        // Check if last statement was a return
+        num_stmts = XArray.XSize(body)
+        has_return = 0
+        IfCondition GreaterThan(num_stmts, 0) ThenBlock: {
+            last_stmt = XArray.XGet(body, Subtract(num_stmts, 1))
+            last_type = AST_Type(last_stmt)
+            IfCondition EqualTo(last_type, Node.RETURN_STMT) ThenBlock: {
+                has_return = 1
+            }
+        }
+        
+        // Add implicit return if method doesn't have explicit return
+        IfCondition EqualTo(has_return, 0) ThenBlock: {
+            cmp = StringCompare(method_name, "__init__")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                // __init__ returns 1 (success)
+                Gen_EmitIndent()
+                Gen_Emit("ReturnValue(1)\n")
+            } ElseBlock: {
+                // Other methods return 0
+                Gen_EmitIndent()
+                Gen_Emit("ReturnValue(0)\n")
+            }
         }
         
         // Restore indent and close
@@ -560,10 +798,23 @@ Function.OOPGen_AttrAssign {
         attr = AST_GetField(stmt, "attr")
         value = AST_GetField(stmt, "value")
         
-        // Check if value needs flattening
-        value_has_call = Gen_HasCall(value)
-        IfCondition EqualTo(value_has_call, 1) ThenBlock: {
-            value = Gen_FlattenExpr(value)
+        // Check if value needs flattening - use OOP-aware flattening
+        value_type = AST_Type(value)
+        needs_flatten = Gen_HasCall(value)
+        
+        // OOP nodes always need flattening
+        IfCondition EqualTo(value_type, Node.ATTRIBUTE) ThenBlock: {
+            needs_flatten = 1
+        }
+        IfCondition EqualTo(value_type, Node.METHOD_CALL) ThenBlock: {
+            needs_flatten = 1
+        }
+        IfCondition EqualTo(value_type, Node.BINARY_OP) ThenBlock: {
+            needs_flatten = 1
+        }
+        
+        IfCondition EqualTo(needs_flatten, 1) ThenBlock: {
+            value = OOPGen_FlattenExpr(value)
         }
         
         Gen_EmitIndent()
@@ -593,9 +844,22 @@ Function.OOPGen_Return {
         }
         
         // Check if value needs flattening
-        value_has_call = Gen_HasCall(value)
-        IfCondition EqualTo(value_has_call, 1) ThenBlock: {
-            value = Gen_FlattenExpr(value)
+        value_type = AST_Type(value)
+        needs_flatten = Gen_HasCall(value)
+        
+        // OOP nodes always need flattening
+        IfCondition EqualTo(value_type, Node.ATTRIBUTE) ThenBlock: {
+            needs_flatten = 1
+        }
+        IfCondition EqualTo(value_type, Node.METHOD_CALL) ThenBlock: {
+            needs_flatten = 1
+        }
+        IfCondition EqualTo(value_type, Node.BINARY_OP) ThenBlock: {
+            needs_flatten = 1
+        }
+        
+        IfCondition EqualTo(needs_flatten, 1) ThenBlock: {
+            value = OOPGen_FlattenExpr(value)
         }
         
         Gen_EmitIndent()
@@ -709,7 +973,7 @@ Function.OOPGen_MethodCall {
         args_var = OOPGen_TempVar("args")
         
         Gen_Emit(args_var)
-        Gen_Emit(" = XArray.XCreate(")
+        Gen_Emit(" = TArray.TCreate(")
         Gen_EmitNumber(num_args)
         Gen_Emit(")\n")
         
@@ -725,7 +989,7 @@ Function.OOPGen_MethodCall {
             }
             
             Gen_EmitIndent()
-            Gen_Emit("XArray.XPush(")
+            Gen_Emit("TArray.TPush(")
             Gen_Emit(args_var)
             Gen_Emit(", ")
             OOPGen_Expr(arg)
@@ -765,7 +1029,7 @@ Function.OOPGen_SuperCall {
         args_var = OOPGen_TempVar("super_args")
         
         Gen_Emit(args_var)
-        Gen_Emit(" = XArray.XCreate(")
+        Gen_Emit(" = TArray.TCreate(")
         Gen_EmitNumber(num_args)
         Gen_Emit(")\n")
         
@@ -774,7 +1038,7 @@ Function.OOPGen_SuperCall {
         WhileLoop LessThan(i, num_args) {
             arg = XArray.XGet(args, i)
             Gen_EmitIndent()
-            Gen_Emit("XArray.XPush(")
+            Gen_Emit("TArray.TPush(")
             Gen_Emit(args_var)
             Gen_Emit(", ")
             OOPGen_Expr(arg)
@@ -927,7 +1191,7 @@ Function.OOPGen_InstanceCreation {
         
         Gen_EmitIndent()
         Gen_Emit(args_var)
-        Gen_Emit(" = XArray.XCreate(")
+        Gen_Emit(" = TArray.TCreate(")
         Gen_EmitNumber(num_args)
         Gen_Emit(")\n")
         
@@ -942,7 +1206,7 @@ Function.OOPGen_InstanceCreation {
             }
             
             Gen_EmitIndent()
-            Gen_Emit("XArray.XPush(")
+            Gen_Emit("TArray.TPush(")
             Gen_Emit(args_var)
             Gen_Emit(", ")
             OOPGen_Expr(arg)
@@ -962,7 +1226,7 @@ Function.OOPGen_InstanceCreation {
         
         // Cleanup args
         Gen_EmitIndent()
-        Gen_Emit("XArray.XDestroy(")
+        Gen_Emit("TArray.TDestroy(")
         Gen_Emit(args_var)
         Gen_Emit(")\n")
         
@@ -1013,20 +1277,24 @@ Function.OOPGen_EmitClassInitSubroutine {
             ReturnValue(0)
         }
         
-        Gen_Emit("SubRoutine.__OOP_ClassInit {\n")
+        Gen_Emit("Function.__OOP_ClassInit {\n")
+        Gen_Emit("    Output: Integer\n")
+        Gen_Emit("    Body: {\n")
         
         num_lines = XArray.XSize(OOPGen.class_init_code)
         i = 0
         WhileLoop LessThan(i, num_lines) {
             line = XArray.XGet(OOPGen.class_init_code, i)
+            Gen_Emit("    ")  // Extra indent since we're inside Body
             Gen_Emit(line)
             i = Add(i, 1)
         }
         
+        Gen_Emit("        ReturnValue(1)\n")
+        Gen_Emit("    }\n")
         Gen_Emit("}\n\n")
     }
 }
-
 
 
 // =============================================================================
