@@ -7,6 +7,8 @@
 
 LibraryImport.XArrays
 LibraryImport.AIMacroCore
+LibraryImport.AIMacroTypeAnnotations
+LibraryImport.AIMacroParserOOP 
 
 // =============================================================================
 // PARSER STATE
@@ -150,6 +152,53 @@ Function.AST_Type {
     }
 }
 
+
+// Add to Library.AIMacroParserCore.ailang
+
+Function.AST_GetField {
+    Input: node: Address
+    Input: field: Address
+    Output: Address
+    Body: {
+        IfCondition EqualTo(node, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        
+        node_type = ArrayGet(node, 0)
+        
+        // FUNCTION: [type, line, col, name, params, body, ret_type]
+        IfCondition EqualTo(node_type, Node.FUNCTION) ThenBlock: {
+            cmp = StringCompare(field, "name")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                ReturnValue(ArrayGet(node, 3))
+            }
+            cmp = StringCompare(field, "params")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                ReturnValue(ArrayGet(node, 4))
+            }
+            cmp = StringCompare(field, "body")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                ReturnValue(ArrayGet(node, 5))
+            }
+            cmp = StringCompare(field, "return_type")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                ReturnValue(ArrayGet(node, 6))
+            }
+        }
+        
+        // IDENT: [type, line, col, name]
+        IfCondition EqualTo(node_type, Node.IDENT) ThenBlock: {
+            cmp = StringCompare(field, "name")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                ReturnValue(ArrayGet(node, 3))
+            }
+        }
+        
+        // Generic fallback - field not found
+        ReturnValue(0)
+    }
+}
+
 // =============================================================================
 // STRING COPY HELPER
 // =============================================================================
@@ -195,8 +244,14 @@ Function.Parse_Program {
                 func = Parse_FuncDef()
                 XArray.XPush(decls, func)
             } ElseBlock: {
-                stmt = Parse_Stmt()
-                XArray.XPush(decls, stmt)
+                // CHECK FOR CLASS DEFINITION
+                IfCondition Parse_IsClassDef() ThenBlock: {
+                    class_node = Parse_ClassDef()
+                    XArray.XPush(decls, class_node)
+                } ElseBlock: {
+                    stmt = Parse_Stmt()
+                    XArray.XPush(decls, stmt)
+                }
             }
             
             // Optional semicolon
@@ -242,52 +297,71 @@ Function.Parse_FuncDef {
                 BreakLoop
             }
             
-            pname_ptr = Parse_Val()
-            pname = Parse_CopyStr(pname_ptr)
-            Parse_Consume(Token.IDENTIFIER)
-            
-            XArray.XPush(params, pname)
-            
-            // Optional type hint
-            is_colon = Parse_Match(Token.COLON)
-            IfCondition EqualTo(is_colon, 1) ThenBlock: {
-                Parse_Advance()
-                Parse_Consume(Token.IDENTIFIER)  // Skip type
-            }
-            
-            // Comma or end
+            // Skip comma between params
             is_comma = Parse_Match(Token.COMMA)
             IfCondition EqualTo(is_comma, 1) ThenBlock: {
                 Parse_Advance()
             }
+            
+            // Check for closing paren after comma
+            is_rparen = Parse_Match(Token.RPAREN)
+            IfCondition EqualTo(is_rparen, 1) ThenBlock: {
+                BreakLoop
+            }
+            
+            // Get parameter name
+            param_ptr = Parse_Val()
+            param_name = Parse_CopyStr(param_ptr)
+            Parse_Consume(Token.IDENTIFIER)
+            
+            // Check for type annotation
+            is_colon = Parse_Match(Token.COLON)
+            IfCondition EqualTo(is_colon, 1) ThenBlock: {
+                Parse_Advance()
+                
+                // Get type name
+                type_ptr = Parse_Val()
+                type_name = Parse_CopyStr(type_ptr)
+                Parse_Consume(Token.IDENTIFIER)
+                
+                // Register the type
+                type_id = TypeAnno_ParseType(type_name)
+                TypeAnno_RegisterParam(name, param_name, type_id)
+            }
+            
+            XArray.XPush(params, param_name)
         }
         
         Parse_Consume(Token.RPAREN)
         
-        // Optional return type
-        ret_type = 0
+        // Check for return type annotation: -> type
+        return_type = 0
         is_arrow = Parse_Match(Token.ARROW)
         IfCondition EqualTo(is_arrow, 1) ThenBlock: {
             Parse_Advance()
-            rt_ptr = Parse_Val()
-            ret_type = Parse_CopyStr(rt_ptr)
+            
+            ret_type_ptr = Parse_Val()
+            ret_type_name = Parse_CopyStr(ret_type_ptr)
             Parse_Consume(Token.IDENTIFIER)
+            
+            return_type = TypeAnno_ParseType(ret_type_name)
+            TypeAnno_RegisterReturn(name, return_type)
         }
         
         Parse_Consume(Token.COLON)
         Parse_SkipNoise()
         
-        // Parse body
+        // Parse function body
         body = Parse_Block()
         
-        // Create function node: [FUNCTION, line, col, name, params, body, ret_type]
+        // Create function node: [FUNCTION, line, col, name, params, body, return_type]
         node = AST_Create(Node.FUNCTION, 4)
         ArraySet(node, 1, line)
         ArraySet(node, 2, col)
         ArraySet(node, 3, name)
         ArraySet(node, 4, params)
         ArraySet(node, 5, body)
-        ArraySet(node, 6, ret_type)
+        ArraySet(node, 6, return_type)
         
         ReturnValue(node)
     }
@@ -314,6 +388,12 @@ Function.Parse_Block {
                 BreakLoop
             }
             IfCondition EqualTo(t, Token.ELSE) ThenBlock: {
+                BreakLoop
+            }
+            IfCondition EqualTo(t, Token.EXCEPT) ThenBlock: {
+                BreakLoop
+            }
+            IfCondition EqualTo(t, Token.FINALLY) ThenBlock: {
                 BreakLoop
             }
             IfCondition EqualTo(t, Token.EOF) ThenBlock: {
@@ -391,8 +471,84 @@ Function.Parse_Stmt {
             ReturnValue(node)
         }
         
+        IfCondition EqualTo(t, Token.TRY) ThenBlock: {
+            node = Parse_Try()
+            ReturnValue(node)
+        }
         // Default: assignment or expression
         node = Parse_AssignOrExpr()
+        ReturnValue(node)
+    }
+}
+
+// =============================================================================
+// TRY STATEMENT: try: ... except: ... finally: ...
+// =============================================================================
+Function.Parse_Try {
+    Output: Address
+    Body: {
+        line = Parse_Line()
+        col = Parse_Col()
+        
+        Parse_Consume(Token.TRY)
+        Parse_Consume(Token.COLON)
+        Parse_SkipNoise()
+        
+        // Parse try body
+        try_body = Parse_Block()
+        
+        // Parse except clauses (can be multiple)
+        except_clauses = XArray.XCreate(4)
+        
+        WhileLoop EqualTo(1, 1) {
+            is_except = Parse_Match(Token.EXCEPT)
+            IfCondition EqualTo(is_except, 0) ThenBlock: {
+                BreakLoop
+            }
+            
+            Parse_Advance()  // Skip 'except'
+            
+            // Optional exception type
+            exc_type = 0
+            is_colon = Parse_Match(Token.COLON)
+            IfCondition EqualTo(is_colon, 0) ThenBlock: {
+                // Has exception type
+                exc_type_ptr = Parse_Val()
+                exc_type = Parse_CopyStr(exc_type_ptr)
+                Parse_Consume(Token.IDENTIFIER)
+            }
+            
+            Parse_Consume(Token.COLON)
+            Parse_SkipNoise()
+            
+            except_body = Parse_Block()
+            
+            // Create except clause node: [EXCEPT_CLAUSE, line, col, type, body]
+            clause = AST_Create(Node.EXCEPT_CLAUSE, 2)
+            ArraySet(clause, 3, exc_type)
+            ArraySet(clause, 4, except_body)
+            
+            XArray.XPush(except_clauses, clause)
+        }
+        
+        // Parse optional finally
+        finally_body = 0
+        is_finally = Parse_Match(Token.FINALLY)
+        IfCondition EqualTo(is_finally, 1) ThenBlock: {
+            Parse_Advance()
+            Parse_Consume(Token.COLON)
+            Parse_SkipNoise()
+            finally_body = Parse_Block()
+        }
+        
+        // Create try node: [TRY_STMT, line, col, try_body, except_clauses, finally_body]
+        node = AST_Create(Node.TRY_STMT, 3)
+        ArraySet(node, 1, line)
+        ArraySet(node, 2, col)
+        ArraySet(node, 3, try_body)
+        ArraySet(node, 4, except_clauses)
+        ArraySet(node, 5, finally_body)
+        
         ReturnValue(node)
     }
 }
@@ -516,7 +672,7 @@ Function.Parse_While {
 }
 
 // =============================================================================
-// FOR STATEMENT
+// FOR STATEMENT - WITH TUPLE UNPACKING SUPPORT
 // =============================================================================
 Function.Parse_For {
     Output: Address
@@ -526,11 +682,42 @@ Function.Parse_For {
         
         Parse_Consume(Token.FOR)
         
-        // Get loop variable
-        var_ptr = Parse_Val()
-        var_name = Parse_CopyStr(var_ptr)
+        // Get first loop variable
+        var1_ptr = Parse_Val()
+        var1 = Parse_CopyStr(var1_ptr)
         Parse_Consume(Token.IDENTIFIER)
         
+        // Check for tuple unpacking: for i, v in ...
+        is_comma = Parse_Match(Token.COMMA)
+        IfCondition EqualTo(is_comma, 1) ThenBlock: {
+            Parse_Advance()  // Skip comma
+            
+            var2_ptr = Parse_Val()
+            var2 = Parse_CopyStr(var2_ptr)
+            Parse_Consume(Token.IDENTIFIER)
+            
+            Parse_Consume(Token.IN)
+            
+            iterable = Parse_Expr()
+            
+            Parse_Consume(Token.COLON)
+            Parse_SkipNoise()
+            
+            body = Parse_Block()
+            
+            // Create tuple for node: [TUPLE_FOR, line, col, var1, var2, iterable, body]
+            node = AST_Create(Node.TUPLE_FOR, 4)
+            ArraySet(node, 1, line)
+            ArraySet(node, 2, col)
+            ArraySet(node, 3, var1)
+            ArraySet(node, 4, var2)
+            ArraySet(node, 5, iterable)
+            ArraySet(node, 6, body)
+            
+            ReturnValue(node)
+        }
+        
+        // Single variable for loop
         Parse_Consume(Token.IN)
         
         iterable = Parse_Expr()
@@ -544,7 +731,7 @@ Function.Parse_For {
         node = AST_Create(Node.FOR_STMT, 3)
         ArraySet(node, 1, line)
         ArraySet(node, 2, col)
-        ArraySet(node, 3, var_name)
+        ArraySet(node, 3, var1)
         ArraySet(node, 4, iterable)
         ArraySet(node, 5, body)
         
@@ -590,9 +777,27 @@ Function.Parse_Return {
 // =============================================================================
 // ASSIGNMENT OR EXPRESSION
 // =============================================================================
+// =============================================================================
+// ASSIGNMENT OR EXPRESSION - WITH TUPLE UNPACKING
+// =============================================================================
 Function.Parse_AssignOrExpr {
     Output: Address
     Body: {
+        // First check for tuple unpacking pattern: IDENT COMMA ...
+        t = Parse_Type()
+        IfCondition EqualTo(t, Token.IDENTIFIER) ThenBlock: {
+            // Peek ahead to see if this is tuple unpacking
+            next_pos = Add(Parse.pos, 1)
+            next_t = Lex_GetType(next_pos)
+            
+            IfCondition EqualTo(next_t, Token.COMMA) ThenBlock: {
+                // This is tuple unpacking: a, b = ...
+                result = Parse_TupleUnpack()
+                ReturnValue(result)
+            }
+        }
+        
+        // Regular expression/assignment
         expr = Parse_Expr()
         
         // Check for simple assignment
@@ -665,6 +870,78 @@ Function.Parse_AssignOrExpr {
         ReturnValue(expr)
     }
 }
+
+// =============================================================================
+// TUPLE UNPACKING: a, b = expr  OR  a, b, c = expr
+// =============================================================================
+Function.Parse_TupleUnpack {
+    Output: Address
+    Body: {
+        line = Parse_Line()
+        col = Parse_Col()
+        
+        // Collect target variable names
+        targets = XArray.XCreate(8)
+        
+        // First identifier
+        name1_ptr = Parse_Val()
+        name1 = Parse_CopyStr(name1_ptr)
+        Parse_Consume(Token.IDENTIFIER)
+        XArray.XPush(targets, name1)
+        
+        // Collect remaining targets (comma-separated)
+        WhileLoop EqualTo(1, 1) {
+            is_comma = Parse_Match(Token.COMMA)
+            IfCondition EqualTo(is_comma, 0) ThenBlock: {
+                BreakLoop
+            }
+            Parse_Advance()  // Skip comma
+            
+            // Check if next is ASSIGN (trailing comma case: a, b, = ...)
+            is_assign = Parse_Match(Token.ASSIGN)
+            IfCondition EqualTo(is_assign, 1) ThenBlock: {
+                BreakLoop
+            }
+            
+            name_ptr = Parse_Val()
+            name = Parse_CopyStr(name_ptr)
+            Parse_Consume(Token.IDENTIFIER)
+            XArray.XPush(targets, name)
+        }
+        
+        // Consume the =
+        Parse_Consume(Token.ASSIGN)
+        
+        // Parse the right-hand side value(s)
+        // Could be: a, b = 1, 2  OR  a, b = func()  OR  a, b = some_list
+        values = XArray.XCreate(8)
+        
+        first_val = Parse_Expr()
+        XArray.XPush(values, first_val)
+        
+        // Check for more values (tuple literal on RHS)
+        WhileLoop EqualTo(1, 1) {
+            is_comma = Parse_Match(Token.COMMA)
+            IfCondition EqualTo(is_comma, 0) ThenBlock: {
+                BreakLoop
+            }
+            Parse_Advance()
+            
+            val = Parse_Expr()
+            XArray.XPush(values, val)
+        }
+        
+        // Create tuple unpack node: [TUPLE_UNPACK, line, col, targets, values]
+        node = AST_Create(Node.TUPLE_UNPACK, 2)
+        ArraySet(node, 1, line)
+        ArraySet(node, 2, col)
+        ArraySet(node, 3, targets)
+        ArraySet(node, 4, values)
+        
+        ReturnValue(node)
+    }
+}
+
 
 // =============================================================================
 // GET AUGMENTED ASSIGNMENT OPERATOR
@@ -832,14 +1109,43 @@ Function.Parse_Equality {
             
             right = Parse_Comparison()
             
-            node = AST_Create(Node.BINARY_OP, 3)
-            ArraySet(node, 1, line)
-            ArraySet(node, 2, col)
-            ArraySet(node, 3, left)
-            ArraySet(node, 4, op)
-            ArraySet(node, 5, right)
+            // Check if either side is a string literal
+            left_type = AST_Type(left)
+            right_type = AST_Type(right)
+            is_string_cmp = 0
             
-            left = node
+            IfCondition EqualTo(left_type, Node.STR_LIT) ThenBlock: {
+                is_string_cmp = 1
+            }
+            IfCondition EqualTo(right_type, Node.STR_LIT) ThenBlock: {
+                is_string_cmp = 1
+            }
+            
+            IfCondition EqualTo(is_string_cmp, 1) ThenBlock: {
+                // Create string comparison node
+                IfCondition EqualTo(op, Token.EQ) ThenBlock: {
+                    node = AST_Create(Node.STR_EQ, 3)
+                } ElseBlock: {
+                    node = AST_Create(Node.STR_NE, 3)
+                }
+                ArraySet(node, 1, line)
+                ArraySet(node, 2, col)
+                ArraySet(node, 3, left)
+                ArraySet(node, 4, op)
+                ArraySet(node, 5, right)
+                
+                left = node
+            } ElseBlock: {
+                // Normal binary op for integers
+                node = AST_Create(Node.BINARY_OP, 3)
+                ArraySet(node, 1, line)
+                ArraySet(node, 2, col)
+                ArraySet(node, 3, left)
+                ArraySet(node, 4, op)
+                ArraySet(node, 5, right)
+                
+                left = node
+            }
         }
         
         ReturnValue(left)

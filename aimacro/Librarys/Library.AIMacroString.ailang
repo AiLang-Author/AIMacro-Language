@@ -6,6 +6,7 @@
 // Usage: LibraryImport.AIMacroString
 
 LibraryImport.XArrays
+LibraryImport.AIMacroTypes
 
 // =============================================================================
 // STRING REPEAT - Python's "string" * count
@@ -908,20 +909,7 @@ Function.String.IsAlnum {
     }
 }
 
-// =============================================================================
-// FEATURE: STRING CONCATENATION
-// =============================================================================
-// 
-// Two parts:
-// 1. Add String.Concat to Library.AIMacroString.ailang
-// 2. Update Gen_BinaryOp in Library.AIMacroCodeGen.ailang
-//
-// =============================================================================
 
-
-// =============================================================================
-// PART 1: Add to Library.AIMacroString.ailang
-// =============================================================================
 
 // Concatenate two strings - returns newly allocated string
 Function.String.Concat {
@@ -1019,3 +1007,4 @@ Function.String.Concat4 {
         ReturnValue(result)
     }
 }
+

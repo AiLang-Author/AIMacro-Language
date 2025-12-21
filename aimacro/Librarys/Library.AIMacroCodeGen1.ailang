@@ -16,8 +16,10 @@ FixedPool.Gen {
     "indent": Initialize=0, CanChange=True    
     "temp_counter": Initialize=0, CanChange=True
     "param_names": Initialize=0, CanChange=True
-     "string_vars": Initialize=0, CanChange=True 
-       "list_vars": Initialize=0, CanChange=True
+    "string_vars": Initialize=0, CanChange=True 
+    "list_vars": Initialize=0, CanChange=True
+    "dict_vars": Initialize=0, CanChange=True
+    "packed_funcs": Initialize=0, CanChange=True
 }
 
 // =============================================================================
@@ -31,6 +33,8 @@ Function.Gen_Init {
         Gen.param_names = XArray.XCreate(16)
         Gen.string_vars = XArray.XCreate(32)
         Gen.list_vars = XArray.XCreate(32)
+        Gen.dict_vars = XArray.XCreate(32)
+        Gen.packed_funcs = XArray.XCreate(16)
     }
 }
 
@@ -57,6 +61,53 @@ Function.Gen_Free {
         IfCondition NotEqual(Gen.list_vars, 0) ThenBlock: {
             XArray.XDestroy(Gen.list_vars)
         }
+        IfCondition NotEqual(Gen.dict_vars, 0) ThenBlock: {
+            XArray.XDestroy(Gen.dict_vars)
+        }
+        IfCondition NotEqual(Gen.packed_funcs, 0) ThenBlock: {
+            XArray.XDestroy(Gen.packed_funcs)
+        }
+    }
+}
+
+
+// =============================================================================
+// CHECK IF FUNCTION REQUIRES PACKED ARGUMENTS (>6 params)
+// =============================================================================
+Function.Gen_IsPackedFunc {
+    Input: name: Address
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(name, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        
+        sz = XArray.XSize(Gen.packed_funcs)
+        
+        // DEBUG
+        PrintMessage("Gen_IsPackedFunc: checking '")
+        PrintString(name)
+        PrintMessage("' against ")
+        PrintNumber(sz)
+        PrintMessage(" entries\n")
+        
+        idx = 0
+        WhileLoop LessThan(idx, sz) {
+            fname = XArray.XGet(Gen.packed_funcs, idx)
+            
+            // DEBUG
+            PrintMessage("  comparing to '")
+            PrintString(fname)
+            PrintMessage("'\n")
+            
+            cmp = StringCompare(name, fname)
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                PrintMessage("  MATCH!\n")
+                ReturnValue(1)
+            }
+            idx = Add(idx, 1)
+        }
+        ReturnValue(0)
     }
 }
 
@@ -68,19 +119,49 @@ Function.Gen_IsStringVar {
     Output: Integer
     Body: {
         IfCondition EqualTo(name, 0) ThenBlock: {
+            PrintMessage("[IsStringVar] name is NULL\n")
             ReturnValue(0)
         }
         
         sz = XArray.XSize(Gen.string_vars)
+        
+        // DEBUG: Show what we're checking
+        PrintMessage("[IsStringVar] Checking '")
+        PrintString(name)
+        PrintMessage("' against ")
+        PrintNumber(sz)
+        PrintMessage(" registered vars: ")
+        
+        // List all registered vars
+        dbg_i = 0
+        WhileLoop LessThan(dbg_i, sz) {
+            dbg_var = XArray.XGet(Gen.string_vars, dbg_i)
+            PrintMessage("'")
+            PrintString(dbg_var)
+            PrintMessage("' ")
+            dbg_i = Add(dbg_i, 1)
+        }
+        PrintMessage("\n")
+        
+        // Actual lookup
         idx = 0
         WhileLoop LessThan(idx, sz) {
             varname = XArray.XGet(Gen.string_vars, idx)
             cmp = StringCompare(name, varname)
             IfCondition EqualTo(cmp, 0) ThenBlock: {
+                PrintMessage("[IsStringVar] FOUND '")
+                PrintString(name)
+                PrintMessage("' at index ")
+                PrintNumber(idx)
+                PrintMessage("\n")
                 ReturnValue(1)
             }
             idx = Add(idx, 1)
         }
+        
+        PrintMessage("[IsStringVar] NOT FOUND '")
+        PrintString(name)
+        PrintMessage("'\n")
         ReturnValue(0)
     }
 }
@@ -89,12 +170,21 @@ Function.Gen_MarkStringVar {
     Input: name: Address
     Body: {
         IfCondition EqualTo(name, 0) ThenBlock: {
+            PrintMessage("[MarkStringVar] name is NULL - skipping\n")
             ReturnValue(0)
         }
+        
+        // DEBUG: Show what we're marking
+        PrintMessage("[MarkStringVar] Attempting to mark '")
+        PrintString(name)
+        PrintMessage("'\n")
         
         // Check if already tracked
         already = Gen_IsStringVar(name)
         IfCondition EqualTo(already, 1) ThenBlock: {
+            PrintMessage("[MarkStringVar] '")
+            PrintString(name)
+            PrintMessage("' already registered - skipping\n")
             ReturnValue(0)
         }
         
@@ -110,6 +200,14 @@ Function.Gen_MarkStringVar {
         SetByte(copy, len, 0)
         
         XArray.XPush(Gen.string_vars, copy)
+        
+        // DEBUG: Confirm registration
+        new_sz = XArray.XSize(Gen.string_vars)
+        PrintMessage("[MarkStringVar] REGISTERED '")
+        PrintString(name)
+        PrintMessage("' - now have ")
+        PrintNumber(new_sz)
+        PrintMessage(" string vars\n")
     }
 }
 
@@ -165,6 +263,55 @@ Function.Gen_MarkListVar {
         XArray.XPush(Gen.list_vars, copy)
     }
 }
+
+Function.Gen_IsDictVar {
+    Input: name: Address
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(name, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        
+        sz = XArray.XSize(Gen.dict_vars)
+        idx = 0
+        WhileLoop LessThan(idx, sz) {
+            varname = XArray.XGet(Gen.dict_vars, idx)
+            cmp = StringCompare(name, varname)
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                ReturnValue(1)
+            }
+            idx = Add(idx, 1)
+        }
+        ReturnValue(0)
+    }
+}
+
+Function.Gen_MarkDictVar {
+    Input: name: Address
+    Body: {
+        IfCondition EqualTo(name, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        
+        already = Gen_IsDictVar(name)
+        IfCondition EqualTo(already, 1) ThenBlock: {
+            ReturnValue(0)
+        }
+        
+        len = StringLength(name)
+        copy = Allocate(Add(len, 1))
+        i = 0
+        WhileLoop LessThan(i, len) {
+            c = GetByte(name, i)
+            SetByte(copy, i, c)
+            i = Add(i, 1)
+        }
+        SetByte(copy, len, 0)
+        
+        XArray.XPush(Gen.dict_vars, copy)
+    }
+}
+
 
 Function.Gen_TempName {
     Output: Address
@@ -326,6 +473,18 @@ Function.Gen_HasCall {
         }
         
         IfCondition EqualTo(t, Node.BINARY_OP) ThenBlock: {
+            op = ArrayGet(node, 4)
+            
+            // EQ and NE now emit SmartEqual/SmartNotEqual function calls
+            // They MUST be extracted to temp vars before use in IfCondition
+            IfCondition EqualTo(op, Token.EQ) ThenBlock: {
+                ReturnValue(1)
+            }
+            IfCondition EqualTo(op, Token.NE) ThenBlock: {
+                ReturnValue(1)
+            }
+            
+            // For other operators, check children recursively
             left = ArrayGet(node, 3)
             right = ArrayGet(node, 5)
             left_has = Gen_HasCall(left)

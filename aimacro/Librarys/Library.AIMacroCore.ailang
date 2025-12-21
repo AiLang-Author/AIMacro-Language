@@ -23,6 +23,9 @@ FixedPool.Token {
     "PASS": Initialize=19
     "BREAK": Initialize=20
     "CONTINUE": Initialize=21
+    "EXCEPT": Initialize=25
+    "FINALLY": Initialize=26
+    "TRY": Initialize=27
     "TRUE": Initialize=30
     "FALSE": Initialize=31
     "NONE": Initialize=32
@@ -66,6 +69,7 @@ FixedPool.Token {
     "EOF": Initialize=101
     "COMMENT": Initialize=102
     "ERROR": Initialize=199
+    
       
 }
 
@@ -95,6 +99,18 @@ FixedPool.Node {
     "AUG_ASSIGN": Initialize=23
     "PASS_STMT": Initialize=24
     "SLICE_ACCESS": Initialize=25
+    "TUPLE_UNPACK": Initialize=26
+    "TUPLE_FOR": Initialize=27
+    "TRY_STMT": Initialize=28
+    "EXCEPT_CLAUSE": Initialize=29
+     "CLASS_DEF": Initialize=100
+    "METHOD_DEF": Initialize=101
+    "ATTRIBUTE": Initialize=102
+    "ATTR_ASSIGN": Initialize=103
+    "METHOD_CALL": Initialize=104
+    "SUPER_CALL": Initialize=105
+    "STR_EQ": Initialize=106
+    "STR_NE": Initialize=107
 }
 
 FixedPool.Lex {
@@ -479,6 +495,15 @@ Function.Lex_MatchKW {
         
         cmp = StringCompare(word, "is")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(Token.IS) }
+
+        cmp = StringCompare(word, "try")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(Token.TRY) }
+
+        cmp = StringCompare(word, "except")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(Token.EXCEPT) }
+
+        cmp = StringCompare(word, "finally")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(Token.FINALLY) }
         
         // Not a keyword
         ReturnValue(Token.IDENTIFIER)

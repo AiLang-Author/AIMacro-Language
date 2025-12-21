@@ -240,8 +240,26 @@ Function.Gen_EmitSmartIndexAccess {
         expr = ArrayGet(node, 3)
         index = ArrayGet(node, 4)
         
-        // Check for string access
+        // Check for dict access
         expr_type = AST_Type(expr)
+        is_dict_access = 0
+        
+        IfCondition EqualTo(expr_type, Node.IDENT) ThenBlock: {
+            var_name = ArrayGet(expr, 3)
+            is_dict_access = Gen_IsDictVar(var_name)
+        }
+        
+        // DICT ACCESS
+        IfCondition EqualTo(is_dict_access, 1) ThenBlock: {
+            Gen_Emit("THash.Get(")
+            Gen_Expr(expr)
+            Gen_Emit(", ")
+            Gen_Expr(index)
+            Gen_Emit(")")
+            ReturnValue(0)
+        }
+        
+        // Check for string access
         is_string_access = 0
         
         IfCondition EqualTo(expr_type, Node.IDENT) ThenBlock: {
@@ -294,7 +312,7 @@ Function.Gen_EmitSmartIndexAccess {
         
         // ARRAY INDEXING - ALWAYS use SmartGet (handles XArray & TArray)
         IfCondition EqualTo(is_negative, 1) ThenBlock: {
-            Gen_Emit("AIMacro.SmartGet(")
+            Gen_Emit("DictGen_SmartGet(")
             Gen_Expr(expr)
             Gen_Emit(", Subtract(AIMacro.SmartSize(")
             Gen_Expr(expr)
@@ -302,7 +320,7 @@ Function.Gen_EmitSmartIndexAccess {
             Gen_EmitNumber(neg_value)
             Gen_Emit("))")
         } ElseBlock: {
-            Gen_Emit("AIMacro.SmartGet(")
+            Gen_Emit("DictGen_SmartGet(")
             Gen_Expr(expr)
             Gen_Emit(", ")
             Gen_Expr(index)
@@ -686,6 +704,11 @@ Function.Gen_ExtractAllCalls {
 // This walks the expression tree depth-first, extracts calls to temps,
 // and returns an identifier node (or literal) that can be used inline
 // =============================================================================
+// =============================================================================
+// Helper: Flatten an expression by extracting ALL calls to temps
+// This walks the expression tree depth-first, extracts calls to temps,
+// and returns an identifier node (or literal) that can be used inline
+// =============================================================================
 Function.Gen_FlattenExpr {
     Input: node: Address
     Output: Address
@@ -712,6 +735,69 @@ Function.Gen_FlattenExpr {
         
         // CALL - flatten args, then extract to temp
         IfCondition EqualTo(t, Node.CALL) ThenBlock: {
+            // Check if this is a packed function call
+            call_name = ArrayGet(node, 3)
+            is_packed = Gen_IsPackedFunc(call_name)
+            
+            IfCondition EqualTo(is_packed, 1) ThenBlock: {
+                // Handle packed call - emit packing, then call
+                args = ArrayGet(node, 4)
+                n = XArray.XSize(args)
+                
+                // Flatten args first
+                idx = 0
+                WhileLoop LessThan(idx, n) {
+                    arg = XArray.XGet(args, idx)
+                    flat_arg = Gen_FlattenExpr(arg)
+                    XArray.XSet(args, idx, flat_arg)
+                    idx = Add(idx, 1)
+                }
+                
+                // Create pack array
+                pack_name = Gen_TempName()
+                
+                // Emit: pack = TArray.TCreate(n)
+                Gen_EmitIndent()
+                Gen_Emit(pack_name)
+                Gen_Emit(" = TArray.TCreate(")
+                n_str = NumberToString(n)
+                Gen_Emit(n_str)
+                Gen_Emit(")\n")
+                Deallocate(n_str, 0)
+                
+                // Emit: TArray.TPush(pack, arg) for each arg
+                idx = 0
+                WhileLoop LessThan(idx, n) {
+                    Gen_EmitIndent()
+                    Gen_Emit("TArray.TPush(")
+                    Gen_Emit(pack_name)
+                    Gen_Emit(", ")
+                    arg = XArray.XGet(args, idx)
+                    Gen_Expr(arg)
+                    Gen_Emit(")\n")
+                    idx = Add(idx, 1)
+                }
+                
+                // Emit: result = func(pack)
+                result_temp = Gen_TempName()
+                Gen_EmitIndent()
+                Gen_Emit(result_temp)
+                Gen_Emit(" = ")
+                Gen_Emit(call_name)
+                Gen_Emit("(")
+                Gen_Emit(pack_name)
+                Gen_Emit(")\n")
+                
+                // Mark result as string if call returns string
+                is_str_call = Gen_InvolvesString(node)
+                IfCondition EqualTo(is_str_call, 1) ThenBlock: {
+                    Gen_MarkStringVar(result_temp)
+                }
+                
+                ReturnValue(Gen_MakeIdent(result_temp))
+            }
+            
+            // Normal call - flatten args, then extract to temp
             args = ArrayGet(node, 4)
             IfCondition NotEqual(args, 0) ThenBlock: {
                 n = XArray.XSize(args)
@@ -731,6 +817,12 @@ Function.Gen_FlattenExpr {
             Gen_Emit(" = ")
             Gen_CallExpr(node)
             Gen_Emit("\n")
+            
+            // Mark temp as string if call returns string
+            is_str_call = Gen_InvolvesString(node)
+            IfCondition EqualTo(is_str_call, 1) ThenBlock: {
+                Gen_MarkStringVar(temp)
+            }
             
             ReturnValue(Gen_MakeIdent(temp))
         }
@@ -760,6 +852,26 @@ Function.Gen_FlattenExpr {
             Gen_MethodCallExpr(node)
             Gen_Emit("\n")
             
+            // Mark temp as string if method returns string
+            method = ArrayGet(node, 4)
+            is_str_method = 0
+            cmp = StringCompare(method, "upper")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { is_str_method = 1 }
+            cmp = StringCompare(method, "lower")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { is_str_method = 1 }
+            cmp = StringCompare(method, "strip")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { is_str_method = 1 }
+            cmp = StringCompare(method, "replace")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { is_str_method = 1 }
+            cmp = StringCompare(method, "join")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { is_str_method = 1 }
+            cmp = StringCompare(method, "split")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { is_str_method = 1 }
+            
+            IfCondition EqualTo(is_str_method, 1) ThenBlock: {
+                Gen_MarkStringVar(temp)
+            }
+            
             ReturnValue(Gen_MakeIdent(temp))
         }
         
@@ -768,8 +880,32 @@ Function.Gen_FlattenExpr {
             expr = ArrayGet(node, 3)
             index = ArrayGet(node, 4)
             
-            // Check if this is string indexing
+            // Check if this is dict indexing
             expr_type = AST_Type(expr)
+            is_dict_access = 0
+            IfCondition EqualTo(expr_type, Node.IDENT) ThenBlock: {
+                var_name = ArrayGet(expr, 3)
+                is_dict_access = Gen_IsDictVar(var_name)
+            }
+            
+            // DICT INDEXING
+            IfCondition EqualTo(is_dict_access, 1) ThenBlock: {
+                flat_expr = Gen_FlattenExpr(expr)
+                flat_index = Gen_FlattenExpr(index)
+                
+                temp = Gen_TempName()
+                Gen_EmitIndent()
+                Gen_Emit(temp)
+                Gen_Emit(" = THash.Get(")
+                Gen_Expr(flat_expr)
+                Gen_Emit(", ")
+                Gen_Expr(flat_index)
+                Gen_Emit(")\n")
+                
+                ReturnValue(Gen_MakeIdent(temp))
+            }
+            
+            // Check if this is string indexing
             is_string_index = 0
             IfCondition EqualTo(expr_type, Node.IDENT) ThenBlock: {
                 var_name = ArrayGet(expr, 3)
@@ -798,9 +934,7 @@ Function.Gen_FlattenExpr {
             
             flat_expr = Gen_FlattenExpr(expr)
             
-            // =========================================================
             // STRING INDEXING WITH NEGATIVE INDEX
-            // =========================================================
             IfCondition And(EqualTo(is_string_index, 1), EqualTo(is_negative, 1)) ThenBlock: {
                 len_temp = Gen_TempName()
                 Gen_EmitIndent()
@@ -831,9 +965,7 @@ Function.Gen_FlattenExpr {
                 ReturnValue(Gen_MakeIdent(result_temp))
             }
             
-            // =========================================================
             // STRING INDEXING WITH POSITIVE INDEX
-            // =========================================================
             IfCondition And(EqualTo(is_string_index, 1), EqualTo(is_negative, 0)) ThenBlock: {
                 flat_index = Gen_FlattenExpr(index)
                 
@@ -850,9 +982,7 @@ Function.Gen_FlattenExpr {
                 ReturnValue(Gen_MakeIdent(result_temp))
             }
             
-            // =========================================================
             // LIST INDEXING WITH NEGATIVE INDEX
-            // =========================================================
             IfCondition EqualTo(is_negative, 1) ThenBlock: {
                 len_temp = Gen_TempName()
                 Gen_EmitIndent()
@@ -873,8 +1003,7 @@ Function.Gen_FlattenExpr {
                 result_temp = Gen_TempName()
                 Gen_EmitIndent()
                 Gen_Emit(result_temp)
-                // FIXED: Use SmartGet instead of XArray.XGet
-                Gen_Emit(" = AIMacro.SmartGet(")
+                Gen_Emit(" = DictGen_SmartGet(")
                 Gen_Expr(flat_expr)
                 Gen_Emit(", ")
                 Gen_Emit(idx_temp)
@@ -882,16 +1011,13 @@ Function.Gen_FlattenExpr {
                 
                 ReturnValue(Gen_MakeIdent(result_temp))
             } ElseBlock: {
-                // =========================================================
-                // LIST INDEXING WITH POSITIVE INDEX - FIXED VERSION
-                // =========================================================
+                // LIST INDEXING WITH POSITIVE INDEX
                 flat_index = Gen_FlattenExpr(index)
                 
                 temp = Gen_TempName()
                 Gen_EmitIndent()
                 Gen_Emit(temp)
-                // FIXED: Use SmartGet instead of calling Gen_IndexAccess
-                Gen_Emit(" = AIMacro.SmartGet(")
+                Gen_Emit(" = DictGen_SmartGet(")
                 Gen_Expr(flat_expr)
                 Gen_Emit(", ")
                 Gen_Expr(flat_index)
@@ -942,7 +1068,38 @@ Function.Gen_FlattenExpr {
                 Gen_Emit(")\n")
                 ReturnValue(Gen_MakeIdent(temp))
             }
+
+            // =========== NEW: STRING EQUALITY (== operator) ===========
+            IfCondition EqualTo(op, Token.EQ) ThenBlock: {
+                IfCondition EqualTo(is_string_op, 1) ThenBlock: {
+                    temp = Gen_TempName()
+                    Gen_EmitIndent()
+                    Gen_Emit(temp)
+                    Gen_Emit(" = EqualTo(StringCompare(")
+                    Gen_Expr(flat_left)
+                    Gen_Emit(", ")
+                    Gen_Expr(flat_right)
+                    Gen_Emit("), 0)\n")
+                    ReturnValue(Gen_MakeIdent(temp))
+                }
+            }
             
+            // =========== NEW: STRING INEQUALITY (!= operator) ===========
+            IfCondition EqualTo(op, Token.NE) ThenBlock: {
+                IfCondition EqualTo(is_string_op, 1) ThenBlock: {
+                    temp = Gen_TempName()
+                    Gen_EmitIndent()
+                    Gen_Emit(temp)
+                    Gen_Emit(" = NotEqual(StringCompare(")
+                    Gen_Expr(flat_left)
+                    Gen_Emit(", ")
+                    Gen_Expr(flat_right)
+                    Gen_Emit("), 0)\n")
+                    ReturnValue(Gen_MakeIdent(temp))
+                }
+            }
+            // =========== END NEW SECTIONS ===========
+                    
             // ALL OTHER BINARY OPS - extract to temp
             temp = Gen_TempName()
             op_name = Gen_OpName(op)
