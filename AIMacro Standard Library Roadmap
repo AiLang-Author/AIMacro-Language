@@ -1,0 +1,149 @@
+# AIMacro Standard Library Roadmap
+
+## Status Legend
+- ✅ Already have in AILANG
+- 🔨 Easy to build (1-2 hours)
+- 📐 Medium effort (half day)
+- 🏗️ Significant work (1+ days)
+
+---
+
+## Priority 1: Core Utilities (Python users expect these)
+
+| Module | Status | AILANG Mapping | Notes |
+|--------|--------|----------------|-------|
+| `math` | 🔨 | `Library.AIMacroMath` | Add, Sub, Mul, Div, Mod, Power already exist. Need: `sqrt`, `abs`, `min`, `max`, `floor`, `ceil`, `sin`, `cos` (via syscall or lookup table) |
+| `random` | 🔨 | `Library.AIMacroRandom` | LFSR or xorshift. `random()`, `randint(a,b)`, `choice(list)`, `shuffle(list)` |
+| `time` | 🔨 | `Library.TimeDate` | Already have `Time.Unix`! Need: `sleep(ms)` via nanosleep syscall |
+| `os` | 📐 | `Library.AIMacroOS` | File ops ✅, need: `getcwd`, `chdir`, `mkdir`, `rmdir`, `listdir`, `environ`, `getenv` |
+| `sys` | 🔨 | `Library.AIMacroSys` | `argv` (parse /proc/self/cmdline), `exit` ✅, `platform` |
+
+---
+
+## Priority 2: Data Structures (We mostly have these!)
+
+| Module | Status | AILANG Mapping | Notes |
+|--------|--------|----------------|-------|
+| `dict` | ✅ | `THash`, `HashMap` | **Already native!** Warn & skip |
+| `list` | ✅ | `XArray`, `TArray` | **Already native!** Warn & skip |
+| `set` | 📐 | `Library.AIMacroSet` | Build on THash (value=1 for membership) |
+| `collections` | 📐 | Multiple | `deque` = ring buffer, `Counter` = THash with counts, `defaultdict` = THash with factory |
+
+---
+
+## Priority 3: String & Text
+
+| Module | Status | AILANG Mapping | Notes |
+|--------|--------|----------------|-------|
+| `str` | ✅ | `AIMacroString` | **Already native!** |
+| `re` | 🏗️ | `Library.AIMacroRegex` | Significant work. Start with: `match`, `search`, `findall` for simple patterns |
+| `json` | 📐 | `Library.AIMacroJSON` | Parse/emit JSON. Use THash + XArray |
+
+---
+
+## Priority 4: Functional Tools
+
+| Module | Status | AILANG Mapping | Notes |
+|--------|--------|----------------|-------|
+| `functools` | 📐 | N/A | `reduce` easy, `partial` needs closures (defer) |
+| `itertools` | 📐 | `Library.AIMacroIter` | `range` ✅, `enumerate`, `zip`, `chain`, `repeat` |
+
+---
+
+## Priority 5: Type System
+
+| Module | Status | AILANG Mapping | Notes |
+|--------|--------|----------------|-------|
+| `typing` | 🔨 | Already have! | `AIMacroTypes`, `AIMacroTypeAnnotations` - just skip import |
+| `int/float/bool` | ✅ | Native | Warn & skip |
+
+---
+
+## Blacklist Categories
+
+### 1. WARN + SKIP (Already native, no action needed)
+```
+dict, list, str, int, float, bool, tuple
+```
+Message: `"Note: '{name}' is a built-in type, import not needed"`
+
+### 2. WARN + SKIP (Not yet supported)
+```
+re, threading, multiprocessing, asyncio, socket, http, urllib
+```
+Message: `"Warning: '{name}' is not yet supported in AIMacro"`
+
+### 3. WARN + MAP (We have equivalent)
+```
+typing -> (skip, already have type annotations)
+time -> (partial support via Time.Unix)
+```
+Message: `"Note: '{name}' maps to AILANG built-in, import not needed"`
+
+---
+
+## Quick Wins (Could build today)
+
+### Library.AIMacroMath
+```ailang
+Function.Math_Abs { Input: n: Integer -> if n < 0 return -n }
+Function.Math_Min { Input: a, b -> if a < b return a else b }
+Function.Math_Max { Input: a, b -> if a > b return a else b }
+Function.Math_Clamp { Input: val, lo, hi -> Min(Max(val, lo), hi) }
+Function.Math_Sqrt { -> Newton-Raphson iteration }
+```
+
+### Library.AIMacroRandom
+```ailang
+FixedPool.RNG { "state": Initialize=12345 }
+Function.Random_Seed { Input: s -> RNG.state = s }
+Function.Random_Next { -> xorshift32 on RNG.state }
+Function.Random_Range { Input: lo, hi -> lo + (Next() % (hi - lo)) }
+```
+
+### Library.AIMacroSys  
+```ailang
+Function.Sys_Exit { Input: code -> ProcessExit(code) }  // Already have!
+Function.Sys_GetArg { Input: index -> parse /proc/self/cmdline }
+```
+
+---
+
+## Implementation Order
+
+1. **Now:** Blacklist + warnings in transpiler
+2. **Soon:** Math, Random, Sys (quick wins)
+3. **Next:** OS (directory ops), JSON
+4. **Later:** Set, Collections, Itertools
+5. **Future:** Regex (big project)
+
+---
+
+## Transpiler Warning Messages
+
+```ailang
+Function.Console_CheckImport {
+    Input: module_name: Address
+    Output: Integer  // 0=process, 1=skip-silent, 2=skip-warn-builtin, 3=skip-warn-unsupported
+    Body: {
+        // Built-in types - skip silently or with note
+        cmp = StringCompare(module_name, "dict")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(2) }
+        
+        cmp = StringCompare(module_name, "list") 
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(2) }
+        
+        // ... etc
+        
+        // Unsupported - warn
+        cmp = StringCompare(module_name, "re")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(3) }
+        
+        cmp = StringCompare(module_name, "asyncio")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(3) }
+        
+        // Unknown - try to find .aim file
+        ReturnValue(0)
+    }
+}
+```
