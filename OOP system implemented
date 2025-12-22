@@ -1,0 +1,201 @@
+# AIMacro Status Update - Addendum
+
+*Add this section to the existing Status Capabilities Limitations document*
+
+---
+
+## NEW: Object-Oriented Programming (OOP) System ✅
+
+**Status:** COMPLETE - 21/21 tests passing
+
+### Capabilities
+
+The AIMacro transpiler now supports full Python-style OOP:
+
+**Class Definition:**
+```python
+class Point:
+    def __init__(self, x: int, y: int):
+        self.x = x
+        self.y = y
+    end
+    
+    def distance_from_origin(self) -> int:
+        return (self.x * self.x + self.y * self.y)
+    end
+end
+```
+
+**Supported Features:**
+- ✅ Class definitions with `class ClassName:`
+- ✅ Constructor with `__init__(self, ...)`
+- ✅ Instance attributes via `self.attr = value`
+- ✅ Instance methods with `self` parameter
+- ✅ Method calls: `obj.method(args)`
+- ✅ Attribute access: `obj.attr`
+- ✅ Chained access: `obj.attr.subattr`
+- ✅ Objects as parameters to functions
+- ✅ Objects as return values from functions
+- ✅ Objects containing other objects (composition)
+- ✅ Multiple independent instances
+- ✅ Post-construction attribute modification
+- ✅ Type annotations on parameters and return types
+
+**Generated Code Pattern:**
+```ailang
+// Class methods become prefixed functions
+Function.Point___init__ {
+    Input: self: Address
+    Input: x: Integer
+    Input: y: Integer
+    Output: Integer
+    Body: {
+        OOP.ObjectSet(self, "x", x)
+        OOP.ObjectSet(self, "y", y)
+        ReturnValue(1)
+    }
+}
+
+// Instantiation uses OOP library
+__oop_init_args = TArray.TCreate(2)
+TArray.TPush(__oop_init_args, 10)
+TArray.TPush(__oop_init_args, 20)
+__oop_inst = OOP.ObjectNewInit("Point", __oop_init_args)
+TArray.TDestroy(__oop_init_args)
+p = __oop_inst
+
+// Method calls use OOP.MethodCall
+__oop_args = TArray.TCreate(0)
+result = OOP.MethodCall(p, "distance_from_origin", __oop_args)
+TArray.TDestroy(__oop_args)
+```
+
+### Limitations
+
+- ❌ Inheritance not yet implemented (class Parent ready, `super()` not done)
+- ❌ Class-level (static) attributes not supported
+- ❌ `@classmethod` and `@staticmethod` decorators not supported
+- ❌ Multiple inheritance not supported
+- ❌ `__str__`, `__repr__`, and other dunder methods not implemented
+- ❌ Properties (`@property` decorator) not supported
+
+---
+
+## Bug Fix: Clean Program Exit ✅
+
+**Problem:** Programs crashed with segfault after successful execution (corrupted return address)
+
+**Solution:** Added `ProcessExit(0)` at end of generated `SubRoutine.Main`
+
+**Impact:** All transpiled programs now exit cleanly
+
+---
+
+## IN PROGRESS: Import System
+
+**Status:** Design complete, implementation pending
+
+### Planned Syntax
+```python
+import mymodule
+from mymodule import func1, func2, MyClass
+```
+
+### Architecture
+1. **Transpiler** parses import statements
+2. **Transpiler** recursively finds and transpiles imported `.aim` files
+3. **Transpiler** emits `Import.modulename` in generated `.ailang`
+4. **AILANG compiler** uses existing `import_resolver.py` for final linking
+
+### New Console Commands (Planned)
+```
+transpile <main.aim> <output_dir>  - Transpile with all imports
+```
+
+---
+
+## PLANNED: Lambda Support
+
+**Status:** Design complete, implementation pending
+
+### Planned Syntax
+```python
+f = lambda x, y: x + y
+names.sort(key=lambda x: len(x))
+```
+
+### Implementation Approach
+- Lambdas compile to hidden `Function.__lambda_N` definitions
+- Single expression becomes `ReturnValue(expr)`
+- Reference via `AddressOf(__lambda_N)`
+- Closures (capturing external variables) deferred to v2
+
+---
+
+## Updated Feature Matrix
+
+| Feature | Status | Notes |
+|---------|--------|-------|
+| Variables & Assignment | ✅ | Complete |
+| Arithmetic Operators | ✅ | +, -, *, /, % |
+| Comparison Operators | ✅ | ==, !=, <, >, <=, >= |
+| Logical Operators | ✅ | and, or, not |
+| If/Elif/Else | ✅ | Complete |
+| While Loops | ✅ | With break/continue |
+| For Loops | ✅ | range(), iterables |
+| For-Each | ✅ | `for x in list` |
+| Functions | ✅ | Params, returns, recursion |
+| Lists | ✅ | Create, access, methods |
+| Dictionaries | ✅ | Create, access, methods |
+| Strings | ✅ | Concat, methods |
+| Tuple Unpacking | ✅ | `a, b = 1, 2` |
+| enumerate() | ✅ | `for i, v in enumerate(x)` |
+| zip() | ✅ | `for a, b in zip(x, y)` |
+| Try/Except | ✅ | Basic support |
+| **Classes (OOP)** | ✅ | **NEW - Full support** |
+| **Clean Exit** | ✅ | **NEW - ProcessExit(0)** |
+| Import | 🔄 | In progress |
+| Lambda | 📋 | Planned |
+| List Comprehensions | 📋 | Future |
+| Decorators | 📋 | Future |
+| Inheritance | 📋 | Future |
+
+---
+
+## Test Coverage
+
+### OOP Test Suite: 21/21 Passing ✅
+
+1. Basic class instantiation
+2. Constructor parameter x
+3. Constructor parameter y
+4. Initial count (state)
+5. After increment
+6. Multiple increments
+7. Decrement
+8. Add with parameter
+9. Instance 1 independent
+10. Instance 2 independent
+11. Object as parameter
+12. Returned object x
+13. Returned object y
+14. Chained via method
+15. Direct chained access
+16. Area computation
+17. Perimeter computation
+18. Nested object access 1
+19. Nested object access 2
+20. Initial value (post-construction)
+21. Modified value
+
+---
+
+## Performance Notes
+
+- OOP method calls have overhead (TArray create/destroy for args)
+- Future optimization: inline simple methods, pool temp arrays
+- Clean exit adds negligible overhead (single syscall)
+
+---
+
+*Last Updated: Current Session*
