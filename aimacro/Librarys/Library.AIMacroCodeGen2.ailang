@@ -37,6 +37,22 @@ Function.Gen_Program {
         decls = ArrayGet(ast, 3)
         n = XArray.XSize(decls)
 
+        // =========== PRE-SCAN FOR CLASS NAMES ===========
+        i = 0
+        WhileLoop LessThan(i, n) {
+            decl = XArray.XGet(decls, i)
+            t = AST_Type(decl)
+            IfCondition EqualTo(t, Node.CLASS_DEF) ThenBlock: {
+                class_name = AST_GetField(decl, "name")
+                // Register the class name so OOPGen_IsClassName works
+                OOPGen_RegisterClassName(class_name)
+                OOPGen.has_classes = 1
+            }
+            i = Add(i, 1)
+        }
+        // =========== END PRE-SCAN ===========
+
+
 
          // =========== PRE-SCAN FOR CLASSES ===========
         i = 0
@@ -138,6 +154,16 @@ Function.Gen_Program {
             
             Gen_EmitLine("RunTask(Main)")
         }
+    }
+}
+
+Function.OOPGen_RegisterClassName {
+    Input: name: Address
+    Body: {
+        OOPGen_Init()
+        class_info = XArray.XCreate(4)
+        XArray.XPush(class_info, name)
+        XArray.XPush(OOPGen.classes, class_info)
     }
 }
 
@@ -331,6 +357,13 @@ Function.Gen_Function {
         
         Gen.indent = Add(Gen.indent, 2)
         Gen_Body(body)
+        // =========== ADD THIS ===========
+        // Emit ProcessExit(0) at end of main
+        IfCondition And(EqualTo(is_main, 1), EqualTo(num_params, 0)) ThenBlock: {
+            Gen_EmitIndent()
+            Gen_EmitLine("ProcessExit(0)")
+        }
+        // =========== END ADD ===========
         Gen.indent = Subtract(Gen.indent, 2)
         
         IfCondition And(EqualTo(is_main, 1), EqualTo(num_params, 0)) ThenBlock: {

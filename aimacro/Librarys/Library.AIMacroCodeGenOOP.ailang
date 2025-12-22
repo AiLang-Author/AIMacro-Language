@@ -25,6 +25,27 @@ FixedPool.OOPGen {
     "has_classes": Initialize=0         
 }
 
+
+// =============================================================================
+// REGISTER CLASS NAMES PRESCAN
+// =============================================================================
+
+Function.OOPGen_RegisterClassName {
+    Input: name: Address
+    Body: {
+        OOPGen_Init()
+        
+        // Create a minimal class info entry with just the name
+        class_info = XArray.XCreate(4)
+        XArray.XPush(class_info, name)    // [0] = class name
+        XArray.XPush(class_info, 0)       // [1] = parent (placeholder)
+        XArray.XPush(class_info, 0)       // [2] = fields (placeholder)
+        XArray.XPush(class_info, 0)       // [3] = methods (placeholder)
+        
+        XArray.XPush(OOPGen.classes, class_info)
+    }
+}
+
 // =============================================================================
 // INITIALIZATION
 // =============================================================================
