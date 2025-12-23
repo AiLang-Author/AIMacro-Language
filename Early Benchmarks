@@ -1,0 +1,317 @@
+Early Benchmarks. 
+
+Test 2 removed due to bug
+
+Ailang/ailang$ time python3 perf_test.py
+209999
+
+real    0m0.211s
+user    0m0.198s
+sys     0m0.009s
+
+
+/Ailang/ailang$ time python3 perf_test.py
+209999
+
+real    0m0.211s
+user    0m0.198s
+sys     0m0.009s
+
+#!/usr/bin/env python3
+# perf_test.py
+# Same benchmarks in pure Python for comparison
+# Run: time python3 perf_test.py
+
+def test_loop_million():
+    count = 0
+    i = 0
+    while i < 1000000:
+        count = count + 1
+        i = i + 1
+    return count
+
+
+
+def add_one(n):
+    return n + 1
+
+def test_function_calls():
+    result = 0
+    i = 0
+    while i < 100000:
+        result = add_one(result)
+        i = i + 1
+    return result
+
+def fib(n):
+    if n <= 1:
+        return n
+    return fib(n - 1) + fib(n - 2)
+
+def test_fibonacci():
+    return fib(30)
+
+def test_nested_loops():
+    count = 0
+    i = 0
+    while i < 1000:
+        j = 0
+        while j < 1000:
+            count = count + 1
+            j = j + 1
+        i = i + 1
+    return count
+
+def test_list_ops():
+    items = []
+    i = 0
+    while i < 10000:
+        items.append(i)
+        i = i + 1
+    
+    total = 0
+    j = 0
+    while j < 10000:
+        total = total + items[j]
+        j = j + 1
+    return total
+
+def test_branching():
+    count = 0
+    i = 0
+    while i < 100000:
+        if i % 2 == 0:
+            count = count + 1
+        elif i % 3 == 0:
+            count = count + 2
+        elif i % 5 == 0:
+            count = count + 3
+        else:
+            count = count + 4
+        i = i + 1
+    return count
+
+def main():
+    r1 = test_loop_million()
+    r3 = test_function_calls()
+    r4 = test_fibonacci()
+    r5 = test_nested_loops()
+    r6 = test_list_ops()
+    r7 = test_branching()
+    print(r7)
+
+if __name__ == "__main__":
+    main()
+
+
+# perf_test.aim
+# Performance Benchmark Suite for AIMacro
+# Tests computational speed of compiled native binaries
+#
+# Run: ./aimacro_console_exec
+#      aim> load perf_test.aim
+#      aim> save perf_test.ailang
+# Then: python3 main.py perf_test.ailang -o perf_test_exec
+#       time ./perf_test_exec
+
+# ============================================================================
+# TEST 1: Loop Performance - Raw iteration speed
+# ============================================================================
+def test_loop_million():
+    count = 0
+    i = 0
+    while i < 1000000:
+        count = count + 1
+        i = i + 1
+    end
+    return count
+end
+
+# ============================================================================
+# TEST 2: Arithmetic - Math operations
+# ============================================================================
+def test_arithmetic():
+    result = 0
+    i = 0
+    while i < 100000:
+        result = result + i * 2
+        result = result - i
+        result = result + (i / 2)
+        i = i + 1
+    end
+    return result
+end
+
+# ============================================================================
+# TEST 3: Function Call Overhead
+# ============================================================================
+def add_one(n):
+    return n + 1
+end
+
+def test_function_calls():
+    result = 0
+    i = 0
+    while i < 100000:
+        result = add_one(result)
+        i = i + 1
+    end
+    return result
+end
+
+# ============================================================================
+# TEST 4: Recursion - Fibonacci (classic benchmark)
+# ============================================================================
+def fib(n):
+    if n <= 1:
+        return n
+    end
+    return fib(n - 1) + fib(n - 2)
+end
+
+def test_fibonacci():
+    return fib(30)
+end
+
+# ============================================================================
+# TEST 5: Nested Loops - O(n²) work
+# ============================================================================
+def test_nested_loops():
+    count = 0
+    i = 0
+    while i < 1000:
+        j = 0
+        while j < 1000:
+            count = count + 1
+            j = j + 1
+        end
+        i = i + 1
+    end
+    return count
+end
+
+# ============================================================================
+# TEST 6: List Operations
+# ============================================================================
+def test_list_ops():
+    items = []
+    i = 0
+    while i < 10000:
+        items.append(i)
+        i = i + 1
+    end
+    
+    # Sum the list
+    total = 0
+    j = 0
+    while j < 10000:
+        total = total + items[j]
+        j = j + 1
+    end
+    return total
+end
+
+# ============================================================================
+# TEST 7: Conditional Branching
+# ============================================================================
+def test_branching():
+    count = 0
+    i = 0
+    while i < 100000:
+        if i % 2 == 0:
+            count = count + 1
+        elif i % 3 == 0:
+            count = count + 2
+        elif i % 5 == 0:
+            count = count + 3
+        else:
+            count = count + 4
+        end
+        i = i + 1
+    end
+    return count
+end
+
+# ============================================================================
+# TEST 8: String Operations (if supported)
+# ============================================================================
+def test_string_concat():
+    result = ""
+    i = 0
+    while i < 1000:
+        result = result + "x"
+        i = i + 1
+    end
+    return len(result)
+end
+
+# ============================================================================
+# MAIN - Run all benchmarks
+# ============================================================================
+def main():
+    print("===========================================")
+    print("  AIMacro Performance Benchmark Suite")
+    print("===========================================")
+    print("")
+    
+    # Test 1: Loop
+    print("TEST 1: Million iterations...")
+    r1 = test_loop_million()
+    print("  Result: ")
+    print(r1)
+    print("  (expected: 1000000)")
+    print("")
+    
+    # Test 2: Arithmetic
+    print("TEST 2: Arithmetic operations...")
+    r2 = test_arithmetic()
+    print("  Result: ")
+    print(r2)
+    print("")
+    
+    # Test 3: Function calls
+    print("TEST 3: 100K function calls...")
+    r3 = test_function_calls()
+    print("  Result: ")
+    print(r3)
+    print("  (expected: 100000)")
+    print("")
+    
+    # Test 4: Fibonacci
+    print("TEST 4: Fibonacci(30)...")
+    r4 = test_fibonacci()
+    print("  Result: ")
+    print(r4)
+    print("  (expected: 832040)")
+    print("")
+    
+    # Test 5: Nested loops
+    print("TEST 5: 1000x1000 nested loops...")
+    r5 = test_nested_loops()
+    print("  Result: ")
+    print(r5)
+    print("  (expected: 1000000)")
+    print("")
+    
+    # Test 6: List operations
+    print("TEST 6: List append + sum...")
+    r6 = test_list_ops()
+    print("  Result: ")
+    print(r6)
+    print("  (expected: 49995000)")
+    print("")
+    
+    # Test 7: Branching
+    print("TEST 7: Conditional branching...")
+    r7 = test_branching()
+    print("  Result: ")
+    print(r7)
+    print("")
+    
+    print("===========================================")
+    print("  BENCHMARK COMPLETE")
+    print("===========================================")
+    print("")
+    print("Run with: time ./perf_test_exec")
+    print("Compare to Python: time python3 perf_test.py")
+end
