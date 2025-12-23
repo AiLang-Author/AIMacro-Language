@@ -10,13 +10,26 @@ user    0m0.198s
 sys     0m0.009s
 
 
-/Ailang/ailang$ time python3 perf_test.py
-209999
+Ailang/ailang$ time ./perf_test_exec
+TArrays Library Loaded (Typed Arrays with Magic Numbers)
+Loading Fixed-Point Trigonometry Library v1.0
+==============================================
+Library loaded successfully!
+Fixed-point scale: 10000 (4 decimal places)
+AIMacroTypes Library Loaded
+AIMacro Core Library Loaded
+THash Library Loaded (Typed Hash with Magic Numbers)
+AIMacroDict Runtime Library Loaded
+20999
 
-real    0m0.211s
-user    0m0.198s
-sys     0m0.009s
 
+real    0m0.014s
+user    0m0.008s
+sys     0m0.004s
+
+
+
+Python code 
 #!/usr/bin/env python3
 # perf_test.py
 # Same benchmarks in pure Python for comparison
