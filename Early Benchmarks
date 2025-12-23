@@ -1,6 +1,6 @@
 Early Benchmarks. 
 
-Test 2 removed due to bug
+Test 2 removed due to bugs, there maybe be more bugs yet to be found take these as low quality performance indicators.
 
 Ailang/ailang$ time python3 perf_test.py
 209999
