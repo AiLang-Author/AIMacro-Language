@@ -1,0 +1,920 @@
+//=============================================================================
+//
+// Library.OOP.ailang
+// Object-Oriented Programming Support Library for AILang
+// 
+// Provides class definition, instantiation, inheritance, and method dispatch
+// as an opt-in library rather than language feature.
+//=============================================================================
+
+Library.OOP
+
+LibraryImport.XArrays
+LibraryImport.HashMap
+
+//=============================================================================
+// INTERNAL DATA STRUCTURES
+//=============================================================================
+
+// Global registry of all defined classes
+// Key: class_name (String)
+// Value: ClassDef hash
+FixedPool.ClassRegistry {
+    "registry": Initialize=0 
+    "initialized": Initialize=0
+}
+
+// ClassDef structure (stored in registry as hash):
+//   "name": String - class name
+//   "parent": String|Null - parent class name
+//   "fields": Hash - field_name -> field_type
+//   "methods": Hash - method_name -> function_address
+//   "field_defaults": Hash - field_name -> default_value
+
+// Object structure (returned by ObjectNew as hash):
+//   "__class__": String - class name
+//   "__data__": Hash - field_name -> current_value
+
+
+//=============================================================================
+// REGISTRY INITIALIZATION
+//=============================================================================
+
+Function.OOP.EnsureInit {
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(ClassRegistry.initialized, 0) ThenBlock: {
+            ClassRegistry.registry = HashCreate(256)
+            ClassRegistry.initialized = 1
+        }
+        ReturnValue(1)
+    }
+}
+
+
+//=============================================================================
+// CLASS DEFINITION
+//=============================================================================
+
+Function.OOP.ClassDefine {
+    // Define a new class, optionally inheriting from a parent
+    //
+    // Input:
+    //   name: String        - name of the class
+    //   parent: String      - parent class name, or 0 for no inheritance
+    //
+    // Output: Integer (1 = success, 0 = failure)
+    
+    Input: name: Address
+    Input: parent: Address
+    Output: Integer
+    Body: {
+        OOP.EnsureInit()
+        
+        // Check if class already exists
+        existing = HashGet(ClassRegistry.registry, name)
+        IfCondition NotEqual(existing, 0) ThenBlock: {
+            ReturnValue(0)  // Class already defined
+        }
+        
+        // Create new class definition hash
+        class_def = HashCreate(64)
+        HashSet(class_def, "name", name)
+        HashSet(class_def, "parent", parent)
+        HashSet(class_def, "fields", HashCreate(32))
+        HashSet(class_def, "methods", HashCreate(32))
+        HashSet(class_def, "field_defaults", HashCreate(32))
+        
+        // If parent exists, copy its fields and methods
+        IfCondition NotEqual(parent, 0) ThenBlock: {
+            parent_def = HashGet(ClassRegistry.registry, parent)
+            IfCondition EqualTo(parent_def, 0) ThenBlock: {
+                ReturnValue(0)  // Parent class not found
+            }
+            
+            // Copy parent fields
+            parent_fields = HashGet(parent_def, "fields")
+            parent_field_keys = HashMap.HKeysSimple(parent_fields)
+            num_parent_fields = XArray.XSize(parent_field_keys)
+            
+            i = 0
+            WhileLoop LessThan(i, num_parent_fields) {
+                field_key = XArray.XGet(parent_field_keys, i)
+                field_type = HashGet(parent_fields, field_key)
+                HashSet(HashGet(class_def, "fields"), field_key, field_type)
+                i = Add(i, 1)
+            }
+            XArray.XDestroy(parent_field_keys)
+            
+            // Copy parent field defaults
+            parent_defaults = HashGet(parent_def, "field_defaults")
+            parent_default_keys = HashMap.HKeysSimple(parent_defaults)
+            num_defaults = XArray.XSize(parent_default_keys)
+            
+            j = 0
+            WhileLoop LessThan(j, num_defaults) {
+                default_key = XArray.XGet(parent_default_keys, j)
+                default_val = HashGet(parent_defaults, default_key)
+                HashSet(HashGet(class_def, "field_defaults"), default_key, default_val)
+                j = Add(j, 1)
+            }
+            XArray.XDestroy(parent_default_keys)
+            
+            // Copy parent methods
+            parent_methods = HashGet(parent_def, "methods")
+            parent_method_keys = HashMap.HKeysSimple(parent_methods)
+            num_methods = XArray.XSize(parent_method_keys)
+            
+            k = 0
+            WhileLoop LessThan(k, num_methods) {
+                method_key = XArray.XGet(parent_method_keys, k)
+                method_addr = HashGet(parent_methods, method_key)
+                HashSet(HashGet(class_def, "methods"), method_key, method_addr)
+                k = Add(k, 1)
+            }
+            XArray.XDestroy(parent_method_keys)
+        }
+        
+        // Register the class
+        HashSet(ClassRegistry.registry, name, class_def)
+        ReturnValue(1)
+    }
+}
+
+Function.OOP.ClassField {
+    // Add a field definition to a class
+    //
+    // Input:
+    //   class_name: String  - which class to modify
+    //   field_name: String  - name of the field
+    //   field_type: String  - type ("Integer", "String", "Array", "Hash", etc)
+    //
+    // Output: Integer (1 = success, 0 = failure)
+    
+    Input: class_name: Address
+    Input: field_name: Address
+    Input: field_type: Address
+    Output: Integer
+    Body: {
+        OOP.EnsureInit()
+        
+        class_def = HashGet(ClassRegistry.registry, class_name)
+        IfCondition EqualTo(class_def, 0) ThenBlock: {
+            ReturnValue(0)  // Class not found
+        }
+        
+        fields = HashGet(class_def, "fields")
+        HashSet(fields, field_name, field_type)
+        ReturnValue(1)
+    }
+}
+
+Function.OOP.ClassFieldDefault {
+    // Set a default value for a field (used during ObjectNew)
+    //
+    // Input:
+    //   class_name: String  - which class to modify
+    //   field_name: String  - which field
+    //   default_val: Any    - default value
+    //
+    // Output: Integer (1 = success, 0 = failure)
+    
+    Input: class_name: Address
+    Input: field_name: Address
+    Input: default_val: Integer
+    Output: Integer
+    Body: {
+        OOP.EnsureInit()
+        
+        class_def = HashGet(ClassRegistry.registry, class_name)
+        IfCondition EqualTo(class_def, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        
+        field_defaults = HashGet(class_def, "field_defaults")
+        HashSet(field_defaults, field_name, default_val)
+        ReturnValue(1)
+    }
+}
+
+Function.OOP.ClassMethod {
+    // Register a method for a class
+    //
+    // Input:
+    //   class_name: String    - which class
+    //   method_name: String   - name of method
+    //   func_addr: Address    - address of the implementing function
+    //
+    // Output: Integer (1 = success, 0 = failure)
+    //
+    // Note: The implementing function must take (obj: Object, ...args) as params
+    //       The 'self' equivalent is the first parameter
+    
+    Input: class_name: Address
+    Input: method_name: Address
+    Input: func_addr: Address
+    Output: Integer
+    Body: {
+        OOP.EnsureInit()
+        
+        class_def = HashGet(ClassRegistry.registry, class_name)
+        IfCondition EqualTo(class_def, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        
+        methods = HashGet(class_def, "methods")
+        HashSet(methods, method_name, func_addr)
+        ReturnValue(1)
+    }
+}
+
+
+//=============================================================================
+// MIXIN SUPPORT
+//=============================================================================
+
+Function.OOP.ClassMixin {
+    // Copy all methods from a mixin class into target class
+    // This is how we handle multiple inheritance / mixins
+    //
+    // Behavior:
+    //   - Get mixin's methods hash
+    //   - Copy each entry into target's methods hash
+    //   - Does NOT copy fields (mixins should be behavior-only)
+    //   - If method already exists in target, mixin does NOT override (target wins)
+    
+    Input: target_class: Address
+    Input: mixin_class: Address
+    Output: Integer
+    Body: {
+        OOP.EnsureInit()
+        
+        target_def = HashGet(ClassRegistry.registry, target_class)
+        mixin_def = HashGet(ClassRegistry.registry, mixin_class)
+        
+        IfCondition EqualTo(target_def, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(mixin_def, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        
+        target_methods = HashGet(target_def, "methods")
+        mixin_methods = HashGet(mixin_def, "methods")
+        mixin_method_keys = HashMap.HKeysSimple(mixin_methods)
+        num_mixin_methods = XArray.XSize(mixin_method_keys)
+        
+        // Copy methods that don't already exist in target
+        i = 0
+        WhileLoop LessThan(i, num_mixin_methods) {
+            method_key = XArray.XGet(mixin_method_keys, i)
+            existing = HashGet(target_methods, method_key)
+            IfCondition EqualTo(existing, 0) ThenBlock: {
+                method_addr = HashGet(mixin_methods, method_key)
+                HashSet(target_methods, method_key, method_addr)
+            }
+            i = Add(i, 1)
+        }
+        XArray.XDestroy(mixin_method_keys)
+        
+        ReturnValue(1)
+    }
+}
+
+Function.OOP.ClassMixinOverride {
+    // Same as ClassMixin but mixin methods DO override existing
+    // Use with caution - breaks encapsulation
+    
+    Input: target_class: Address
+    Input: mixin_class: Address
+    Output: Integer
+    Body: {
+        OOP.EnsureInit()
+        
+        target_def = HashGet(ClassRegistry.registry, target_class)
+        mixin_def = HashGet(ClassRegistry.registry, mixin_class)
+        
+        IfCondition EqualTo(target_def, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(mixin_def, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        
+        target_methods = HashGet(target_def, "methods")
+        mixin_methods = HashGet(mixin_def, "methods")
+        mixin_method_keys = HashMap.HKeysSimple(mixin_methods)
+        num_mixin_methods = XArray.XSize(mixin_method_keys)
+        
+        // Copy all methods, overriding existing ones
+        i = 0
+        WhileLoop LessThan(i, num_mixin_methods) {
+            method_key = XArray.XGet(mixin_method_keys, i)
+            method_addr = HashGet(mixin_methods, method_key)
+            HashSet(target_methods, method_key, method_addr)
+            i = Add(i, 1)
+        }
+        XArray.XDestroy(mixin_method_keys)
+        
+        ReturnValue(1)
+    }
+}
+
+
+//=============================================================================
+// OBJECT INSTANTIATION
+//=============================================================================
+
+Function.OOP.ObjectNew {
+    // Create a new instance of a class
+    //
+    // Input:
+    //   class_name: String  - which class to instantiate
+    //
+    // Output: Address (the new instance hash, or 0 on failure)
+    //
+    // Behavior:
+    //   - Create new Object hash
+    //   - Set __class__ field
+    //   - Initialize __data__ hash with all fields from class definition
+    //   - Apply default values where defined
+    //   - Does NOT call __init__ - use MethodCall for that
+    
+    Input: class_name: Address
+    Output: Address
+    Body: {
+        OOP.EnsureInit()
+        
+        class_def = HashGet(ClassRegistry.registry, class_name)
+        IfCondition EqualTo(class_def, 0) ThenBlock: {
+            ReturnValue(0)  // Class not found
+        }
+        
+        // Create object structure
+        obj = HashCreate(32)
+        HashSet(obj, "__class__", class_name)
+        HashSet(obj, "__data__", HashCreate(32))
+        
+        data = HashGet(obj, "__data__")
+        fields = HashGet(class_def, "fields")
+        field_defaults = HashGet(class_def, "field_defaults")
+        field_keys = HashMap.HKeysSimple(fields)
+        num_fields = XArray.XSize(field_keys)
+        
+        // Initialize all fields
+        i = 0
+        WhileLoop LessThan(i, num_fields) {
+            field_name = XArray.XGet(field_keys, i)
+            
+            // Check for default value
+            default_val = HashGet(field_defaults, field_name)
+            IfCondition NotEqual(default_val, 0) ThenBlock: {
+                HashSet(data, field_name, default_val)
+            } ElseBlock: {
+                // Initialize to type-appropriate default
+                field_type = HashGet(fields, field_name)
+                
+                // Compare field_type string to known types
+                // For now, initialize all to 0 (works for Integer, Address, etc)
+                HashSet(data, field_name, 0)
+            }
+            i = Add(i, 1)
+        }
+        XArray.XDestroy(field_keys)
+        
+        ReturnValue(obj)
+    }
+}
+
+Function.OOP.ObjectNewInit {
+    // Create instance AND call __init__ method with args
+    // Convenience wrapper around ObjectNew + MethodCall
+    //
+    // Input:
+    //   class_name: String  - which class
+    //   init_args: Address  - XArray of arguments to pass to __init__
+    //
+    // Output: Address (the object, or 0 on failure)
+    
+    Input: class_name: Address
+    Input: init_args: Address
+    Output: Address
+    Body: {
+        obj = OOP.ObjectNew(class_name)
+        IfCondition EqualTo(obj, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        
+        // Check if __init__ method exists
+        IfCondition OOP.MethodExists(obj, "__init__") ThenBlock: {
+            OOP.MethodCall(obj, "__init__", init_args)
+        }
+        
+        ReturnValue(obj)
+    }
+}
+
+
+//=============================================================================
+// FIELD ACCESS
+//=============================================================================
+
+Function.OOP.ObjectGet {
+    // Get a field value from an object
+    //
+    // Input:
+    //   obj: Address        - the instance hash
+    //   field_name: String  - which field
+    //
+    // Output: Integer/Address (the field value, or 0 if not found)
+    
+    Input: obj: Address
+    Input: field_name: Address
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(obj, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        data = HashGet(obj, "__data__")
+        ReturnValue(HashGet(data, field_name))
+    }
+}
+
+Function.OOP.ObjectSet {
+    // Set a field value on an object
+    //
+    // Input:
+    //   obj: Address        - the instance hash
+    //   field_name: String  - which field
+    //   value: Any          - new value
+    //
+    // Output: Integer (1 = success, 0 = failure)
+    
+    Input: obj: Address
+    Input: field_name: Address
+    Input: value: Integer
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(obj, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        data = HashGet(obj, "__data__")
+        HashSet(data, field_name, value)
+        ReturnValue(1)
+    }
+}
+
+Function.OOP.ObjectHasField {
+    // Check if object has a field
+    //
+    // Input:
+    //   obj: Address
+    //   field_name: String
+    //
+    // Output: Integer (1 = yes, 0 = no)
+    
+    Input: obj: Address
+    Input: field_name: Address
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(obj, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        data = HashGet(obj, "__data__")
+        value = HashGet(data, field_name)
+        // HashGet returns 0 if not found, but 0 could be a valid value
+        // Use HashExists for proper check if available
+        IfCondition NotEqual(value, 0) ThenBlock: {
+            ReturnValue(1)
+        }
+        // Check if key actually exists using HKeysSimple
+        keys = HashMap.HKeysSimple(data)
+        num_keys = XArray.XSize(keys)
+        found = 0
+        i = 0
+        WhileLoop LessThan(i, num_keys) {
+            key = XArray.XGet(keys, i)
+            cmp = StringCompare(key, field_name)
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                found = 1
+            }
+            i = Add(i, 1)
+        }
+        XArray.XDestroy(keys)
+        ReturnValue(found)
+    }
+}
+
+
+//=============================================================================
+// METHOD DISPATCH
+//=============================================================================
+
+Function.OOP._MethodLookupInClass {
+    // Internal helper: look up method in specific class (no inheritance)
+    Input: class_name: Address
+    Input: method_name: Address
+    Output: Address
+    Body: {
+        class_def = HashGet(ClassRegistry.registry, class_name)
+        IfCondition EqualTo(class_def, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        methods = HashGet(class_def, "methods")
+        ReturnValue(HashGet(methods, method_name))
+    }
+}
+
+Function.OOP._MethodLookupWithInheritance {
+    // Internal helper: look up method walking inheritance chain
+    Input: class_name: Address
+    Input: method_name: Address
+    Output: Address
+    Body: {
+        current_class = class_name
+        
+        WhileLoop NotEqual(current_class, 0) {
+            func_addr = OOP._MethodLookupInClass(current_class, method_name)
+            IfCondition NotEqual(func_addr, 0) ThenBlock: {
+                ReturnValue(func_addr)
+            }
+            
+            // Move to parent class
+            class_def = HashGet(ClassRegistry.registry, current_class)
+            IfCondition EqualTo(class_def, 0) ThenBlock: {
+                ReturnValue(0)
+            }
+            current_class = HashGet(class_def, "parent")
+        }
+        
+        ReturnValue(0)
+    }
+}
+
+Function.OOP.MethodCall {
+    // Call a method on an object
+    //
+    // Input:
+    //   obj: Address         - the instance ('self')
+    //   method_name: String  - which method to call
+    //   args: Address        - XArray of arguments (NOT including self)
+    //
+    // Output: Integer/Address (return value from method, or 0 if not found)
+    //
+    // Behavior:
+    //   1. Get obj's class_name
+    //   2. Lookup class in ClassRegistry
+    //   3. Lookup method_name in class's methods hash
+    //   4. If not found AND class has parent, recurse up inheritance chain
+    //   5. If found, call function with (obj, ...args)
+    //   6. If not found anywhere, return 0
+    
+    Input: obj: Address
+    Input: method_name: Address
+    Input: args: Address
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(obj, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        
+        class_name = HashGet(obj, "__class__")
+        func_addr = OOP._MethodLookupWithInheritance(class_name, method_name)
+        
+        IfCondition EqualTo(func_addr, 0) ThenBlock: {
+            // Method not found
+            PrintMessage("ERROR: Method not found: ")
+            PrintMessage(method_name)
+            PrintMessage("\n")
+            ReturnValue(0)
+        }
+        
+        // Build call args: prepend obj (self) to args
+        // For simplicity, we support up to 5 method arguments
+        num_args = XArray.XSize(args)
+        
+        // Call based on number of arguments
+        // This is verbose but necessary without variadic CallIndirect
+        IfCondition EqualTo(num_args, 0) ThenBlock: {
+            result = CallIndirect(func_addr, obj)
+            ReturnValue(result)
+        }
+        
+        IfCondition EqualTo(num_args, 1) ThenBlock: {
+            arg0 = XArray.XGet(args, 0)
+            result = CallIndirect(func_addr, obj, arg0)
+            ReturnValue(result)
+        }
+        
+        IfCondition EqualTo(num_args, 2) ThenBlock: {
+            arg0 = XArray.XGet(args, 0)
+            arg1 = XArray.XGet(args, 1)
+            result = CallIndirect(func_addr, obj, arg0, arg1)
+            ReturnValue(result)
+        }
+        
+        IfCondition EqualTo(num_args, 3) ThenBlock: {
+            arg0 = XArray.XGet(args, 0)
+            arg1 = XArray.XGet(args, 1)
+            arg2 = XArray.XGet(args, 2)
+            result = CallIndirect(func_addr, obj, arg0, arg1, arg2)
+            ReturnValue(result)
+        }
+        
+        IfCondition EqualTo(num_args, 4) ThenBlock: {
+            arg0 = XArray.XGet(args, 0)
+            arg1 = XArray.XGet(args, 1)
+            arg2 = XArray.XGet(args, 2)
+            arg3 = XArray.XGet(args, 3)
+            result = CallIndirect(func_addr, obj, arg0, arg1, arg2, arg3)
+            ReturnValue(result)
+        }
+        
+        // 5+ args
+        arg0 = XArray.XGet(args, 0)
+        arg1 = XArray.XGet(args, 1)
+        arg2 = XArray.XGet(args, 2)
+        arg3 = XArray.XGet(args, 3)
+        arg4 = XArray.XGet(args, 4)
+        result = CallIndirect(func_addr, obj, arg0, arg1, arg2, arg3, arg4)
+        ReturnValue(result)
+    }
+}
+
+Function.OOP.MethodExists {
+    // Check if a method exists on an object (including inherited)
+    //
+    // Input:
+    //   obj: Address
+    //   method_name: String
+    //
+    // Output: Integer (1 = exists, 0 = doesn't)
+    
+    Input: obj: Address
+    Input: method_name: Address
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(obj, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        
+        class_name = HashGet(obj, "__class__")
+        func_addr = OOP._MethodLookupWithInheritance(class_name, method_name)
+        
+        IfCondition NotEqual(func_addr, 0) ThenBlock: {
+            ReturnValue(1)
+        }
+        ReturnValue(0)
+    }
+}
+
+Function.OOP.MethodLookup {
+    // Get the function address for a method without calling it
+    // Useful for passing methods as callbacks
+    //
+    // Input:
+    //   obj: Address
+    //   method_name: String
+    //
+    // Output: Address (function address, or 0 if not found)
+    
+    Input: obj: Address
+    Input: method_name: Address
+    Output: Address
+    Body: {
+        IfCondition EqualTo(obj, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        
+        class_name = HashGet(obj, "__class__")
+        ReturnValue(OOP._MethodLookupWithInheritance(class_name, method_name))
+    }
+}
+
+
+//=============================================================================
+// INTROSPECTION
+//=============================================================================
+
+Function.OOP.ObjectClass {
+    // Get the class name of an object
+    //
+    // Input:
+    //   obj: Address
+    //
+    // Output: Address (class name string, or 0 if null)
+    
+    Input: obj: Address
+    Output: Address
+    Body: {
+        IfCondition EqualTo(obj, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        ReturnValue(HashGet(obj, "__class__"))
+    }
+}
+
+Function.OOP.ObjectIsInstance {
+    // Check if object is instance of a class (including inheritance)
+    //
+    // Input:
+    //   obj: Address
+    //   class_name: String
+    //
+    // Output: Integer (1 = yes, 0 = no)
+    //
+    // Behavior:
+    //   - Check if obj's class matches
+    //   - If not, check parent, recurse up chain
+    
+    Input: obj: Address
+    Input: class_name: Address
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(obj, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        
+        obj_class = HashGet(obj, "__class__")
+        current_class = obj_class
+        
+        WhileLoop NotEqual(current_class, 0) {
+            cmp = StringCompare(current_class, class_name)
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                ReturnValue(1)
+            }
+            
+            // Move to parent
+            class_def = HashGet(ClassRegistry.registry, current_class)
+            IfCondition EqualTo(class_def, 0) ThenBlock: {
+                ReturnValue(0)
+            }
+            current_class = HashGet(class_def, "parent")
+        }
+        
+        ReturnValue(0)
+    }
+}
+
+Function.OOP.ClassGetFields {
+    // Get list of all field names for a class
+    //
+    // Input:
+    //   class_name: String
+    //
+    // Output: Address (XArray of field name strings)
+    
+    Input: class_name: Address
+    Output: Address
+    Body: {
+        OOP.EnsureInit()
+        
+        class_def = HashGet(ClassRegistry.registry, class_name)
+        IfCondition EqualTo(class_def, 0) ThenBlock: {
+            ReturnValue(XArray.XCreate(0))
+        }
+        
+        fields = HashGet(class_def, "fields")
+        ReturnValue(HashMap.HKeysSimple(fields))
+    }
+}
+
+Function.OOP.ClassGetMethods {
+    // Get list of all method names for a class
+    //
+    // Input:
+    //   class_name: String
+    //
+    // Output: Address (XArray of method name strings)
+    
+    Input: class_name: Address
+    Output: Address
+    Body: {
+        OOP.EnsureInit()
+        
+        class_def = HashGet(ClassRegistry.registry, class_name)
+        IfCondition EqualTo(class_def, 0) ThenBlock: {
+            ReturnValue(XArray.XCreate(0))
+        }
+        
+        methods = HashGet(class_def, "methods")
+        ReturnValue(HashMap.HKeysSimple(methods))
+    }
+}
+
+Function.OOP.ClassGetParent {
+    // Get parent class name
+    //
+    // Input:
+    //   class_name: String
+    //
+    // Output: Address (parent name string, or 0 if no parent)
+    
+    Input: class_name: Address
+    Output: Address
+    Body: {
+        OOP.EnsureInit()
+        
+        class_def = HashGet(ClassRegistry.registry, class_name)
+        IfCondition EqualTo(class_def, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        ReturnValue(HashGet(class_def, "parent"))
+    }
+}
+
+Function.OOP.ClassExists {
+    // Check if a class is defined
+    //
+    // Input:
+    //   class_name: String
+    //
+    // Output: Integer (1 = exists, 0 = doesn't)
+    
+    Input: class_name: Address
+    Output: Integer
+    Body: {
+        OOP.EnsureInit()
+        
+        class_def = HashGet(ClassRegistry.registry, class_name)
+        IfCondition NotEqual(class_def, 0) ThenBlock: {
+            ReturnValue(1)
+        }
+        ReturnValue(0)
+    }
+}
+
+
+//=============================================================================
+// SUPER CALL SUPPORT
+//=============================================================================
+
+Function.OOP.SuperCall {
+    // Call parent class's version of a method
+    // Used when a subclass wants to extend rather than replace parent behavior
+    //
+    // Input:
+    //   obj: Address         - the instance
+    //   current_class: String - the class making the super call
+    //   method_name: String   - method to call on parent
+    //   args: Address         - XArray of arguments
+    //
+    // Output: Integer/Address (return value from parent method)
+    //
+    // Example (in Dog_speak):
+    //   SuperCall(self, "Dog", "speak", args)  // calls Animal_speak
+    
+    Input: obj: Address
+    Input: current_class: Address
+    Input: method_name: Address
+    Input: args: Address
+    Output: Integer
+    Body: {
+        class_def = HashGet(ClassRegistry.registry, current_class)
+        IfCondition EqualTo(class_def, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        
+        parent_class = HashGet(class_def, "parent")
+        IfCondition EqualTo(parent_class, 0) ThenBlock: {
+            ReturnValue(0)  // No parent to call
+        }
+        
+        func_addr = OOP._MethodLookupWithInheritance(parent_class, method_name)
+        IfCondition EqualTo(func_addr, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        
+        // Call with same arg dispatch as MethodCall
+        num_args = XArray.XSize(args)
+        
+        IfCondition EqualTo(num_args, 0) ThenBlock: {
+            result = CallIndirect(func_addr, obj)
+            ReturnValue(result)
+        }
+        
+        IfCondition EqualTo(num_args, 1) ThenBlock: {
+            arg0 = XArray.XGet(args, 0)
+            result = CallIndirect(func_addr, obj, arg0)
+            ReturnValue(result)
+        }
+        
+        IfCondition EqualTo(num_args, 2) ThenBlock: {
+            arg0 = XArray.XGet(args, 0)
+            arg1 = XArray.XGet(args, 1)
+            result = CallIndirect(func_addr, obj, arg0, arg1)
+            ReturnValue(result)
+        }
+        
+        arg0 = XArray.XGet(args, 0)
+        arg1 = XArray.XGet(args, 1)
+        arg2 = XArray.XGet(args, 2)
+        result = CallIndirect(func_addr, obj, arg0, arg1, arg2)
+        ReturnValue(result)
+    }
+}
+
+
+//=============================================================================
+// END Library.OOP.ailang
+//=============================================================================
