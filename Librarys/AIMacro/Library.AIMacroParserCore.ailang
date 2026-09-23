@@ -2602,29 +2602,21 @@ Function.Parse_AssignRhs {
 Function.Parse_AssignOrExpr {
     Output: Address
     Body: {
-        // Starred unpack: *rest, last = ...
+        // Starred / rich unpack: *rest, last = ... / *a, self.x = ...
         t = Parse_Type()
         IfCondition EqualTo(t, Token.STAR) ThenBlock: {
             line = Parse_Line()
             col = Parse_Col()
             targets = Array.Create(8)
             WhileLoop EqualTo(1, 1) {
-                IfCondition EqualTo(Parse_Match(Token.STAR), 1) ThenBlock: {
-                    Parse_Advance()
-                }
-                IfCondition EqualTo(Parse_Match(Token.IDENTIFIER), 0) ThenBlock: {
-                    BreakLoop
-                }
-                name_ptr = Parse_Val()
-                name = Parse_CopyStr(name_ptr)
-                Parse_Advance()
-                idn = AST_Create(Node.IDENT, 1)
-                ArraySet(idn, 3, name)
-                Array.Push(targets, idn)
+                Array.Push(targets, Parse_UnpackTarget())
                 IfCondition EqualTo(Parse_Match(Token.COMMA), 0) ThenBlock: {
                     BreakLoop
                 }
                 Parse_Advance()
+                IfCondition EqualTo(Parse_Match(Token.ASSIGN), 1) ThenBlock: {
+                    BreakLoop
+                }
             }
             Parse_Consume(Token.ASSIGN)
             values = Array.Create(8)
@@ -2731,7 +2723,7 @@ Function.Parse_AssignOrExpr {
                 IfCondition EqualTo(Parse_Match(Token.ASSIGN), 1) ThenBlock: {
                     BreakLoop
                 }
-                Array.Push(targets, Parse_Expr())
+                Array.Push(targets, Parse_UnpackTarget())
             }
             Parse_Consume(Token.ASSIGN)
             values = Array.Create(8)
@@ -2852,56 +2844,58 @@ Function.Parse_AssignOrExpr {
 // =============================================================================
 // TUPLE UNPACKING: a, b = expr  OR  a, b, c = expr
 // =============================================================================
+// One unpack LHS target: IDENT / *IDENT / ATTRIBUTE / INDEX (parse-coverage for *).
+Function.Parse_UnpackTarget {
+    Output: Address
+    Body: {
+        Parse_SkipNoise()
+        is_star = Parse_Match(Token.STAR)
+        IfCondition EqualTo(is_star, 1) ThenBlock: {
+            Parse_Advance()
+            Parse_SkipNoise()
+            name_ptr = Parse_Val()
+            name = Parse_CopyStr(name_ptr)
+            Parse_Consume(Token.IDENTIFIER)
+            idn = AST_Create(Node.IDENT, 1)
+            ArraySet(idn, 3, name)
+            ReturnValue(idn)
+        }
+        ReturnValue(Parse_Expr())
+    }
+}
+
+// TUPLE UNPACKING: a, b = expr  OR  a, *b = expr  OR  tmp, self.x = expr
 Function.Parse_TupleUnpack {
     Output: Address
     Body: {
         line = Parse_Line()
         col = Parse_Col()
         
-        // Collect target variable names
         targets = Array.Create(8)
+        Array.Push(targets, Parse_UnpackTarget())
         
-        // First identifier
-        name1_ptr = Parse_Val()
-        name1 = Parse_CopyStr(name1_ptr)
-        Parse_Consume(Token.IDENTIFIER)
-        idn = AST_Create(Node.IDENT, 1)
-        ArraySet(idn, 3, name1)
-        Array.Push(targets, idn)
-        
-        // Collect remaining targets (comma-separated)
         WhileLoop EqualTo(1, 1) {
             is_comma = Parse_Match(Token.COMMA)
             IfCondition EqualTo(is_comma, 0) ThenBlock: {
                 BreakLoop
             }
-            Parse_Advance()  // Skip comma
+            Parse_Advance()
             
-            // Check if next is ASSIGN (trailing comma case: a, b, = ...)
             is_assign = Parse_Match(Token.ASSIGN)
             IfCondition EqualTo(is_assign, 1) ThenBlock: {
                 BreakLoop
             }
             
-            name_ptr = Parse_Val()
-            name = Parse_CopyStr(name_ptr)
-            Parse_Consume(Token.IDENTIFIER)
-            idn = AST_Create(Node.IDENT, 1)
-            ArraySet(idn, 3, name)
-            Array.Push(targets, idn)
+            Array.Push(targets, Parse_UnpackTarget())
         }
         
-        // Consume the =
         Parse_Consume(Token.ASSIGN)
         
-        // Parse the right-hand side value(s)
-        // Could be: a, b = 1, 2  OR  a, b = func()  OR  a, b = some_list
         values = Array.Create(8)
         
         first_val = Parse_Expr()
         Array.Push(values, first_val)
         
-        // Check for more values (tuple literal on RHS)
         WhileLoop EqualTo(1, 1) {
             is_comma = Parse_Match(Token.COMMA)
             IfCondition EqualTo(is_comma, 0) ThenBlock: {
@@ -2913,7 +2907,6 @@ Function.Parse_TupleUnpack {
             Array.Push(values, val)
         }
         
-        // Create tuple unpack node: [TUPLE_UNPACK, line, col, targets, values]
         node = AST_Create(Node.TUPLE_UNPACK, 2)
         ArraySet(node, 1, line)
         ArraySet(node, 2, col)

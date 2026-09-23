@@ -767,6 +767,14 @@ Function.Gen_UnpackOne {
             OOPGen_AttrAssign(anode)
             ReturnValue(0)
         }
+        IfCondition EqualTo(tt, Node.INDEX_ACCESS) ThenBlock: {
+            inode = AST_Create(Node.INDEX_ASSIGN, 3)
+            ArraySet(inode, 3, ArrayGet(target, 3))
+            ArraySet(inode, 4, ArrayGet(target, 4))
+            ArraySet(inode, 5, val)
+            Gen_IndexAssign(inode)
+            ReturnValue(0)
+        }
         Gen_EmitIndent()
         Gen_Emit(target)
         Gen_Emit(" = ")
