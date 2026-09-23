@@ -2145,6 +2145,56 @@ Function.Parse_While {
     }
 }
 
+
+// Consume one for/comp unpack target: IDENT or nested (target, ...).
+// Returns first IDENT name for AST binding; nested structure is parse-coverage only.
+Function.Parse_ConsumeForTarget {
+    Output: Address
+    Body: {
+        Parse_SkipNoise()
+        is_lp = Parse_Match(Token.LPAREN)
+        IfCondition EqualTo(is_lp, 1) ThenBlock: {
+            Parse_Advance()
+            depth = 1
+            first = 0
+            WhileLoop GreaterThan(depth, 0) {
+                Parse_SkipNoise()
+                t = Parse_Type()
+                IfCondition EqualTo(t, Token.EOF) ThenBlock: {
+                    BreakLoop
+                }
+                IfCondition EqualTo(t, Token.LPAREN) ThenBlock: {
+                    depth = Add(depth, 1)
+                    Parse_Advance()
+                } ElseBlock: {
+                    IfCondition EqualTo(t, Token.RPAREN) ThenBlock: {
+                        depth = Subtract(depth, 1)
+                        Parse_Advance()
+                    } ElseBlock: {
+                        IfCondition EqualTo(t, Token.IDENTIFIER) ThenBlock: {
+                            IfCondition EqualTo(first, 0) ThenBlock: {
+                                p = Parse_Val()
+                                first = Parse_CopyStr(p)
+                            }
+                            Parse_Advance()
+                        } ElseBlock: {
+                            // COMMA / STAR / other tokens inside nested target
+                            Parse_Advance()
+                        }
+                    }
+                }
+            }
+            Parse_SkipNoise()
+            ReturnValue(first)
+        }
+        p = Parse_Val()
+        name = Parse_CopyStr(p)
+        Parse_Consume(Token.IDENTIFIER)
+        Parse_SkipNoise()
+        ReturnValue(name)
+    }
+}
+
 // =============================================================================
 // FOR STATEMENT - WITH TUPLE UNPACKING SUPPORT
 // =============================================================================
@@ -2161,15 +2211,12 @@ Function.Parse_For {
         var2 = 0
         is_tuple = 0
         
-        // for (a, b[, c...]) in ...
+        // for (a, b[, c...]) / for (i, (a, b)) in ...
         is_lparen = Parse_Match(Token.LPAREN)
         IfCondition EqualTo(is_lparen, 1) ThenBlock: {
             Parse_Advance()
             Parse_SkipNoise()
-            var1_ptr = Parse_Val()
-            var1 = Parse_CopyStr(var1_ptr)
-            Parse_Consume(Token.IDENTIFIER)
-            Parse_SkipNoise()
+            var1 = Parse_ConsumeForTarget()
             WhileLoop EqualTo(Parse_Match(Token.COMMA), 1) {
                 Parse_Advance()
                 Parse_SkipNoise()
@@ -2177,37 +2224,28 @@ Function.Parse_For {
                 IfCondition EqualTo(is_rp, 1) ThenBlock: {
                     BreakLoop
                 }
-                p = Parse_Val()
+                name = Parse_ConsumeForTarget()
                 IfCondition EqualTo(var2, 0) ThenBlock: {
-                    var2 = Parse_CopyStr(p)
+                    var2 = name
                 }
-                Parse_Consume(Token.IDENTIFIER)
-                Parse_SkipNoise()
                 is_tuple = 1
             }
             Parse_SkipNoise()
             Parse_Consume(Token.RPAREN)
             Parse_SkipNoise()
         } ElseBlock: {
-            // for a[, b[, c...]] in ...
-            var1_ptr = Parse_Val()
-            var1 = Parse_CopyStr(var1_ptr)
-            Parse_Consume(Token.IDENTIFIER)
-            Parse_SkipNoise()
+            // for a[, b[, c...]] / for i, (a, b) in ...
+            var1 = Parse_ConsumeForTarget()
             is_comma = Parse_Match(Token.COMMA)
             IfCondition EqualTo(is_comma, 1) ThenBlock: {
                 is_tuple = 1
                 Parse_Advance()
                 Parse_SkipNoise()
-                var2_ptr = Parse_Val()
-                var2 = Parse_CopyStr(var2_ptr)
-                Parse_Consume(Token.IDENTIFIER)
-                Parse_SkipNoise()
+                var2 = Parse_ConsumeForTarget()
                 WhileLoop EqualTo(Parse_Match(Token.COMMA), 1) {
                     Parse_Advance()
                     Parse_SkipNoise()
-                    Parse_Consume(Token.IDENTIFIER)
-                    Parse_SkipNoise()
+                    discard = Parse_ConsumeForTarget()
                 }
             }
         }
@@ -4467,7 +4505,7 @@ Function.Parse_ArgList {
 // =============================================================================
 
 // Shared: after "for" consumed, parse targets + "in iter [if cond]" into LIST_COMP.
-// Targets: a | a, b[, c...] | (a, b[, c...]). var2=0 when single-target.
+// Targets: a | a, b | a, (b, c) | (a, b) | (a, (b, c)). var2=0 when single-target.
 // Used for listcomp / genexp / setcomp / dictcomp (LIST_COMP AST).
 // Additional for/if (comp_iter) handled by Parse_CompIterExtra.
 Function.Parse_CompForBody {
@@ -4478,14 +4516,12 @@ Function.Parse_CompForBody {
     Body: {
         var1 = 0
         var2 = 0
+        // Targets: a | a, b | a, (b, c) | (a, b) | (a, (b, c))
         is_lparen = Parse_Match(Token.LPAREN)
         IfCondition EqualTo(is_lparen, 1) ThenBlock: {
             Parse_Advance()
             Parse_SkipNoise()
-            var1_ptr = Parse_Val()
-            var1 = Parse_CopyStr(var1_ptr)
-            Parse_Consume(Token.IDENTIFIER)
-            Parse_SkipNoise()
+            var1 = Parse_ConsumeForTarget()
             WhileLoop EqualTo(Parse_Match(Token.COMMA), 1) {
                 Parse_Advance()
                 Parse_SkipNoise()
@@ -4493,30 +4529,23 @@ Function.Parse_CompForBody {
                 IfCondition EqualTo(is_rp, 1) ThenBlock: {
                     BreakLoop
                 }
-                p = Parse_Val()
+                name = Parse_ConsumeForTarget()
                 IfCondition EqualTo(var2, 0) ThenBlock: {
-                    var2 = Parse_CopyStr(p)
+                    var2 = name
                 }
-                Parse_Consume(Token.IDENTIFIER)
-                Parse_SkipNoise()
             }
             Parse_SkipNoise()
             Parse_Consume(Token.RPAREN)
             Parse_SkipNoise()
         } ElseBlock: {
-            var1_ptr = Parse_Val()
-            var1 = Parse_CopyStr(var1_ptr)
-            Parse_Consume(Token.IDENTIFIER)
-            Parse_SkipNoise()
+            var1 = Parse_ConsumeForTarget()
             WhileLoop EqualTo(Parse_Match(Token.COMMA), 1) {
                 Parse_Advance()
                 Parse_SkipNoise()
-                p = Parse_Val()
+                name = Parse_ConsumeForTarget()
                 IfCondition EqualTo(var2, 0) ThenBlock: {
-                    var2 = Parse_CopyStr(p)
+                    var2 = name
                 }
-                Parse_Consume(Token.IDENTIFIER)
-                Parse_SkipNoise()
             }
         }
         Parse_Consume(Token.IN)
