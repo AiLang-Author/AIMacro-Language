@@ -481,7 +481,7 @@ Function.Lex_ReadNumber {
     Body: {
         val = 0
         ch0 = Lex_Char()
-        // Hex: 0xNN / 0XNN
+        // Hex: 0xNN / 0XNN (underscores allowed between digits: 0xffff_ffff)
         IfCondition EqualTo(ch0, 48) ThenBlock: {
             hx = Lex_Peek(1)
             IfCondition Or(EqualTo(hx, 120), EqualTo(hx, 88)) ThenBlock: {
@@ -489,6 +489,15 @@ Function.Lex_ReadNumber {
                 Lex_Advance()
                 WhileLoop EqualTo(1, 1) {
                     ch = Lex_Char()
+                    // digit separator _
+                    IfCondition EqualTo(ch, 95) ThenBlock: {
+                        IfCondition EqualTo(Lex_IsHexDigit(Lex_Peek(1)), 1) ThenBlock: {
+                            Lex_Advance()
+                            ch = Lex_Char()
+                        } ElseBlock: {
+                            BreakLoop
+                        }
+                    }
                     IfCondition EqualTo(Lex_IsHexDigit(ch), 0) ThenBlock: {
                         BreakLoop
                     }
@@ -507,12 +516,21 @@ Function.Lex_ReadNumber {
                 }
                 ReturnValue(val)
             }
-            // Octal: 0oNN / 0ONN
+            // Octal: 0oNN / 0ONN (0o7_7)
             IfCondition Or(EqualTo(hx, 111), EqualTo(hx, 79)) ThenBlock: {
                 Lex_Advance()
                 Lex_Advance()
                 WhileLoop EqualTo(1, 1) {
                     ch = Lex_Char()
+                    IfCondition EqualTo(ch, 95) ThenBlock: {
+                        nxt = Lex_Peek(1)
+                        IfCondition And(GreaterEqual(nxt, 48), LessEqual(nxt, 55)) ThenBlock: {
+                            Lex_Advance()
+                            ch = Lex_Char()
+                        } ElseBlock: {
+                            BreakLoop
+                        }
+                    }
                     // digits 0-7 only
                     IfCondition Or(LessThan(ch, 48), GreaterThan(ch, 55)) ThenBlock: {
                         BreakLoop
@@ -524,12 +542,21 @@ Function.Lex_ReadNumber {
                 }
                 ReturnValue(val)
             }
-            // Binary: 0bNN / 0BNN
+            // Binary: 0bNN / 0BNN (0b1010_0101)
             IfCondition Or(EqualTo(hx, 98), EqualTo(hx, 66)) ThenBlock: {
                 Lex_Advance()
                 Lex_Advance()
                 WhileLoop EqualTo(1, 1) {
                     ch = Lex_Char()
+                    IfCondition EqualTo(ch, 95) ThenBlock: {
+                        nxt = Lex_Peek(1)
+                        IfCondition And(GreaterEqual(nxt, 48), LessEqual(nxt, 49)) ThenBlock: {
+                            Lex_Advance()
+                            ch = Lex_Char()
+                        } ElseBlock: {
+                            BreakLoop
+                        }
+                    }
                     // digits 0-1 only
                     IfCondition Or(LessThan(ch, 48), GreaterThan(ch, 49)) ThenBlock: {
                         BreakLoop
@@ -543,8 +570,17 @@ Function.Lex_ReadNumber {
             }
         }
 
+        // Decimal int: 1_000 / 1_000_000
         WhileLoop EqualTo(1, 1) {
             ch = Lex_Char()
+            IfCondition EqualTo(ch, 95) ThenBlock: {
+                IfCondition EqualTo(Lex_IsDigit(Lex_Peek(1)), 1) ThenBlock: {
+                    Lex_Advance()
+                    ch = Lex_Char()
+                } ElseBlock: {
+                    BreakLoop
+                }
+            }
             is_dig = Lex_IsDigit(ch)
             IfCondition EqualTo(is_dig, 0) ThenBlock: {
                 BreakLoop
@@ -566,13 +602,19 @@ Function.Lex_EmitFloatSlice {
         IfCondition LessThan(slen, 1) ThenBlock: {
             ReturnValue(0)
         }
+        // Copy slice but drop digit separators (_) so FloatParse sees 3.1415 not 3.14_15
         fs = Allocate(Add(slen, 1))
         j = 0
-        WhileLoop LessThan(j, slen) {
-            SetByte(fs, j, GetByte(Lex.src, Add(start, j)))
-            j = Add(j, 1)
+        i = 0
+        WhileLoop LessThan(i, slen) {
+            ch = GetByte(Lex.src, Add(start, i))
+            IfCondition NotEqual(ch, 95) ThenBlock: {
+                SetByte(fs, j, ch)
+                j = Add(j, 1)
+            }
+            i = Add(i, 1)
         }
-        SetByte(fs, slen, 0)
+        SetByte(fs, j, 0)
         Lex_Emit(Token.FLOAT, fs)
     }
 }
@@ -597,7 +639,18 @@ Function.Lex_TryScanExponent {
         IfCondition Or(EqualTo(ch, 43), EqualTo(ch, 45)) ThenBlock: {
             Lex_Advance()
         }
-        WhileLoop EqualTo(Lex_IsDigit(Lex_Char()), 1) {
+        WhileLoop EqualTo(1, 1) {
+            che = Lex_Char()
+            IfCondition EqualTo(che, 95) ThenBlock: {
+                IfCondition EqualTo(Lex_IsDigit(Lex_Peek(1)), 1) ThenBlock: {
+                    Lex_Advance()
+                    ContinueLoop
+                }
+                BreakLoop
+            }
+            IfCondition EqualTo(Lex_IsDigit(che), 0) ThenBlock: {
+                BreakLoop
+            }
             Lex_Advance()
         }
         ReturnValue(1)
@@ -834,9 +887,21 @@ Function.Lex_Tokenize {
                 ch2 = Lex_Char()
                 IfCondition EqualTo(ch2, 46) ThenBlock: {
                     nxt = Lex_Peek(1)
-                    IfCondition EqualTo(Lex_IsDigit(nxt), 1) ThenBlock: {
+                    // 3.14 / 3.14_15 — digit or _digit starts fraction
+                    IfCondition Or(EqualTo(Lex_IsDigit(nxt), 1), And(EqualTo(nxt, 95), EqualTo(Lex_IsDigit(Lex_Peek(2)), 1))) ThenBlock: {
                         Lex_Advance()
-                        WhileLoop EqualTo(Lex_IsDigit(Lex_Char()), 1) {
+                        WhileLoop EqualTo(1, 1) {
+                            chf = Lex_Char()
+                            IfCondition EqualTo(chf, 95) ThenBlock: {
+                                IfCondition EqualTo(Lex_IsDigit(Lex_Peek(1)), 1) ThenBlock: {
+                                    Lex_Advance()
+                                    ContinueLoop
+                                }
+                                BreakLoop
+                            }
+                            IfCondition EqualTo(Lex_IsDigit(chf), 0) ThenBlock: {
+                                BreakLoop
+                            }
                             Lex_Advance()
                         }
                         is_float = 1
