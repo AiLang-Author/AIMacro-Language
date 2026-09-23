@@ -4442,6 +4442,7 @@ Function.Parse_ArgList {
                     col = Parse_Col()
                     Parse_Advance()
                     arg = Parse_CompForBody(first_arg, line, col)
+                    Parse_CompIterExtra(first_arg, line, col)
                     Array.Push(args, arg)
                     BreakLoop
                 }
@@ -4468,6 +4469,7 @@ Function.Parse_ArgList {
 // Shared: after "for" consumed, parse targets + "in iter [if cond]" into LIST_COMP.
 // Targets: a | a, b[, c...] | (a, b[, c...]). var2=0 when single-target.
 // Used for listcomp / genexp / setcomp / dictcomp (LIST_COMP AST).
+// Additional for/if (comp_iter) handled by Parse_CompIterExtra.
 Function.Parse_CompForBody {
     Input: first: Address
     Input: line: Integer
@@ -4537,7 +4539,32 @@ Function.Parse_CompForBody {
     }
 }
 
-// Shared: after elt, parse "for targets in iter [if cond]" then consume close_tok.
+// Consume extra for/if clauses (Python comp_iter) after the first for-body.
+// Parse coverage only — nested LIST_COMP / conds are discarded; AST keeps first for.
+Function.Parse_CompIterExtra {
+    Input: first: Address
+    Input: line: Integer
+    Input: col: Integer
+    Output: Integer
+    Body: {
+        Parse_SkipNoise()
+        WhileLoop Or(EqualTo(Parse_Match(Token.FOR), 1), EqualTo(Parse_Match(Token.IF), 1)) {
+            IfCondition EqualTo(Parse_Match(Token.FOR), 1) ThenBlock: {
+                Parse_Advance()
+                Parse_SkipNoise()
+                discard = Parse_CompForBody(first, line, col)
+            } ElseBlock: {
+                Parse_Advance()
+                Parse_SkipNoise()
+                discard_cond = Parse_Or()
+            }
+            Parse_SkipNoise()
+        }
+        ReturnValue(0)
+    }
+}
+
+// Shared: after elt, parse "for targets in iter" then comp_iter then close_tok.
 Function.Parse_CompAfter {
     Input: first: Address
     Input: close_tok: Integer
@@ -4547,7 +4574,7 @@ Function.Parse_CompAfter {
     Body: {
         Parse_Advance()  // for
         node = Parse_CompForBody(first, line, col)
-        Parse_SkipNoise()
+        Parse_CompIterExtra(first, line, col)
         Parse_Consume(close_tok)
         ReturnValue(node)
     }
