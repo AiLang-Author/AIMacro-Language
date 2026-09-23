@@ -1,0 +1,1962 @@
+// Library.AIMacroCodeGen3.ailang
+// AILang Code Generator - Part 3: Call Extraction, Flattening
+//
+// Dependencies: AIMacroCore, AIMacroParserCore, AIMacroCodeGen1, AIMacroCodeGen4
+//
+// Copyright (c) 2025-2026 Sean Collins, 2 Paws Machine and Engineering. All rights reserved.
+// Licensed under the Sean Collins Software License (SCSL v1.0).
+
+LibraryImport.Array
+LibraryImport.AIMacro.AIMacroCore
+LibraryImport.AIMacro.AIMacroParserCore
+LibraryImport.AIMacro.AIMacroCodeGen1
+LibraryImport.AIMacro.AIMacroCodeGen4
+
+// =============================================================================
+// EXTRACT ALL CALLS FROM CONDITION EXPRESSION
+// Handles:
+//   - Direct calls: GreaterThan(func(), x)
+//   - Nested in binary ops: And(func1(), func2())
+//   - Calls with call arguments: GreaterThan(Array.Get(arr, i), max)
+//   - Index access: arr[i] becomes Array.Get which is a call
+// =============================================================================
+Function.Gen_ExtractConditionCalls {
+    Input: node: Address
+    Body: {
+        IfCondition EqualTo(node, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        
+        t = AST_Type(node)
+        
+        // If it's a CALL, extract calls from its arguments
+        IfCondition EqualTo(t, Node.CALL) ThenBlock: {
+            args = ArrayGet(node, 4)
+            IfCondition NotEqual(args, 0) ThenBlock: {
+                n = Array.Size(args)
+                idx = 0
+                WhileLoop LessThan(idx, n) {
+                    arg = Array.Get(args, idx)
+                    arg_type = AST_Type(arg)
+                    
+                    // If argument is a call, extract it to temp
+                    IfCondition EqualTo(arg_type, Node.CALL) ThenBlock: {
+                        Gen_ExtractConditionCalls(arg)
+                        temp = Gen_TempName()
+                        Gen_EmitIndent()
+                        Gen_Emit(temp)
+                        Gen_Emit(" = ")
+                        Gen_CallExpr(arg)
+                        Gen_Emit("\n")
+                        Array.Set(args, idx, Gen_MakeIdent(temp))
+                    } ElseBlock: {
+                        IfCondition EqualTo(arg_type, Node.METHOD_CALL) ThenBlock: {
+                            temp = Gen_TempName()
+                            Gen_EmitIndent()
+                            Gen_Emit(temp)
+                            Gen_Emit(" = ")
+                            Gen_MethodCallExpr(arg)
+                            Gen_Emit("\n")
+                            Array.Set(args, idx, Gen_MakeIdent(temp))
+                        } ElseBlock: {
+                            IfCondition EqualTo(arg_type, Node.INDEX_ACCESS) ThenBlock: {
+                                // FLATTEN INDEX EXPRESSION FIRST
+                                index_expr = ArrayGet(arg, 4)
+                                index_has_call = Gen_HasCall(index_expr)
+                                IfCondition EqualTo(index_has_call, 1) ThenBlock: {
+                                    flat_index = Gen_FlattenExpr(index_expr)
+                                    ArraySet(arg, 4, flat_index)
+                                }
+                                
+                                temp = Gen_TempName()
+                                Gen_EmitIndent()
+                                Gen_Emit(temp)
+                                Gen_Emit(" = ")
+                                // FIXED: Emit SmartGet directly instead of calling Gen_IndexAccess
+                                Gen_EmitSmartIndexAccess(arg)
+                                Gen_Emit("\n")
+                                Array.Set(args, idx, Gen_MakeIdent(temp))
+                            } ElseBlock: {
+                                Gen_ExtractConditionCalls(arg)
+                            }
+                        }
+                    }
+                    
+                    idx = Add(idx, 1)
+                }
+            }
+            ReturnValue(0)
+        }
+        
+        // If it's a BINARY_OP, check both sides
+        IfCondition EqualTo(t, Node.BINARY_OP) ThenBlock: {
+            left = ArrayGet(node, 3)
+            right = ArrayGet(node, 5)
+            
+            left_type = AST_Type(left)
+            right_type = AST_Type(right)
+            
+            // Handle left side
+            IfCondition EqualTo(left_type, Node.CALL) ThenBlock: {
+                Gen_ExtractConditionCalls(left)
+                temp = Gen_TempName()
+                Gen_EmitIndent()
+                Gen_Emit(temp)
+                Gen_Emit(" = ")
+                Gen_CallExpr(left)
+                Gen_Emit("\n")
+                ArraySet(node, 3, Gen_MakeIdent(temp))
+            } ElseBlock: {
+                IfCondition EqualTo(left_type, Node.METHOD_CALL) ThenBlock: {
+                    temp = Gen_TempName()
+                    Gen_EmitIndent()
+                    Gen_Emit(temp)
+                    Gen_Emit(" = ")
+                    Gen_MethodCallExpr(left)
+                    Gen_Emit("\n")
+                    ArraySet(node, 3, Gen_MakeIdent(temp))
+                } ElseBlock: {
+                    IfCondition EqualTo(left_type, Node.INDEX_ACCESS) ThenBlock: {
+                        // NEW: Flatten index expression first!
+                        index_expr = ArrayGet(left, 4)
+                        index_has_call = Gen_HasCall(index_expr)
+                        IfCondition EqualTo(index_has_call, 1) ThenBlock: {
+                            flat_index = Gen_FlattenExpr(index_expr)
+                            ArraySet(left, 4, flat_index)
+                        }
+                        
+                        temp = Gen_TempName()
+                        Gen_EmitIndent()
+                        Gen_Emit(temp)
+                        Gen_Emit(" = ")
+                        // FIXED: Emit SmartGet directly
+                        Gen_EmitSmartIndexAccess(left)
+                        Gen_Emit("\n")
+                        ArraySet(node, 3, Gen_MakeIdent(temp))
+                    } ElseBlock: {
+                        Gen_ExtractConditionCalls(left)
+                    }
+                }
+            }
+            
+            // Handle right side
+            IfCondition EqualTo(right_type, Node.CALL) ThenBlock: {
+                Gen_ExtractConditionCalls(right)
+                temp = Gen_TempName()
+                Gen_EmitIndent()
+                Gen_Emit(temp)
+                Gen_Emit(" = ")
+                Gen_CallExpr(right)
+                Gen_Emit("\n")
+                ArraySet(node, 5, Gen_MakeIdent(temp))
+            } ElseBlock: {
+                IfCondition EqualTo(right_type, Node.METHOD_CALL) ThenBlock: {
+                    temp = Gen_TempName()
+                    Gen_EmitIndent()
+                    Gen_Emit(temp)
+                    Gen_Emit(" = ")
+                    Gen_MethodCallExpr(right)
+                    Gen_Emit("\n")
+                    ArraySet(node, 5, Gen_MakeIdent(temp))
+                } ElseBlock: {
+                    IfCondition EqualTo(right_type, Node.INDEX_ACCESS) ThenBlock: {
+                        // NEW: Flatten index expression first!
+                        index_expr = ArrayGet(right, 4)
+                        index_has_call = Gen_HasCall(index_expr)
+                        IfCondition EqualTo(index_has_call, 1) ThenBlock: {
+                            flat_index = Gen_FlattenExpr(index_expr)
+                            ArraySet(right, 4, flat_index)
+                        }
+                        
+                        temp = Gen_TempName()
+                        Gen_EmitIndent()
+                        Gen_Emit(temp)
+                        Gen_Emit(" = ")
+                        // FIXED: Emit SmartGet directly
+                        Gen_EmitSmartIndexAccess(right)
+                        Gen_Emit("\n")
+                        ArraySet(node, 5, Gen_MakeIdent(temp))
+                    } ElseBlock: {
+                        Gen_ExtractConditionCalls(right)
+                    }
+                }
+            }
+            
+            ReturnValue(0)
+        }
+        
+        // If it's a UNARY_OP, check operand
+        IfCondition EqualTo(t, Node.UNARY_OP) ThenBlock: {
+            operand = ArrayGet(node, 4)
+            operand_type = AST_Type(operand)
+            
+            IfCondition EqualTo(operand_type, Node.CALL) ThenBlock: {
+                Gen_ExtractConditionCalls(operand)
+                temp = Gen_TempName()
+                Gen_EmitIndent()
+                Gen_Emit(temp)
+                Gen_Emit(" = ")
+                Gen_CallExpr(operand)
+                Gen_Emit("\n")
+                ArraySet(node, 4, Gen_MakeIdent(temp))
+            } ElseBlock: {
+                IfCondition EqualTo(operand_type, Node.INDEX_ACCESS) ThenBlock: {
+                    // NEW: Flatten index expression first!
+                    index_expr = ArrayGet(operand, 4)
+                    index_has_call = Gen_HasCall(index_expr)
+                    IfCondition EqualTo(index_has_call, 1) ThenBlock: {
+                        flat_index = Gen_FlattenExpr(index_expr)
+                        ArraySet(operand, 4, flat_index)
+                    }
+                    
+                    temp = Gen_TempName()
+                    Gen_EmitIndent()
+                    Gen_Emit(temp)
+                    Gen_Emit(" = ")
+                    // FIXED: Emit SmartGet directly
+                    Gen_EmitSmartIndexAccess(operand)
+                    Gen_Emit("\n")
+                    ArraySet(node, 4, Gen_MakeIdent(temp))
+                } ElseBlock: {
+                    Gen_ExtractConditionCalls(operand)
+                }
+            }
+            
+            ReturnValue(0)
+        }
+        
+        // INDEX_ACCESS at top level - just return, handled by caller
+        IfCondition EqualTo(t, Node.INDEX_ACCESS) ThenBlock: {
+            ReturnValue(0)
+        }
+    }
+}
+
+// =============================================================================
+// NEW HELPER: Emit SmartGet index access directly
+// This avoids the cross-module call to Gen_IndexAccess
+// =============================================================================
+Function.Gen_EmitSmartIndexAccess {
+    Input: node: Address
+    Body: {
+        expr = ArrayGet(node, 3)
+        index = ArrayGet(node, 4)
+        
+        // Check for dict access
+        expr_type = AST_Type(expr)
+        is_dict_access = 0
+        
+        IfCondition EqualTo(expr_type, Node.IDENT) ThenBlock: {
+            var_name = ArrayGet(expr, 3)
+            is_dict_access = Gen_IsDictVar(var_name)
+        }
+        
+        // DICT ACCESS
+        IfCondition EqualTo(is_dict_access, 1) ThenBlock: {
+            Gen_Emit("Hash.Get(")
+            Gen_Expr(expr)
+            Gen_Emit(", ")
+            Gen_Expr(index)
+            Gen_Emit(")")
+            ReturnValue(0)
+        }
+        
+        // Check for string access
+        is_string_access = 0
+        
+        IfCondition EqualTo(expr_type, Node.IDENT) ThenBlock: {
+            var_name = ArrayGet(expr, 3)
+            is_str = Gen_IsStringVar(var_name)
+            IfCondition EqualTo(is_str, 1) ThenBlock: {
+                is_string_access = 1
+            }
+        }
+        IfCondition EqualTo(expr_type, Node.STR_LIT) ThenBlock: {
+            is_string_access = 1
+        }
+        
+        // Check for negative index
+        index_type = AST_Type(index)
+        is_negative = 0
+        neg_value = 0
+        
+        IfCondition EqualTo(index_type, Node.UNARY_OP) ThenBlock: {
+            op = ArrayGet(index, 3)
+            IfCondition EqualTo(op, Token.MINUS) ThenBlock: {
+                operand = ArrayGet(index, 4)
+                operand_type = AST_Type(operand)
+                IfCondition EqualTo(operand_type, Node.NUM_LIT) ThenBlock: {
+                    is_negative = 1
+                    neg_value = ArrayGet(operand, 3)
+                }
+            }
+        }
+        
+        // STRING INDEXING
+        IfCondition EqualTo(is_string_access, 1) ThenBlock: {
+            IfCondition EqualTo(is_negative, 1) ThenBlock: {
+                Gen_Emit("AIMacro.Chr(GetByte(")
+                Gen_Expr(expr)
+                Gen_Emit(", Subtract(StringLength(")
+                Gen_Expr(expr)
+                Gen_Emit("), ")
+                Gen_EmitNumber(neg_value)
+                Gen_Emit(")))")
+            } ElseBlock: {
+                Gen_Emit("AIMacro.Chr(GetByte(")
+                Gen_Expr(expr)
+                Gen_Emit(", ")
+                Gen_Expr(index)
+                Gen_Emit("))")
+            }
+            ReturnValue(0)
+        }
+        
+        // ARRAY INDEXING - ALWAYS use SmartGet (handles XArray & TArray)
+        IfCondition EqualTo(is_negative, 1) ThenBlock: {
+            Gen_Emit("DictGen_SmartGet(")
+            Gen_Expr(expr)
+            Gen_Emit(", Subtract(AIMacro.SmartSize(")
+            Gen_Expr(expr)
+            Gen_Emit("), ")
+            Gen_EmitNumber(neg_value)
+            Gen_Emit("))")
+        } ElseBlock: {
+            Gen_Emit("DictGen_SmartGet(")
+            Gen_Expr(expr)
+            Gen_Emit(", ")
+            Gen_Expr(index)
+            Gen_Emit(")")
+        }
+    }
+}
+
+// =============================================================================
+// EXTRACT FUNCTION CALLS TO TEMP VARIABLES
+// This is the key function - extracts nested calls BEFORE the statement
+// =============================================================================
+Function.Gen_ExtractCalls {
+    Input: node: Address
+    Body: {
+        IfCondition EqualTo(node, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        
+        t = AST_Type(node)
+        
+        // For binary ops, check both sides
+        IfCondition EqualTo(t, Node.BINARY_OP) ThenBlock: {
+            left = ArrayGet(node, 3)
+            right = ArrayGet(node, 5)
+            
+            // Extract calls from left side
+            left_t = AST_Type(left)
+            IfCondition EqualTo(left_t, Node.CALL) ThenBlock: {
+                // First extract any nested calls in this call's args
+                Gen_ExtractCallArgs(left)
+                temp = Gen_TempName()
+                Gen_EmitIndent()
+                Gen_Emit(temp)
+                Gen_Emit(" = ")
+                Gen_CallExpr(left)
+                Gen_Emit("\n")
+                ArraySet(node, 3, Gen_MakeIdent(temp))
+            } ElseBlock: {
+                // Handle INDEX_ACCESS on left
+                IfCondition EqualTo(left_t, Node.INDEX_ACCESS) ThenBlock: {
+                    temp = Gen_TempName()
+                    Gen_EmitIndent()
+                    Gen_Emit(temp)
+                    Gen_Emit(" = ")
+                    // FIXED: Use SmartGet directly
+                    Gen_EmitSmartIndexAccess(left)
+                    Gen_Emit("\n")
+                    ArraySet(node, 3, Gen_MakeIdent(temp))
+                } ElseBlock: {
+                    // Recurse into nested binary ops
+                    Gen_ExtractCalls(left)
+                }
+            }
+            
+            // Extract calls from right side
+            right_t = AST_Type(right)
+            IfCondition EqualTo(right_t, Node.CALL) ThenBlock: {
+                Gen_ExtractCallArgs(right)
+                temp = Gen_TempName()
+                Gen_EmitIndent()
+                Gen_Emit(temp)
+                Gen_Emit(" = ")
+                Gen_CallExpr(right)
+                Gen_Emit("\n")
+                ArraySet(node, 5, Gen_MakeIdent(temp))
+            } ElseBlock: {
+                // Handle INDEX_ACCESS on right
+                IfCondition EqualTo(right_t, Node.INDEX_ACCESS) ThenBlock: {
+                    temp = Gen_TempName()
+                    Gen_EmitIndent()
+                    Gen_Emit(temp)
+                    Gen_Emit(" = ")
+                    // FIXED: Use SmartGet directly
+                    Gen_EmitSmartIndexAccess(right)
+                    Gen_Emit("\n")
+                    ArraySet(node, 5, Gen_MakeIdent(temp))
+                } ElseBlock: {
+                    Gen_ExtractCalls(right)
+                }
+            }
+            
+            ReturnValue(0)
+        }
+        
+        // For unary ops
+        IfCondition EqualTo(t, Node.UNARY_OP) ThenBlock: {
+            operand = ArrayGet(node, 4)
+            operand_t = AST_Type(operand)
+            IfCondition EqualTo(operand_t, Node.CALL) ThenBlock: {
+                temp = Gen_TempName()
+                Gen_EmitIndent()
+                Gen_Emit(temp)
+                Gen_Emit(" = ")
+                Gen_CallExpr(operand)
+                Gen_Emit("\n")
+                ArraySet(node, 4, Gen_MakeIdent(temp))
+            } ElseBlock: {
+                // Handle INDEX_ACCESS in unary ops
+                IfCondition EqualTo(operand_t, Node.INDEX_ACCESS) ThenBlock: {
+                    temp = Gen_TempName()
+                    Gen_EmitIndent()
+                    Gen_Emit(temp)
+                    Gen_Emit(" = ")
+                    // FIXED: Use SmartGet directly
+                    Gen_EmitSmartIndexAccess(operand)
+                    Gen_Emit("\n")
+                    ArraySet(node, 4, Gen_MakeIdent(temp))
+                } ElseBlock: {
+                    Gen_ExtractCalls(operand)
+                }
+            }
+            ReturnValue(0)
+        }
+        
+        // If the node itself is INDEX_ACCESS, extract the index if it has calls
+        IfCondition EqualTo(t, Node.INDEX_ACCESS) ThenBlock: {
+            index_expr = ArrayGet(node, 4)
+            index_t = AST_Type(index_expr)
+            IfCondition EqualTo(index_t, Node.CALL) ThenBlock: {
+                temp = Gen_TempName()
+                Gen_EmitIndent()
+                Gen_Emit(temp)
+                Gen_Emit(" = ")
+                Gen_CallExpr(index_expr)
+                Gen_Emit("\n")
+                ArraySet(node, 4, Gen_MakeIdent(temp))
+            }
+            ReturnValue(0)
+        }
+    }
+}
+
+// =============================================================================
+// EXTRACT CALLS FROM FUNCTION ARGUMENTS
+// Handles: result = add(multiply(2,3), multiply(4,5))
+// Emits:   t0 = multiply(2,3)
+//          t1 = multiply(4,5)
+// Then the call becomes: add(t0, t1)
+// =============================================================================
+Function.Gen_ExtractCallArgs {
+    Input: call_node: Address
+    Body: {
+        args = ArrayGet(call_node, 4)
+        IfCondition EqualTo(args, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        
+        n = Array.Size(args)
+        i = 0
+        WhileLoop LessThan(i, n) {
+            arg = Array.Get(args, i)
+            arg_type = AST_Type(arg)
+            
+            // If argument is a call, extract it
+            IfCondition EqualTo(arg_type, Node.CALL) ThenBlock: {
+                // Check if THIS call has nested calls in its args
+                inner_args = ArrayGet(arg, 4)
+                inner_has_calls = Gen_ArgsHaveCalls(inner_args)
+                IfCondition EqualTo(inner_has_calls, 1) ThenBlock: {
+                    // Recursively extract inner calls first
+                    Gen_ExtractCallArgs(arg)
+                }
+                
+                // Now extract this call to a temp
+                temp = Gen_TempName()
+                Gen_EmitIndent()
+                Gen_Emit(temp)
+                Gen_Emit(" = ")
+                Gen_CallExpr(arg)
+                Gen_Emit("\n")
+                
+                // Replace arg with identifier node
+                Array.Set(args, i, Gen_MakeIdent(temp))
+            } ElseBlock: {
+                // If it's a binary/unary op with calls, extract those
+                IfCondition EqualTo(arg_type, Node.BINARY_OP) ThenBlock: {
+                    has = Gen_HasCall(arg)
+                    IfCondition EqualTo(has, 1) ThenBlock: {
+                        Gen_ExtractCalls(arg)
+                    }
+                }
+                IfCondition EqualTo(arg_type, Node.UNARY_OP) ThenBlock: {
+                    has = Gen_HasCall(arg)
+                    IfCondition EqualTo(has, 1) ThenBlock: {
+                        Gen_ExtractCalls(arg)
+                    }
+                }
+            }
+            
+            i = Add(i, 1)
+        }
+    }
+}
+
+// =============================================================================
+// NEW FUNCTION: Extract nested calls from any expression
+// Returns the (possibly modified) expression after extracting calls to temps
+// =============================================================================
+Function.Gen_ExtractAllCalls {
+    Input: node: Address
+    Output: Address
+    Body: {
+        IfCondition EqualTo(node, 0) ThenBlock: {
+            ReturnValue(node)
+        }
+        
+        t = AST_Type(node)
+        
+        // For a CALL node, first extract calls from its arguments
+        IfCondition EqualTo(t, Node.CALL) ThenBlock: {
+            args = ArrayGet(node, 4)
+            IfCondition NotEqual(args, 0) ThenBlock: {
+                n = Array.Size(args)
+                idx = 0
+                WhileLoop LessThan(idx, n) {
+                    arg = Array.Get(args, idx)
+                    arg_type = AST_Type(arg)
+                    
+                    // If argument is a CALL, METHOD_CALL, or INDEX_ACCESS
+                    // extract it to a temp variable
+                    needs_extract = 0
+                    IfCondition EqualTo(arg_type, Node.CALL) ThenBlock: {
+                        needs_extract = 1
+                    }
+                    IfCondition EqualTo(arg_type, Node.METHOD_CALL) ThenBlock: {
+                        needs_extract = 1
+                    }
+                    IfCondition EqualTo(arg_type, Node.INDEX_ACCESS) ThenBlock: {
+                        needs_extract = 1
+                    }
+                    
+                    IfCondition EqualTo(needs_extract, 1) ThenBlock: {
+                        // Recursively extract from this arg first
+                        extracted_arg = Gen_ExtractAllCalls(arg)
+                        
+                        // Now emit this call to a temp
+                        temp = Gen_TempName()
+                        Gen_EmitIndent()
+                        Gen_Emit(temp)
+                        Gen_Emit(" = ")
+                        Gen_Expr(extracted_arg)
+                        Gen_Emit("\n")
+                        
+                        // Replace the arg with an identifier
+                        Array.Set(args, idx, Gen_MakeIdent(temp))
+                    } ElseBlock: {
+                        // If it's a BINARY_OP, recursively process it
+                        IfCondition EqualTo(arg_type, Node.BINARY_OP) ThenBlock: {
+                            new_arg = Gen_ExtractAllCalls(arg)
+                            Array.Set(args, idx, new_arg)
+                        }
+                    }
+                    
+                    idx = Add(idx, 1)
+                }
+            }
+            ReturnValue(node)
+        }
+        
+        // For METHOD_CALL, same logic
+        IfCondition EqualTo(t, Node.METHOD_CALL) ThenBlock: {
+            // Extract from object if it's a call
+            obj = ArrayGet(node, 3)
+            obj_type = AST_Type(obj)
+            IfCondition Or(EqualTo(obj_type, Node.CALL), Or(EqualTo(obj_type, Node.METHOD_CALL), EqualTo(obj_type, Node.INDEX_ACCESS))) ThenBlock: {
+                extracted_obj = Gen_ExtractAllCalls(obj)
+                temp = Gen_TempName()
+                Gen_EmitIndent()
+                Gen_Emit(temp)
+                Gen_Emit(" = ")
+                Gen_Expr(extracted_obj)
+                Gen_Emit("\n")
+                ArraySet(node, 3, Gen_MakeIdent(temp))
+            }
+            
+            // Extract from arguments
+            args = ArrayGet(node, 5)
+            IfCondition NotEqual(args, 0) ThenBlock: {
+                n = Array.Size(args)
+                idx = 0
+                WhileLoop LessThan(idx, n) {
+                    arg = Array.Get(args, idx)
+                    arg_type = AST_Type(arg)
+                    
+                    needs_extract = 0
+                    IfCondition EqualTo(arg_type, Node.CALL) ThenBlock: { needs_extract = 1 }
+                    IfCondition EqualTo(arg_type, Node.METHOD_CALL) ThenBlock: { needs_extract = 1 }
+                    IfCondition EqualTo(arg_type, Node.INDEX_ACCESS) ThenBlock: { needs_extract = 1 }
+                    
+                    IfCondition EqualTo(needs_extract, 1) ThenBlock: {
+                        extracted_arg = Gen_ExtractAllCalls(arg)
+                        temp = Gen_TempName()
+                        Gen_EmitIndent()
+                        Gen_Emit(temp)
+                        Gen_Emit(" = ")
+                        Gen_Expr(extracted_arg)
+                        Gen_Emit("\n")
+                        Array.Set(args, idx, Gen_MakeIdent(temp))
+                    } ElseBlock: {
+                        IfCondition EqualTo(arg_type, Node.BINARY_OP) ThenBlock: {
+                            new_arg = Gen_ExtractAllCalls(arg)
+                            Array.Set(args, idx, new_arg)
+                        }
+                    }
+                    
+                    idx = Add(idx, 1)
+                }
+            }
+            ReturnValue(node)
+        }
+        
+        // For BINARY_OP, process both sides
+        IfCondition EqualTo(t, Node.BINARY_OP) ThenBlock: {
+            left = ArrayGet(node, 3)
+            right = ArrayGet(node, 5)
+            
+            // Process left side
+            left_type = AST_Type(left)
+            IfCondition Or(EqualTo(left_type, Node.CALL), Or(EqualTo(left_type, Node.METHOD_CALL), EqualTo(left_type, Node.INDEX_ACCESS))) ThenBlock: {
+                extracted_left = Gen_ExtractAllCalls(left)
+                temp = Gen_TempName()
+                Gen_EmitIndent()
+                Gen_Emit(temp)
+                Gen_Emit(" = ")
+                Gen_Expr(extracted_left)
+                Gen_Emit("\n")
+                ArraySet(node, 3, Gen_MakeIdent(temp))
+            } ElseBlock: {
+                IfCondition EqualTo(left_type, Node.BINARY_OP) ThenBlock: {
+                    new_left = Gen_ExtractAllCalls(left)
+                    ArraySet(node, 3, new_left)
+                }
+            }
+            
+            // Process right side
+            right_type = AST_Type(right)
+            IfCondition Or(EqualTo(right_type, Node.CALL), Or(EqualTo(right_type, Node.METHOD_CALL), EqualTo(right_type, Node.INDEX_ACCESS))) ThenBlock: {
+                extracted_right = Gen_ExtractAllCalls(right)
+                temp = Gen_TempName()
+                Gen_EmitIndent()
+                Gen_Emit(temp)
+                Gen_Emit(" = ")
+                Gen_Expr(extracted_right)
+                Gen_Emit("\n")
+                ArraySet(node, 5, Gen_MakeIdent(temp))
+            } ElseBlock: {
+                IfCondition EqualTo(right_type, Node.BINARY_OP) ThenBlock: {
+                    new_right = Gen_ExtractAllCalls(right)
+                    ArraySet(node, 5, new_right)
+                }
+            }
+            
+            ReturnValue(node)
+        }
+        
+        // For INDEX_ACCESS, process the index expression
+        IfCondition EqualTo(t, Node.INDEX_ACCESS) ThenBlock: {
+            index = ArrayGet(node, 4)
+            index_type = AST_Type(index)
+            IfCondition Or(EqualTo(index_type, Node.CALL), Or(EqualTo(index_type, Node.METHOD_CALL), EqualTo(index_type, Node.INDEX_ACCESS))) ThenBlock: {
+                extracted_index = Gen_ExtractAllCalls(index)
+                temp = Gen_TempName()
+                Gen_EmitIndent()
+                Gen_Emit(temp)
+                Gen_Emit(" = ")
+                Gen_Expr(extracted_index)
+                Gen_Emit("\n")
+                ArraySet(node, 4, Gen_MakeIdent(temp))
+            }
+            ReturnValue(node)
+        }
+        
+        // For other node types, return as-is
+        ReturnValue(node)
+    }
+}
+
+// =============================================================================
+// Helper: Flatten an expression by extracting ALL calls to temps
+// This walks the expression tree depth-first, extracts calls to temps,
+// and returns an identifier node (or literal) that can be used inline
+// =============================================================================
+// =============================================================================
+// Helper: Flatten an expression by extracting ALL calls to temps
+// This walks the expression tree depth-first, extracts calls to temps,
+// and returns an identifier node (or literal) that can be used inline
+// =============================================================================
+Function.Gen_FlattenExpr {
+    Input: node: Address
+    Output: Address
+    Body: {
+        IfCondition EqualTo(node, 0) ThenBlock: {
+            ReturnValue(node)
+        }
+        
+        t = AST_Type(node)
+        
+        // Literals and identifiers - return as-is
+        IfCondition EqualTo(t, Node.NUM_LIT) ThenBlock: {
+            ReturnValue(node)
+        }
+        IfCondition EqualTo(t, Node.FLOAT_LIT) ThenBlock: {
+            temp = Gen_TempName()
+            Gen_EmitIndent()
+            Gen_Emit(temp)
+            Gen_Emit(" = ")
+            Gen_Expr(node)
+            Gen_Emit("\n")
+            ReturnValue(Gen_MakeIdent(temp))
+        }
+        IfCondition EqualTo(t, Node.STR_LIT) ThenBlock: {
+            ReturnValue(node)
+        }
+        IfCondition EqualTo(t, Node.BOOL_LIT) ThenBlock: {
+            temp = Gen_TempName()
+            Gen_EmitIndent()
+            Gen_Emit(temp)
+            Gen_Emit(" = ")
+            Gen_Expr(node)
+            Gen_Emit("\n")
+            ReturnValue(Gen_MakeIdent(temp))
+        }
+        IfCondition EqualTo(t, Node.IDENT) ThenBlock: {
+            ReturnValue(node)
+        }
+        IfCondition EqualTo(t, Node.CHAIN_COMPARE) ThenBlock: {
+            ReturnValue(Gen_FlattenChainCompare(node))
+        }
+        IfCondition EqualTo(t, Node.LAMBDA) ThenBlock: {
+            ReturnValue(Gen_FlattenLambda(node))
+        }
+        IfCondition EqualTo(t, Node.INDIRECT_CALL) ThenBlock: {
+            ReturnValue(Gen_FlattenIndirectCall(node))
+        }
+        IfCondition EqualTo(t, Node.TERNARY) ThenBlock: {
+            ReturnValue(Gen_FlattenTernary(node))
+        }
+        IfCondition EqualTo(t, Node.NAMED_EXPR) ThenBlock: {
+            target = ArrayGet(node, 3)
+            value = ArrayGet(node, 4)
+            flat_val = Gen_FlattenExpr(value)
+            // Bind name = value when target is a simple IDENT
+            tt = AST_Type(target)
+            IfCondition EqualTo(tt, Node.IDENT) ThenBlock: {
+                Gen_EmitIndent()
+                Gen_EmitIdent(ArrayGet(target, 3))
+                Gen_Emit(" = ")
+                Gen_Expr(flat_val)
+                Gen_Emit("\n")
+                ReturnValue(target)
+            }
+            ReturnValue(flat_val)
+        }
+        IfCondition EqualTo(t, Node.KW_ARG) ThenBlock: {
+            val = ArrayGet(node, 4)
+            IfCondition EqualTo(Gen_HasCall(val), 1) ThenBlock: {
+                ArraySet(node, 4, Gen_FlattenExpr(val))
+            }
+            ReturnValue(node)
+        }
+        // =========== OOP ATTRIBUTE - flatten to temp ===========
+        IfCondition EqualTo(t, Node.ATTRIBUTE) ThenBlock: {
+            obj = ArrayGet(node, 3)
+            attr = ArrayGet(node, 4)
+            IfCondition EqualTo(Gen_IsStdlibAttr(obj, attr), 1) ThenBlock: {
+                temp = Gen_TempName()
+                Gen_EmitIndent()
+                Gen_Emit(temp)
+                Gen_Emit(" = ")
+                Gen_EmitStdlibAttr(obj, attr)
+                Gen_Emit("\n")
+                cmp = StringCompare(attr, "argv")
+                IfCondition EqualTo(cmp, 0) ThenBlock: {
+                    Gen_MarkListVar(temp)
+                }
+                ReturnValue(Gen_MakeIdent(temp))
+            }
+            flat_obj = Gen_FlattenExpr(obj)
+            temp = Gen_TempName()
+            Gen_EmitIndent()
+            Gen_Emit(temp)
+            Gen_Emit(" = OOP.ObjectGet(")
+            Gen_Expr(flat_obj)
+            Gen_Emit(", \"")
+            Gen_Emit(attr)
+            Gen_Emit("\")\n")
+            ReturnValue(Gen_MakeIdent(temp))
+        }
+        // =========== END OOP ATTRIBUTE ===========
+
+        // CALL - flatten args, then extract to temp
+        IfCondition EqualTo(t, Node.CALL) ThenBlock: {
+            call_name = ArrayGet(node, 3)
+            is_va = Gen_LookupVarargs(call_name)
+            IfCondition NotEqual(is_va, 0) ThenBlock: {
+                args = ArrayGet(node, 4)
+                n = Array.Size(args)
+                idx = 0
+                WhileLoop LessThan(idx, n) {
+                    arg = Array.Get(args, idx)
+                    flat_arg = Gen_FlattenExpr(arg)
+                    Array.Set(args, idx, flat_arg)
+                    idx = Add(idx, 1)
+                }
+                defaults = Gen_LookupDefaults(call_name)
+                n_named = Subtract(is_va, 1)
+                IfCondition LessThan(n_named, 0) ThenBlock: {
+                    n_named = 0
+                }
+                pack_name = Gen_TempName()
+                Gen_EmitIndent()
+                Gen_Emit(pack_name)
+                Gen_Emit(" = Array.Create(8)\n")
+                i = n_named
+                WhileLoop LessThan(i, n) {
+                    Gen_EmitIndent()
+                    Gen_Emit("Array.Push(")
+                    Gen_Emit(pack_name)
+                    Gen_Emit(", ")
+                    Gen_Expr(Array.Get(args, i))
+                    Gen_Emit(")\n")
+                    i = Add(i, 1)
+                }
+                temp = Gen_TempName()
+                Gen_EmitIndent()
+                Gen_Emit(temp)
+                Gen_Emit(" = ")
+                Gen_Emit(call_name)
+                Gen_Emit("(")
+                i = 0
+                WhileLoop LessThan(i, n_named) {
+                    IfCondition GreaterThan(i, 0) ThenBlock: {
+                        Gen_Emit(", ")
+                    }
+                    IfCondition LessThan(i, n) ThenBlock: {
+                        Gen_Expr(Array.Get(args, i))
+                    } ElseBlock: {
+                        IfCondition And(NotEqual(defaults, 0), LessThan(i, Array.Size(defaults))) ThenBlock: {
+                            d = Array.Get(defaults, i)
+                            IfCondition EqualTo(d, 0) ThenBlock: {
+                                Gen_Emit("Types.GetNone()")
+                            } ElseBlock: {
+                                Gen_Expr(d)
+                            }
+                        } ElseBlock: {
+                            Gen_Emit("Types.GetNone()")
+                        }
+                    }
+                    i = Add(i, 1)
+                }
+                IfCondition GreaterThan(n_named, 0) ThenBlock: {
+                    Gen_Emit(", ")
+                }
+                Gen_Emit(pack_name)
+                Gen_Emit(")\n")
+                ReturnValue(Gen_MakeIdent(temp))
+            }
+            is_packed = Gen_IsPackedFunc(call_name)
+            
+            IfCondition EqualTo(is_packed, 1) ThenBlock: {
+                // Handle packed call - emit packing, then call
+                args = ArrayGet(node, 4)
+                n = Array.Size(args)
+                
+                // Flatten args first
+                idx = 0
+                WhileLoop LessThan(idx, n) {
+                    arg = Array.Get(args, idx)
+                    flat_arg = Gen_FlattenExpr(arg)
+                    Array.Set(args, idx, flat_arg)
+                    idx = Add(idx, 1)
+                }
+                
+                // Create pack array
+                pack_name = Gen_TempName()
+                
+                // Emit: pack = Array.Create(n)
+                Gen_EmitIndent()
+                Gen_Emit(pack_name)
+                Gen_Emit(" = Array.Create(")
+                n_str = NumberToString(n)
+                Gen_Emit(n_str)
+                Gen_Emit(")\n")
+                
+                // Emit: Array.Push(pack, arg) for each arg
+                idx = 0
+                WhileLoop LessThan(idx, n) {
+                    Gen_EmitIndent()
+                    Gen_Emit("Array.Push(")
+                    Gen_Emit(pack_name)
+                    Gen_Emit(", ")
+                    arg = Array.Get(args, idx)
+                    Gen_Expr(arg)
+                    Gen_Emit(")\n")
+                    idx = Add(idx, 1)
+                }
+                
+                // Emit: result = func(pack)
+                result_temp = Gen_TempName()
+                Gen_EmitIndent()
+                Gen_Emit(result_temp)
+                Gen_Emit(" = ")
+                Gen_Emit(call_name)
+                Gen_Emit("(")
+                Gen_Emit(pack_name)
+                Gen_Emit(")\n")
+                
+                // Mark result as string if call returns string
+                is_str_call = Gen_InvolvesString(node)
+                IfCondition EqualTo(is_str_call, 1) ThenBlock: {
+                    Gen_MarkStringVar(result_temp)
+                }
+                
+                ReturnValue(Gen_MakeIdent(result_temp))
+            }
+            
+            // Normal call - flatten args, then extract to temp
+            args = ArrayGet(node, 4)
+            IfCondition NotEqual(args, 0) ThenBlock: {
+                n = Array.Size(args)
+                idx = 0
+                WhileLoop LessThan(idx, n) {
+                    arg = Array.Get(args, idx)
+                    flat_arg = Gen_FlattenExpr(arg)
+                    Array.Set(args, idx, flat_arg)
+                    idx = Add(idx, 1)
+                }
+            }
+            
+            // Emit this call to a temp
+            temp = Gen_TempName()
+            Gen_EmitIndent()
+            Gen_Emit(temp)
+            Gen_Emit(" = ")
+            Gen_CallExpr(node)
+            Gen_Emit("\n")
+            
+            // Mark temp as string if call returns string
+            is_str_call = Gen_InvolvesString(node)
+            IfCondition EqualTo(is_str_call, 1) ThenBlock: {
+                Gen_MarkStringVar(temp)
+            }
+            
+            ReturnValue(Gen_MakeIdent(temp))
+        }
+        
+        IfCondition EqualTo(t, Node.LIST_COMP) ThenBlock: {
+            expr = ArrayGet(node, 3)
+            var_name = ArrayGet(node, 4)
+            iterable = ArrayGet(node, 5)
+            cond = ArrayGet(node, 6)
+            var2 = ArrayGet(node, 7)
+            temp = Gen_TempName()
+            Gen_EmitIndent()
+            Gen_Emit(temp)
+            Gen_Emit(" = Array.Create(8)\n")
+            loop_id = Gen.temp_counter
+            Gen.temp_counter = Add(Gen.temp_counter, 1)
+            loop_suffix = NumberToString(loop_id)
+            iter_has_call = Gen_HasCall(iterable)
+            IfCondition EqualTo(iter_has_call, 1) ThenBlock: {
+                iterable = Gen_FlattenExpr(iterable)
+            }
+            Gen_EmitIndent()
+            Gen_Emit("iter")
+            Gen_Emit(loop_suffix)
+            Gen_Emit(" = ")
+            Gen_Expr(iterable)
+            Gen_Emit("\n")
+            Gen_EmitIndent()
+            Gen_Emit("iterlen")
+            Gen_Emit(loop_suffix)
+            Gen_Emit(" = AIMacro.IterLen(iter")
+            Gen_Emit(loop_suffix)
+            Gen_Emit(")\n")
+            Gen_EmitIndent()
+            Gen_Emit("iteri")
+            Gen_Emit(loop_suffix)
+            Gen_Emit(" = 0\n")
+            Gen_EmitIndent()
+            Gen_Emit("WhileLoop LessThan(iteri")
+            Gen_Emit(loop_suffix)
+            Gen_Emit(", iterlen")
+            Gen_Emit(loop_suffix)
+            Gen_Emit(") {\n")
+            Gen.indent = Add(Gen.indent, 1)
+            IfCondition NotEqual(var2, 0) ThenBlock: {
+                Gen_EmitIndent()
+                Gen_Emit("__pair")
+                Gen_Emit(loop_suffix)
+                Gen_Emit(" = AIMacro.IterGet(iter")
+                Gen_Emit(loop_suffix)
+                Gen_Emit(", iteri")
+                Gen_Emit(loop_suffix)
+                Gen_Emit(")\n")
+                Gen_EmitIndent()
+                Gen_Emit(var_name)
+                Gen_Emit(" = DictGen_SmartGet(__pair")
+                Gen_Emit(loop_suffix)
+                Gen_Emit(", 0)\n")
+                Gen_EmitIndent()
+                Gen_Emit(var2)
+                Gen_Emit(" = DictGen_SmartGet(__pair")
+                Gen_Emit(loop_suffix)
+                Gen_Emit(", 1)\n")
+            } ElseBlock: {
+                Gen_EmitIndent()
+                Gen_Emit(var_name)
+                Gen_Emit(" = AIMacro.IterGet(iter")
+                Gen_Emit(loop_suffix)
+                Gen_Emit(", iteri")
+                Gen_Emit(loop_suffix)
+                Gen_Emit(")\n")
+            }
+            IfCondition NotEqual(cond, 0) ThenBlock: {
+                IfCondition EqualTo(Gen_HasCall(cond), 1) ThenBlock: {
+                    cond = Gen_FlattenExpr(cond)
+                }
+                Gen_EmitIndent()
+                Gen_Emit("IfCondition AIMacro.SmartBool(")
+                Gen_Expr(cond)
+                Gen_Emit(") ThenBlock: {\n")
+                Gen.indent = Add(Gen.indent, 1)
+            }
+            elem = expr
+            eh = Gen_HasCall(elem)
+            IfCondition EqualTo(eh, 1) ThenBlock: {
+                elem = Gen_FlattenExpr(elem)
+            }
+            Gen_EmitIndent()
+            Gen_Emit("Array.Push(")
+            Gen_Emit(temp)
+            Gen_Emit(", ")
+            Gen_Expr(elem)
+            Gen_Emit(")\n")
+            IfCondition NotEqual(cond, 0) ThenBlock: {
+                Gen.indent = Subtract(Gen.indent, 1)
+                Gen_EmitIndent()
+                Gen_Emit("}\n")
+            }
+            Gen_EmitIndent()
+            Gen_Emit("iteri")
+            Gen_Emit(loop_suffix)
+            Gen_Emit(" = Add(iteri")
+            Gen_Emit(loop_suffix)
+            Gen_Emit(", 1)\n")
+            Gen.indent = Subtract(Gen.indent, 1)
+            Gen_EmitIndent()
+            Gen_Emit("}\n")
+            ReturnValue(Gen_MakeIdent(temp))
+        }
+        
+        // METHOD_CALL - flatten object and args, then extract to temp
+        IfCondition EqualTo(t, Node.METHOD_CALL) ThenBlock: {
+            obj = ArrayGet(node, 3)
+            method = ArrayGet(node, 4)
+            args = ArrayGet(node, 5)
+            IfCondition NotEqual(args, 0) ThenBlock: {
+                n = Array.Size(args)
+                idx = 0
+                WhileLoop LessThan(idx, n) {
+                    arg = Array.Get(args, idx)
+                    flat_arg = Gen_FlattenExpr(arg)
+                    Array.Set(args, idx, flat_arg)
+                    idx = Add(idx, 1)
+                }
+            }
+            IfCondition EqualTo(Gen_IsStdlibMethod(obj, method), 1) ThenBlock: {
+                temp = Gen_TempName()
+                Gen_EmitIndent()
+                Gen_Emit(temp)
+                Gen_Emit(" = ")
+                Gen_EmitStdlibMethod(obj, method, args)
+                Gen_Emit("\n")
+                cmp = StringCompare(method, "listdir")
+                IfCondition EqualTo(cmp, 0) ThenBlock: { Gen_MarkListVar(temp) }
+                cmp = StringCompare(method, "dumps")
+                IfCondition EqualTo(cmp, 0) ThenBlock: { Gen_MarkStringVar(temp) }
+                cmp = StringCompare(method, "join")
+                IfCondition EqualTo(cmp, 0) ThenBlock: { Gen_MarkStringVar(temp) }
+                cmp = StringCompare(method, "basename")
+                IfCondition EqualTo(cmp, 0) ThenBlock: { Gen_MarkStringVar(temp) }
+                cmp = StringCompare(method, "dirname")
+                IfCondition EqualTo(cmp, 0) ThenBlock: { Gen_MarkStringVar(temp) }
+                ReturnValue(Gen_MakeIdent(temp))
+            }
+            flat_obj = Gen_FlattenExpr(obj)
+            ArraySet(node, 3, flat_obj)
+            
+            args = ArrayGet(node, 5)
+            IfCondition NotEqual(args, 0) ThenBlock: {
+                n = Array.Size(args)
+                idx = 0
+                WhileLoop LessThan(idx, n) {
+                    arg = Array.Get(args, idx)
+                    flat_arg = Gen_FlattenExpr(arg)
+                    Array.Set(args, idx, flat_arg)
+                    idx = Add(idx, 1)
+                }
+            }
+            
+            temp = Gen_TempName()
+            is_known = 0
+            obj_type = AST_Type(flat_obj)
+            IfCondition EqualTo(obj_type, Node.IDENT) ThenBlock: {
+                obj_name = ArrayGet(flat_obj, 3)
+                is_known = Or(Gen_IsListVar(obj_name), Or(Gen_IsDictVar(obj_name), Gen_IsStringVar(obj_name)))
+            }
+            
+            method = ArrayGet(node, 4)
+            
+            cmp = StringCompare(method, "read")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                Gen_EmitIndent()
+                Gen_Emit(temp)
+                Gen_Emit(" = AIMacro.FileRead(")
+                Gen_Expr(flat_obj)
+                Gen_Emit(")\n")
+                Gen_MarkStringVar(temp)
+                ReturnValue(Gen_MakeIdent(temp))
+            }
+            cmp = StringCompare(method, "readline")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                Gen_EmitIndent()
+                Gen_Emit(temp)
+                Gen_Emit(" = AIMacro.FileReadLine(")
+                Gen_Expr(flat_obj)
+                Gen_Emit(")\n")
+                Gen_MarkStringVar(temp)
+                ReturnValue(Gen_MakeIdent(temp))
+            }
+            cmp = StringCompare(method, "write")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                Gen_EmitIndent()
+                Gen_Emit(temp)
+                Gen_Emit(" = AIMacro.FileWrite(")
+                Gen_Expr(flat_obj)
+                Gen_Emit(", ")
+                IfCondition And(NotEqual(args, 0), GreaterThan(Array.Size(args), 0)) ThenBlock: {
+                    Gen_Expr(Array.Get(args, 0))
+                } ElseBlock: {
+                    Gen_Emit("\"\"")
+                }
+                Gen_Emit(")\n")
+                ReturnValue(Gen_MakeIdent(temp))
+            }
+            cmp = StringCompare(method, "close")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                Gen_EmitIndent()
+                Gen_Emit("AIMacro.FileClose(")
+                Gen_Expr(flat_obj)
+                Gen_Emit(")\n")
+                Gen_EmitIndent()
+                Gen_Emit(temp)
+                Gen_Emit(" = 0\n")
+                ReturnValue(Gen_MakeIdent(temp))
+            }
+
+            IfCondition EqualTo(AST_Type(flat_obj), Node.STR_LIT) ThenBlock: {
+                is_known = 1
+            }
+            
+            // OOP MethodCall emits setup statements; do not prefix "temp = "
+            IfCondition EqualTo(is_known, 0) ThenBlock: {
+                IfCondition EqualTo(args, 0) ThenBlock: {
+                    num_args = 0
+                } ElseBlock: {
+                    num_args = Array.Size(args)
+                }
+                args_var = Gen_TempName()
+                Gen_EmitIndent()
+                Gen_Emit(args_var)
+                Gen_Emit(" = Array.Create(")
+                Gen_EmitNumber(num_args)
+                Gen_Emit(")\n")
+                i = 0
+                WhileLoop LessThan(i, num_args) {
+                    arg = Array.Get(args, i)
+                    Gen_EmitIndent()
+                    Gen_Emit("Array.Push(")
+                    Gen_Emit(args_var)
+                    Gen_Emit(", ")
+                    Gen_Expr(arg)
+                    Gen_Emit(")\n")
+                    i = Add(i, 1)
+                }
+                Gen_EmitIndent()
+                Gen_Emit(temp)
+                Gen_Emit(" = OOP.MethodCall(")
+                Gen_Expr(flat_obj)
+                Gen_Emit(", \"")
+                Gen_Emit(method)
+                Gen_Emit("\", ")
+                Gen_Emit(args_var)
+                Gen_Emit(")\n")
+                ReturnValue(Gen_MakeIdent(temp))
+            }
+            
+            Gen_EmitIndent()
+            Gen_Emit(temp)
+            Gen_Emit(" = ")
+            Gen_MethodCallExpr(node)
+            Gen_Emit("\n")
+            
+            // Mark temp as string if method returns string
+            method = ArrayGet(node, 4)
+            is_str_method = 0
+            cmp = StringCompare(method, "upper")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { is_str_method = 1 }
+            cmp = StringCompare(method, "lower")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { is_str_method = 1 }
+            cmp = StringCompare(method, "strip")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { is_str_method = 1 }
+            cmp = StringCompare(method, "replace")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { is_str_method = 1 }
+            cmp = StringCompare(method, "join")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { is_str_method = 1 }
+            cmp = StringCompare(method, "split")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { is_str_method = 1 }
+            
+            IfCondition EqualTo(is_str_method, 1) ThenBlock: {
+                Gen_MarkStringVar(temp)
+            }
+            
+            ReturnValue(Gen_MakeIdent(temp))
+        }
+        
+        // INDEX_ACCESS - handle negative indices, then flatten
+        IfCondition EqualTo(t, Node.INDEX_ACCESS) ThenBlock: {
+            expr = ArrayGet(node, 3)
+            index = ArrayGet(node, 4)
+            
+            // Check if this is dict indexing
+            expr_type = AST_Type(expr)
+            is_dict_access = 0
+            IfCondition EqualTo(expr_type, Node.IDENT) ThenBlock: {
+                var_name = ArrayGet(expr, 3)
+                is_dict_access = Gen_IsDictVar(var_name)
+            }
+            
+            // DICT INDEXING
+            IfCondition EqualTo(is_dict_access, 1) ThenBlock: {
+                flat_expr = Gen_FlattenExpr(expr)
+                flat_index = Gen_FlattenExpr(index)
+                
+                temp = Gen_TempName()
+                Gen_EmitIndent()
+                Gen_Emit(temp)
+                Gen_Emit(" = Hash.Get(")
+                Gen_Expr(flat_expr)
+                Gen_Emit(", ")
+                Gen_Expr(flat_index)
+                Gen_Emit(")\n")
+                
+                ReturnValue(Gen_MakeIdent(temp))
+            }
+            
+            // Check if this is string indexing
+            is_string_index = 0
+            IfCondition EqualTo(expr_type, Node.IDENT) ThenBlock: {
+                var_name = ArrayGet(expr, 3)
+                is_string_index = Gen_IsStringVar(var_name)
+            }
+            IfCondition EqualTo(expr_type, Node.STR_LIT) ThenBlock: {
+                is_string_index = 1
+            }
+            
+            // Check for negative index (UNARY_OP with MINUS on NUM_LIT)
+            index_type = AST_Type(index)
+            is_negative = 0
+            neg_value = 0
+            
+            IfCondition EqualTo(index_type, Node.UNARY_OP) ThenBlock: {
+                op = ArrayGet(index, 3)
+                IfCondition EqualTo(op, Token.MINUS) ThenBlock: {
+                    operand = ArrayGet(index, 4)
+                    operand_type = AST_Type(operand)
+                    IfCondition EqualTo(operand_type, Node.NUM_LIT) ThenBlock: {
+                        is_negative = 1
+                        neg_value = ArrayGet(operand, 3)
+                    }
+                }
+            }
+            
+            flat_expr = Gen_FlattenExpr(expr)
+            
+            // STRING INDEXING WITH NEGATIVE INDEX
+            IfCondition And(EqualTo(is_string_index, 1), EqualTo(is_negative, 1)) ThenBlock: {
+                len_temp = Gen_TempName()
+                Gen_EmitIndent()
+                Gen_Emit(len_temp)
+                Gen_Emit(" = StringLength(")
+                Gen_Expr(flat_expr)
+                Gen_Emit(")\n")
+                
+                idx_temp = Gen_TempName()
+                Gen_EmitIndent()
+                Gen_Emit(idx_temp)
+                Gen_Emit(" = Subtract(")
+                Gen_Emit(len_temp)
+                Gen_Emit(", ")
+                Gen_EmitNumber(neg_value)
+                Gen_Emit(")\n")
+                
+                result_temp = Gen_TempName()
+                Gen_MarkStringVar(result_temp)
+                Gen_EmitIndent()
+                Gen_Emit(result_temp)
+                Gen_Emit(" = AIMacro.Chr(GetByte(")
+                Gen_Expr(flat_expr)
+                Gen_Emit(", ")
+                Gen_Emit(idx_temp)
+                Gen_Emit("))\n")
+                
+                ReturnValue(Gen_MakeIdent(result_temp))
+            }
+            
+            // STRING INDEXING WITH POSITIVE INDEX
+            IfCondition And(EqualTo(is_string_index, 1), EqualTo(is_negative, 0)) ThenBlock: {
+                flat_index = Gen_FlattenExpr(index)
+                
+                result_temp = Gen_TempName()
+                Gen_MarkStringVar(result_temp)
+                Gen_EmitIndent()
+                Gen_Emit(result_temp)
+                Gen_Emit(" = AIMacro.Chr(GetByte(")
+                Gen_Expr(flat_expr)
+                Gen_Emit(", ")
+                Gen_Expr(flat_index)
+                Gen_Emit("))\n")
+                
+                ReturnValue(Gen_MakeIdent(result_temp))
+            }
+            
+            // LIST INDEXING WITH NEGATIVE INDEX
+            IfCondition EqualTo(is_negative, 1) ThenBlock: {
+                len_temp = Gen_TempName()
+                Gen_EmitIndent()
+                Gen_Emit(len_temp)
+                Gen_Emit(" = AIMacro.SmartSize(")
+                Gen_Expr(flat_expr)
+                Gen_Emit(")\n")
+                
+                idx_temp = Gen_TempName()
+                Gen_EmitIndent()
+                Gen_Emit(idx_temp)
+                Gen_Emit(" = Subtract(")
+                Gen_Emit(len_temp)
+                Gen_Emit(", ")
+                Gen_EmitNumber(neg_value)
+                Gen_Emit(")\n")
+                
+                result_temp = Gen_TempName()
+                Gen_EmitIndent()
+                Gen_Emit(result_temp)
+                Gen_Emit(" = DictGen_SmartGet(")
+                Gen_Expr(flat_expr)
+                Gen_Emit(", ")
+                Gen_Emit(idx_temp)
+                Gen_Emit(")\n")
+                
+                ReturnValue(Gen_MakeIdent(result_temp))
+            } ElseBlock: {
+                // LIST INDEXING WITH POSITIVE INDEX
+                flat_index = Gen_FlattenExpr(index)
+                
+                temp = Gen_TempName()
+                Gen_EmitIndent()
+                Gen_Emit(temp)
+                Gen_Emit(" = DictGen_SmartGet(")
+                Gen_Expr(flat_expr)
+                Gen_Emit(", ")
+                Gen_Expr(flat_index)
+                Gen_Emit(")\n")
+                
+                ReturnValue(Gen_MakeIdent(temp))
+            }
+        }
+        
+        // BINARY_OP - flatten both sides, then ALWAYS extract to temp
+        IfCondition EqualTo(t, Node.BINARY_OP) ThenBlock: {
+            left = ArrayGet(node, 3)
+            op = ArrayGet(node, 4)
+            right = ArrayGet(node, 5)
+
+            IfCondition Or(EqualTo(op, Token.AND), EqualTo(op, Token.OR)) ThenBlock: {
+                ReturnValue(Gen_ShortCircuit(op, left, right))
+            }
+            
+            flat_left = Gen_FlattenExpr(left)
+            flat_right = Gen_FlattenExpr(right)
+            
+            // Check if this is a string concat
+            left_is_str = Gen_InvolvesString(flat_left)
+            right_is_str = Gen_InvolvesString(flat_right)
+            is_string_op = Or(EqualTo(left_is_str, 1), EqualTo(right_is_str, 1))
+            
+            IfCondition And(EqualTo(op, Token.PLUS), EqualTo(is_string_op, 1)) ThenBlock: {
+                // String concat - extract to temp
+                temp = Gen_TempName()
+                Gen_MarkStringVar(temp)
+                Gen_EmitIndent()
+                Gen_Emit(temp)
+                Gen_Emit(" = String.Concat(")
+                Gen_Expr(flat_left)
+                Gen_Emit(", ")
+                Gen_Expr(flat_right)
+                Gen_Emit(")\n")
+                ReturnValue(Gen_MakeIdent(temp))
+            }
+            
+            // String repeat
+            IfCondition And(EqualTo(op, Token.STAR), EqualTo(left_is_str, 1)) ThenBlock: {
+                temp = Gen_TempName()
+                Gen_MarkStringVar(temp)
+                Gen_EmitIndent()
+                Gen_Emit(temp)
+                Gen_Emit(" = String.Repeat(")
+                Gen_Expr(flat_left)
+                Gen_Emit(", ")
+                Gen_Emit("AIMacro.Int(")
+                Gen_Expr(flat_right)
+                Gen_Emit(")")
+                Gen_Emit(")\n")
+                ReturnValue(Gen_MakeIdent(temp))
+            }
+
+            // =========== NEW: STRING EQUALITY (== operator) ===========
+            IfCondition EqualTo(op, Token.EQ) ThenBlock: {
+                IfCondition EqualTo(is_string_op, 1) ThenBlock: {
+                    temp = Gen_TempName()
+                    Gen_EmitIndent()
+                    Gen_Emit(temp)
+                    Gen_Emit(" = AIMacro.Bool(EqualTo(StringCompare(")
+                    Gen_Expr(flat_left)
+                    Gen_Emit(", ")
+                    Gen_Expr(flat_right)
+                    Gen_Emit("), 0))\n")
+                    ReturnValue(Gen_MakeIdent(temp))
+                }
+            }
+            
+            // =========== NEW: STRING INEQUALITY (!= operator) ===========
+            IfCondition EqualTo(op, Token.NE) ThenBlock: {
+                IfCondition EqualTo(is_string_op, 1) ThenBlock: {
+                    temp = Gen_TempName()
+                    Gen_EmitIndent()
+                    Gen_Emit(temp)
+                    Gen_Emit(" = AIMacro.Bool(NotEqual(StringCompare(")
+                    Gen_Expr(flat_left)
+                    Gen_Emit(", ")
+                    Gen_Expr(flat_right)
+                    Gen_Emit("), 0))\n")
+                    ReturnValue(Gen_MakeIdent(temp))
+                }
+            }
+
+            IfCondition EqualTo(op, Token.IS) ThenBlock: {
+                temp = Gen_TempName()
+                Gen_EmitIndent()
+                Gen_Emit(temp)
+                Gen_Emit(" = AIMacro.Is(")
+                Gen_Expr(flat_left)
+                Gen_Emit(", ")
+                Gen_Expr(flat_right)
+                Gen_Emit(")\n")
+                ReturnValue(Gen_MakeIdent(temp))
+            }
+
+            IfCondition EqualTo(op, Token.IN) ThenBlock: {
+                temp = Gen_TempName()
+                Gen_EmitIndent()
+                Gen_Emit(temp)
+                Gen_Emit(" = AIMacro.Bool(DictGen_SmartContains(")
+                Gen_Expr(flat_right)
+                Gen_Emit(", ")
+                Gen_Expr(flat_left)
+                Gen_Emit("))\n")
+                ReturnValue(Gen_MakeIdent(temp))
+            }
+            // =========== END NEW SECTIONS ===========
+                    
+            // ALL OTHER BINARY OPS - extract to temp
+            temp = Gen_TempName()
+            op_name = Gen_OpName(op)
+            Gen_EmitIndent()
+            Gen_Emit(temp)
+            Gen_Emit(" = ")
+            Gen_Emit(op_name)
+            Gen_Emit("(")
+            Gen_Expr(flat_left)
+            Gen_Emit(", ")
+            Gen_Expr(flat_right)
+            Gen_Emit(")\n")
+            
+            ReturnValue(Gen_MakeIdent(temp))
+        }
+        
+        // UNARY_OP - flatten operand, then extract to temp
+        IfCondition EqualTo(t, Node.UNARY_OP) ThenBlock: {
+            op = ArrayGet(node, 3)
+            operand = ArrayGet(node, 4)
+            flat_operand = Gen_FlattenExpr(operand)
+            
+            temp = Gen_TempName()
+            Gen_EmitIndent()
+            Gen_Emit(temp)
+            Gen_Emit(" = ")
+            
+            IfCondition EqualTo(op, Token.NOT) ThenBlock: {
+                Gen_Emit("AIMacro.NotVal(")
+                Gen_Expr(flat_operand)
+                Gen_Emit(")")
+            } ElseBlock: {
+                IfCondition EqualTo(op, Token.MINUS) ThenBlock: {
+                    Gen_Emit("AIMacro.NumNeg(")
+                    Gen_Expr(flat_operand)
+                    Gen_Emit(")")
+                }
+            }
+            Gen_Emit("\n")
+            
+            ReturnValue(Gen_MakeIdent(temp))
+        }
+        
+        // LIST_LIT - create as temp
+        IfCondition EqualTo(t, Node.LIST_LIT) ThenBlock: {
+            ReturnValue(Gen_CreateListLiteral(node))
+        }
+
+        IfCondition EqualTo(t, Node.DICT_LIT) ThenBlock: {
+            ReturnValue(Gen_CreateDictLiteral(node))
+        }
+        
+        // Default - return as-is
+        ReturnValue(node)
+    }
+}
+
+// =============================================================================
+// FLATTEN CALL ARGUMENTS (for CALL nodes)
+// =============================================================================
+Function.Gen_FlattenCallArgs {
+    Input: node: Address
+    Body: {
+        args = ArrayGet(node, 4)
+        IfCondition EqualTo(args, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        
+        n = Array.Size(args)
+        idx = 0
+        WhileLoop LessThan(idx, n) {
+            arg = Array.Get(args, idx)
+            arg_type = AST_Type(arg)
+            
+            // Handle inline list literals
+            IfCondition EqualTo(arg_type, Node.LIST_LIT) ThenBlock: {
+                list_ident = Gen_CreateListLiteral(arg)
+                Array.Set(args, idx, list_ident)
+                idx = Add(idx, 1)
+                ContinueLoop
+            }
+            IfCondition EqualTo(arg_type, Node.DICT_LIT) ThenBlock: {
+                dict_ident = Gen_CreateDictLiteral(arg)
+                Array.Set(args, idx, dict_ident)
+                idx = Add(idx, 1)
+                ContinueLoop
+            }
+            
+            // Flatten any argument with nested calls
+            has_call = Gen_HasCall(arg)
+            IfCondition EqualTo(has_call, 1) ThenBlock: {
+                flat_arg = Gen_FlattenExpr(arg)
+                Array.Set(args, idx, flat_arg)
+            }
+            
+            idx = Add(idx, 1)
+        }
+    }
+}
+
+// =============================================================================
+// FLATTEN METHOD CALL ARGUMENTS
+// =============================================================================
+Function.Gen_FlattenMethodArgs {
+    Input: node: Address
+    Body: {
+        // Flatten object if needed
+        obj = ArrayGet(node, 3)
+        method = ArrayGet(node, 4)
+        obj_type = AST_Type(obj)
+        IfCondition EqualTo(Gen_IsStdlibMethod(obj, method), 0) ThenBlock: {
+            IfCondition Or(EqualTo(obj_type, Node.CALL), Or(EqualTo(obj_type, Node.METHOD_CALL), Or(EqualTo(obj_type, Node.INDEX_ACCESS), EqualTo(obj_type, Node.ATTRIBUTE)))) ThenBlock: {
+                flat_obj = Gen_FlattenExpr(obj)
+                ArraySet(node, 3, flat_obj)
+            }
+        }
+        
+        // Flatten arguments
+        args = ArrayGet(node, 5)
+        IfCondition EqualTo(args, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        
+        n = Array.Size(args)
+        idx = 0
+        WhileLoop LessThan(idx, n) {
+            arg = Array.Get(args, idx)
+            arg_type = AST_Type(arg)
+            
+            // Handle inline list literals
+            IfCondition EqualTo(arg_type, Node.LIST_LIT) ThenBlock: {
+                list_ident = Gen_CreateListLiteral(arg)
+                Array.Set(args, idx, list_ident)
+                idx = Add(idx, 1)
+                ContinueLoop
+            }
+            IfCondition EqualTo(arg_type, Node.DICT_LIT) ThenBlock: {
+                dict_ident = Gen_CreateDictLiteral(arg)
+                Array.Set(args, idx, dict_ident)
+                idx = Add(idx, 1)
+                ContinueLoop
+            }
+            
+            // Flatten any argument with nested calls
+            has_call = Gen_HasCall(arg)
+            IfCondition EqualTo(has_call, 1) ThenBlock: {
+                flat_arg = Gen_FlattenExpr(arg)
+                Array.Set(args, idx, flat_arg)
+            }
+            
+            idx = Add(idx, 1)
+        }
+    }
+}
+
+// =============================================================================
+// CREATE LIST LITERAL AS TEMP VARIABLE
+// =============================================================================
+Function.Gen_CreateListLiteral {
+    Input: list_node: Address
+    Output: Address
+    Body: {
+        elems = ArrayGet(list_node, 3)
+        n = Array.Size(elems)
+        
+        // Create temp for the list - USE TArray for user lists
+        temp = Gen_TempName()
+        
+        // Emit: temp = Array.Create(n)
+        Gen_EmitIndent()
+        Gen_Emit(temp)
+        Gen_Emit(" = Array.Create(")
+        Gen_EmitNumber(n)
+        Gen_Emit(")\n")
+        
+        // Emit pushes / extends for each element
+        i = 0
+        WhileLoop LessThan(i, n) {
+            elem = Array.Get(elems, i)
+            IfCondition EqualTo(AST_Type(elem), Node.STARRED) ThenBlock: {
+                val = ArrayGet(elem, 3)
+                has_call = Gen_HasCall(val)
+                IfCondition EqualTo(has_call, 1) ThenBlock: {
+                    val = Gen_FlattenExpr(val)
+                }
+                Gen_EmitIndent()
+                Gen_Emit("AIMacro.ListExtend(")
+                Gen_Emit(temp)
+                Gen_Emit(", ")
+                Gen_Expr(val)
+                Gen_Emit(")\n")
+            } ElseBlock: {
+                has_call = Gen_HasCall(elem)
+                IfCondition EqualTo(has_call, 1) ThenBlock: {
+                    elem = Gen_FlattenExpr(elem)
+                }
+                Gen_EmitIndent()
+                Gen_Emit("Array.Push(")
+                Gen_Emit(temp)
+                Gen_Emit(", ")
+                Gen_Expr(elem)
+                Gen_Emit(")\n")
+            }
+            i = Add(i, 1)
+        }
+        
+        // Return identifier node for the temp
+        ReturnValue(Gen_MakeIdent(temp))
+    }
+}
+
+Function.Gen_CreateDictLiteral {
+    Input: dict_node: Address
+    Output: Address
+    Body: {
+        pairs = ArrayGet(dict_node, 3)
+        n = Array.Size(pairs)
+        num_pairs = Divide(n, 2)
+        capacity = Multiply(num_pairs, 2)
+        IfCondition LessThan(capacity, 16) ThenBlock: {
+            capacity = 16
+        }
+        temp = Gen_TempName()
+        Gen_MarkDictVar(temp)
+        Gen_EmitIndent()
+        Gen_Emit(temp)
+        Gen_Emit(" = Hash.Create(")
+        Gen_EmitNumber(capacity)
+        Gen_Emit(")\n")
+        i = 0
+        WhileLoop LessThan(i, n) {
+            key = Array.Get(pairs, i)
+            value = Array.Get(pairs, Add(i, 1))
+            IfCondition EqualTo(AST_Type(key), Node.STARRED) ThenBlock: {
+                val = ArrayGet(key, 3)
+                has_call = Gen_HasCall(val)
+                IfCondition EqualTo(has_call, 1) ThenBlock: {
+                    val = Gen_FlattenExpr(val)
+                }
+                Gen_EmitIndent()
+                Gen_Emit("DictGen_Update(")
+                Gen_Emit(temp)
+                Gen_Emit(", ")
+                Gen_Expr(val)
+                Gen_Emit(")\n")
+            } ElseBlock: {
+                key_has_call = Gen_HasCall(key)
+                IfCondition EqualTo(key_has_call, 1) ThenBlock: {
+                    key = Gen_FlattenExpr(key)
+                }
+                value_has_call = Gen_HasCall(value)
+                IfCondition EqualTo(value_has_call, 1) ThenBlock: {
+                    value = Gen_FlattenExpr(value)
+                }
+                Gen_EmitIndent()
+                Gen_Emit("Hash.Set(")
+                Gen_Emit(temp)
+                Gen_Emit(", ")
+                Gen_Expr(key)
+                Gen_Emit(", ")
+                Gen_Expr(value)
+                Gen_Emit(")\n")
+            }
+            i = Add(i, 2)
+        }
+        ReturnValue(Gen_MakeIdent(temp))
+    }
+}
+
+Function.Gen_ShortCircuit {
+    Input: op: Integer
+    Input: left: Address
+    Input: right: Address
+    Output: Address
+    Body: {
+        flat_left = Gen_FlattenExpr(left)
+        temp = Gen_TempName()
+        Gen_EmitIndent()
+        Gen_Emit(temp)
+        Gen_Emit(" = ")
+        Gen_Expr(flat_left)
+        Gen_Emit("\n")
+        IfCondition EqualTo(op, Token.AND) ThenBlock: {
+            Gen_EmitIndent()
+            Gen_Emit("IfCondition AIMacro.SmartBool(")
+            Gen_Emit(temp)
+            Gen_Emit(") ThenBlock: {\n")
+        } ElseBlock: {
+            Gen_EmitIndent()
+            Gen_Emit("IfCondition Not(AIMacro.SmartBool(")
+            Gen_Emit(temp)
+            Gen_Emit(")) ThenBlock: {\n")
+        }
+        Gen.indent = Add(Gen.indent, 1)
+        flat_right = Gen_FlattenExpr(right)
+        Gen_EmitIndent()
+        Gen_Emit(temp)
+        Gen_Emit(" = ")
+        Gen_Expr(flat_right)
+        Gen_Emit("\n")
+        Gen.indent = Subtract(Gen.indent, 1)
+        Gen_EmitIndent()
+        Gen_Emit("}\n")
+        ReturnValue(Gen_MakeIdent(temp))
+    }
+}
+
+Function.Gen_FlattenChainCompare {
+    Input: node: Address
+    Output: Address
+    Body: {
+        operands = ArrayGet(node, 3)
+        ops = ArrayGet(node, 4)
+        nops = Array.Size(ops)
+        leftv = Gen_FlattenExpr(Array.Get(operands, 0))
+        rightv = Gen_FlattenExpr(Array.Get(operands, 1))
+        result = Gen_TempName()
+        op_name = Gen_OpName(Array.Get(ops, 0))
+        Gen_EmitIndent()
+        Gen_Emit(result)
+        Gen_Emit(" = ")
+        Gen_Emit(op_name)
+        Gen_Emit("(")
+        Gen_Expr(leftv)
+        Gen_Emit(", ")
+        Gen_Expr(rightv)
+        Gen_Emit(")\n")
+        i = 1
+        WhileLoop LessThan(i, nops) {
+            Gen_EmitIndent()
+            Gen_Emit("IfCondition AIMacro.SmartBool(")
+            Gen_Emit(result)
+            Gen_Emit(") ThenBlock: {\n")
+            Gen.indent = Add(Gen.indent, 1)
+            nextv = Gen_FlattenExpr(Array.Get(operands, Add(i, 1)))
+            op_name = Gen_OpName(Array.Get(ops, i))
+            Gen_EmitIndent()
+            Gen_Emit(result)
+            Gen_Emit(" = ")
+            Gen_Emit(op_name)
+            Gen_Emit("(")
+            Gen_Expr(rightv)
+            Gen_Emit(", ")
+            Gen_Expr(nextv)
+            Gen_Emit(")\n")
+            rightv = nextv
+            Gen.indent = Subtract(Gen.indent, 1)
+            Gen_EmitIndent()
+            Gen_Emit("}\n")
+            i = Add(i, 1)
+        }
+        ReturnValue(Gen_MakeIdent(result))
+    }
+}
+
+Function.Gen_FlattenLambda {
+    Input: node: Address
+    Output: Address
+    Body: {
+        name = ArrayGet(node, 3)
+        IfCondition EqualTo(name, 0) ThenBlock: {
+            name = StringConcat("__lam_", NumberToString(Gen.lambda_counter))
+            Gen.lambda_counter = Add(Gen.lambda_counter, 1)
+            ArraySet(node, 3, name)
+            ArraySet(node, 0, Node.FUNCTION)
+            Array.Push(Gen.deferred_functions, node)
+        }
+        temp = Gen_TempName()
+        Gen_EmitIndent()
+        Gen_Emit(temp)
+        Gen_Emit(" = AddressOf(")
+        Gen_Emit(name)
+        Gen_Emit(")\n")
+        Gen_MarkCallableVar(temp)
+        ReturnValue(Gen_MakeIdent(temp))
+    }
+}
+
+Function.Gen_FlattenIndirectCall {
+    Input: node: Address
+    Output: Address
+    Body: {
+        callee = ArrayGet(node, 3)
+        args = ArrayGet(node, 4)
+        flat_callee = Gen_FlattenExpr(callee)
+        IfCondition NotEqual(args, 0) ThenBlock: {
+            n = Array.Size(args)
+            i = 0
+            WhileLoop LessThan(i, n) {
+                arg = Array.Get(args, i)
+                IfCondition EqualTo(Gen_HasCall(arg), 1) ThenBlock: {
+                    Array.Set(args, i, Gen_FlattenExpr(arg))
+                }
+                i = Add(i, 1)
+            }
+        }
+        temp = Gen_TempName()
+        Gen_EmitIndent()
+        Gen_Emit(temp)
+        Gen_Emit(" = CallIndirect(")
+        Gen_Expr(flat_callee)
+        IfCondition NotEqual(args, 0) ThenBlock: {
+            n = Array.Size(args)
+            i = 0
+            WhileLoop LessThan(i, n) {
+                Gen_Emit(", ")
+                Gen_Expr(Array.Get(args, i))
+                i = Add(i, 1)
+            }
+        }
+        Gen_Emit(")\n")
+        ReturnValue(Gen_MakeIdent(temp))
+    }
+}
+
+Function.Gen_FlattenTernary {
+    Input: node: Address
+    Output: Address
+    Body: {
+        then_expr = ArrayGet(node, 3)
+        cond = ArrayGet(node, 4)
+        else_expr = ArrayGet(node, 5)
+        flat_cond = Gen_FlattenExpr(cond)
+        temp = Gen_TempName()
+        Gen_EmitIndent()
+        Gen_Emit(temp)
+        Gen_Emit(" = 0\n")
+        Gen_EmitIndent()
+        Gen_Emit("IfCondition AIMacro.SmartBool(")
+        Gen_Expr(flat_cond)
+        Gen_Emit(") ThenBlock: {\n")
+        Gen.indent = Add(Gen.indent, 1)
+        flat_then = Gen_FlattenExpr(then_expr)
+        Gen_EmitIndent()
+        Gen_Emit(temp)
+        Gen_Emit(" = ")
+        Gen_Expr(flat_then)
+        Gen_Emit("\n")
+        Gen.indent = Subtract(Gen.indent, 1)
+        Gen_EmitIndent()
+        Gen_Emit("} ElseBlock: {\n")
+        Gen.indent = Add(Gen.indent, 1)
+        flat_else = Gen_FlattenExpr(else_expr)
+        Gen_EmitIndent()
+        Gen_Emit(temp)
+        Gen_Emit(" = ")
+        Gen_Expr(flat_else)
+        Gen_Emit("\n")
+        Gen.indent = Subtract(Gen.indent, 1)
+        Gen_EmitIndent()
+        Gen_Emit("}\n")
+        ReturnValue(Gen_MakeIdent(temp))
+    }
+}

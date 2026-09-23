@@ -1,0 +1,22 @@
+# test_min.aim - with explicit main
+class Counter {
+    def __init__(self) {
+        self.count = 0
+    }
+    
+    def increment(self) {
+        self.count = self.count + 1
+    }
+    
+    def get(self) {
+        return self.count
+    }
+}
+
+def main() {
+    c = Counter()
+    c.increment()
+    c.increment()
+    val = c.get()
+    print(val)
+}

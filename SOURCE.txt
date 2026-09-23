@@ -1,0 +1,5 @@
+/tmp/aimacro-cb-test commit:
+26b4560ded0e86b0b409e0af68eb0ef6843b94af
+feat(aimacro): multi_global / multi_nonlocal  global a, b
+2026-09-22 22:00:14 -0400
+Extracted from AiLang-Author/Ailang-Self-Hosting- branch aimacro/class-body-parse-fixes

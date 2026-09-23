@@ -1,0 +1,2580 @@
+// Library.AIMacroCodeGen2.ailang
+// AILang Code Generator - Part 2: Program, Function, Statements
+//
+// Dependencies: AIMacroCore, AIMacroParserCore, AIMacroCodeGen1, AIMacroCodeGen3, AIMacroCodeGen4
+//
+// Copyright (c) 2025-2026 Sean Collins, 2 Paws Machine and Engineering. All rights reserved.
+// Licensed under the Sean Collins Software License (SCSL v1.0).
+
+LibraryImport.Array
+LibraryImport.AIMacro.AIMacroCore
+LibraryImport.AIMacro.AIMacroParserCore
+LibraryImport.AIMacro.AIMacroCodeGen1
+LibraryImport.AIMacro.AIMacroCodeGen3
+LibraryImport.AIMacro.AIMacroCodeGen4
+LibraryImport.AIMacro.AIMacroTypeAnnotations
+LibraryImport.AIMacro.AIMacroCodeGenDict
+LibraryImport.AIMacro.AIMacroCodeGenOOP
+
+// =============================================================================
+// MAIN CODE GENERATION ENTRY
+// =============================================================================
+Function.Gen_Program {
+    Input: ast: Address
+    Body: {
+        TypeAnno_Init()
+        DictGen_Init()
+        OOPGen_Init()
+        OOPGen_Reset()
+        
+        // Standard library imports (always needed)
+        Gen_EmitLine("LibraryImport.AIMacro.AIMacro")
+        Gen_EmitLine("LibraryImport.AIMacro.AIMacroString")
+        Gen_EmitLine("LibraryImport.Array")
+        Gen_EmitLine("LibraryImport.Hash")
+        Gen_EmitLine("LibraryImport.AIMacro.AIMacroDict")
+        Gen_EmitLine("LibraryImport.OOP")
+        Gen_Emit("\n")
+        
+        decls = ArrayGet(ast, 3)
+        n = Array.Size(decls)
+
+        // =========== PASS 0: Emit user imports ===========
+        i = 0
+        WhileLoop LessThan(i, n) {
+            decl = Array.Get(decls, i)
+            t = AST_Type(decl)
+            
+            IfCondition EqualTo(t, Node.IMPORT) ThenBlock: {
+                Gen_Import(decl)
+            }
+            IfCondition EqualTo(t, Node.FROM_IMPORT) ThenBlock: {
+                Gen_FromImport(decl)
+            }
+            
+            i = Add(i, 1)
+        }
+        Gen_Emit("\n")
+        // =========== END PASS 0 ===========
+
+        // =========== PRE-SCAN FOR CLASS NAMES ===========
+        i = 0
+        WhileLoop LessThan(i, n) {
+            decl = Array.Get(decls, i)
+            t = AST_Type(decl)
+            IfCondition EqualTo(t, Node.CLASS_DEF) ThenBlock: {
+                class_name = AST_GetField(decl, "name")
+                OOPGen_RegisterClassName(class_name)
+                OOPGen.has_classes = 1
+            }
+            i = Add(i, 1)
+        }
+        // =========== END PRE-SCAN ===========
+        
+        i = 0
+        WhileLoop LessThan(i, n) {
+            decl = Array.Get(decls, i)
+            t = AST_Type(decl)
+            IfCondition EqualTo(t, Node.FUNCTION) ThenBlock: {
+                fname = ArrayGet(decl, 3)
+                defs = ArrayGet(decl, 7)
+                Array.Push(Gen.func_names, fname)
+                Array.Push(Gen.func_defaults, defs)
+                Array.Push(Gen.func_params, ArrayGet(decl, 4))
+                star = ArrayGet(decl, 8)
+                IfCondition NotEqual(star, 0) ThenBlock: {
+                    Array.Push(Gen.func_varargs, Array.Size(ArrayGet(decl, 4)))
+                } ElseBlock: {
+                    Array.Push(Gen.func_varargs, 0)
+                }
+            }
+            i = Add(i, 1)
+        }
+        
+        // =========== FIRST PASS: Scan for >6 param functions ===========
+        i = 0
+        WhileLoop LessThan(i, n) {
+            decl = Array.Get(decls, i)
+            t = AST_Type(decl)
+            IfCondition EqualTo(t, Node.FUNCTION) ThenBlock: {
+                fname = ArrayGet(decl, 3)
+                params = ArrayGet(decl, 4)
+                num_params = Array.Size(params)
+                star = ArrayGet(decl, 8)
+                IfCondition And(EqualTo(star, 0), GreaterThan(num_params, 6)) ThenBlock: {
+                    Array.Push(Gen.packed_funcs, fname)
+                }
+            }
+            i = Add(i, 1)
+        }
+        // =========== END FIRST PASS ===========
+        
+        has_main = 0
+        toplevel = Array.Create(64)
+        
+        // =========== SECOND PASS: Generate functions/classes; buffer top-level stmts ===========
+        i = 0
+        WhileLoop LessThan(i, n) {
+            decl = Array.Get(decls, i)
+            t = AST_Type(decl)
+            
+            IfCondition EqualTo(t, Node.IMPORT) ThenBlock: {
+                i = Add(i, 1)
+                ContinueLoop
+            }
+            IfCondition EqualTo(t, Node.FROM_IMPORT) ThenBlock: {
+                i = Add(i, 1)
+                ContinueLoop
+            }
+            
+            IfCondition EqualTo(t, Node.FUNCTION) ThenBlock: {
+                Gen_Node(decl)
+                name = ArrayGet(decl, 3)
+                cmp = StringCompare(name, "main")
+                IfCondition EqualTo(cmp, 0) ThenBlock: {
+                    has_main = 1
+                }
+            } ElseBlock: {
+                IfCondition EqualTo(t, Node.CLASS_DEF) ThenBlock: {
+                    Gen_Node(decl)
+                } ElseBlock: {
+                    Array.Push(toplevel, decl)
+                }
+            }
+            
+            i = Add(i, 1)
+        }
+        // =========== END SECOND PASS ===========
+        
+        // Hoist nested def to file scope (AILang has no nested Function)
+        WhileLoop EqualTo(1, 1) {
+            n_def = Array.Size(Gen.deferred_functions)
+            IfCondition EqualTo(n_def, 0) ThenBlock: {
+                BreakLoop
+            }
+            pending = Gen.deferred_functions
+            Gen.deferred_functions = Array.Create(64)
+            i = 0
+            WhileLoop LessThan(i, n_def) {
+                Gen_Function(Array.Get(pending, i))
+                i = Add(i, 1)
+            }
+        }
+        
+        OOPGen_EmitClassInitSubroutine()
+        
+        n_top = Array.Size(toplevel)
+        need_main = 0
+        IfCondition EqualTo(has_main, 1) ThenBlock: {
+            need_main = 1
+        }
+        IfCondition GreaterThan(n_top, 0) ThenBlock: {
+            need_main = 1
+        }
+        IfCondition EqualTo(OOPGen.has_classes, 1) ThenBlock: {
+            need_main = 1
+        }
+        
+        IfCondition EqualTo(need_main, 1) ThenBlock: {
+            Gen_Emit("\n")
+            Gen_EmitLine("SubRoutine.Main {")
+            IfCondition EqualTo(OOPGen.has_classes, 1) ThenBlock: {
+                Gen_EmitLine("    __OOP_ClassInit()")
+            }
+            saved_indent = Gen.indent
+            Gen.indent = 2
+            i = 0
+            WhileLoop LessThan(i, n_top) {
+                Gen_Node(Array.Get(toplevel, i))
+                i = Add(i, 1)
+            }
+            Gen.indent = saved_indent
+            IfCondition EqualTo(has_main, 1) ThenBlock: {
+                Gen_EmitLine("    main()")
+            }
+            Gen_EmitLine("    ProcessExit(0)")
+            Gen_EmitLine("}")
+            Gen_Emit("\n")
+            WhileLoop EqualTo(1, 1) {
+                n_def = Array.Size(Gen.deferred_functions)
+                IfCondition EqualTo(n_def, 0) ThenBlock: {
+                    BreakLoop
+                }
+                pending = Gen.deferred_functions
+                Gen.deferred_functions = Array.Create(64)
+                i = 0
+                WhileLoop LessThan(i, n_def) {
+                    Gen_Function(Array.Get(pending, i))
+                    i = Add(i, 1)
+                }
+            }
+            Gen_EmitLine("RunTask(Main)")
+        }
+    }
+}
+
+
+// =============================================================================
+// IMPORT CODE GENERATION
+// =============================================================================
+Function.Gen_Import {
+    Input: node: Address
+    Body: {
+        // node structure: [Node.IMPORT, line, col, module_name, modules?]
+        // Multi-import: emit Import.X for each name in modules array (slot 4).
+        modules = ArrayGet(node, 4)
+        IfCondition NotEqual(modules, 0) ThenBlock: {
+            n = Array.Size(modules)
+            i = 0
+            WhileLoop LessThan(i, n) {
+                module_name = Array.Get(modules, i)
+                IfCondition EqualTo(Gen_IsShimModule(module_name), 1) ThenBlock: {
+                    i = Add(i, 1)
+                    ContinueLoop
+                }
+                IfCondition And(NotEqual(module_name, 0), EqualTo(GetByte(module_name, 0), 46)) ThenBlock: {
+                    i = Add(i, 1)
+                    ContinueLoop
+                }
+                Gen_Emit("Import.")
+                Gen_Emit(module_name)
+                Gen_Emit("\n")
+                i = Add(i, 1)
+            }
+            ReturnValue(0)
+        }
+        module_name = ArrayGet(node, 3)
+        IfCondition EqualTo(Gen_IsShimModule(module_name), 1) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition And(NotEqual(module_name, 0), EqualTo(GetByte(module_name, 0), 46)) ThenBlock: {
+            ReturnValue(0)
+        }
+        Gen_Emit("Import.")
+        Gen_Emit(module_name)
+        Gen_Emit("\n")
+    }
+}
+
+Function.Gen_FromImport {
+    Input: node: Address
+    Body: {
+        // node structure: [Node.FROM_IMPORT, line, col, module_name, symbols]
+        // For now, from X import a,b,c becomes Import.X
+        // Symbols stored in slot 4 for future tree-shaking
+        module_name = ArrayGet(node, 3)
+        IfCondition EqualTo(Gen_IsShimModule(module_name), 1) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition And(NotEqual(module_name, 0), EqualTo(GetByte(module_name, 0), 46)) ThenBlock: {
+            ReturnValue(0)
+        }
+        Gen_Emit("Import.")
+        Gen_Emit(module_name)
+        Gen_Emit("\n")
+    }
+}
+
+// =============================================================================
+// NODE DISPATCH
+// =============================================================================
+Function.Gen_Node {
+    Input: node: Address
+    Body: {
+        IfCondition EqualTo(node, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        
+        t = AST_Type(node)
+
+        IfCondition EqualTo(t, Node.CLASS_DEF) ThenBlock: {
+            OOPGen_ClassDef(node)
+            ReturnValue(0)
+        }
+        
+        // =========== ADD THIS ===========
+        IfCondition EqualTo(t, Node.ATTR_ASSIGN) ThenBlock: {
+            OOPGen_AttrAssign(node)
+            ReturnValue(0)
+        }
+        // =========== END ADD ===========
+
+        IfCondition EqualTo(t, Node.FUNCTION) ThenBlock: {
+            IfCondition GreaterThan(Gen.indent, 0) ThenBlock: {
+                fname = ArrayGet(node, 3)
+                Array.Push(Gen.func_names, fname)
+                Array.Push(Gen.func_defaults, ArrayGet(node, 7))
+                Array.Push(Gen.func_params, ArrayGet(node, 4))
+                star = ArrayGet(node, 8)
+                IfCondition NotEqual(star, 0) ThenBlock: {
+                    Array.Push(Gen.func_varargs, Array.Size(ArrayGet(node, 4)))
+                } ElseBlock: {
+                    Array.Push(Gen.func_varargs, 0)
+                }
+                Array.Push(Gen.deferred_functions, node)
+                ReturnValue(0)
+            }
+            Gen_Function(node)
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t, Node.IF_STMT) ThenBlock: {
+            Gen_If(node)
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t, Node.WHILE_STMT) ThenBlock: {
+            Gen_While(node)
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t, Node.FOR_STMT) ThenBlock: {
+            Gen_For(node)
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t, Node.RETURN_STMT) ThenBlock: {
+            Gen_Return(node)
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t, Node.BREAK_STMT) ThenBlock: {
+            IfCondition NotEqual(Gen.loop_else_flag, 0) ThenBlock: {
+                Gen_EmitIndent()
+                Gen_Emit(Gen.loop_else_flag)
+                Gen_Emit(" = 1\n")
+            }
+            Gen_EmitIndent()
+            Gen_Emit("BreakLoop\n")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t, Node.CONTINUE_STMT) ThenBlock: {
+            Gen_EmitIndent()
+            Gen_Emit("ContinueLoop\n")
+            ReturnValue(0)
+        }
+
+        IfCondition EqualTo(t, Node.TRY_STMT) ThenBlock: {
+            Gen_Try(node)
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t, Node.WITH_STMT) ThenBlock: {
+            Gen_With(node)
+            ReturnValue(0)
+        }
+
+        IfCondition EqualTo(t, Node.RAISE_STMT) ThenBlock: {
+            Gen_Raise(node)
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t, Node.ASSERT_STMT) ThenBlock: {
+            Gen_Assert(node)
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t, Node.DEL_STMT) ThenBlock: {
+            Gen_Del(node)
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t, Node.GLOBAL_STMT) ThenBlock: {
+            // AILang has no dynamic global cell; parse coverage no-op
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t, Node.NONLOCAL_STMT) ThenBlock: {
+            ReturnValue(0)
+        }
+        
+        // NEW: Handle pass statement - does nothing
+        IfCondition EqualTo(t, Node.PASS_STMT) ThenBlock: {
+            // pass generates no code
+            ReturnValue(0)
+        }
+
+        IfCondition EqualTo(t, Node.TUPLE_UNPACK) ThenBlock: {
+            Gen_TupleUnpack(node)
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t, Node.TUPLE_FOR) ThenBlock: {
+            Gen_TupleFor(node)
+            ReturnValue(0)
+        }
+        
+        IfCondition EqualTo(t, Node.ASSIGNMENT) ThenBlock: {
+            Gen_Assignment(node)
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t, Node.AUG_ASSIGN) ThenBlock: {
+            Gen_AugAssignment(node)
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t, Node.INDEX_ASSIGN) ThenBlock: {
+            Gen_IndexAssign(node)
+            ReturnValue(0)
+        }
+        
+        // CALL as statement - flatten arguments first
+        IfCondition EqualTo(t, Node.CALL) ThenBlock: {
+            cname = ArrayGet(node, 3)
+            is_va = Gen_LookupVarargs(cname)
+            IfCondition NotEqual(is_va, 0) ThenBlock: {
+                Gen_FlattenExpr(node)
+                ReturnValue(0)
+            }
+            Gen_FlattenCallArgs(node)
+            Gen_EmitIndent()
+            Gen_CallExpr(node)
+            Gen_Emit("\n")
+            ReturnValue(0)
+        }
+        
+        // METHOD_CALL as statement - flatten arguments first
+        IfCondition EqualTo(t, Node.METHOD_CALL) ThenBlock: {
+            Gen_FlattenMethodArgs(node)
+            Gen_EmitIndent()
+            Gen_MethodCallExpr(node)
+            Gen_Emit("\n")
+            ReturnValue(0)
+        }
+        
+        Gen_EmitIndent()
+        Gen_Expr(node)
+        Gen_Emit("\n")
+    }
+}
+
+
+// =============================================================================
+// FUNCTION GENERATION
+// =============================================================================
+Function.Gen_Function {
+    Input: node: Address
+    Body: {
+        name = ArrayGet(node, 3)
+        params = ArrayGet(node, 4)
+        body = ArrayGet(node, 5)
+        ret_type = ArrayGet(node, 6)
+        
+        num_params = Array.Size(params)
+        defaults = ArrayGet(node, 7)
+        star = ArrayGet(node, 8)
+        va_count = 0
+        IfCondition NotEqual(star, 0) ThenBlock: {
+            va_count = num_params
+        }
+        Array.Push(Gen.func_names, name)
+        Array.Push(Gen.func_defaults, defaults)
+        Array.Push(Gen.func_params, params)
+        Array.Push(Gen.func_varargs, va_count)
+        
+        // Set type annotation context for this function
+        TypeAnno_EnterFunction(name)
+        
+        // Call the packed handler for more than 6 functions in a call
+        IfCondition And(EqualTo(star, 0), GreaterThan(num_params, 6)) ThenBlock: {
+            Gen_PackedFunction(name, params, body, ret_type, num_params)
+            TypeAnno_ExitFunction()
+            ReturnValue(0)
+        }
+        
+        // RESET STATE FOR NEW FUNCTION
+        Gen.temp_counter = 0
+        Array.Clear(Gen.param_names)
+        Array.Clear(Gen.string_vars)
+        Array.Clear(Gen.list_vars)
+        Array.Clear(Gen.dict_vars) 
+        
+        j = 0
+        WhileLoop LessThan(j, num_params) {
+            pname = Array.Get(params, j)
+            Array.Push(Gen.param_names, pname)
+            j = Add(j, 1)
+        }
+        
+        Gen_Emit("Function.")
+        Gen_Emit(name)
+        Gen_Emit(" {\n")
+        
+        j = 0
+        WhileLoop LessThan(j, num_params) {
+            pname = Array.Get(params, j)
+            is_star = 0
+            IfCondition NotEqual(star, 0) ThenBlock: {
+                is_star = EqualTo(StringCompare(pname, star), 0)
+            }
+            Gen_Emit("    Input: p_")
+            Gen_Emit(pname)
+            IfCondition EqualTo(is_star, 1) ThenBlock: {
+                Gen_Emit(": Address\n")
+                Gen_MarkListVar(pname)
+            } ElseBlock: {
+                Gen_Emit(": Integer\n")
+            }
+            j = Add(j, 1)
+        }
+        
+        IfCondition NotEqual(ret_type, 0) ThenBlock: {
+            Gen_Emit("    Output: Integer\n")
+        }
+        
+        Gen_EmitLine("    Body: {")
+        
+        Gen.indent = Add(Gen.indent, 2)
+        Gen_Body(body)
+        Gen.indent = Subtract(Gen.indent, 2)
+        
+        Gen_EmitLine("    }")
+        Gen_EmitLine("}")
+        
+        Gen_Emit("\n")
+        Array.Clear(Gen.param_names)
+        
+        // Exit type annotation context
+        TypeAnno_ExitFunction()
+    }
+}
+
+
+
+// =============================================================================
+// HANDLE FUNCTIONS WITH >6 PARAMETERS - Pack into array
+// =============================================================================
+Function.Gen_PackedFunction {
+    Input: name: Address
+    Input: params: Address
+    Input: body: Address
+    Input: ret_type: Address
+    Input: num_params: Integer
+    Body: {
+
+        // RESET STATE FOR NEW FUNCTION
+        Gen.temp_counter = 0
+        Array.Clear(Gen.param_names)
+        Array.Clear(Gen.string_vars)
+        Array.Clear(Gen.list_vars)
+        Array.Clear(Gen.dict_vars)
+
+        // Register param names for body generation
+        j = 0
+        WhileLoop LessThan(j, num_params) {
+            pname = Array.Get(params, j)
+            Array.Push(Gen.param_names, pname)
+            j = Add(j, 1)
+        }
+        
+        // Emit function header with single array param
+        Gen_Emit("Function.")
+        Gen_Emit(name)
+        Gen_Emit(" {\n")
+        Gen_Emit("    Input: p__args: Address\n")
+        
+        IfCondition NotEqual(ret_type, 0) ThenBlock: {
+            Gen_Emit("    Output: Integer\n")
+        }
+        
+        Gen_EmitLine("    Body: {")
+        
+        // Emit unpacking code for each parameter
+        j = 0
+        WhileLoop LessThan(j, num_params) {
+            pname = Array.Get(params, j)
+            idx_str = NumberToString(j)
+            
+            Gen_Emit("        p_")
+            Gen_Emit(pname)
+            Gen_Emit(" = DictGen_SmartGet(p__args, ")
+            Gen_Emit(idx_str)
+            Gen_Emit(")\n")
+            
+            j = Add(j, 1)
+        }
+        
+        // Generate body
+        Gen.indent = Add(Gen.indent, 2)
+        Gen_Body(body)
+        Gen.indent = Subtract(Gen.indent, 2)
+        
+        Gen_EmitLine("    }")
+        Gen_EmitLine("}")
+        Gen_Emit("\n")
+        
+        Array.Clear(Gen.param_names)
+    }
+}
+
+// =============================================================================
+// BODY GENERATION
+// =============================================================================
+Function.Gen_TryLoopGuard {
+    Body: {
+        IfCondition GreaterThan(Gen.try_depth, 0) ThenBlock: {
+            Gen_EmitIndent()
+            Gen_Emit("IfCondition EqualTo(AIMacro.ExcPending(), 1) ThenBlock: {\n")
+            Gen_EmitIndent()
+            Gen_Emit("    BreakLoop\n")
+            Gen_EmitIndent()
+            Gen_Emit("}\n")
+        }
+    }
+}
+
+Function.Gen_Body {
+    Input: stmts: Address
+    Body: {
+        IfCondition EqualTo(stmts, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        
+        n = Array.Size(stmts)
+        i = 0
+        WhileLoop LessThan(i, n) {
+            stmt = Array.Get(stmts, i)
+            IfCondition GreaterThan(Gen.try_depth, 0) ThenBlock: {
+                Gen_EmitIndent()
+                Gen_Emit("Fork EqualTo(AIMacro.ExcPending(), 0) TrueBlock: {\n")
+                Gen.indent = Add(Gen.indent, 1)
+                Gen_Node(stmt)
+                Gen.indent = Subtract(Gen.indent, 1)
+                Gen_EmitIndent()
+                Gen_Emit("} FalseBlock: {\n")
+                Gen_EmitIndent()
+                Gen_Emit("}\n")
+            } ElseBlock: {
+                Gen_Node(stmt)
+            }
+            i = Add(i, 1)
+        }
+    }
+}
+
+// =============================================================================
+// SLICE ACCESS GENERATION
+// =============================================================================
+
+Function.Gen_SliceAccess {
+    Input: node: Address
+    Body: {
+        expr = ArrayGet(node, 3)
+        start_expr = ArrayGet(node, 4)
+        end_expr = ArrayGet(node, 5)
+        step_expr = ArrayGet(node, 6)
+        
+        // Check if slicing a string
+        expr_type = AST_Type(expr)
+        is_string = 0
+        IfCondition EqualTo(expr_type, Node.IDENT) ThenBlock: {
+            var_name = ArrayGet(expr, 3)
+            is_string = Gen_IsStringVar(var_name)
+        }
+        IfCondition EqualTo(expr_type, Node.STR_LIT) ThenBlock: {
+            is_string = 1
+        }
+        
+        IfCondition EqualTo(is_string, 1) ThenBlock: {
+            Gen_Emit("AIMacro.StringSlice(")
+        } ElseBlock: {
+            Gen_Emit("AIMacro.ListSlice(")
+        }
+        
+        Gen_Expr(expr)
+        Gen_Emit(", ")
+        
+        // Start (default 0)
+        IfCondition EqualTo(start_expr, 0) ThenBlock: {
+            Gen_Emit("0")
+        } ElseBlock: {
+            Gen_Expr(start_expr)
+        }
+        Gen_Emit(", ")
+        
+        // End (default size - need runtime check)
+        IfCondition EqualTo(end_expr, 0) ThenBlock: {
+            // Default to length
+            IfCondition EqualTo(is_string, 1) ThenBlock: {
+                Gen_Emit("StringLength(")
+            } ElseBlock: {
+                Gen_Emit("Array.Size(")
+            }
+            Gen_Expr(expr)
+            Gen_Emit(")")
+        } ElseBlock: {
+            Gen_Expr(end_expr)
+        }
+        Gen_Emit(", ")
+        
+        // Step (default 1)
+        IfCondition EqualTo(step_expr, 0) ThenBlock: {
+            Gen_Emit("1")
+        } ElseBlock: {
+            Gen_Expr(step_expr)
+        }
+        
+        Gen_Emit(")")
+    }
+}
+
+// =============================================================================
+// IF STATEMENT - WITH FULL NESTED CALL EXTRACTION
+// =============================================================================
+Function.Gen_If {
+    Input: node: Address
+    Body: {
+        cond = ArrayGet(node, 3)
+        then_body = ArrayGet(node, 4)
+        else_body = ArrayGet(node, 5)
+        
+        // Check if condition has function calls that need extraction
+        has_call = Gen_HasCall(cond)
+        
+        IfCondition EqualTo(has_call, 1) ThenBlock: {
+            cond = Gen_FlattenExpr(cond)
+        }
+        
+        Gen_EmitIndent()
+        Gen_Emit("IfCondition AIMacro.SmartBool(")
+        Gen_Expr(cond)
+        Gen_Emit(") ThenBlock: {\n")
+        
+        Gen.indent = Add(Gen.indent, 1)
+        Gen_Body(then_body)
+        Gen.indent = Subtract(Gen.indent, 1)
+        
+        IfCondition NotEqual(else_body, 0) ThenBlock: {
+            Gen_EmitIndent()
+            Gen_Emit("} ElseBlock: {\n")
+            Gen.indent = Add(Gen.indent, 1)
+            Gen_Body(else_body)
+            Gen.indent = Subtract(Gen.indent, 1)
+        }
+        
+        Gen_EmitIndent()
+        Gen_Emit("}\n")
+    }
+}
+
+Function.Gen_UnpackOne {
+    Input: target: Address
+    Input: val: Address
+    Body: {
+        tt = AST_Type(target)
+        IfCondition EqualTo(tt, Node.IDENT) ThenBlock: {
+            Gen_EmitIndent()
+            Gen_Emit(ArrayGet(target, 3))
+            Gen_Emit(" = ")
+            Gen_Expr(val)
+            Gen_Emit("\n")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(tt, Node.ATTRIBUTE) ThenBlock: {
+            anode = ArrayCreate(6)
+            ArraySet(anode, 0, Node.ATTR_ASSIGN)
+            ArraySet(anode, 3, ArrayGet(target, 3))
+            ArraySet(anode, 4, ArrayGet(target, 4))
+            ArraySet(anode, 5, val)
+            OOPGen_AttrAssign(anode)
+            ReturnValue(0)
+        }
+        Gen_EmitIndent()
+        Gen_Emit(target)
+        Gen_Emit(" = ")
+        Gen_Expr(val)
+        Gen_Emit("\n")
+    }
+}
+
+// =============================================================================
+// TUPLE UNPACKING: a, b = 1, 2  OR  a, b = func()
+// =============================================================================
+Function.Gen_TupleUnpack {
+    Input: node: Address
+    Body: {
+        targets = ArrayGet(node, 3)
+        values = ArrayGet(node, 4)
+        
+        num_targets = Array.Size(targets)
+        num_values = Array.Size(values)
+        
+        // Case 1: Multiple values on RHS (a, b = 1, 2)
+        IfCondition EqualTo(num_targets, num_values) ThenBlock: {
+            i = 0
+            WhileLoop LessThan(i, num_targets) {
+                target_name = Array.Get(targets, i)
+                val = Array.Get(values, i)
+                
+                // Flatten if needed
+                has_call = Gen_HasCall(val)
+                IfCondition EqualTo(has_call, 1) ThenBlock: {
+                    val = Gen_FlattenExpr(val)
+                }
+                Gen_UnpackOne(target_name, val)
+                i = Add(i, 1)
+            }
+            ReturnValue(0)
+        }
+        
+        // Case 2: Single value on RHS (a, b = func() or a, b = some_list)
+        IfCondition EqualTo(num_values, 1) ThenBlock: {
+            val = Array.Get(values, 0)
+            
+            // Flatten the value to a temp
+            has_call = Gen_HasCall(val)
+            IfCondition EqualTo(has_call, 1) ThenBlock: {
+                val = Gen_FlattenExpr(val)
+            }
+            
+            // Generate temp variable for the source
+            temp_id = Gen.temp_counter
+            Gen.temp_counter = Add(Gen.temp_counter, 1)
+            temp_suffix = NumberToString(temp_id)
+            
+            Gen_EmitIndent()
+            Gen_Emit("__tup")
+            Gen_Emit(temp_suffix)
+            Gen_Emit(" = ")
+            Gen_Expr(val)
+            Gen_Emit("\n")
+            
+            i = 0
+            WhileLoop LessThan(i, num_targets) {
+                item = Gen_TempName()
+                Gen_EmitIndent()
+                Gen_Emit(item)
+                Gen_Emit(" = DictGen_SmartGet(__tup")
+                Gen_Emit(temp_suffix)
+                Gen_Emit(", ")
+                Gen_EmitNumber(i)
+                Gen_Emit(")\n")
+                Gen_UnpackOne(Array.Get(targets, i), Gen_MakeIdent(item))
+                i = Add(i, 1)
+            }
+            
+            ReturnValue(0)
+        }
+        
+        // Mismatch - emit error comment
+        Gen_EmitIndent()
+        Gen_Emit("// ERROR: Tuple unpack mismatch\n")
+    }
+}
+
+// =============================================================================
+// TUPLE FOR: for i, v in enumerate(x)  OR  for a, b in zip(x, y)
+// =============================================================================
+Function.Gen_TupleFor {
+    Input: node: Address
+    Body: {
+        var1 = ArrayGet(node, 3)
+        var2 = ArrayGet(node, 4)
+        iterable = ArrayGet(node, 5)
+        body = ArrayGet(node, 6)
+        else_body = ArrayGet(node, 7)
+        saved_flag = Gen_LoopElseEnter(else_body)
+        
+        iter_type = AST_Type(iterable)
+        
+        // Check for enumerate()
+        IfCondition EqualTo(iter_type, Node.CALL) ThenBlock: {
+            call_name = ArrayGet(iterable, 3)
+            
+            cmp = StringCompare(call_name, "enumerate")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                Gen_ForEnumerate(var1, var2, iterable, body)
+                Gen_LoopElseExit(else_body, saved_flag)
+                ReturnValue(0)
+            }
+            
+            cmp = StringCompare(call_name, "zip")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                Gen_ForZip(var1, var2, iterable, body)
+                Gen_LoopElseExit(else_body, saved_flag)
+                ReturnValue(0)
+            }
+        }
+        
+        // Generic tuple iteration - iterate and unpack pairs
+        loop_id = Gen.temp_counter
+        Gen.temp_counter = Add(Gen.temp_counter, 1)
+        loop_suffix = NumberToString(loop_id)
+        
+        // Flatten iterable if needed
+        iter_has_call = Gen_HasCall(iterable)
+        IfCondition EqualTo(iter_has_call, 1) ThenBlock: {
+            iterable = Gen_FlattenExpr(iterable)
+        }
+        
+        // iter = <iterable>
+        Gen_EmitIndent()
+        Gen_Emit("iter")
+        Gen_Emit(loop_suffix)
+        Gen_Emit(" = ")
+        Gen_Expr(iterable)
+        Gen_Emit("\n")
+        
+        // iterlen = SmartLen(iter)
+        Gen_EmitIndent()
+        Gen_Emit("iterlen")
+        Gen_Emit(loop_suffix)
+        Gen_Emit(" = AIMacro.SmartLen(iter")
+        Gen_Emit(loop_suffix)
+        Gen_Emit(")\n")
+        
+        // iteri = 0
+        Gen_EmitIndent()
+        Gen_Emit("iteri")
+        Gen_Emit(loop_suffix)
+        Gen_Emit(" = 0\n")
+        
+        // WhileLoop
+        Gen_EmitIndent()
+        Gen_Emit("WhileLoop LessThan(iteri")
+        Gen_Emit(loop_suffix)
+        Gen_Emit(", iterlen")
+        Gen_Emit(loop_suffix)
+        Gen_Emit(") {\n")
+        
+        Gen.indent = Add(Gen.indent, 1)
+        
+        // pair = SmartGet(iter, iteri)
+        Gen_EmitIndent()
+        Gen_Emit("__pair")
+        Gen_Emit(loop_suffix)
+        Gen_Emit(" = DictGen_SmartGet(iter")
+        Gen_Emit(loop_suffix)
+        Gen_Emit(", iteri")
+        Gen_Emit(loop_suffix)
+        Gen_Emit(")\n")
+        
+        // var1 = SmartGet(pair, 0)
+        Gen_EmitIndent()
+        Gen_EmitIdent(var1)
+        Gen_Emit(" = DictGen_SmartGet(__pair")
+        Gen_Emit(loop_suffix)
+        Gen_Emit(", 0)\n")
+        
+        // var2 = SmartGet(pair, 1)
+        Gen_EmitIndent()
+        Gen_EmitIdent(var2)
+        Gen_Emit(" = DictGen_SmartGet(__pair")
+        Gen_Emit(loop_suffix)
+        Gen_Emit(", 1)\n")
+        
+        // Body
+        Gen_Body(body)
+        
+        // iteri = Add(iteri, 1)
+        Gen_EmitIndent()
+        Gen_Emit("iteri")
+        Gen_Emit(loop_suffix)
+        Gen_Emit(" = Add(iteri")
+        Gen_Emit(loop_suffix)
+        Gen_Emit(", 1)\n")
+        
+        Gen.indent = Subtract(Gen.indent, 1)
+        Gen_EmitIndent()
+        Gen_Emit("}\n")
+        
+        Gen_LoopElseExit(else_body, saved_flag)
+    }
+}
+
+// =============================================================================
+// TRY STATEMENT
+// =============================================================================
+Function.Gen_Assert {
+    Input: node: Address
+    Body: {
+        cond = ArrayGet(node, 3)
+        msg = ArrayGet(node, 4)
+        IfCondition EqualTo(Gen_HasCall(cond), 1) ThenBlock: {
+            cond = Gen_FlattenExpr(cond)
+        }
+        Gen_EmitIndent()
+        Gen_Emit("IfCondition EqualTo(AIMacro.SmartBool(")
+        Gen_Expr(cond)
+        Gen_Emit("), 0) ThenBlock: {\n")
+        Gen.indent = Add(Gen.indent, 1)
+        Gen_EmitIndent()
+        Gen_Emit("AIMacro.RaiseKind(8, ")
+        IfCondition EqualTo(msg, 0) ThenBlock: {
+            Gen_Emit("\"AssertionError\"")
+        } ElseBlock: {
+            IfCondition EqualTo(Gen_HasCall(msg), 1) ThenBlock: {
+                msg = Gen_FlattenExpr(msg)
+            }
+            Gen_Expr(msg)
+        }
+        Gen_Emit(")\n")
+        Gen.indent = Subtract(Gen.indent, 1)
+        Gen_EmitIndent()
+        Gen_Emit("}\n")
+    }
+}
+
+Function.Gen_Del {
+    Input: node: Address
+    Body: {
+        targets = ArrayGet(node, 3)
+        n = Array.Size(targets)
+        i = 0
+        WhileLoop LessThan(i, n) {
+            tgt = Array.Get(targets, i)
+            tt = AST_Type(tgt)
+            // del d[k] / del a[i] -> Hash.Delete (already linked)
+            IfCondition EqualTo(tt, Node.INDEX_ACCESS) ThenBlock: {
+                container = ArrayGet(tgt, 3)
+                index = ArrayGet(tgt, 4)
+                IfCondition EqualTo(Gen_HasCall(container), 1) ThenBlock: {
+                    container = Gen_FlattenExpr(container)
+                }
+                IfCondition EqualTo(Gen_HasCall(index), 1) ThenBlock: {
+                    index = Gen_FlattenExpr(index)
+                }
+                Gen_EmitIndent()
+                Gen_Emit("Hash.Delete(")
+                Gen_Expr(container)
+                Gen_Emit(", ")
+                Gen_Expr(index)
+                Gen_Emit(")\n")
+            }
+            // del name / del obj.attr: no-op in static AILang locals
+            i = Add(i, 1)
+        }
+    }
+}
+
+Function.Gen_Raise {
+    Input: node: Address
+    Body: {
+        expr = ArrayGet(node, 3)
+        kind = 6
+        msg_node = 0
+        IfCondition NotEqual(expr, 0) ThenBlock: {
+            et = AST_Type(expr)
+            IfCondition EqualTo(et, Node.CALL) ThenBlock: {
+                cname = ArrayGet(expr, 3)
+                kind = Gen_MapExcKind(cname)
+                args = ArrayGet(expr, 4)
+                IfCondition And(NotEqual(args, 0), GreaterThan(Array.Size(args), 0)) ThenBlock: {
+                    msg_node = Array.Get(args, 0)
+                }
+            }
+            IfCondition EqualTo(et, Node.IDENT) ThenBlock: {
+                kind = Gen_MapExcKind(ArrayGet(expr, 3))
+            }
+            IfCondition EqualTo(et, Node.STR_LIT) ThenBlock: {
+                msg_node = expr
+            }
+        }
+        Gen_EmitIndent()
+        Gen_Emit("AIMacro.RaiseKind(")
+        Gen_EmitNumber(kind)
+        Gen_Emit(", ")
+        IfCondition EqualTo(msg_node, 0) ThenBlock: {
+            Gen_Emit("\"\"")
+        } ElseBlock: {
+            has_call = Gen_HasCall(msg_node)
+            IfCondition EqualTo(has_call, 1) ThenBlock: {
+                msg_node = Gen_FlattenExpr(msg_node)
+            }
+            Gen_Expr(msg_node)
+        }
+        Gen_Emit(")\n")
+    }
+}
+
+Function.Gen_Try {
+    Input: node: Address
+    Body: {
+        try_body = ArrayGet(node, 3)
+        except_clauses = ArrayGet(node, 4)
+        finally_body = ArrayGet(node, 5)
+        
+        Gen_EmitIndent()
+        Gen_Emit("AIMacro.ExcEnter()\n")
+        
+        Gen.try_depth = Add(Gen.try_depth, 1)
+        Gen_Body(try_body)
+        Gen.try_depth = Subtract(Gen.try_depth, 1)
+        
+        num_clauses = 0
+        IfCondition NotEqual(except_clauses, 0) ThenBlock: {
+            num_clauses = Array.Size(except_clauses)
+        }
+        
+        IfCondition GreaterThan(num_clauses, 0) ThenBlock: {
+            Gen_EmitIndent()
+            Gen_Emit("Fork EqualTo(AIMacro.ExcPending(), 1) TrueBlock: {\n")
+            Gen.indent = Add(Gen.indent, 1)
+            
+            bare = 0
+            typed = 0
+            i = 0
+            WhileLoop LessThan(i, num_clauses) {
+                clause = Array.Get(except_clauses, i)
+                exc_type = ArrayGet(clause, 3)
+                IfCondition EqualTo(exc_type, 0) ThenBlock: {
+                    bare = Add(bare, 1)
+                } ElseBlock: {
+                    typed = Add(typed, 1)
+                }
+                i = Add(i, 1)
+            }
+            
+            IfCondition EqualTo(typed, 0) ThenBlock: {
+                i = 0
+                WhileLoop LessThan(i, num_clauses) {
+                    clause = Array.Get(except_clauses, i)
+                    as_name = ArrayGet(clause, 5)
+                    IfCondition NotEqual(as_name, 0) ThenBlock: {
+                        Gen_EmitIndent()
+                        Gen_Emit(as_name)
+                        Gen_Emit(" = AIMacro.ExcValue()\n")
+                    }
+                    Gen_Body(ArrayGet(clause, 4))
+                    Gen_EmitIndent()
+                    Gen_Emit("AIMacro.ExcClear()\n")
+                    i = Add(i, 1)
+                }
+            } ElseBlock: {
+                Gen_EmitIndent()
+                Gen_Emit("Branch AIMacro.ExcKind() {\n")
+                Gen.indent = Add(Gen.indent, 1)
+                i = 0
+                WhileLoop LessThan(i, num_clauses) {
+                    clause = Array.Get(except_clauses, i)
+                    exc_type = ArrayGet(clause, 3)
+                    IfCondition NotEqual(exc_type, 0) ThenBlock: {
+                        k = Gen_MapExcKind(exc_type)
+                        Gen_EmitIndent()
+                        Gen_Emit("Case ")
+                        Gen_EmitNumber(k)
+                        Gen_Emit(": {\n")
+                        Gen.indent = Add(Gen.indent, 1)
+                        as_name = ArrayGet(clause, 5)
+                        IfCondition NotEqual(as_name, 0) ThenBlock: {
+                            Gen_EmitIndent()
+                            Gen_Emit(as_name)
+                            Gen_Emit(" = AIMacro.ExcValue()\n")
+                        }
+                        Gen_Body(ArrayGet(clause, 4))
+                        Gen_EmitIndent()
+                        Gen_Emit("AIMacro.ExcClear()\n")
+                        Gen.indent = Subtract(Gen.indent, 1)
+                        Gen_EmitIndent()
+                        Gen_Emit("}\n")
+                    }
+                    i = Add(i, 1)
+                }
+                IfCondition GreaterThan(bare, 0) ThenBlock: {
+                    Gen_EmitIndent()
+                    Gen_Emit("Default: {\n")
+                    Gen.indent = Add(Gen.indent, 1)
+                    i = 0
+                    WhileLoop LessThan(i, num_clauses) {
+                        clause = Array.Get(except_clauses, i)
+                        IfCondition EqualTo(ArrayGet(clause, 3), 0) ThenBlock: {
+                            as_name = ArrayGet(clause, 5)
+                            IfCondition NotEqual(as_name, 0) ThenBlock: {
+                                Gen_EmitIndent()
+                                Gen_Emit(as_name)
+                                Gen_Emit(" = AIMacro.ExcValue()\n")
+                            }
+                            Gen_Body(ArrayGet(clause, 4))
+                            Gen_EmitIndent()
+                            Gen_Emit("AIMacro.ExcClear()\n")
+                        }
+                        i = Add(i, 1)
+                    }
+                    Gen.indent = Subtract(Gen.indent, 1)
+                    Gen_EmitIndent()
+                    Gen_Emit("}\n")
+                }
+                Gen.indent = Subtract(Gen.indent, 1)
+                Gen_EmitIndent()
+                Gen_Emit("}\n")
+            }
+            
+            Gen.indent = Subtract(Gen.indent, 1)
+            Gen_EmitIndent()
+            Gen_Emit("} FalseBlock: {\n")
+            Gen_EmitIndent()
+            Gen_Emit("}\n")
+        }
+        
+        IfCondition NotEqual(finally_body, 0) ThenBlock: {
+            Gen_Body(finally_body)
+        }
+        
+        Gen_EmitIndent()
+        Gen_Emit("AIMacro.ExcLeave()\n")
+    }
+}
+
+Function.Gen_With {
+    Input: node: Address
+    Body: {
+        expr = ArrayGet(node, 3)
+        as_name = ArrayGet(node, 4)
+        body = ArrayGet(node, 5)
+        has_call = Gen_HasCall(expr)
+        IfCondition EqualTo(has_call, 1) ThenBlock: {
+            expr = Gen_FlattenExpr(expr)
+        }
+        ctx = Gen_TempName()
+        Gen_EmitIndent()
+        Gen_Emit(ctx)
+        Gen_Emit(" = ")
+        Gen_Expr(expr)
+        Gen_Emit("\n")
+        IfCondition NotEqual(as_name, 0) ThenBlock: {
+            Gen_EmitIndent()
+            Gen_Emit(as_name)
+            Gen_Emit(" = ")
+            Gen_Emit(ctx)
+            Gen_Emit("\n")
+        }
+        Gen.try_depth = Add(Gen.try_depth, 1)
+        Gen_Body(body)
+        Gen.try_depth = Subtract(Gen.try_depth, 1)
+        Gen_EmitIndent()
+        Gen_Emit("AIMacro.FileClose(")
+        Gen_Emit(ctx)
+        Gen_Emit(")\n")
+    }
+}
+
+// =============================================================================
+// FOR ENUMERATE: for i, v in enumerate(items)
+// Optimized - no actual enumerate() call needed
+// =============================================================================
+Function.Gen_ForEnumerate {
+    Input: idx_var: Address
+    Input: val_var: Address
+    Input: enum_call: Address
+    Input: body: Address
+    Body: {
+        // Get the list from enumerate(list)
+        args = ArrayGet(enum_call, 4)
+        list_arg = Array.Get(args, 0)
+        
+        loop_id = Gen.temp_counter
+        Gen.temp_counter = Add(Gen.temp_counter, 1)
+        loop_suffix = NumberToString(loop_id)
+        
+        // Check if list_arg is a list literal - needs special handling
+        list_type = AST_Type(list_arg)
+        IfCondition EqualTo(list_type, Node.LIST_LIT) ThenBlock: {
+            // Create the list using Gen_ListAssignment pattern
+            elems = ArrayGet(list_arg, 3)
+            n = Array.Size(elems)
+            
+            Gen_EmitIndent()
+            Gen_Emit("iter")
+            Gen_Emit(loop_suffix)
+            Gen_Emit(" = Array.Create(")
+            Gen_EmitNumber(n)
+            Gen_Emit(")\n")
+            
+            i = 0
+            WhileLoop LessThan(i, n) {
+                elem = Array.Get(elems, i)
+                
+                // Flatten element if needed
+                has_call = Gen_HasCall(elem)
+                IfCondition EqualTo(has_call, 1) ThenBlock: {
+                    elem = Gen_FlattenExpr(elem)
+                }
+                
+                Gen_EmitIndent()
+                Gen_Emit("Array.Push(iter")
+                Gen_Emit(loop_suffix)
+                Gen_Emit(", ")
+                Gen_Expr(elem)
+                Gen_Emit(")\n")
+                i = Add(i, 1)
+            }
+        } ElseBlock: {
+            // Flatten list if it has calls
+            list_has_call = Gen_HasCall(list_arg)
+            IfCondition EqualTo(list_has_call, 1) ThenBlock: {
+                list_arg = Gen_FlattenExpr(list_arg)
+            }
+            
+            // iter = <list>
+            Gen_EmitIndent()
+            Gen_Emit("iter")
+            Gen_Emit(loop_suffix)
+            Gen_Emit(" = ")
+            Gen_Expr(list_arg)
+            Gen_Emit("\n")
+        }
+        
+        // iterlen = SmartLen(iter)
+        Gen_EmitIndent()
+        Gen_Emit("iterlen")
+        Gen_Emit(loop_suffix)
+        Gen_Emit(" = AIMacro.SmartLen(iter")
+        Gen_Emit(loop_suffix)
+        Gen_Emit(")\n")
+        
+        // idx_var = 0 (this IS the index variable!)
+        Gen_EmitIndent()
+        Gen_EmitIdent(idx_var)
+        Gen_Emit(" = 0\n")
+        
+        // WhileLoop
+        Gen_EmitIndent()
+        Gen_Emit("WhileLoop LessThan(")
+        Gen_EmitIdent(idx_var)
+        Gen_Emit(", iterlen")
+        Gen_Emit(loop_suffix)
+        Gen_Emit(") {\n")
+        
+        Gen.indent = Add(Gen.indent, 1)
+        
+        // val_var = SmartGet(iter, idx_var)
+        Gen_EmitIndent()
+        Gen_EmitIdent(val_var)
+        Gen_Emit(" = DictGen_SmartGet(iter")
+        Gen_Emit(loop_suffix)
+        Gen_Emit(", ")
+        Gen_EmitIdent(idx_var)
+        Gen_Emit(")\n")
+        
+        // Body
+        Gen_TryLoopGuard()
+        Gen_Body(body)
+        
+        // idx_var = Add(idx_var, 1)
+        Gen_EmitIndent()
+        Gen_EmitIdent(idx_var)
+        Gen_Emit(" = Add(")
+        Gen_EmitIdent(idx_var)
+        Gen_Emit(", 1)\n")
+        
+        Gen.indent = Subtract(Gen.indent, 1)
+        Gen_EmitIndent()
+        Gen_Emit("}\n")
+        
+    }
+}
+
+// =============================================================================
+// FOR ZIP: for a, b in zip(list1, list2)
+// Parallel iteration over two lists
+// =============================================================================
+Function.Gen_ForZip {
+    Input: var1: Address
+    Input: var2: Address
+    Input: zip_call: Address
+    Input: body: Address
+    Body: {
+        // Get both lists from zip(list1, list2)
+        args = ArrayGet(zip_call, 4)
+        list1_arg = Array.Get(args, 0)
+        list2_arg = Array.Get(args, 1)
+        
+        loop_id = Gen.temp_counter
+        Gen.temp_counter = Add(Gen.temp_counter, 1)
+        loop_suffix = NumberToString(loop_id)
+        
+        // Handle list1 - check if literal
+        list1_type = AST_Type(list1_arg)
+        IfCondition EqualTo(list1_type, Node.LIST_LIT) ThenBlock: {
+            elems = ArrayGet(list1_arg, 3)
+            n = Array.Size(elems)
+            
+            Gen_EmitIndent()
+            Gen_Emit("iter1_")
+            Gen_Emit(loop_suffix)
+            Gen_Emit(" = Array.Create(")
+            Gen_EmitNumber(n)
+            Gen_Emit(")\n")
+            
+            i = 0
+            WhileLoop LessThan(i, n) {
+                elem = Array.Get(elems, i)
+                has_call = Gen_HasCall(elem)
+                IfCondition EqualTo(has_call, 1) ThenBlock: {
+                    elem = Gen_FlattenExpr(elem)
+                }
+                Gen_EmitIndent()
+                Gen_Emit("Array.Push(iter1_")
+                Gen_Emit(loop_suffix)
+                Gen_Emit(", ")
+                Gen_Expr(elem)
+                Gen_Emit(")\n")
+                i = Add(i, 1)
+            }
+        } ElseBlock: {
+            list1_has_call = Gen_HasCall(list1_arg)
+            IfCondition EqualTo(list1_has_call, 1) ThenBlock: {
+                list1_arg = Gen_FlattenExpr(list1_arg)
+            }
+            Gen_EmitIndent()
+            Gen_Emit("iter1_")
+            Gen_Emit(loop_suffix)
+            Gen_Emit(" = ")
+            Gen_Expr(list1_arg)
+            Gen_Emit("\n")
+        }
+        
+        // Handle list2 - check if literal
+        list2_type = AST_Type(list2_arg)
+        IfCondition EqualTo(list2_type, Node.LIST_LIT) ThenBlock: {
+            elems = ArrayGet(list2_arg, 3)
+            n = Array.Size(elems)
+            
+            Gen_EmitIndent()
+            Gen_Emit("iter2_")
+            Gen_Emit(loop_suffix)
+            Gen_Emit(" = Array.Create(")
+            Gen_EmitNumber(n)
+            Gen_Emit(")\n")
+            
+            i = 0
+            WhileLoop LessThan(i, n) {
+                elem = Array.Get(elems, i)
+                has_call = Gen_HasCall(elem)
+                IfCondition EqualTo(has_call, 1) ThenBlock: {
+                    elem = Gen_FlattenExpr(elem)
+                }
+                Gen_EmitIndent()
+                Gen_Emit("Array.Push(iter2_")
+                Gen_Emit(loop_suffix)
+                Gen_Emit(", ")
+                Gen_Expr(elem)
+                Gen_Emit(")\n")
+                i = Add(i, 1)
+            }
+        } ElseBlock: {
+            list2_has_call = Gen_HasCall(list2_arg)
+            IfCondition EqualTo(list2_has_call, 1) ThenBlock: {
+                list2_arg = Gen_FlattenExpr(list2_arg)
+            }
+            Gen_EmitIndent()
+            Gen_Emit("iter2_")
+            Gen_Emit(loop_suffix)
+            Gen_Emit(" = ")
+            Gen_Expr(list2_arg)
+            Gen_Emit("\n")
+        }
+        
+        // len1 = SmartLen(iter1)
+        Gen_EmitIndent()
+        Gen_Emit("len1_")
+        Gen_Emit(loop_suffix)
+        Gen_Emit(" = AIMacro.SmartLen(iter1_")
+        Gen_Emit(loop_suffix)
+        Gen_Emit(")\n")
+        
+        // len2 = SmartLen(iter2)
+        Gen_EmitIndent()
+        Gen_Emit("len2_")
+        Gen_Emit(loop_suffix)
+        Gen_Emit(" = AIMacro.SmartLen(iter2_")
+        Gen_Emit(loop_suffix)
+        Gen_Emit(")\n")
+        
+        // iterlen = Min(len1, len2)
+        Gen_EmitIndent()
+        Gen_Emit("iterlen")
+        Gen_Emit(loop_suffix)
+        Gen_Emit(" = Min(len1_")
+        Gen_Emit(loop_suffix)
+        Gen_Emit(", len2_")
+        Gen_Emit(loop_suffix)
+        Gen_Emit(")\n")
+        
+        // iteri = 0
+        Gen_EmitIndent()
+        Gen_Emit("iteri")
+        Gen_Emit(loop_suffix)
+        Gen_Emit(" = 0\n")
+        
+        // WhileLoop
+        Gen_EmitIndent()
+        Gen_Emit("WhileLoop LessThan(iteri")
+        Gen_Emit(loop_suffix)
+        Gen_Emit(", iterlen")
+        Gen_Emit(loop_suffix)
+        Gen_Emit(") {\n")
+        
+        Gen.indent = Add(Gen.indent, 1)
+        
+        // var1 = SmartGet(iter1, iteri)
+        Gen_EmitIndent()
+        Gen_EmitIdent(var1)
+        Gen_Emit(" = DictGen_SmartGet(iter1_")
+        Gen_Emit(loop_suffix)
+        Gen_Emit(", iteri")
+        Gen_Emit(loop_suffix)
+        Gen_Emit(")\n")
+        
+        // var2 = SmartGet(iter2, iteri)
+        Gen_EmitIndent()
+        Gen_EmitIdent(var2)
+        Gen_Emit(" = DictGen_SmartGet(iter2_")
+        Gen_Emit(loop_suffix)
+        Gen_Emit(", iteri")
+        Gen_Emit(loop_suffix)
+        Gen_Emit(")\n")
+        
+        // Body
+        Gen_TryLoopGuard()
+        Gen_Body(body)
+        
+        // iteri = Add(iteri, 1)
+        Gen_EmitIndent()
+        Gen_Emit("iteri")
+        Gen_Emit(loop_suffix)
+        Gen_Emit(" = Add(iteri")
+        Gen_Emit(loop_suffix)
+        Gen_Emit(", 1)\n")
+        
+        Gen.indent = Subtract(Gen.indent, 1)
+        Gen_EmitIndent()
+        Gen_Emit("}\n")
+        
+    }
+}
+
+// =============================================================================
+// EMIT CONDITION EXPRESSION (with temp substitution)
+// =============================================================================
+Function.Gen_CondExpr {
+    Input: node: Address
+    Body: {
+        // After extraction, just emit normally
+        Gen_Expr(node)
+    }
+}
+
+// =============================================================================
+// WHILE STATEMENT
+// =============================================================================
+// =============================================================================
+// FOR/WHILE-ELSE: break flag (Python: else runs iff loop did not break)
+// =============================================================================
+Function.Gen_LoopElseEnter {
+    Input: else_body: Address
+    Output: Address
+    Body: {
+        saved = Gen.loop_else_flag
+        Gen.loop_else_flag = 0
+        IfCondition NotEqual(else_body, 0) ThenBlock: {
+            flag = Gen_TempName()
+            Gen_EmitIndent()
+            Gen_Emit(flag)
+            Gen_Emit(" = 0\n")
+            Gen.loop_else_flag = flag
+        }
+        ReturnValue(saved)
+    }
+}
+
+Function.Gen_LoopElseExit {
+    Input: else_body: Address
+    Input: saved_flag: Address
+    Body: {
+        IfCondition NotEqual(else_body, 0) ThenBlock: {
+            flag = Gen.loop_else_flag
+            Gen_EmitIndent()
+            Gen_Emit("IfCondition EqualTo(")
+            Gen_Emit(flag)
+            Gen_Emit(", 0) ThenBlock: {\n")
+            Gen.indent = Add(Gen.indent, 1)
+            Gen_Body(else_body)
+            Gen.indent = Subtract(Gen.indent, 1)
+            Gen_EmitIndent()
+            Gen_Emit("}\n")
+        }
+        Gen.loop_else_flag = saved_flag
+    }
+}
+
+Function.Gen_While {
+    Input: node: Address
+    Body: {
+        cond = ArrayGet(node, 3)
+        body = ArrayGet(node, 4)
+        else_body = ArrayGet(node, 5)
+        saved_flag = Gen_LoopElseEnter(else_body)
+        
+        has_call = Gen_HasCall(cond)
+        
+        IfCondition EqualTo(has_call, 1) ThenBlock: {
+            // Use infinite loop + break pattern for complex conditions
+            Gen_EmitIndent()
+            Gen_Emit("WhileLoop EqualTo(1, 1) {\n")
+            Gen.indent = Add(Gen.indent, 1)
+            
+            flat_cond = Gen_FlattenExpr(cond)
+            Gen_EmitIndent()
+            Gen_Emit("IfCondition Not(AIMacro.SmartBool(")
+            Gen_Expr(flat_cond)
+            Gen_Emit(")) ThenBlock: {\n")
+            Gen.indent = Add(Gen.indent, 1)
+            Gen_EmitIndent()
+            Gen_Emit("BreakLoop\n")
+            Gen.indent = Subtract(Gen.indent, 1)
+            Gen_EmitIndent()
+            Gen_Emit("}\n")
+            
+            Gen_TryLoopGuard()
+            Gen_Body(body)
+            Gen.indent = Subtract(Gen.indent, 1)
+            Gen_EmitIndent()
+            Gen_Emit("}\n")
+        } ElseBlock: {
+            Gen_EmitIndent()
+            Gen_Emit("WhileLoop AIMacro.SmartBool(")
+            Gen_Expr(cond)
+            Gen_Emit(") {\n")
+            
+            Gen.indent = Add(Gen.indent, 1)
+            Gen_TryLoopGuard()
+            Gen_Body(body)
+            Gen.indent = Subtract(Gen.indent, 1)
+            
+            Gen_EmitIndent()
+            Gen_Emit("}\n")
+        }
+        Gen_LoopElseExit(else_body, saved_flag)
+    }
+}
+
+
+// =============================================================================
+// FOR STATEMENT
+// =============================================================================
+Function.Gen_For {
+    Input: node: Address
+    Body: {
+        var_name = ArrayGet(node, 3)
+        iterable = ArrayGet(node, 4)
+        body = ArrayGet(node, 5)
+        else_body = ArrayGet(node, 6)
+        saved_flag = Gen_LoopElseEnter(else_body)
+        
+        iter_type = AST_Type(iterable)
+        
+        // Check if it's range()
+        IfCondition EqualTo(iter_type, Node.CALL) ThenBlock: {
+            call_name = ArrayGet(iterable, 3)
+            cmp = StringCompare(call_name, "range")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                Gen_ForRange(var_name, iterable, body)
+                Gen_LoopElseExit(else_body, saved_flag)
+                ReturnValue(0)
+            }
+        }
+        
+        // Generic for-each over a list/iterable
+        // Transform: for x in items:  ->  i=0; while i<len: x=items[i]; ...; i+=1
+        
+        // Get unique suffix for loop variables
+        loop_id = Gen.temp_counter
+        Gen.temp_counter = Add(Gen.temp_counter, 1)
+        loop_suffix = NumberToString(loop_id)
+        
+        // Flatten iterable if it has calls
+        iter_has_call = Gen_HasCall(iterable)
+        IfCondition EqualTo(iter_has_call, 1) ThenBlock: {
+            iterable = Gen_FlattenExpr(iterable)
+        }
+        
+        // Emit: iter_arr = <iterable>
+        Gen_EmitIndent()
+        Gen_Emit("iter")
+        Gen_Emit(loop_suffix)
+        Gen_Emit(" = ")
+        Gen_Expr(iterable)
+        Gen_Emit("\n")
+        
+        Gen_EmitIndent()
+        Gen_Emit("iterlen")
+        Gen_Emit(loop_suffix)
+        Gen_Emit(" = AIMacro.IterLen(iter")
+        Gen_Emit(loop_suffix)
+        Gen_Emit(")\n")
+        
+        // Emit: iter_i = 0
+        Gen_EmitIndent()
+        Gen_Emit("iteri")
+        Gen_Emit(loop_suffix)
+        Gen_Emit(" = 0\n")
+        
+        // Emit: WhileLoop LessThan(iter_i, iter_len) {
+        Gen_EmitIndent()
+        Gen_Emit("WhileLoop LessThan(iteri")
+        Gen_Emit(loop_suffix)
+        Gen_Emit(", iterlen")
+        Gen_Emit(loop_suffix)
+        Gen_Emit(") {\n")
+        
+        Gen.indent = Add(Gen.indent, 1)
+        
+        // Emit: var_name = Array.Get(iter_arr, iter_i)
+        Gen_EmitIndent()
+        Gen_EmitIdent(var_name)
+        Gen_Emit(" = AIMacro.IterGet(iter")
+        Gen_Emit(loop_suffix)
+        Gen_Emit(", iteri")
+        Gen_Emit(loop_suffix)
+        Gen_Emit(")\n")
+        
+        // Emit body
+        Gen_TryLoopGuard()
+        Gen_Body(body)
+        
+        // Emit: iter_i = Add(iter_i, 1)
+        Gen_EmitIndent()
+        Gen_Emit("iteri")
+        Gen_Emit(loop_suffix)
+        Gen_Emit(" = Add(iteri")
+        Gen_Emit(loop_suffix)
+        Gen_Emit(", 1)\n")
+        
+        Gen.indent = Subtract(Gen.indent, 1)
+        
+        Gen_EmitIndent()
+        Gen_Emit("}\n")
+        
+        // Free suffix string
+        Gen_LoopElseExit(else_body, saved_flag)
+    }
+}
+
+// =============================================================================
+// FOR-RANGE OPTIMIZATION
+// =============================================================================
+Function.Gen_ForRange {
+    Input: var_name: Address
+    Input: range_call: Address
+    Input: body: Address
+    Body: {
+        args = ArrayGet(range_call, 4)
+        num_args = Array.Size(args)
+
+        // Determine loop direction: negative step needs GreaterThan condition
+        use_greater = 0
+        IfCondition EqualTo(num_args, 3) ThenBlock: {
+            step_node = Array.Get(args, 2)
+            step_node_type = ArrayGet(step_node, 0)
+            IfCondition EqualTo(step_node_type, Node.UNARY_OP) ThenBlock: {
+                unary_op_val = ArrayGet(step_node, 3)
+                IfCondition EqualTo(unary_op_val, Token.MINUS) ThenBlock: {
+                    use_greater = 1
+                }
+            }
+        }
+
+        // Get unique suffix for this loop's internal variables
+        loop_id = Gen.temp_counter
+        Gen.temp_counter = Add(Gen.temp_counter, 1)
+        loop_suffix = NumberToString(loop_id)
+        
+        // Determine start, stop, step values
+        // range(n)       -> start=0, stop=n, step=1
+        // range(a, b)    -> start=a, stop=b, step=1
+        // range(a, b, c) -> start=a, stop=b, step=c
+        
+        // Create internal loop counter name: lc<id> (loop counter)
+        Gen_EmitIndent()
+        Gen_Emit("lc")
+        Gen_Emit(loop_suffix)
+        Gen_Emit(" = ")
+        IfCondition EqualTo(num_args, 1) ThenBlock: {
+            Gen_Emit("0")
+        } ElseBlock: {
+            start_arg = Array.Get(args, 0)
+            Gen_Expr(start_arg)
+        }
+        Gen_Emit("\n")
+        
+        // Set stop value: ls<id> (loop stop)
+        Gen_EmitIndent()
+        Gen_Emit("ls")
+        Gen_Emit(loop_suffix)
+        Gen_Emit(" = ")
+        IfCondition EqualTo(num_args, 1) ThenBlock: {
+            stop_arg = Array.Get(args, 0)
+            Gen_Expr(stop_arg)
+        } ElseBlock: {
+            stop_arg = Array.Get(args, 1)
+            Gen_Expr(stop_arg)
+        }
+        Gen_Emit("\n")
+        
+        // Set step value: lt<id> (loop step)
+        Gen_EmitIndent()
+        Gen_Emit("lt")
+        Gen_Emit(loop_suffix)
+        Gen_Emit(" = ")
+        IfCondition EqualTo(num_args, 3) ThenBlock: {
+            step_arg = Array.Get(args, 2)
+            Gen_Expr(step_arg)
+        } ElseBlock: {
+            Gen_Emit("1")
+        }
+        Gen_Emit("\n")
+        
+        // While loop - direction depends on step sign
+        Gen_EmitIndent()
+        Gen_Emit("WhileLoop ")
+        IfCondition EqualTo(use_greater, 1) ThenBlock: {
+            Gen_Emit("GreaterThan(lc")
+        } ElseBlock: {
+            Gen_Emit("LessThan(lc")
+        }
+        Gen_Emit(loop_suffix)
+        Gen_Emit(", ls")
+        Gen_Emit(loop_suffix)
+        Gen_Emit(") {\n")
+        
+        Gen.indent = Add(Gen.indent, 1)
+        
+        // CRITICAL: Copy loop counter to user variable FIRST
+        // This way continue won't skip the increment
+        Gen_EmitIndent()
+        Gen_EmitIdent(var_name)
+        Gen_Emit(" = lc")
+        Gen_Emit(loop_suffix)
+        Gen_Emit("\n")
+        
+        // INCREMENT IMMEDIATELY (before body)
+        // This is the key fix - continue will skip body but not this
+        Gen_EmitIndent()
+        Gen_Emit("lc")
+        Gen_Emit(loop_suffix)
+        Gen_Emit(" = Add(lc")
+        Gen_Emit(loop_suffix)
+        Gen_Emit(", lt")
+        Gen_Emit(loop_suffix)
+        Gen_Emit(")\n")
+        
+        // Now emit the body - user uses var_name which has current value
+        // If continue fires, it goes back to loop check, but increment already done
+        Gen_TryLoopGuard()
+        Gen_Body(body)
+        
+        Gen.indent = Subtract(Gen.indent, 1)
+        Gen_EmitIndent()
+        Gen_Emit("}\n")
+        
+        // Free the suffix string
+    }
+}
+
+// =============================================================================
+// RETURN STATEMENT - Also needs call extraction
+// =============================================================================
+// =============================================================================
+// RETURN STATEMENT - Also needs call extraction
+// =============================================================================
+Function.Gen_Return {
+    Input: node: Address
+    Body: {
+        value = ArrayGet(node, 3)
+        
+        IfCondition EqualTo(value, 0) ThenBlock: {
+            Gen_EmitIndent()
+            Gen_Emit("ReturnValue(0)\n")
+            ReturnValue(0)
+        }
+        
+        value_type = AST_Type(value)
+        
+        // =========== OOP CLASS INSTANTIATION IN RETURN ===========
+        // Handle: return ClassName(args)
+        IfCondition EqualTo(value_type, Node.CALL) ThenBlock: {
+            call_name = ArrayGet(value, 3)
+            call_args = ArrayGet(value, 4)
+            is_class = OOPGen_IsClassName(call_name)
+            IfCondition EqualTo(is_class, 1) ThenBlock: {
+                // OOPGen_InstanceCreation emits the setup code and returns
+                // the temp var holding the instance
+                instance_var = OOPGen_InstanceCreation(call_name, call_args)
+                
+                // Return the instance
+                Gen_EmitIndent()
+                Gen_Emit("ReturnValue(")
+                Gen_Emit(instance_var)
+                Gen_Emit(")\n")
+                ReturnValue(0)
+            }
+        }
+        // =========== END OOP CLASS INSTANTIATION ===========
+        
+        // =========== OOP METHOD CALL IN RETURN ===========
+        // Handle: return obj.method(args)
+        IfCondition EqualTo(value_type, Node.METHOD_CALL) ThenBlock: {
+            obj = AST_GetField(value, "object")
+            method = AST_GetField(value, "method")
+            args = AST_GetField(value, "args")
+            
+            // Check if object is a known builtin type
+            obj_type = AST_Type(obj)
+            is_known_list = 0
+            is_known_dict = 0
+            is_known_str = 0
+            IfCondition EqualTo(obj_type, Node.IDENT) ThenBlock: {
+                obj_name = ArrayGet(obj, 3)
+                is_known_list = Gen_IsListVar(obj_name)
+                is_known_dict = Gen_IsDictVar(obj_name)
+                is_known_str = Gen_IsStringVar(obj_name)
+            }
+            
+            // If it's a known container, use standard method handling
+            is_known = Or(is_known_list, Or(is_known_dict, is_known_str))
+            IfCondition EqualTo(is_known, 0) ThenBlock: {
+                IfCondition EqualTo(args, 0) ThenBlock: {
+                    num_args = 0
+                } ElseBlock: {
+                    num_args = Array.Size(args)
+                }
+                
+                args_var = OOPGen_TempVar("args")
+                
+                Gen_EmitIndent()
+                Gen_Emit(args_var)
+                Gen_Emit(" = Array.Create(")
+                Gen_EmitNumber(num_args)
+                Gen_Emit(")\n")
+                
+                i = 0
+                WhileLoop LessThan(i, num_args) {
+                    arg = Array.Get(args, i)
+                    arg_has_call = Gen_HasCall(arg)
+                    IfCondition EqualTo(arg_has_call, 1) ThenBlock: {
+                        arg = Gen_FlattenExpr(arg)
+                    }
+                    Gen_EmitIndent()
+                    Gen_Emit("Array.Push(")
+                    Gen_Emit(args_var)
+                    Gen_Emit(", ")
+                    Gen_Expr(arg)
+                    Gen_Emit(")\n")
+                    i = Add(i, 1)
+                }
+                
+                result_var = Gen_TempName()
+                Gen_EmitIndent()
+                Gen_Emit(result_var)
+                Gen_Emit(" = OOP.MethodCall(")
+                Gen_Expr(obj)
+                Gen_Emit(", \"")
+                Gen_Emit(method)
+                Gen_Emit("\", ")
+                Gen_Emit(args_var)
+                Gen_Emit(")\n")
+                
+                Gen_EmitIndent()
+                Gen_Emit("Array.Destroy(")
+                Gen_Emit(args_var)
+                Gen_Emit(")\n")
+                
+                Gen_EmitIndent()
+                Gen_Emit("ReturnValue(")
+                Gen_Emit(result_var)
+                Gen_Emit(")\n")
+                ReturnValue(0)
+            }
+        }
+        // =========== END OOP METHOD CALL ===========
+        
+        // FLATTEN THE RETURN VALUE if it has calls OR is a binary op
+        has_call = Gen_HasCall(value)
+        is_binary = EqualTo(value_type, Node.BINARY_OP)
+        
+        IfCondition Or(EqualTo(has_call, 1), EqualTo(is_binary, 1)) ThenBlock: {
+            value = Gen_FlattenExpr(value)
+        }
+        
+        Gen_EmitIndent()
+        Gen_Emit("ReturnValue(")
+        Gen_Expr(value)
+        Gen_Emit(")\n")
+    }
+}
+
+Function.Gen_Assignment {
+    Input: node: Address
+    Body: {
+        target = ArrayGet(node, 3)
+        value = ArrayGet(node, 4)
+        
+        value_type = AST_Type(value)
+        
+        // Extract target name from AST node for type tracking
+        target_type = AST_Type(target)
+        target_name = target
+        IfCondition EqualTo(target_type, Node.IDENT) ThenBlock: {
+            target_name = ArrayGet(target, 3)
+        }
+        IfCondition EqualTo(value_type, Node.LAMBDA) ThenBlock: {
+            Gen_MarkCallableVar(target_name)
+        }
+        
+        // List literal - special handling
+        IfCondition EqualTo(value_type, Node.LIST_LIT) ThenBlock: {
+            Gen_MarkListVar(target_name)
+            Gen_ListAssignment(target, value)
+            ReturnValue(0)
+        }
+        
+        // Dict literal - special handling
+        IfCondition EqualTo(value_type, Node.DICT_LIT) ThenBlock: {
+            Gen_DictAssignment(target, value)
+            ReturnValue(0)
+        }
+        
+        // =========== PACKED FUNCTION CALL (>6 params) ===========
+        IfCondition EqualTo(value_type, Node.CALL) ThenBlock: {
+            call_name = ArrayGet(value, 3)
+            is_packed = Gen_IsPackedFunc(call_name)
+            IfCondition EqualTo(is_packed, 1) ThenBlock: {
+                call_args = ArrayGet(value, 4)
+                Gen_PackedCallAssignment(target, call_name, call_args)
+                ReturnValue(0)
+            }
+        }
+        // =========== END PACKED FUNCTION CALL ===========
+        
+        // =========== OOP CLASS INSTANTIATION ===========
+        IfCondition EqualTo(value_type, Node.CALL) ThenBlock: {
+            call_name = ArrayGet(value, 3)
+            call_args = ArrayGet(value, 4)
+            is_class = OOPGen_IsClassName(call_name)
+            IfCondition EqualTo(is_class, 1) ThenBlock: {
+                instance_var = OOPGen_InstanceCreation(call_name, call_args)
+                
+                Gen_EmitIndent()
+                Gen_EmitIdent(target)
+                Gen_Emit(" = ")
+                Gen_Emit(instance_var)
+                Gen_Emit("\n")
+                ReturnValue(0)
+            }
+        }
+        // =========== END OOP CLASS INSTANTIATION ===========
+
+        // =========== METHOD CALL ASSIGNMENT ===========
+        IfCondition EqualTo(value_type, Node.METHOD_CALL) ThenBlock: {
+            obj = AST_GetField(value, "object")
+            method = AST_GetField(value, "method")
+            args = AST_GetField(value, "args")
+            
+            // First check if object is a known container type
+            obj_type = AST_Type(obj)
+            is_known_dict = 0
+            is_known_list = 0
+            is_known_str = 0
+            IfCondition EqualTo(obj_type, Node.IDENT) ThenBlock: {
+                obj_name = ArrayGet(obj, 3)
+                is_known_dict = Gen_IsDictVar(obj_name)
+                is_known_list = Gen_IsListVar(obj_name)
+                is_known_str = Gen_IsStringVar(obj_name)
+            }
+            IfCondition EqualTo(obj_type, Node.STR_LIT) ThenBlock: {
+                is_known_str = 1
+            }
+            
+            is_builtin = 0
+            IfCondition EqualTo(Gen_IsStdlibMethod(obj, method), 1) ThenBlock: { is_builtin = 1 }
+            cmp = StringCompare(method, "read")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+            cmp = StringCompare(method, "readline")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+            cmp = StringCompare(method, "write")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+            cmp = StringCompare(method, "close")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+            
+            // List methods - only if object is known list
+            IfCondition EqualTo(is_known_list, 1) ThenBlock: {
+                cmp = StringCompare(method, "pop")
+                IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+                cmp = StringCompare(method, "append")
+                IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+                cmp = StringCompare(method, "copy")
+                IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+                cmp = StringCompare(method, "clear")
+                IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+                cmp = StringCompare(method, "extend")
+                IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+                cmp = StringCompare(method, "insert")
+                IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+                cmp = StringCompare(method, "remove")
+                IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+                cmp = StringCompare(method, "reverse")
+                IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+                cmp = StringCompare(method, "sort")
+                IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+                cmp = StringCompare(method, "index")
+                IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+                cmp = StringCompare(method, "count")
+                IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+            }
+            
+            // Dict methods - only if object is known dict
+            IfCondition EqualTo(is_known_dict, 1) ThenBlock: {
+                cmp = StringCompare(method, "get")
+                IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+                cmp = StringCompare(method, "keys")
+                IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+                cmp = StringCompare(method, "values")
+                IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+                cmp = StringCompare(method, "items")
+                IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+                cmp = StringCompare(method, "update")
+                IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+                cmp = StringCompare(method, "setdefault")
+                IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+                cmp = StringCompare(method, "pop")
+                IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+            }
+            
+            // String methods - only if object is known string
+            IfCondition EqualTo(is_known_str, 1) ThenBlock: {
+                cmp = StringCompare(method, "upper")
+                IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+                cmp = StringCompare(method, "lower")
+                IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+                cmp = StringCompare(method, "strip")
+                IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+                cmp = StringCompare(method, "lstrip")
+                IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+                cmp = StringCompare(method, "rstrip")
+                IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+                cmp = StringCompare(method, "split")
+                IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+                cmp = StringCompare(method, "join")
+                IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+                cmp = StringCompare(method, "replace")
+                IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+                cmp = StringCompare(method, "find")
+                IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+                cmp = StringCompare(method, "startswith")
+                IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+                cmp = StringCompare(method, "endswith")
+                IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+                cmp = StringCompare(method, "format")
+                IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+                cmp = StringCompare(method, "count")
+                IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+            }
+            
+            // If it's a builtin method, use standard method call handling
+            IfCondition EqualTo(is_builtin, 1) ThenBlock: {
+                Gen_FlattenMethodArgs(value)
+                
+                Gen_EmitIndent()
+                Gen_EmitIdent(target)
+                Gen_Emit(" = ")
+                Gen_MethodCallExpr(value)
+                Gen_Emit("\n")
+                cmp = StringCompare(method, "listdir")
+                IfCondition EqualTo(cmp, 0) ThenBlock: {
+                    Gen_MarkListVar(target_name)
+                }
+                cmp = StringCompare(method, "dumps")
+                IfCondition EqualTo(cmp, 0) ThenBlock: { Gen_MarkStringVar(target_name) }
+                cmp = StringCompare(method, "join")
+                IfCondition EqualTo(cmp, 0) ThenBlock: { Gen_MarkStringVar(target_name) }
+                cmp = StringCompare(method, "basename")
+                IfCondition EqualTo(cmp, 0) ThenBlock: { Gen_MarkStringVar(target_name) }
+                cmp = StringCompare(method, "dirname")
+                IfCondition EqualTo(cmp, 0) ThenBlock: { Gen_MarkStringVar(target_name) }
+                ReturnValue(0)
+            }
+            
+            // =========== OOP METHOD CALL (non-builtin) ===========
+            IfCondition EqualTo(args, 0) ThenBlock: {
+                num_args = 0
+            } ElseBlock: {
+                num_args = Array.Size(args)
+            }
+            
+            args_var = OOPGen_TempVar("args")
+            
+            Gen_EmitIndent()
+            Gen_Emit(args_var)
+            Gen_Emit(" = Array.Create(")
+            Gen_EmitNumber(num_args)
+            Gen_Emit(")\n")
+            
+            i = 0
+            WhileLoop LessThan(i, num_args) {
+                arg = Array.Get(args, i)
+                
+                arg_has_call = Gen_HasCall(arg)
+                IfCondition EqualTo(arg_has_call, 1) ThenBlock: {
+                    arg = Gen_FlattenExpr(arg)
+                }
+                
+                Gen_EmitIndent()
+                Gen_Emit("Array.Push(")
+                Gen_Emit(args_var)
+                Gen_Emit(", ")
+                Gen_Expr(arg)
+                Gen_Emit(")\n")
+                
+                i = Add(i, 1)
+            }
+            
+            Gen_EmitIndent()
+            Gen_EmitIdent(target)
+            Gen_Emit(" = OOP.MethodCall(")
+            Gen_Expr(obj)
+            Gen_Emit(", \"")
+            Gen_Emit(method)
+            Gen_Emit("\", ")
+            Gen_Emit(args_var)
+            Gen_Emit(")\n")
+            
+            Gen_EmitIndent()
+            Gen_Emit("Array.Destroy(")
+            Gen_Emit(args_var)
+            Gen_Emit(")\n")
+            
+            ReturnValue(0)
+        }
+        // =========== END METHOD CALL ASSIGNMENT ===========
+        
+        // =========== STRING PROPAGATION FROM IDENT ===========
+        IfCondition EqualTo(value_type, Node.IDENT) ThenBlock: {
+            val_name = ArrayGet(value, 3)
+            val_is_str = Gen_IsStringVar(val_name)
+            IfCondition EqualTo(val_is_str, 1) ThenBlock: {
+                Gen_MarkStringVar(target_name)
+            }
+        }
+        // =========== END STRING PROPAGATION ===========
+        
+        is_string_value = Gen_InvolvesString(value)
+        
+        IfCondition EqualTo(is_string_value, 1) ThenBlock: {
+            Gen_MarkStringVar(target_name)
+            
+            IfCondition EqualTo(value_type, Node.BINARY_OP) ThenBlock: {
+                op = ArrayGet(value, 4)
+                IfCondition EqualTo(op, Token.PLUS) ThenBlock: {
+                    value = Gen_FlattenExpr(value)
+                    
+                    Gen_EmitIndent()
+                    Gen_EmitIdent(target)
+                    Gen_Emit(" = ")
+                    Gen_Expr(value)
+                    Gen_Emit("\n")
+                    ReturnValue(0)
+                }
+            }
+            
+            IfCondition EqualTo(value_type, Node.CALL) ThenBlock: {
+                Gen_FlattenCallArgs(value)
+                Gen_EmitIndent()
+                Gen_EmitIdent(target)
+                Gen_Emit(" = ")
+                Gen_CallExpr(value)
+                Gen_Emit("\n")
+                ReturnValue(0)
+            }
+            
+            IfCondition EqualTo(value_type, Node.METHOD_CALL) ThenBlock: {
+                Gen_FlattenMethodArgs(value)
+                Gen_EmitIndent()
+                Gen_EmitIdent(target)
+                Gen_Emit(" = ")
+                Gen_MethodCallExpr(value)
+                Gen_Emit("\n")
+                ReturnValue(0)
+            }
+        }
+        
+        // =========== OOP ATTRIBUTE FLATTENING ===========
+        IfCondition EqualTo(value_type, Node.ATTRIBUTE) ThenBlock: {
+            value = OOPGen_FlattenExpr(value)
+        }
+        // =========== END OOP ATTRIBUTE FLATTENING ===========
+        
+        has_call = Gen_HasCall(value)
+        IfCondition EqualTo(has_call, 1) ThenBlock: {
+            value = Gen_FlattenExpr(value)
+        }
+        
+        Gen_EmitIndent()
+        Gen_EmitIdent(target)
+        Gen_Emit(" = ")
+        Gen_Expr(value)
+        Gen_Emit("\n")
+    }
+}
+
+// =============================================================================
+// PACKED CALL WITH ASSIGNMENT - handles t9 = helper_many_params(1,2,3,4,5,6,7,8)
+// =============================================================================
+Function.Gen_PackedCallAssignment {
+    Input: target: Address
+    Input: name: Address
+    Input: args: Address
+    Body: {
+        n = Array.Size(args)
+        
+        // Create pack array name
+        pack_name = Gen_TempName()
+        
+        // Emit: __packN = Array.Create(n)
+        Gen_EmitIndent()
+        Gen_Emit(pack_name)
+        Gen_Emit(" = Array.Create(")
+        n_str = NumberToString(n)
+        Gen_Emit(n_str)
+        Gen_Emit(")\n")
+        
+        // Emit: Array.Push(__packN, arg) for each arg
+        idx = 0
+        WhileLoop LessThan(idx, n) {
+            Gen_EmitIndent()
+            Gen_Emit("Array.Push(")
+            Gen_Emit(pack_name)
+            Gen_Emit(", ")
+            arg = Array.Get(args, idx)
+            Gen_Expr(arg)
+            Gen_Emit(")\n")
+            idx = Add(idx, 1)
+        }
+        
+        // Emit: target = func(pack)
+        Gen_EmitIndent()
+        Gen_EmitIdent(target)
+        Gen_Emit(" = ")
+        Gen_Emit(name)
+        Gen_Emit("(")
+        Gen_Emit(pack_name)
+        Gen_Emit(")\n")
+    }
+}
+
+// =============================================================================
+// AUGMENTED ASSIGNMENT (x += 1)
+// =============================================================================
+Function.Gen_AugAssignment {
+    Input: node: Address
+    Body: {
+        name = ArrayGet(node, 3)
+        op = ArrayGet(node, 4)
+        value = ArrayGet(node, 5)
+        
+        // FLATTEN THE VALUE EXPRESSION FIRST
+        has_call = Gen_HasCall(value)
+        
+        IfCondition EqualTo(has_call, 1) ThenBlock: {
+            value = Gen_FlattenExpr(value)
+        }
+        
+        op_name = Gen_OpName(op)
+        
+        Gen_EmitIndent()
+        Gen_EmitIdent(name)
+        Gen_Emit(" = ")
+        Gen_Emit(op_name)
+        Gen_Emit("(")
+        Gen_EmitIdent(name)
+        Gen_Emit(", ")
+        Gen_Expr(value)
+        Gen_Emit(")\n")
+    }
+}
+
+// =============================================================================
+// LIST ASSIGNMENT
+// =============================================================================
+Function.Gen_ListAssignment {
+    Input: target: Address
+    Input: list_node: Address
+    Body: {
+        elems = ArrayGet(list_node, 3)
+        n = Array.Size(elems)
+        
+        // Extract target name if it's an AST node
+        target_type = AST_Type(target)
+        target_name = target
+        IfCondition EqualTo(target_type, Node.IDENT) ThenBlock: {
+            target_name = ArrayGet(target, 3)
+        }
+        
+        Gen_EmitIndent()
+        Gen_EmitIdent(target_name)
+        Gen_Emit(" = Array.Create(")
+        Gen_EmitNumber(n)
+        Gen_Emit(")\n")
+        
+        i = 0
+        WhileLoop LessThan(i, n) {
+            elem = Array.Get(elems, i)
+            // List star: [*a, ...] -> AIMacro.ListExtend(target, a)
+            IfCondition EqualTo(AST_Type(elem), Node.STARRED) ThenBlock: {
+                val = ArrayGet(elem, 3)
+                has_call = Gen_HasCall(val)
+                IfCondition EqualTo(has_call, 1) ThenBlock: {
+                    val = Gen_FlattenExpr(val)
+                }
+                Gen_EmitIndent()
+                Gen_Emit("AIMacro.ListExtend(")
+                Gen_EmitIdent(target_name)
+                Gen_Emit(", ")
+                Gen_Expr(val)
+                Gen_Emit(")\n")
+            } ElseBlock: {
+                has_call = Gen_HasCall(elem)
+                IfCondition EqualTo(has_call, 1) ThenBlock: {
+                    elem = Gen_FlattenExpr(elem)
+                }
+                Gen_EmitIndent()
+                Gen_Emit("Array.Push(")
+                Gen_EmitIdent(target_name)
+                Gen_Emit(", ")
+                Gen_Expr(elem)
+                Gen_Emit(")\n")
+            }
+            i = Add(i, 1)
+        }
+    }
+}
+
+
+// =============================================================================
+// DICT ASSIGNMENT
+// =============================================================================
+Function.Gen_DictAssignment {
+    Input: target: Address
+    Input: dict_node: Address
+    Body: {
+        pairs = ArrayGet(dict_node, 3)
+        n = Array.Size(pairs)
+        num_pairs = Divide(n, 2)
+        
+        // Mark this variable as a dict
+        Gen_MarkDictVar(target)
+        
+        capacity = Multiply(num_pairs, 2)
+        IfCondition LessThan(capacity, 16) ThenBlock: {
+            capacity = 16
+        }
+        
+        Gen_EmitIndent()
+        Gen_EmitIdent(target)
+        Gen_Emit(" = Hash.Create(")
+        Gen_EmitNumber(capacity)
+        Gen_Emit(")\n")
+        
+        i = 0
+        WhileLoop LessThan(i, n) {
+            key = Array.Get(pairs, i)
+            value = Array.Get(pairs, Add(i, 1))
+            // Dict star: {**a, ...} -> DictGen_Update(target, a)
+            IfCondition EqualTo(AST_Type(key), Node.STARRED) ThenBlock: {
+                val = ArrayGet(key, 3)
+                has_call = Gen_HasCall(val)
+                IfCondition EqualTo(has_call, 1) ThenBlock: {
+                    val = Gen_FlattenExpr(val)
+                }
+                Gen_EmitIndent()
+                Gen_Emit("DictGen_Update(")
+                Gen_EmitIdent(target)
+                Gen_Emit(", ")
+                Gen_Expr(val)
+                Gen_Emit(")\n")
+            } ElseBlock: {
+                Gen_EmitIndent()
+                Gen_Emit("Hash.Set(")
+                Gen_EmitIdent(target)
+                Gen_Emit(", ")
+                Gen_Expr(key)
+                Gen_Emit(", ")
+                Gen_Expr(value)
+                Gen_Emit(")\n")
+            }
+            i = Add(i, 2)
+        }
+    }
+}
+
+
+// =============================================================================
+// INDEX ASSIGNMENT
+// =============================================================================
+Function.Gen_IndexAssign {
+    Input: node: Address
+    Body: {
+        expr = ArrayGet(node, 3)
+        index = ArrayGet(node, 4)
+        value = ArrayGet(node, 5)
+        
+        // Flatten index if it has nested calls
+        index_has_call = Gen_HasCall(index)
+        IfCondition EqualTo(index_has_call, 1) ThenBlock: {
+            index = Gen_FlattenExpr(index)
+        }
+        
+        // Flatten value if it has nested calls
+        value_has_call = Gen_HasCall(value)
+        IfCondition EqualTo(value_has_call, 1) ThenBlock: {
+            value = Gen_FlattenExpr(value)
+        }
+        
+        // Flatten expr (the container itself) if needed
+        expr_has_call = Gen_HasCall(expr)
+        IfCondition EqualTo(expr_has_call, 1) ThenBlock: {
+            expr = Gen_FlattenExpr(expr)
+        }
+        
+        // Check container type
+        expr_type = AST_Type(expr)
+        is_dict = 0
+        is_list = 0
+        
+        IfCondition EqualTo(expr_type, Node.IDENT) ThenBlock: {
+            var_name = ArrayGet(expr, 3)
+            is_dict = Gen_IsDictVar(var_name)
+            is_list = Gen_IsListVar(var_name)
+        }
+        IfCondition EqualTo(expr_type, Node.DICT_LIT) ThenBlock: {
+            is_dict = 1
+        }
+        IfCondition EqualTo(expr_type, Node.LIST_LIT) ThenBlock: {
+            is_list = 1
+        }
+        
+        IfCondition EqualTo(is_dict, 1) ThenBlock: {
+            // Known dict assignment: d["key"] = value
+            Gen_EmitIndent()
+            Gen_Emit("Hash.Set(")
+            Gen_Expr(expr)
+            Gen_Emit(", ")
+            Gen_Expr(index)
+            Gen_Emit(", ")
+            Gen_Expr(value)
+            Gen_Emit(")\n")
+            ReturnValue(0)
+        }
+        
+        IfCondition EqualTo(is_list, 1) ThenBlock: {
+            // Known list assignment - use SmartSet (handles XArray & TArray)
+            Gen_EmitIndent()
+            Gen_Emit("DictGen_SmartSet(")
+            Gen_Expr(expr)
+            Gen_Emit(", ")
+            Gen_Expr(index)
+            Gen_Emit(", ")
+            Gen_Expr(value)
+            Gen_Emit(")\n")
+            ReturnValue(0)
+        }
+        
+        // UNKNOWN TYPE - Use runtime dispatch (handles function parameters)
+        Gen_EmitIndent()
+        Gen_Emit("DictGen_SmartSet(")
+        Gen_Expr(expr)
+        Gen_Emit(", ")
+        Gen_Expr(index)
+        Gen_Emit(", ")
+        Gen_Expr(value)
+        Gen_Emit(")\n")
+    }
+}

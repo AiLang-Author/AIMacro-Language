@@ -1,0 +1,318 @@
+// Library.AIMacroDict.ailang
+// Runtime Dict Operations for AIMacro
+// Provides Python-compatible dict methods that require complex logic
+//
+// Usage: LibraryImport.AIMacro.AIMacroDict
+//
+// Copyright (c) 2025-2026 Sean Collins, 2 Paws Machine and Engineering. All rights reserved.
+// Licensed under the Sean Collins Software License (SCSL v1.0).
+
+LibraryImport.Hash
+LibraryImport.Array
+LibraryImport.AIMacro.AIMacroTypes
+LibraryImport.AIMacro.AIMacro
+
+// =============================================================================
+// GET WITH DEFAULT
+// Python: d.get(key, default)
+// Returns value if key exists, otherwise returns default
+// =============================================================================
+Function.DictGen_GetWithDefault {
+    Input: dict: Address
+    Input: key: Address
+    Input: default_val: Integer
+    Output: Integer
+    Body: {
+        // Check if key exists
+        exists = Hash.Contains(dict, key)
+        IfCondition EqualTo(exists, 1) ThenBlock: {
+            ReturnValue(Hash.Get(dict, key))
+        }
+        ReturnValue(default_val)
+    }
+}
+
+// =============================================================================
+// POP
+// Python: d.pop(key) - removes and returns value
+// Raises KeyError if not found (we return 0)
+// =============================================================================
+Function.DictGen_Pop {
+    Input: dict: Address
+    Input: key: Address
+    Output: Integer
+    Body: {
+        // Get value first
+        value = Hash.Get(dict, key)
+        // Delete the key
+        Hash.Delete(dict, key)
+        ReturnValue(value)
+    }
+}
+
+// =============================================================================
+// POP WITH DEFAULT
+// Python: d.pop(key, default)
+// =============================================================================
+Function.DictGen_PopDefault {
+    Input: dict: Address
+    Input: key: Address
+    Input: default_val: Integer
+    Output: Integer
+    Body: {
+        exists = Hash.Contains(dict, key)
+        IfCondition EqualTo(exists, 1) ThenBlock: {
+            value = Hash.Get(dict, key)
+            Hash.Delete(dict, key)
+            ReturnValue(value)
+        }
+        ReturnValue(default_val)
+    }
+}
+
+// =============================================================================
+// SETDEFAULT
+// Python: d.setdefault(key, default)
+// If key exists, return its value
+// If key doesn't exist, set it to default and return default
+// =============================================================================
+Function.DictGen_SetDefault {
+    Input: dict: Address
+    Input: key: Address
+    Input: default_val: Integer
+    Output: Integer
+    Body: {
+        exists = Hash.Contains(dict, key)
+        IfCondition EqualTo(exists, 1) ThenBlock: {
+            ReturnValue(Hash.Get(dict, key))
+        }
+        Hash.Set(dict, key, default_val)
+        ReturnValue(default_val)
+    }
+}
+
+// =============================================================================
+// UPDATE
+// Python: d.update(other)
+// Copy all key-value pairs from other into d
+// =============================================================================
+Function.DictGen_Update {
+    Input: dict: Address
+    Input: other: Address
+    Body: {
+        // Get items from other dict
+        items = Hash.Items(other)
+        n = Array.Size(items)
+        
+        i = 0
+        WhileLoop LessThan(i, n) {
+            pair = Array.Get(items, i)
+            key = Array.Get(pair, 0)
+            value = Array.Get(pair, 1)
+            Hash.Set(dict, key, value)
+            i = Add(i, 1)
+        }
+        
+        // Note: items TArray should be freed, but we don't have GC
+        // In production, would need to destroy it
+    }
+}
+
+// =============================================================================
+// COPY
+// Python: d.copy()
+// Returns shallow copy of dictionary
+// =============================================================================
+Function.DictGen_Copy {
+    Input: dict: Address
+    Output: Address
+    Body: {
+        // Get size for capacity hint
+        size = Hash.Size(dict)
+        capacity = Multiply(size, 2)
+        IfCondition LessThan(capacity, 16) ThenBlock: {
+            capacity = 16
+        }
+        
+        // Create new dict
+        new_dict = Hash.Create(capacity)
+        
+        // Copy all items
+        items = Hash.Items(dict)
+        n = Array.Size(items)
+        
+        i = 0
+        WhileLoop LessThan(i, n) {
+            pair = Array.Get(items, i)
+            key = Array.Get(pair, 0)
+            value = Array.Get(pair, 1)
+            Hash.Set(new_dict, key, value)
+            i = Add(i, 1)
+        }
+        
+        ReturnValue(new_dict)
+    }
+}
+
+// =============================================================================
+// FROMKEYS
+// Python: dict.fromkeys(keys, value)
+// Creates new dict with keys from iterable, all set to value
+// =============================================================================
+Function.DictGen_FromKeys {
+    Input: keys: Address
+    Input: value: Integer
+    Output: Address
+    Body: {
+        n = Array.Size(keys)
+        capacity = Multiply(n, 2)
+        IfCondition LessThan(capacity, 16) ThenBlock: {
+            capacity = 16
+        }
+        
+        new_dict = Hash.Create(capacity)
+        
+        i = 0
+        WhileLoop LessThan(i, n) {
+            key = Array.Get(keys, i)
+            Hash.Set(new_dict, key, value)
+            i = Add(i, 1)
+        }
+        
+        ReturnValue(new_dict)
+    }
+}
+
+// =============================================================================
+// SMART LEN FOR DICT
+// Works with both THash and TArray for polymorphic len()
+// =============================================================================
+Function.DictGen_SmartLen {
+    Input: container: Address
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(container, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        
+        // Check if it's a THash
+        is_hash = Hash.IsHash(container)
+        IfCondition EqualTo(is_hash, 1) ThenBlock: {
+            ReturnValue(Hash.Size(container))
+        }
+        
+        // Check if it's a TArray
+        is_array = Array.IsArray(container)
+        IfCondition EqualTo(is_array, 1) ThenBlock: {
+            ReturnValue(Array.Size(container))
+        }
+        
+        // Assume it's a string
+        ReturnValue(StringLength(container))
+    }
+}
+
+// =============================================================================
+// SMART CONTAINS
+// Works with dict (key in dict) and list (item in list)
+// =============================================================================
+Function.DictGen_SmartContains {
+    Input: container: Address
+    Input: item: Address
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(container, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition GreaterEqual(container, TypeMagic.PTR_MIN) ThenBlock: {
+            is_hash = Hash.IsHash(container)
+            IfCondition EqualTo(is_hash, 1) ThenBlock: {
+                ReturnValue(Hash.Contains(container, item))
+            }
+            is_array = Array.IsArray(container)
+            IfCondition EqualTo(is_array, 1) ThenBlock: {
+                ReturnValue(AIMacro.ListContains(container, item))
+            }
+        }
+        found = StringIndexOf(container, item, 0)
+        IfCondition GreaterEqual(found, 0) ThenBlock: {
+            ReturnValue(1)
+        }
+        ReturnValue(0)
+    }
+}
+
+// =============================================================================
+// TYPE CHECKING - Check if value is a dict
+// =============================================================================
+Function.DictGen_IsDict {
+    Input: value: Address
+    Output: Integer
+    Body: {
+        ReturnValue(Hash.IsHash(value))
+    }
+}
+
+
+// =============================================================================
+// SMART GET - Runtime dispatch for dict/list access
+// Handles both THash (dict) and TArray (list) containers
+// =============================================================================
+Function.DictGen_SmartGet {
+    Input: container: Address
+    Input: key: Address
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(container, 0) ThenBlock: {
+            ReturnValue(-999999)
+        }
+        
+        // Check if it's a THash (dict)
+        is_hash = Hash.IsHash(container)
+        IfCondition EqualTo(is_hash, 1) ThenBlock: {
+            ReturnValue(Hash.Get(container, key))
+        }
+        
+        // Check if it's a TArray (list)
+        is_array = Array.IsArray(container)
+        IfCondition EqualTo(is_array, 1) ThenBlock: {
+            // Key should be an integer index
+            ReturnValue(Array.Get(container, key))
+        }
+        
+        // Fallback: try XArray
+        ReturnValue(Array.Get(container, key))
+    }
+}
+
+// =============================================================================
+// SMART SET - Runtime dispatch for dict/list assignment
+// Handles both THash (dict) and TArray (list) containers
+// =============================================================================
+Function.DictGen_SmartSet {
+    Input: container: Address
+    Input: key: Address
+    Input: value: Integer
+    Body: {
+        IfCondition EqualTo(container, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        
+        // Check if it's a THash (dict)
+        is_hash = Hash.IsHash(container)
+        IfCondition EqualTo(is_hash, 1) ThenBlock: {
+            Hash.Set(container, key, value)
+            ReturnValue(0)
+        }
+        
+        // Check if it's a TArray (list)
+        is_array = Array.IsArray(container)
+        IfCondition EqualTo(is_array, 1) ThenBlock: {
+            Array.Set(container, key, value)
+            ReturnValue(0)
+        }
+        
+        // Fallback: try XArray
+        Array.Set(container, key, value)
+    }
+}

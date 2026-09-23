@@ -1,0 +1,20 @@
+# Built transpiler / compiler binaries (rebuild from .ailang)
+*.x
+*_exec
+/aimacro
+a.out
+
+# Generated transpile output in the matrix dir
+AIMacro_Tests/*.ailang
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Editor / OS
+.DS_Store
+*.swp
+*~
+.idea/
+.vscode/

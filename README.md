@@ -1,191 +1,122 @@
 # AIMacro
 
-**A compiled language stack for people who are done with Python's whitespace bullshit.**
+Python-shaped surface syntax that **transpiles to AILang** and compiles to a native Linux ELF.
 
-## What Is This?
+This is the **AOT `{ }` language**. It is not the 2025 `end`-keyword tree.
 
-- **AILang** - A low-level compiled language that generates native x86-64 Linux executables https://github.com/AiLang-Author/AiLang
-- **AIMacro** - A Python-like language that transpiles to AILang
+## Blocks are `{ }`. `end` is gone.
 
-Write code that reads like Python, compiles to native binaries, and never breaks because someone's editor converted tabs to spaces.
+That is the language change.
 
-## Quick Start
+| Era | Blocks | Compiler | This repo |
+|-----|--------|----------|-----------|
+| 2025 (`archive/end-syntax-2025`) | Python-ish indent + explicit `end` | Python `main.py` | old `main` |
+| **2026 (this tree)** | **C-style `{ }`** | self-hosted `aimacro.x` → `ailang.x` | **`main`** |
 
-```bash
-# Compile AILang directly
-python main.py myprogram.ailang
+`end` is not valid block syntax anymore. Indentation is not the grammar. Braces are.
 
-# Or use the AIMacro transpiler
-./aimacro_console_exec
-aim> load myprogram.aim
-aim> save myprogram.ailang
-aim> quit
-python main.py myprogram.ailang
+```aim
+def factorial(n) {
+    if n <= 1 {
+        return 1
+    }
+    return n * factorial(n - 1)
+}
+
+def main() {
+    print(factorial(10))
+}
 ```
 
-## AIMacro Example
+Old (retired):
 
-```python
-# factorial.aim
+```aim
 def factorial(n):
     if n <= 1:
         return 1
     end
     return n * factorial(n - 1)
 end
-
-def main():
-    print("10! =", factorial(10))
-end
 ```
 
-Transpiles to clean AILang:
+`py2aim.py` is the indent-Python → `{ }` bridge. Do not port CPython by hand with `end`.
 
-```ailang
-Function.factorial {
-    Input: p_n: Integer
-    Output: Integer
-    Body: {
-        IfCondition LessEqual(p_n, 1) ThenBlock: {
-            ReturnValue(1)
-        }
-        t0 = factorial(Subtract(p_n, 1))
-        ReturnValue(Multiply(p_n, t0))
-    }
-}
-```
-
-## Supported Python Features
-
-### Working Now ✅
-
-**Control Flow:**
-- `if` / `elif` / `else` conditionals
-- `while` loops with `break` / `continue`
-- `for x in range()` (all variants)
-- `for x in list:`
-- `for i, v in enumerate(list):`
-- `for a, b in zip(list1, list2):`
-- Tuple unpacking: `a, b = 1, 2`
-
-**Functions:**
-- Functions with parameters and return values
-- Recursive functions
-- Nested/chained calls
-
-**Operators:**
-- Arithmetic: `+` `-` `*` `/` `%` `**` `//`
-- Comparison: `>` `<` `>=` `<=` `==` `!=`
-- Logical: `and` `or` `not`
-- Augmented: `+=` `-=` `*=` `/=` `%=`
-- Membership: `x in list`
-
-**Lists:**
-- Literals: `[1, 2, 3]`
-- Indexing: `list[0]`, `list[-1]`
-- Assignment: `list[0] = x`
-- Slicing: `list[1:4]`
-- Methods: `.append()`, `.pop()`, `.insert()`, `.remove()`, `.index()`, `.count()`, `.extend()`, `.copy()`, `.clear()`
-- Built-ins: `len()`, `sorted()`, `reversed()`, `sum()`, `min()`, `max()`
-
-**Strings:**
-- Literals and `len()`
-- Concatenation: `"a" + "b"`
-- Repetition: `"x" * 3`
-- Indexing: `s[0]`, `s[-1]`
-- Methods: `.upper()`, `.lower()`, `.strip()`, `.split()`, `.join()`, `.replace()`, `.find()`, `.startswith()`, `.endswith()`, `.count()`
-- Conversion: `str()`, `int()`
-
-**Built-ins:**
-- `print()`, `len()`, `abs()`, `min()`, `max()`, `sum()`
-- `range()`, `enumerate()`, `zip()`, `sorted()`, `reversed()`
-- `str()`, `int()`, `bool()`, `chr()`, `ord()`
-- `isinstance()`, `input()`
-
-**Type System:**
-- `isinstance(x, int)`, `isinstance(x, str)`, `isinstance(x, list)`
-
-### Not Yet Implemented
-- Dict literals `{}`
-- Default function arguments
-- Lambda expressions
-- List comprehensions
-- Classes/objects
-- Full exception handling (try/except partial)
-
-## Why?
-
-**Python's problems:**
-- Invisible whitespace bugs that waste hours
-- Tabs vs spaces holy wars
-- Copy-paste destroys indentation
-- No compilation = runtime surprises
-
-**Our solutions:**
-- Explicit `end` block markers
-- Compiles to native code - catch errors early
-- No interpreter overhead
-- Direct access to system calls when needed
-
-## Architecture
+## Pipeline
 
 ```
-AIMacro (.aim)
-    ↓ transpiler (written in AILang, self-hosted)
-AILang (.ailang)
-    ↓ compiler (Python, generates x86-64)
-Native Linux Executable
+.aim  →  ./aimacro.x  →  .ailang  →  ./ailang.x  →  native ELF
+         (this repo)                 (AILang compiler)
 ```
 
-The AIMacro transpiler is itself written in AILang and compiles to a native executable. Bootstrapping in progress.
+- **AIMacro** lives here: https://github.com/AiLang-Author/AIMacro-Language
+- **AILang compiler** (`ailang.x`, Hash, Array, OOP, …): https://github.com/AiLang-Author/Ailang-Self-Hosting-
 
-## Project Structure
+AIMacro was parked inside the self-hosting compiler repo while AOT work ran. It is back in this repo. Grokbot / class-body grind: work **here**, not in `Ailang-Self-Hosting-`.
 
-```
-ailang/
-├── main.py                 # Main compiler entry point
-├── ailang_compiler/        # AILang → x86-64 compiler
-├── aimacro/               
-│   ├── Library.AIMacroCore.ailang      # Lexer
-│   ├── Library.AIMacroParserCore.ailang # Parser  
-│   ├── Library.AIMacroCodeGen.ailang   # Code generator
-│   └── aimacro_console.ailang          # Interactive console
-├── libraries/
-│   ├── Library.XArrays.ailang          # Dynamic arrays
-│   ├── Library.XSHash.ailang           # Hash tables
-│   └── Library.AIMacro.ailang          # Python built-in implementations
-└── tests/
-```
+## Build
 
-## Building
+Needs `ailang.x` on `PATH` (or in this directory). From the compiler repo:
 
 ```bash
-# Requirements: Python 3.8+, Linux x86-64
+# in Ailang-Self-Hosting-
+./ailang.x   # already built, or rebuild per that repo
 
-# Compile the AIMacro console
-python main.py aimacro/aimacro_console.ailang
-
-# Run it
-./aimacro_console_exec
+# in AIMacro-Language (this repo)
+cp /path/to/Ailang-Self-Hosting-/ailang.x .
+./ailang.x aimacro_cli.ailang aimacro
+mv -f aimacro aimacro.x
 ```
 
-## Status
+`ailang.x` inlines `Librarys/AIMacro/` at compile time. Rebuild `aimacro.x` after parser/codegen edits.
 
-**Working:**
-- AILang compiler generates functioning executables
-- AIMacro transpiler handles core Python subset
-- Self-hosted transpiler console operational
-- Complex recursive algorithms compile and run correctly
+```bash
+./aimacro.x AIMacro_Tests/fizzbuzz.aim /tmp/fizzbuzz.ailang
+./ailang.x /tmp/fizzbuzz.ailang /tmp/fizzbuzz.x
+/tmp/fizzbuzz.x
+```
 
-**In Progress:**
-- String operations
-- More Python built-ins
-- Error messages that don't suck
+## Gates (2026-09-22, py3.11 / 585, tip `26b4560d`)
+
+| Gate | Result |
+|------|--------|
+| curated (`tests/python/curated`, stdout vs CPython) | **25/25** |
+| internal matrix (`AIMacro_Tests/*.aim`) | **62/62/62** transpile/compile/run |
+| CPython stdlib lib transpile | **379/585** (in-scope **317/395**) |
+| SIGSEGV | **0** |
+| fizzbuzz ELF | **211054** |
+
+Not full CPython. 95th-percentile scripts. AOT stays production; VM is later.
+
+## Layout
+
+```
+Librarys/AIMacro/          lexer, parser, codegen, runtime builtins
+aimacro_cli.ailang         CLI transpiler source
+aimacro_console.ailang     interactive console
+AIMacro/                   spec, status, scripts
+AIMacro_Tests/             62 .aim matrix tests
+tests/python/curated/      25 CPython gold files
+tools/py2aim.py            indent Python → { } .aim
+tools/aimacro_cpython_runner.py
+```
+
+Keep `Librarys/AIMacro/` at that path. `LibraryImport.AIMacro.*` resolves there.
+
+## Docs
+
+| File | What |
+|------|------|
+| [AIMacro/SPECIFICATION.md](AIMacro/SPECIFICATION.md) | language contract (`{ }` is the syntax rule) |
+| [AIMacro/ARCHITECTURE.md](AIMacro/ARCHITECTURE.md) | pipeline |
+| [AIMacro/CONFORMANCE.md](AIMacro/CONFORMANCE.md) | CPython-lite scorecard |
+| [AIMacro/STATUS.md](AIMacro/STATUS.md) | living gates |
+| [AIMacro/PYTHON_TESTS.md](AIMacro/PYTHON_TESTS.md) | runner |
+
+## History in this GitHub repo
+
+- **`archive/end-syntax-2025`** — last `end` / Python-compiler snapshot (`493cfdc8`, 2025-12-23)
+- **`main`** — AOT `{ }` tree imported from `Ailang-Self-Hosting-` `aimacro/class-body-parse-fixes` @ `26b4560d`
 
 ## License
 
-MIT
-
----
-
-*AIMacro: Because life's too short to debug whitespace.*
+Sean Collins Software License (SCSL v1.0). Copyright (c) 2025–2026 Sean Collins, 2 Paws Machine and Engineering.
