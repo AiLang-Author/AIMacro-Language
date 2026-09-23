@@ -816,6 +816,7 @@ Function.Gen_TupleUnpack {
         // Case 2: Single value on RHS (a, b = func() or a, b = some_list)
         IfCondition EqualTo(num_values, 1) ThenBlock: {
             val = Array.Get(values, 0)
+            val = Gen_ResolveChainValue(val)
             
             // Flatten the value to a temp
             has_call = Gen_HasCall(val)
@@ -2000,11 +2001,53 @@ Function.Gen_Return {
     }
 }
 
+
+// =============================================================================
+// CHAINED ASSIGN: a = b = expr  /  a, b = c = expr
+// Nested ASSIGNMENT / ATTR_ASSIGN / INDEX_ASSIGN as values: emit inner, return
+// an expression that reads the stored value (name / attr / index).
+// =============================================================================
+Function.Gen_ResolveChainValue {
+    Input: value: Address
+    Output: Address
+    Body: {
+        IfCondition EqualTo(value, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        vt = AST_Type(value)
+        IfCondition EqualTo(vt, Node.ASSIGNMENT) ThenBlock: {
+            Gen_Assignment(value)
+            name = ArrayGet(value, 3)
+            ReturnValue(Gen_MakeIdent(name))
+        }
+        IfCondition EqualTo(vt, Node.ATTR_ASSIGN) ThenBlock: {
+            OOPGen_AttrAssign(value)
+            // Re-read attribute: ATTRIBUTE [type,line,col,obj,attr]
+            anode = ArrayCreate(5)
+            ArraySet(anode, 0, Node.ATTRIBUTE)
+            ArraySet(anode, 1, 0)
+            ArraySet(anode, 2, 0)
+            ArraySet(anode, 3, ArrayGet(value, 3))
+            ArraySet(anode, 4, ArrayGet(value, 4))
+            ReturnValue(anode)
+        }
+        IfCondition EqualTo(vt, Node.INDEX_ASSIGN) ThenBlock: {
+            Gen_IndexAssign(value)
+            inode = AST_Create(Node.INDEX_ACCESS, 2)
+            ArraySet(inode, 3, ArrayGet(value, 3))
+            ArraySet(inode, 4, ArrayGet(value, 4))
+            ReturnValue(inode)
+        }
+        ReturnValue(value)
+    }
+}
+
 Function.Gen_Assignment {
     Input: node: Address
     Body: {
         target = ArrayGet(node, 3)
         value = ArrayGet(node, 4)
+        value = Gen_ResolveChainValue(value)
         
         value_type = AST_Type(value)
         
@@ -2513,6 +2556,7 @@ Function.Gen_IndexAssign {
         expr = ArrayGet(node, 3)
         index = ArrayGet(node, 4)
         value = ArrayGet(node, 5)
+        value = Gen_ResolveChainValue(value)
         
         // Flatten index if it has nested calls
         index_has_call = Gen_HasCall(index)
