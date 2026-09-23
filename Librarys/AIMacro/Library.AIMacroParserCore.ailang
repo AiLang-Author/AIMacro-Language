@@ -3945,6 +3945,7 @@ Function.Parse_Primary {
         }
 
         // Parenthesized expression or tuple (tuples are lists)
+        // Tuple star: (*a, 3) / (1, *a) — same STARRED elems as list [*a]
         IfCondition EqualTo(t, Token.LPAREN) ThenBlock: {
             Parse_Advance()
             Parse_SkipNoise()
@@ -3959,18 +3960,22 @@ Function.Parse_Primary {
                 result = Parse_Postfix(node)
                 ReturnValue(result)
             }
-            expr = Parse_Expr()
+            first = Parse_ListElem()
             Parse_SkipNoise()
-            // Generator expression: (x for x in y)
-            IfCondition EqualTo(Parse_Match(Token.FOR), 1) ThenBlock: {
-                node = Parse_CompAfter(expr, Token.RPAREN, line, col)
-                result = Parse_Postfix(node)
-                ReturnValue(result)
+            is_starred = EqualTo(AST_Type(first), Node.STARRED)
+            // Generator expression: (x for x in y) — not (*a for ...)
+            IfCondition EqualTo(is_starred, 0) ThenBlock: {
+                IfCondition EqualTo(Parse_Match(Token.FOR), 1) ThenBlock: {
+                    node = Parse_CompAfter(first, Token.RPAREN, line, col)
+                    result = Parse_Postfix(node)
+                    ReturnValue(result)
+                }
             }
             is_comma = Parse_Match(Token.COMMA)
-            IfCondition EqualTo(is_comma, 1) ThenBlock: {
+            // Comma tuple, or bare (*a) as 1-elem starred list for parse coverage
+            IfCondition Or(EqualTo(is_comma, 1), EqualTo(is_starred, 1)) ThenBlock: {
                 elems = Array.Create(8)
-                Array.Push(elems, expr)
+                Array.Push(elems, first)
                 WhileLoop EqualTo(1, 1) {
                     Parse_SkipNoise()
                     is_comma = Parse_Match(Token.COMMA)
@@ -3981,7 +3986,7 @@ Function.Parse_Primary {
                         IfCondition EqualTo(is_rp, 1) ThenBlock: {
                             BreakLoop
                         }
-                        Array.Push(elems, Parse_Expr())
+                        Array.Push(elems, Parse_ListElem())
                     } ElseBlock: {
                         BreakLoop
                     }
@@ -3997,7 +4002,7 @@ Function.Parse_Primary {
             }
             Parse_SkipNoise()
             Parse_Consume(Token.RPAREN)
-            result = Parse_Postfix(expr)
+            result = Parse_Postfix(first)
             ReturnValue(result)
         }
         
