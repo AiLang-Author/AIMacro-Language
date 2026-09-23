@@ -748,6 +748,24 @@ Function.Lex_Tokenize {
                 Lex_Advance()
                 ContinueLoop
             }
+
+            // Line continuation: backslash + newline joins physical lines
+            // (same as Python; optional spaces/tabs after \ are skipped)
+            IfCondition EqualTo(ch, 92) ThenBlock: {
+                Lex_Advance()
+                WhileLoop Or(EqualTo(Lex_Char(), 32), EqualTo(Lex_Char(), 9)) {
+                    Lex_Advance()
+                }
+                c = Lex_Char()
+                IfCondition EqualTo(c, 13) ThenBlock: {
+                    Lex_Advance()
+                    c = Lex_Char()
+                }
+                IfCondition EqualTo(c, 10) ThenBlock: {
+                    Lex_Advance()
+                }
+                ContinueLoop
+            }
             
             // Comment
             IfCondition EqualTo(ch, 35) ThenBlock: {
