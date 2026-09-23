@@ -2584,16 +2584,51 @@ Function.Parse_BareTupleTail {
     }
 }
 
-// RHS of assignment: supports chained a = b = 1 and bare tuples a = 1, 2
+// RHS of assignment: chained a = b = 1 / self.x = y = 1 and bare tuples a = 1, 2
+// Middle targets become nested ASSIGNMENT / ATTR_ASSIGN / INDEX_ASSIGN (codegen unwraps).
 Function.Parse_AssignRhs {
     Output: Address
     Body: {
         first = Parse_Expr()
         is_assign = Parse_Match(Token.ASSIGN)
         IfCondition EqualTo(is_assign, 1) ThenBlock: {
-            // Middle target in a = b = 1 — skip target, parse deeper RHS
+            line = Parse_Line()
+            col = Parse_Col()
             Parse_Advance()
-            ReturnValue(Parse_AssignRhs())
+            deeper = Parse_AssignRhs()
+            ft = AST_Type(first)
+            IfCondition EqualTo(ft, Node.IDENT) ThenBlock: {
+                name = ArrayGet(first, 3)
+                node = AST_Create(Node.ASSIGNMENT, 2)
+                ArraySet(node, 1, line)
+                ArraySet(node, 2, col)
+                ArraySet(node, 3, name)
+                ArraySet(node, 4, deeper)
+                ReturnValue(node)
+            }
+            IfCondition EqualTo(ft, Node.ATTRIBUTE) ThenBlock: {
+                obj = ArrayGet(first, 3)
+                attr_name = ArrayGet(first, 4)
+                node = ArrayCreate(6)
+                ArraySet(node, 0, Node.ATTR_ASSIGN)
+                ArraySet(node, 1, line)
+                ArraySet(node, 2, col)
+                ArraySet(node, 3, obj)
+                ArraySet(node, 4, attr_name)
+                ArraySet(node, 5, deeper)
+                ReturnValue(node)
+            }
+            IfCondition EqualTo(ft, Node.INDEX_ACCESS) ThenBlock: {
+                node = AST_Create(Node.INDEX_ASSIGN, 3)
+                ArraySet(node, 1, line)
+                ArraySet(node, 2, col)
+                ArraySet(node, 3, ArrayGet(first, 3))
+                ArraySet(node, 4, ArrayGet(first, 4))
+                ArraySet(node, 5, deeper)
+                ReturnValue(node)
+            }
+            // Unknown middle target shape — keep prior skip behavior
+            ReturnValue(deeper)
         }
         ReturnValue(Parse_BareTupleTail(first))
     }
@@ -2890,23 +2925,11 @@ Function.Parse_TupleUnpack {
         }
         
         Parse_Consume(Token.ASSIGN)
-        
+
+        // Parse_AssignRhs: chained a, b = c = expr and bare a, b = 1, 2
         values = Array.Create(8)
-        
-        first_val = Parse_Expr()
-        Array.Push(values, first_val)
-        
-        WhileLoop EqualTo(1, 1) {
-            is_comma = Parse_Match(Token.COMMA)
-            IfCondition EqualTo(is_comma, 0) ThenBlock: {
-                BreakLoop
-            }
-            Parse_Advance()
-            
-            val = Parse_Expr()
-            Array.Push(values, val)
-        }
-        
+        Array.Push(values, Parse_AssignRhs())
+
         node = AST_Create(Node.TUPLE_UNPACK, 2)
         ArraySet(node, 1, line)
         ArraySet(node, 2, col)

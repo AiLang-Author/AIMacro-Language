@@ -780,6 +780,8 @@ Function.OOPGen_AttrAssign {
         IfCondition Or(EqualTo(obj, 0), EqualTo(attr, 0)) ThenBlock: {
             ReturnValue(0)
         }
+        // Chained: self.x = y = expr  /  self.x = self.y = expr
+        value = Gen_ResolveChainValue(value)
         
         // Check if value needs flattening - use OOP-aware flattening
         value_type = AST_Type(value)
