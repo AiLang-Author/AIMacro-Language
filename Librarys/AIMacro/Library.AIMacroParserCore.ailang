@@ -2451,7 +2451,11 @@ Function.Parse_BareTupleTail {
                 BreakLoop
             }
             Parse_Advance()
-            Parse_SkipNoise()
+            // Skip comments only — do NOT SkipNoise here (that eats NEWLINE and
+            // wrongly continues bare tuples across statements: x = 1,\ny = 2).
+            WhileLoop EqualTo(Parse_Type(), Token.COMMENT) {
+                Parse_Advance()
+            }
             t = Parse_Type()
             IfCondition EqualTo(t, Token.NEWLINE) ThenBlock: {
                 BreakLoop
