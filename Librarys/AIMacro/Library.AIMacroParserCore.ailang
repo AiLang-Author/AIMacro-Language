@@ -4227,19 +4227,18 @@ Function.Parse_Postfix {
                     result = call
                     ContinueLoop
                 }
-                IfCondition EqualTo(expr_type, Node.LAMBDA) ThenBlock: {
-                    Parse_Advance()
-                    args = Parse_ArgList()
-                    Parse_Consume(Token.RPAREN)
-                    call = AST_Create(Node.INDIRECT_CALL, 2)
-                    ArraySet(call, 1, line)
-                    ArraySet(call, 2, col)
-                    ArraySet(call, 3, result)
-                    ArraySet(call, 4, args)
-                    result = call
-                    ContinueLoop
-                }
-                BreakLoop
+                // Indirect call: lambda() / d[k](...) / f()(...) / (obj.attr)(...)
+                // Any non-IDENT callee uses CallIndirect via INDIRECT_CALL node.
+                Parse_Advance()
+                args = Parse_ArgList()
+                Parse_Consume(Token.RPAREN)
+                call = AST_Create(Node.INDIRECT_CALL, 2)
+                ArraySet(call, 1, line)
+                ArraySet(call, 2, col)
+                ArraySet(call, 3, result)
+                ArraySet(call, 4, args)
+                result = call
+                ContinueLoop
             }
             
             // Index access OR slice
