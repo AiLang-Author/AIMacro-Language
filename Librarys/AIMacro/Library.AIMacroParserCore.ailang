@@ -1637,6 +1637,11 @@ Function.Parse_Stmt {
             node = Parse_Return()
             ReturnValue(node)
         }
+
+        IfCondition EqualTo(t, Token.YIELD) ThenBlock: {
+            node = Parse_Yield(1)
+            ReturnValue(node)
+        }
         
         IfCondition EqualTo(t, Token.BREAK) ThenBlock: {
             node = Parse_Break()
@@ -2247,6 +2252,67 @@ Function.Parse_For {
 }
 
 // =============================================================================
+// YIELD / YIELD FROM — parse coverage (no generator runtime)
+// as_stmt=1 → bare yield is PASS; as_stmt=0 → bare yield is None
+// valued / yield-from → the value expression (stmt or expr context)
+// =============================================================================
+Function.Parse_Yield {
+    Input: as_stmt: Integer
+    Output: Address
+    Body: {
+        line = Parse_Line()
+        col = Parse_Col()
+
+        Parse_Consume(Token.YIELD)
+        Parse_SkipNoise()
+
+        // yield from <expr>
+        is_from = Parse_Match(Token.FROM)
+        IfCondition EqualTo(is_from, 1) ThenBlock: {
+            Parse_Advance()
+            Parse_SkipNoise()
+            ReturnValue(Parse_Expr())
+        }
+
+        // Bare yield?
+        next = Parse_Type()
+        IfCondition Or(EqualTo(next, Token.SEMICOLON), Or(EqualTo(next, Token.NEWLINE), Or(EqualTo(next, Token.RBRACE), EqualTo(next, Token.EOF)))) ThenBlock: {
+            IfCondition EqualTo(as_stmt, 1) ThenBlock: {
+                node = AST_Create(Node.PASS_STMT, 0)
+                ReturnValue(node)
+            }
+            node = AST_Create(Node.NONE_LIT, 0)
+            ReturnValue(node)
+        }
+
+        value = Parse_Expr()
+        is_comma = Parse_Match(Token.COMMA)
+        IfCondition EqualTo(is_comma, 1) ThenBlock: {
+            elems = Array.Create(4)
+            Array.Push(elems, value)
+            WhileLoop EqualTo(1, 1) {
+                is_comma = Parse_Match(Token.COMMA)
+                IfCondition EqualTo(is_comma, 0) ThenBlock: {
+                    BreakLoop
+                }
+                Parse_Advance()
+                nxt = Parse_Type()
+                IfCondition Or(EqualTo(nxt, Token.NEWLINE), Or(EqualTo(nxt, Token.RBRACE), Or(EqualTo(nxt, Token.SEMICOLON), EqualTo(nxt, Token.EOF)))) ThenBlock: {
+                    BreakLoop
+                }
+                Array.Push(elems, Parse_Expr())
+            }
+            tup = AST_Create(Node.LIST_LIT, 1)
+            ArraySet(tup, 1, line)
+            ArraySet(tup, 2, col)
+            ArraySet(tup, 3, elems)
+            value = tup
+        }
+        ReturnValue(value)
+    }
+}
+
+// =============================================================================
 // RETURN STATEMENT
 // =============================================================================
 Function.Parse_Return {
@@ -2324,6 +2390,7 @@ Function.Parse_IsAnnotStop {
         IfCondition EqualTo(t, Token.WHILE) ThenBlock: { ReturnValue(1) }
         IfCondition EqualTo(t, Token.FOR) ThenBlock: { ReturnValue(1) }
         IfCondition EqualTo(t, Token.RETURN) ThenBlock: { ReturnValue(1) }
+        IfCondition EqualTo(t, Token.YIELD) ThenBlock: { ReturnValue(1) }
         IfCondition EqualTo(t, Token.TRY) ThenBlock: { ReturnValue(1) }
         IfCondition EqualTo(t, Token.WITH) ThenBlock: { ReturnValue(1) }
         IfCondition EqualTo(t, Token.IMPORT) ThenBlock: { ReturnValue(1) }
@@ -3921,6 +3988,13 @@ Function.Parse_Primary {
         IfCondition EqualTo(t, Token.NONE) ThenBlock: {
             Parse_Advance()
             node = AST_Create(Node.NONE_LIT, 0)
+            result = Parse_Postfix(node)
+            ReturnValue(result)
+        }
+
+        // yield / yield from as expression (e.g. x = yield 1)
+        IfCondition EqualTo(t, Token.YIELD) ThenBlock: {
+            node = Parse_Yield(0)
             result = Parse_Postfix(node)
             ReturnValue(result)
         }

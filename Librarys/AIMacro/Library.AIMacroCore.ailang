@@ -32,6 +32,7 @@ FixedPool.Token {
     "FINALLY": Initialize=26
     "TRY": Initialize=27
     "RAISE": Initialize=28
+    "YIELD": Initialize=29
     "TRUE": Initialize=30
     "FALSE": Initialize=31
     "NONE": Initialize=32
@@ -701,6 +702,9 @@ Function.Lex_MatchKW {
 
         cmp = StringCompare(word, "raise")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(Token.RAISE) }
+
+        cmp = StringCompare(word, "yield")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(Token.YIELD) }
 
         cmp = StringCompare(word, "try")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(Token.TRY) }
