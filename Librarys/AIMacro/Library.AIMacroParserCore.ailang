@@ -3766,6 +3766,79 @@ Function.Parse_With {
     }
 }
 
+
+// =============================================================================
+// String-prefix helpers (b/r/u/br/rb) + one concat piece for implicit "a" "b"
+// =============================================================================
+Function.Parse_IsStringPrefix {
+    Input: name_ptr: Address
+    Output: Integer
+    Body: {
+        IfCondition Or(EqualTo(StringCompare(name_ptr, "b"), 0), EqualTo(StringCompare(name_ptr, "B"), 0)) ThenBlock: {
+            ReturnValue(1)
+        }
+        IfCondition Or(EqualTo(StringCompare(name_ptr, "r"), 0), EqualTo(StringCompare(name_ptr, "R"), 0)) ThenBlock: {
+            ReturnValue(1)
+        }
+        IfCondition Or(EqualTo(StringCompare(name_ptr, "u"), 0), EqualTo(StringCompare(name_ptr, "U"), 0)) ThenBlock: {
+            ReturnValue(1)
+        }
+        IfCondition Or(EqualTo(StringCompare(name_ptr, "br"), 0), EqualTo(StringCompare(name_ptr, "Br"), 0)) ThenBlock: {
+            ReturnValue(1)
+        }
+        IfCondition Or(EqualTo(StringCompare(name_ptr, "bR"), 0), EqualTo(StringCompare(name_ptr, "BR"), 0)) ThenBlock: {
+            ReturnValue(1)
+        }
+        IfCondition Or(EqualTo(StringCompare(name_ptr, "rb"), 0), EqualTo(StringCompare(name_ptr, "Rb"), 0)) ThenBlock: {
+            ReturnValue(1)
+        }
+        IfCondition Or(EqualTo(StringCompare(name_ptr, "rB"), 0), EqualTo(StringCompare(name_ptr, "RB"), 0)) ThenBlock: {
+            ReturnValue(1)
+        }
+        ReturnValue(0)
+    }
+}
+
+// Consume one implicit-concat string piece: STRING/FSTRING, or prefix IDENT + STRING/FSTRING.
+// Returns 0 if the next token is not a string piece.
+Function.Parse_TryStringConcatPiece {
+    Output: Address
+    Body: {
+        t = Parse_Type()
+        IfCondition Or(EqualTo(t, Token.STRING), EqualTo(t, Token.FSTRING)) ThenBlock: {
+            IfCondition EqualTo(t, Token.FSTRING) ThenBlock: {
+                node = Parse_FString(Parse_Val())
+                Parse_Advance()
+                ReturnValue(node)
+            }
+            node = AST_Create(Node.STR_LIT, 1)
+            ArraySet(node, 3, Parse_Val())
+            Parse_Advance()
+            ReturnValue(node)
+        }
+        IfCondition EqualTo(t, Token.IDENTIFIER) ThenBlock: {
+            name_ptr = Parse_Val()
+            next_t = Lex_GetType(Add(Parse.pos, 1))
+            IfCondition Or(EqualTo(next_t, Token.STRING), EqualTo(next_t, Token.FSTRING)) ThenBlock: {
+                is_prefix = Parse_IsStringPrefix(name_ptr)
+                IfCondition EqualTo(is_prefix, 1) ThenBlock: {
+                    Parse_Advance()
+                    IfCondition EqualTo(Parse_Type(), Token.FSTRING) ThenBlock: {
+                        node = Parse_FString(Parse_Val())
+                        Parse_Advance()
+                        ReturnValue(node)
+                    }
+                    node = AST_Create(Node.STR_LIT, 1)
+                    ArraySet(node, 3, Parse_Val())
+                    Parse_Advance()
+                    ReturnValue(node)
+                }
+            }
+        }
+        ReturnValue(0)
+    }
+}
+
 // =============================================================================
 // PRIMARY EXPRESSION (with postfix handling)
 // =============================================================================
@@ -3807,14 +3880,11 @@ Function.Parse_Primary {
                 ArraySet(node, 3, Parse_Val())
                 Parse_Advance()
             }
-            WhileLoop Or(EqualTo(Parse_Type(), Token.STRING), EqualTo(Parse_Type(), Token.FSTRING)) {
-                IfCondition EqualTo(Parse_Type(), Token.FSTRING) ThenBlock: {
-                    right = Parse_FString(Parse_Val())
-                    Parse_Advance()
-                } ElseBlock: {
-                    right = AST_Create(Node.STR_LIT, 1)
-                    ArraySet(right, 3, Parse_Val())
-                    Parse_Advance()
+            // Implicit concat continues through plain or prefixed pieces: "a" r"b" br"c"
+            WhileLoop EqualTo(1, 1) {
+                right = Parse_TryStringConcatPiece()
+                IfCondition EqualTo(right, 0) ThenBlock: {
+                    BreakLoop
                 }
                 bin = AST_Create(Node.BINARY_OP, 3)
                 ArraySet(bin, 3, node)
@@ -3863,31 +3933,11 @@ Function.Parse_Primary {
                 node = Parse_Primary()
                 ReturnValue(node)
             }
-            // Merge prefix + adjacent STRING/FSTRING (no NEWLINE between tokens).
+            // Merge prefix + adjacent STRING/FSTRING; keep concat through further prefixed pieces.
             next_t = Lex_GetType(Add(Parse.pos, 1))
             is_prefix = 0
             IfCondition Or(EqualTo(next_t, Token.STRING), EqualTo(next_t, Token.FSTRING)) ThenBlock: {
-                IfCondition Or(EqualTo(StringCompare(name_ptr, "b"), 0), EqualTo(StringCompare(name_ptr, "B"), 0)) ThenBlock: {
-                    is_prefix = 1
-                }
-                IfCondition Or(EqualTo(StringCompare(name_ptr, "r"), 0), EqualTo(StringCompare(name_ptr, "R"), 0)) ThenBlock: {
-                    is_prefix = 1
-                }
-                IfCondition Or(EqualTo(StringCompare(name_ptr, "u"), 0), EqualTo(StringCompare(name_ptr, "U"), 0)) ThenBlock: {
-                    is_prefix = 1
-                }
-                IfCondition Or(EqualTo(StringCompare(name_ptr, "br"), 0), EqualTo(StringCompare(name_ptr, "Br"), 0)) ThenBlock: {
-                    is_prefix = 1
-                }
-                IfCondition Or(EqualTo(StringCompare(name_ptr, "bR"), 0), EqualTo(StringCompare(name_ptr, "BR"), 0)) ThenBlock: {
-                    is_prefix = 1
-                }
-                IfCondition Or(EqualTo(StringCompare(name_ptr, "rb"), 0), EqualTo(StringCompare(name_ptr, "Rb"), 0)) ThenBlock: {
-                    is_prefix = 1
-                }
-                IfCondition Or(EqualTo(StringCompare(name_ptr, "rB"), 0), EqualTo(StringCompare(name_ptr, "RB"), 0)) ThenBlock: {
-                    is_prefix = 1
-                }
+                is_prefix = Parse_IsStringPrefix(name_ptr)
             }
             IfCondition EqualTo(is_prefix, 1) ThenBlock: {
                 Parse_Advance()
@@ -3899,14 +3949,10 @@ Function.Parse_Primary {
                     ArraySet(node, 3, Parse_Val())
                     Parse_Advance()
                 }
-                WhileLoop Or(EqualTo(Parse_Type(), Token.STRING), EqualTo(Parse_Type(), Token.FSTRING)) {
-                    IfCondition EqualTo(Parse_Type(), Token.FSTRING) ThenBlock: {
-                        right = Parse_FString(Parse_Val())
-                        Parse_Advance()
-                    } ElseBlock: {
-                        right = AST_Create(Node.STR_LIT, 1)
-                        ArraySet(right, 3, Parse_Val())
-                        Parse_Advance()
+                WhileLoop EqualTo(1, 1) {
+                    right = Parse_TryStringConcatPiece()
+                    IfCondition EqualTo(right, 0) ThenBlock: {
+                        BreakLoop
                     }
                     bin = AST_Create(Node.BINARY_OP, 3)
                     ArraySet(bin, 3, node)
