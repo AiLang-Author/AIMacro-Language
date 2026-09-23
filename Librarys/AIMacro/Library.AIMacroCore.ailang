@@ -506,6 +506,40 @@ Function.Lex_ReadNumber {
                 }
                 ReturnValue(val)
             }
+            // Octal: 0oNN / 0ONN
+            IfCondition Or(EqualTo(hx, 111), EqualTo(hx, 79)) ThenBlock: {
+                Lex_Advance()
+                Lex_Advance()
+                WhileLoop EqualTo(1, 1) {
+                    ch = Lex_Char()
+                    // digits 0-7 only
+                    IfCondition Or(LessThan(ch, 48), GreaterThan(ch, 55)) ThenBlock: {
+                        BreakLoop
+                    }
+                    digit = Subtract(ch, 48)
+                    val = Multiply(val, 8)
+                    val = Add(val, digit)
+                    Lex_Advance()
+                }
+                ReturnValue(val)
+            }
+            // Binary: 0bNN / 0BNN
+            IfCondition Or(EqualTo(hx, 98), EqualTo(hx, 66)) ThenBlock: {
+                Lex_Advance()
+                Lex_Advance()
+                WhileLoop EqualTo(1, 1) {
+                    ch = Lex_Char()
+                    // digits 0-1 only
+                    IfCondition Or(LessThan(ch, 48), GreaterThan(ch, 49)) ThenBlock: {
+                        BreakLoop
+                    }
+                    digit = Subtract(ch, 48)
+                    val = Multiply(val, 2)
+                    val = Add(val, digit)
+                    Lex_Advance()
+                }
+                ReturnValue(val)
+            }
         }
 
         WhileLoop EqualTo(1, 1) {

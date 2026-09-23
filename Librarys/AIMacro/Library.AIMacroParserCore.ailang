@@ -3645,14 +3645,13 @@ Function.Parse_FString {
                                     BreakLoop
                                 }
                                 IfCondition And(GreaterEqual(c3, 48), LessEqual(c3, 57)) ThenBlock: {
-                                    num = 0
+                                    // Digit-string IDENT so f-string call args match
+                                    // working IDENT shape (NUM_LIT here SIGSEGVs in codegen).
+                                    astart = i
                                     WhileLoop And(LessThan(i, slen), And(GreaterEqual(GetByte(s, i), 48), LessEqual(GetByte(s, i), 57))) {
-                                        num = Add(Multiply(num, 10), Subtract(GetByte(s, i), 48))
                                         i = Add(i, 1)
                                     }
-                                    nlit = AST_Create(Node.NUM_LIT, 1)
-                                    ArraySet(nlit, 3, num)
-                                    Array.Push(call_args, nlit)
+                                    Array.Push(call_args, Parse_InterpIdent(s, astart, i))
                                 } ElseBlock: {
                                     astart = i
                                     WhileLoop LessThan(i, slen) {
