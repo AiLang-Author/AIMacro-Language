@@ -1,19 +1,14 @@
 # AIMacro
 
-Python-shaped surface syntax that **transpiles to AILang** and compiles to a native Linux ELF.
+AIMacro is a Python-like language that transpiles to AILang and then compiles to a native Linux executable.
 
-This is the **AOT `{ }` language**. It is not the 2025 `end`-keyword tree.
+The syntax is intentionally familiar to Python programmers, but blocks use `{ }` instead of indentation and `end`.
 
-## Blocks are `{ }`. `end` is gone.
+This is the current AOT language for this repo. The older 2025 syntax with `end` is kept only in the archived branch.
 
-That is the language change.
+## Block syntax
 
-| Era | Blocks | Compiler | This repo |
-|-----|--------|----------|-----------|
-| 2025 (`archive/end-syntax-2025`) | Python-ish indent + explicit `end` | Python `main.py` | old `main` |
-| **2026 (this tree)** | **C-style `{ }`** | self-hosted `aimacro.x` → `ailang.x` | **`main`** |
-
-`end` is not valid block syntax anymore. Indentation is not the grammar. Braces are.
+AIMacro uses braces for blocks:
 
 ```aim
 def factorial(n) {
@@ -28,7 +23,7 @@ def main() {
 }
 ```
 
-Old (retired):
+This is the main difference from the old 2025 version:
 
 ```aim
 def factorial(n):
@@ -39,35 +34,37 @@ def factorial(n):
 end
 ```
 
-`py2aim.py` is the indent-Python → `{ }` bridge. Do not port CPython by hand with `end`.
+The old `end`-based syntax is retired. Indentation is not part of the grammar; braces are.
 
 ## Pipeline
 
-```
-.aim  →  ./aimacro.x  →  .ailang  →  ./ailang.x  →  native ELF
-         (this repo)                 (AILang compiler)
+```text
+.aim  ->  ./aimacro.x  ->  .ailang  ->  ./ailang.x  ->  native ELF
 ```
 
-- **AIMacro** lives here: https://github.com/AiLang-Author/AIMacro-Language
-- **AILang compiler** (`ailang.x`, Hash, Array, OOP, …): https://github.com/AiLang-Author/Ailang-Self-Hosting-
-
-AIMacro was parked inside the self-hosting compiler repo while AOT work ran. It is back in this repo. Grokbot / class-body grind: work **here**, not in `Ailang-Self-Hosting-`.
+- `aimacro.x` is the transpiler in this repo.
+- `ailang.x` is the AILang compiler used for the final build.
+- The output is a native Linux ELF binary.
 
 ## Build
 
-Needs `ailang.x` on `PATH` (or in this directory). From the compiler repo:
+This repo expects `ailang.x` to be available on `PATH` (or in the repo directory).
+
+From the AILang compiler repo:
 
 ```bash
-# in Ailang-Self-Hosting-
-./ailang.x   # already built, or rebuild per that repo
+./ailang.x
+```
 
-# in AIMacro-Language (this repo)
+Then in this repo:
+
+```bash
 cp /path/to/Ailang-Self-Hosting-/ailang.x .
 ./ailang.x aimacro_cli.ailang aimacro
 mv -f aimacro aimacro.x
 ```
 
-`ailang.x` inlines `Librarys/AIMacro/` at compile time. Rebuild `aimacro.x` after parser/codegen edits.
+After that, you can transpile and run a program:
 
 ```bash
 ./aimacro.x AIMacro_Tests/fizzbuzz.aim /tmp/fizzbuzz.ailang
@@ -75,47 +72,34 @@ mv -f aimacro aimacro.x
 /tmp/fizzbuzz.x
 ```
 
-## Gates (2026-09-22, py3.11 / 585, tip `26b4560d`)
+## Current status
 
-| Gate | Result |
-|------|--------|
-| curated (`tests/python/curated`, stdout vs CPython) | **25/25** |
-| internal matrix (`AIMacro_Tests/*.aim`) | **62/62/62** transpile/compile/run |
-| CPython stdlib lib transpile | **379/585** (in-scope **317/395**) |
-| SIGSEGV | **0** |
-| fizzbuzz ELF | **211054** |
+The project is in active development. The current tree is the brace-based AOT implementation.
 
-Not full CPython. 95th-percentile scripts. AOT stays production; VM is later.
+The repo includes:
 
-## Layout
+- `Librarys/AIMacro/` — lexer, parser, code generation, runtime builtins
+- `aimacro_cli.ailang` — command-line transpiler source
+- `aimacro_console.ailang` — interactive console
+- `AIMacro/` — specs, status, and scripts
+- `AIMacro_Tests/` — test suite
+- `tests/python/curated/` — curated Python compatibility checks
+- `tools/py2aim.py` — helper for converting indent-based Python into brace-based `.aim` code
 
-```
-Librarys/AIMacro/          lexer, parser, codegen, runtime builtins
-aimacro_cli.ailang         CLI transpiler source
-aimacro_console.ailang     interactive console
-AIMacro/                   spec, status, scripts
-AIMacro_Tests/             62 .aim matrix tests
-tests/python/curated/      25 CPython gold files
-tools/py2aim.py            indent Python → { } .aim
-tools/aimacro_cpython_runner.py
-```
+## Documentation
 
-Keep `Librarys/AIMacro/` at that path. `LibraryImport.AIMacro.*` resolves there.
+| File | Purpose |
+|------|---------|
+| [AIMacro/SPECIFICATION.md](AIMacro/SPECIFICATION.md) | Language contract and syntax rules |
+| [AIMacro/ARCHITECTURE.md](AIMacro/ARCHITECTURE.md) | Execution pipeline and design |
+| [AIMacro/CONFORMANCE.md](AIMacro/CONFORMANCE.md) | Compatibility and scorecard |
+| [AIMacro/STATUS.md](AIMacro/STATUS.md) | Current build and test status |
+| [AIMacro/PYTHON_TESTS.md](AIMacro/PYTHON_TESTS.md) | Test runner and coverage notes |
 
-## Docs
+## History in this repository
 
-| File | What |
-|------|------|
-| [AIMacro/SPECIFICATION.md](AIMacro/SPECIFICATION.md) | language contract (`{ }` is the syntax rule) |
-| [AIMacro/ARCHITECTURE.md](AIMacro/ARCHITECTURE.md) | pipeline |
-| [AIMacro/CONFORMANCE.md](AIMacro/CONFORMANCE.md) | CPython-lite scorecard |
-| [AIMacro/STATUS.md](AIMacro/STATUS.md) | living gates |
-| [AIMacro/PYTHON_TESTS.md](AIMacro/PYTHON_TESTS.md) | runner |
-
-## History in this GitHub repo
-
-- **`archive/end-syntax-2025`** — last `end` / Python-compiler snapshot (`493cfdc8`, 2025-12-23)
-- **`main`** — AOT `{ }` tree imported from `Ailang-Self-Hosting-` `aimacro/class-body-parse-fixes` @ `26b4560d`
+- `archive/end-syntax-2025` — the older `end`-based snapshot
+- `main` — the current brace-based implementation
 
 ## License
 
