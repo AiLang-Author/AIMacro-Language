@@ -200,6 +200,30 @@ Function.Parse_SkipBrackets {
     }
 }
 
+// Skip balanced (...) after a class-base callee: class X(namedtuple(...)) / class C(f("x"))
+Function.Parse_SkipParens {
+    Body: {
+        IfCondition EqualTo(Parse_Check(Token.LPAREN), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        Parse_Advance()
+        depth = 1
+        WhileLoop GreaterThan(depth, 0) {
+            t = Parse_Type()
+            IfCondition EqualTo(t, Token.EOF) ThenBlock: {
+                BreakLoop
+            }
+            IfCondition EqualTo(t, Token.LPAREN) ThenBlock: {
+                depth = Add(depth, 1)
+            }
+            IfCondition EqualTo(t, Token.RPAREN) ThenBlock: {
+                depth = Subtract(depth, 1)
+            }
+            Parse_Advance()
+        }
+    }
+}
+
 Function.Parse_ClassBase {
     Input: bases: Address
     Body: {
@@ -217,6 +241,10 @@ Function.Parse_ClassBase {
         }
         IfCondition EqualTo(Parse_Check(Token.LBRACKET), 1) ThenBlock: {
             Parse_SkipBrackets()
+        }
+        // Call base: namedtuple("Point", "x y") / f("x") — skip args, keep callee name
+        IfCondition EqualTo(Parse_Check(Token.LPAREN), 1) ThenBlock: {
+            Parse_SkipParens()
         }
         IfCondition EqualTo(Parse_Check(Token.ASSIGN), 1) ThenBlock: {
             Parse_Advance()
