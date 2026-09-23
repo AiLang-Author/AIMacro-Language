@@ -161,6 +161,21 @@ def _bracket_delta(s: str) -> int:
     return delta
 
 
+def _endswith_cont(code: str) -> bool:
+    """True if *code* ends with a Python line-continuation backslash."""
+    return code.rstrip().endswith("\\")
+
+
+def _join_cont_codes(parts: list[str]) -> str:
+    """Join backslash-continued code fragments into one logical line."""
+    cleaned = []
+    for p in parts:
+        s = p.rstrip()
+        if s.endswith("\\"):
+            s = s[:-1].rstrip()
+        cleaned.append(s)
+    return " ".join(x for x in cleaned if x)
+
 
 def convert(src: str) -> str:
     """Insert `{` / `}` from indentation. Preserve comments."""
@@ -221,16 +236,26 @@ def convert(src: str) -> str:
 
         if width == stack[-1] and first in CONTINUE_SUITE:
             # replace implicit close: emit `} else {` using this line's indent
-            body = code
+            # Backslash-continued headers: elif a and \<nl> b:  →  } elif a and b {
+            parts = [code]
+            cont_i = i
+            cont_comment = comment
+            while _endswith_cont(parts[-1]) and cont_i + 1 < n:
+                cont_i += 1
+                nline = raw_lines[cont_i]
+                nws = _leading_ws(nline)
+                ncode, ncomment = _code_part(nline[len(nws) :])
+                parts.append(ncode)
+                if ncomment:
+                    cont_comment = ncomment
+            body = _join_cont_codes(parts)
             if body.endswith(":"):
                 body = body[:-1].rstrip()
             extra = ""
-            if comment:
-                extra = "  " + comment
+            if cont_comment:
+                extra = "  " + cont_comment
             out.append(f"{ws}}} {body} {{{extra}")
-            # next indent will push
-            i += 1
-            # look ahead: if next real line is more indented, push that width
+            i = cont_i + 1
             j = i
             while j < n and is_blank_or_comment(raw_lines[j]):
                 j += 1
@@ -238,7 +263,7 @@ def convert(src: str) -> str:
                 nxt_w = _indent_width(_leading_ws(raw_lines[j]))
                 if nxt_w > width:
                     stack.append(nxt_w)
-            qstate = line_q
+            qstate = _advance_quote_state(raw_lines[cont_i], None)
             continue
 
         colon = code.find(":")
@@ -251,6 +276,47 @@ def convert(src: str) -> str:
             out.append(f"{ws}{head} {{ {tail} }}{extra}")
             i += 1
             qstate = line_q
+            continue
+
+        # Backslash-continued suite header: if a and \<nl> b:  →  if a and b {
+        if first in SUITE_START and _endswith_cont(code) and not code.endswith(":"):
+            parts = [code]
+            cont_i = i
+            cont_comment = comment
+            while _endswith_cont(parts[-1]) and cont_i + 1 < n:
+                cont_i += 1
+                nline = raw_lines[cont_i]
+                nws = _leading_ws(nline)
+                ncode, ncomment = _code_part(nline[len(nws) :])
+                parts.append(ncode)
+                if ncomment:
+                    cont_comment = ncomment
+            body = _join_cont_codes(parts)
+            if body.endswith(":"):
+                body = body[:-1].rstrip()
+                extra = ""
+                if cont_comment:
+                    extra = "  " + cont_comment
+                out.append(f"{ws}{body} {{{extra}")
+                i = cont_i + 1
+                j = i
+                while j < n and is_blank_or_comment(raw_lines[j]):
+                    j += 1
+                if j < n:
+                    nxt_w = _indent_width(_leading_ws(raw_lines[j]))
+                    if nxt_w > width:
+                        stack.append(nxt_w)
+                    elif nxt_w == width:
+                        out.append(f"{ws}}}")
+                else:
+                    out.append(f"{ws}}}")
+                qstate = _advance_quote_state(raw_lines[cont_i], None)
+                continue
+            # No colon yet (unusual) — fall through with joined text as opaque lines
+            for k in range(i, cont_i + 1):
+                out.append(raw_lines[k])
+            i = cont_i + 1
+            qstate = _advance_quote_state(raw_lines[cont_i], None)
             continue
 
         if code.endswith(":") and first in SUITE_START:
