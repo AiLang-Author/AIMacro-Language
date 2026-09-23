@@ -237,6 +237,8 @@ def convert(src: str) -> str:
         if width == stack[-1] and first in CONTINUE_SUITE:
             # replace implicit close: emit `} else {` using this line's indent
             # Backslash-continued headers: elif a and \<nl> b:  →  } elif a and b {
+            # Paren-continued headers: elif (a and\n b): → } elif (a and\n b) {
+            #   (do NOT open '{' until the signature ':' closes — same as if/def header_depth)
             parts = [code]
             cont_i = i
             cont_comment = comment
@@ -251,19 +253,42 @@ def convert(src: str) -> str:
             body = _join_cont_codes(parts)
             if body.endswith(":"):
                 body = body[:-1].rstrip()
+                extra = ""
+                if cont_comment:
+                    extra = "  " + cont_comment
+                out.append(f"{ws}}} {body} {{{extra}")
+                i = cont_i + 1
+                j = i
+                while j < n and is_blank_or_comment(raw_lines[j]):
+                    j += 1
+                if j < n:
+                    nxt_w = _indent_width(_leading_ws(raw_lines[j]))
+                    if nxt_w > width:
+                        stack.append(nxt_w)
+                qstate = _advance_quote_state(raw_lines[cont_i], None)
+                continue
+            # Incomplete continue-suite header (open parens, no ':' yet).
+            # Close prior suite with `}` then emit the partial line; header_depth
+            # finishes when a later line ends with ':'.
+            if cont_i > i:
+                # Unusual: backslash join without colon — emit joined text, no '{'.
+                extra = ""
+                if cont_comment:
+                    extra = "  " + cont_comment
+                out.append(f"{ws}}} {body}{extra}")
+                i = cont_i + 1
+                qstate = _advance_quote_state(raw_lines[cont_i], None)
+                continue
             extra = ""
-            if cont_comment:
-                extra = "  " + cont_comment
-            out.append(f"{ws}}} {body} {{{extra}")
-            i = cont_i + 1
-            j = i
-            while j < n and is_blank_or_comment(raw_lines[j]):
-                j += 1
-            if j < n:
-                nxt_w = _indent_width(_leading_ws(raw_lines[j]))
-                if nxt_w > width:
-                    stack.append(nxt_w)
-            qstate = _advance_quote_state(raw_lines[cont_i], None)
+            if comment:
+                extra = "  " + comment
+            out.append(f"{ws}}} {code}{extra}")
+            delta = _bracket_delta(code)
+            if delta > 0:
+                header_depth = delta
+                header_indent = width
+            i += 1
+            qstate = line_q
             continue
 
         colon = code.find(":")
