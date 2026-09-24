@@ -1,0 +1,9 @@
+Canonical AIMacro sources live in this repository:
+
+  https://github.com/AiLang-Author/AIMacro-Language
+  path: Librarys/AIMacro/
+
+Ailang-Self-Hosting- may still contain a stale extract of this directory.
+Do not edit the Self-Hosting copy. rsync this tree into a compile host that
+has ailang.x (see AIMacro/GROKBOT_CODEGEN.md). Never commit AIMacro changes
+to the compiler repo.

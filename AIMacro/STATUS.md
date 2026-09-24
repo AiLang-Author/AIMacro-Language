@@ -2,7 +2,7 @@
 
 Living document. Re-run audit scripts and update counts after substantive changes.
 
-**Last updated:** 2026-09-24 (bar: all 585 stdlib `.py` must transpile **and** compile. Current 3.11 transpile **520/585**, in-scope **370/395**. Compile corpus not yet scored. curated 25/25; matrix 62/62/62; SIGSEGV 0; fizzbuzz 211054)
+**Last updated:** 2026-09-24 (bar: all 585 must transpile **and** compile. 3.11 transpile **537/585**, in-scope **380/395**. Compile probe **0/26**. Overnight codegen: [GROKBOT_CODEGEN.md](GROKBOT_CODEGEN.md) on branch `grokasaurus2`. curated 25/25; matrix 62/62/62; SIGSEGV 0; fizzbuzz 211054)
 
 ## Build artifacts
 
