@@ -123,6 +123,7 @@ Keep `Librarys/AIMacro/` at that path. `LibraryImport.AIMacro.*` resolves there.
 | [AIMacro/STATUS.md](AIMacro/STATUS.md) | living gates |
 | [AIMacro/PYTHON_TESTS.md](AIMacro/PYTHON_TESTS.md) | runner |
 | [AIMacro/GROKBOT_CODEGEN.md](AIMacro/GROKBOT_CODEGEN.md) | unattended codegen shift (`grokasaurus2`) |
+| [AIMacro/GROKBOT_PARSE.md](AIMacro/GROKBOT_PARSE.md) | parse/transpile grind (`aimacro/class-body-parse-fixes`) |
 
 ## History in this GitHub repo
 
