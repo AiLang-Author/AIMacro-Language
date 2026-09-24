@@ -226,11 +226,16 @@ def convert(src: str) -> str:
         line_q = _advance_quote_state(line, None)
 
         # Dedent: close braces. else/elif/except/finally share the brace.
+        # need_cont_close: True when we popped an indented body and will emit
+        # `} else` / `} elif`. False when the previous sibling was a one-liner
+        # `if x { stmt }` that already self-closed — then just `else { ... }`.
+        need_cont_close = False
         while width < stack[-1]:
             stack.pop()
             pad = " " * stack[-1]
             if width == stack[-1] and first in CONTINUE_SUITE:
                 # `} else {` on this line — brace emitted with the keyword
+                need_cont_close = True
                 break
             out.append(f"{pad}}}")
 
@@ -239,6 +244,7 @@ def convert(src: str) -> str:
             # Backslash-continued headers: elif a and \<nl> b:  →  } elif a and b {
             # Paren-continued headers: elif (a and\n b): → } elif (a and\n b) {
             #   (do NOT open '{' until the signature ':' closes — same as if/def header_depth)
+            # One-liner continue-suite: else: stmt / elif x: stmt → else { stmt }
             parts = [code]
             cont_i = i
             cont_comment = comment
@@ -251,12 +257,13 @@ def convert(src: str) -> str:
                 if ncomment:
                     cont_comment = ncomment
             body = _join_cont_codes(parts)
+            close = "} " if need_cont_close else ""
             if body.endswith(":"):
                 body = body[:-1].rstrip()
                 extra = ""
                 if cont_comment:
                     extra = "  " + cont_comment
-                out.append(f"{ws}}} {body} {{{extra}")
+                out.append(f"{ws}{close}{body} {{{extra}")
                 i = cont_i + 1
                 j = i
                 while j < n and is_blank_or_comment(raw_lines[j]):
@@ -267,6 +274,18 @@ def convert(src: str) -> str:
                         stack.append(nxt_w)
                 qstate = _advance_quote_state(raw_lines[cont_i], None)
                 continue
+            # One-liner: else: stmt  /  elif cond: stmt  /  except E: stmt
+            colon = body.find(":")
+            if colon != -1 and colon < len(body) - 1:
+                head = body[:colon].rstrip()
+                tail = body[colon + 1 :].strip()
+                extra = ""
+                if cont_comment:
+                    extra = "  " + cont_comment
+                out.append(f"{ws}{close}{head} {{ {tail} }}{extra}")
+                i = cont_i + 1
+                qstate = _advance_quote_state(raw_lines[cont_i], None)
+                continue
             # Incomplete continue-suite header (open parens, no ':' yet).
             # Close prior suite with `}` then emit the partial line; header_depth
             # finishes when a later line ends with ':'.
@@ -275,14 +294,14 @@ def convert(src: str) -> str:
                 extra = ""
                 if cont_comment:
                     extra = "  " + cont_comment
-                out.append(f"{ws}}} {body}{extra}")
+                out.append(f"{ws}{close}{body}{extra}")
                 i = cont_i + 1
                 qstate = _advance_quote_state(raw_lines[cont_i], None)
                 continue
             extra = ""
             if comment:
                 extra = "  " + comment
-            out.append(f"{ws}}} {code}{extra}")
+            out.append(f"{ws}{close}{code}{extra}")
             delta = _bracket_delta(code)
             if delta > 0:
                 header_depth = delta
