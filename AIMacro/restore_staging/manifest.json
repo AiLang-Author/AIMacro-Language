@@ -2,47 +2,28 @@
   {
     "name": "Library.AIMacroCodeGen1.ailang",
     "prefix": "cg1",
-    "md5": "6cf42a3e23a5c04b34ae1427958babd8",
+    "md5": "bb62a3b01c9e7e0ae674aa7f3c63086d",
     "parts": [
-      "cg1.z.b64.00.0",
-      "cg1.z.b64.00.1",
-      "cg1.z.b64.00.2",
-      "cg1.z.b64.00.3",
-      "cg1.z.b64.00.4",
-      "cg1.z.b64.01"
+      "cg1.z.b64.00.0"
     ]
   },
   {
     "name": "Library.AIMacroCodeGen2.ailang",
     "prefix": "cg2",
-    "md5": "5c7634a60bbc1852969db801745440f2",
+    "md5": "c799f366230810b6f63f6c2636852565",
     "parts": [
       "cg2.z.b64.00.0",
       "cg2.z.b64.00.1",
-      "cg2.z.b64.00.2",
-      "cg2.z.b64.00.3",
-      "cg2.z.b64.00.4",
-      "cg2.z.b64.01",
-      "cg2.z.b64.02",
-      "cg2.z.b64.03"
+      "cg2.z.b64.00.2"
     ]
   },
   {
     "name": "Library.AIMacroCodeGen4.ailang",
     "prefix": "cg4",
-    "md5": "2826d299817ab03991df46e9072f083c",
+    "md5": "b711452a34ceb462b6bdafd71665b9ad",
     "parts": [
       "cg4.z.b64.00.0",
-      "cg4.z.b64.00.1",
-      "cg4.z.b64.00.2",
-      "cg4.z.b64.00.3",
-      "cg4.z.b64.00.4",
-      "cg4.z.b64.01.0",
-      "cg4.z.b64.01.1",
-      "cg4.z.b64.01.2",
-      "cg4.z.b64.01.3",
-      "cg4.z.b64.01.4",
-      "cg4.z.b64.02"
+      "cg4.z.b64.00.1"
     ]
   },
   {
