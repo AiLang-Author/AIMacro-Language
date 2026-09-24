@@ -3,7 +3,7 @@ on:
   push:
     branches: [grokasaurus2]
     paths:
-      - "AIMacro/restore_staging/**"
+      - "AIMacro/restore_staging/manifest.json"
   workflow_dispatch:
 jobs:
   assemble:
@@ -23,10 +23,11 @@ jobs:
           git add Librarys/AIMacro/Library.AIMacroCodeGen1.ailang \
                   Librarys/AIMacro/Library.AIMacroCodeGen2.ailang \
                   Librarys/AIMacro/Library.AIMacroCodeGen4.ailang \
-                  Librarys/AIMacro/Library.AIMacro.ailang
+                  Librarys/AIMacro/Library.AIMacro.ailang \
+                  AIMacro_Tests/compile_map_builtin.aim || true
           if git diff --cached --quiet; then
             echo "No changes to commit"
           else
-            git commit -m "fix(aimacro): restore CodeGen1+PyMod/FrozenSet after corrupted path write"
+            git commit -m "feat(aimacro): compile_map_builtin  map(fn, xs) → AIMacro.Map"
             git push origin HEAD:grokasaurus2
           fi
