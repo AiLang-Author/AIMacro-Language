@@ -211,6 +211,28 @@ Function.Gen_IsPackedFunc {
     }
 }
 
+// Known user Function names (for AddressOf when used as values)
+Function.Gen_IsKnownFunc {
+    Input: name: Address
+    Output: Integer
+    Body: {
+        IfCondition Or(EqualTo(name, 0), EqualTo(Gen.func_names, 0)) ThenBlock: {
+            ReturnValue(0)
+        }
+        n = Array.Size(Gen.func_names)
+        i = 0
+        WhileLoop LessThan(i, n) {
+            fn = Array.Get(Gen.func_names, i)
+            cmp = StringCompare(fn, name)
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                ReturnValue(1)
+            }
+            i = Add(i, 1)
+        }
+        ReturnValue(0)
+    }
+}
+
 // =============================================================================
 // TEMP NAME GENERATION - Clean names, reset per function
 // =============================================================================
