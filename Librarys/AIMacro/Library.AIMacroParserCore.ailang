@@ -2251,7 +2251,9 @@ Function.Parse_For {
         }
         
         Parse_Consume(Token.IN)
-        iterable = Parse_Expr()
+        // Bare tuple iterable: for j in 1, 2, 5 {  /  for x in a, b {
+        // (paren form for j in (1, 2, 5) already works via Parse_Expr)
+        iterable = Parse_BareTupleTail(Parse_Expr())
         body = Parse_EnterBlock()
         
         // Optional else: for ... { } else { } (runs if no break)
