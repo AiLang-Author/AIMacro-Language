@@ -10,7 +10,7 @@ Pipeline per file:
 
 Corpora (test262 shape, not a unittest dump):
   curated  tests/python/curated/*.py  — stdout vs CPython (gold)
-  lib      CPython stdlib .py         — parse/codegen coverage
+  lib      CPython stdlib .py         — ALL files must transpile then compile (585 on 3.11)
   test     CPython Lib/test/*.py      — syntax coverage (almost all unittest)
   all      curated run + lib compile + test transpile
 
@@ -159,18 +159,20 @@ def run_aimacro_stage(
     name = stem or aim.stem
     ailang_out = work / (name + ".ailang")
     bin_out = work / name
-    rc, _, err = run_cmd(
+    rc, out, err = run_cmd(
         [str(AIMACRO), str(aim), str(ailang_out)], timeout, cwd=ROOT
     )
     if rc != 0:
-        return rc, "", f"transpile: {err}", "transpile"
+        return rc, "", f"transpile: {(out or '')[-300:]}\n{(err or '')}".strip(), "transpile"
     if stage == "transpile":
         return 0, "", "", ""
-    rc, _, err = run_cmd(
+    rc, out, err = run_cmd(
         [str(AILANG), str(ailang_out), str(bin_out)], timeout, cwd=ROOT
     )
     if rc != 0:
-        return rc, "", f"compile: {err}", "compile"
+        # ailang.x prints parse/codegen errors on stdout; SIGSEGV is rc < 0.
+        blob = ((out or "") + "\n" + (err or "")).strip()
+        return rc, "", f"compile: {blob[-800:]}", "compile"
     if stage == "compile":
         return 0, "", "", ""
     os.chmod(bin_out, 0o755)

@@ -3,9 +3,11 @@
 ## Mission
 
 Deliver a **production-usable Python surface** on top of AILang (`{ }` blocks,
-not indentation): transpile the 95th-percentile of real-world Python scripts to
-static binaries today, then add an **interpreted VM runtime** (JSVM-style) for
-REPL and embedding. See [PYTHON_GAP.md](PYTHON_GAP.md).
+not indentation). The CPython stdlib corpus (585 `.py` on 3.11 after excludes)
+must **all transpile and all compile**. Tagged files (`async`, `yield`, `@`,
+`match`) are still in the 585 — skip tags are triage, not a pass. After that
+corpus compiles, chase run/codegen holes until the modules actually work.
+VM (JSVM-style REPL) comes after AOT stays green. See [PYTHON_GAP.md](PYTHON_GAP.md).
 
 ---
 
@@ -25,20 +27,24 @@ without guessing.
 
 ---
 
-### O2 — Close 95th-percentile transpiler gaps
+### O2 — Close the CPython stdlib corpus (transpile, then compile)
 
-**Goal:** Scripts that ordinary Python developers write daily transpile and run
-without manual fixes.
+**Goal:** All 585 stdlib `.py` files transpile (`py2aim` + `aimacro.x`) and then
+compile (`ailang.x`). Not a 95th-percentile subset. Not “in-scope only.”
 
-**Tier A (stabilize):** control flow, strings, lists, arithmetic, functions, print/len/str/range
+**Tranche A (now):** 585/585 transpile. Remaining ~65 parse holes (token mismatches,
+timeouts, empty `__init__` handling).
 
-**Tier B (harden):** dicts, OOP, try/except, imports, isinstance
+**Tranche B (next):** `--stage compile` on that corpus. Probe 2026-09-24: **0/26**
+transpile-ok modules compiled (20 `ailang.x` SIGSEGV, 6 `Variable not found` /
+`Unknown function`). That is the next scorecard.
 
-**Tier C (add):** `open`/file I/O, comprehensions or f-strings, `with`, `in` on dict,
-stdlib shims (`os.path`, `json` subset)
+**Tranche C:** run vs CPython where the module is a script-shaped surface; shims
+for `os`/`json`/`sys` already exist and must keep growing.
 
-**Success:** `aimacro_full_test.aim`, `dict_test_comprehensive.aim`,
-`test_oop_complete.aim`, `test_harness.aim` all pass full pipeline.
+**Success:** `python3 tools/aimacro_cpython_runner.py --corpus lib --stage transpile`
+is 585/585, then `--stage compile` is 585/585. Matrix 62/62/62 and curated 25/25
+stay green the whole time.
 
 ---
 
@@ -72,11 +78,14 @@ stdlib shims (`os.path`, `json` subset)
 
 ## Non-objectives (this project phase)
 
-- Full CPython compatibility
-- `async`/`await`, generators, `lambda`, decorators
-- Packaging / pip / venv
-- Non-Linux AOT targets (BSD/Windows syscall backends are separate OS project)
+- Packaging / pip / venv / a CPython `Lib/test` unittest runner
+- Non-Linux AOT targets (BSD/Windows syscall backends are a separate OS project)
 - Replacing the AILang compiler
+- Shipping a VM before AOT stdlib compile is green
+
+`async` / `yield` / `@` / `match` / `lambda` are **not** skip-forever. They must
+parse and AOT-compile with the rest of the 585. Runtime for those can lag;
+dropping the file is not done.
 
 ---
 

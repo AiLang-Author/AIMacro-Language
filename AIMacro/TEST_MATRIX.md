@@ -17,7 +17,7 @@ Full matrix (pipes `<test>.stdin` when present): `./AIMacro/scripts/run_matrix.s
 | Tier | Meaning |
 |------|---------|
 | **P0** | Must pass for Phase 1 exit (Tier A + core integration) |
-| **P1** | Required for 95th-percentile claim (Tier B) |
+| **P1** | Required for stdlib-corpus / daily-script claim (Tier B) |
 | **P2** | Debug, isolate, stress, or regression |
 
 ## P0 — Core integration (8)

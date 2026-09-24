@@ -1,8 +1,9 @@
 # AIMacro vs CPython tests (test262 analog)
 
 JS has `test262` + `tools/test262_runner.py` + `JS-tests/test262_harness.ailang`.
-AIMacro’s counterpart is **not** a full CPython `Lib/test` run (unittest, C API,
-importlib). It is the same *shape*: preprocess → execute → compare → JSON.
+AIMacro’s counterpart is the same *shape* as test262: preprocess → execute →
+compare → JSON. `Lib/` stdlib `.py` files must **all transpile and compile**
+(585 on 3.11). `Lib/test` remains a syntax probe, not a unittest runner.
 
 ## Pieces
 
@@ -30,9 +31,10 @@ python3 tools/aimacro_cpython_runner.py --verbose
 python3 tools/aimacro_cpython_runner.py --output-json results/aimacro_cpython.json
 ```
 
-`--corpus all` is the mountain: curated (stdout vs python3) plus CPython
-stdlib transpile plus `Lib/test` transpile. `Lib/test` is unittest — those
-files are syntax probes, not a unittest runner. See [CONFORMANCE.md](CONFORMANCE.md).
+`--corpus lib --stage transpile` then `--stage compile` is the mountain:
+every stdlib `.py` (585 on 3.11) must clear both. `--corpus all` still adds
+curated stdout vs python3 and `Lib/test` as a syntax probe (not a unittest
+runner). See [CONFORMANCE.md](CONFORMANCE.md).
 
 ```bash
 ./AIMacro/scripts/run_conformance.sh

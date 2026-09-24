@@ -75,17 +75,28 @@ mv -f aimacro aimacro.x
 /tmp/fizzbuzz.x
 ```
 
-## Gates (2026-09-22, py3.11 / 585, tip `26b4560d`)
+## Bar
+
+Every CPython stdlib `.py` in the corpus must **transpile and compile**. On this box that is **585** files (Python 3.11.6, after dropping `test/`, `tkinter/`, …). Skipping tagged files (`async`, `yield`, `@`, `match`) is a triage label, not a done state. Those files still have to parse and AOT-compile.
+
+Tranches, in order:
+
+1. **Transpile all 585** — `py2aim` + `aimacro.x` parse/codegen emit `.ailang`
+2. **Compile all 585** — `ailang.x` AOT on that `.ailang`
+3. **Run** — execute vs CPython where that is meaningful
+
+95th-percentile was the old ceiling. It is not the stop. AOT stays production; VM is later.
+
+## Gates (2026-09-24, py3.11 / 585, tip `a1eb820`)
 
 | Gate | Result |
 |------|--------|
 | curated (`tests/python/curated`, stdout vs CPython) | **25/25** |
 | internal matrix (`AIMacro_Tests/*.aim`) | **62/62/62** transpile/compile/run |
-| CPython stdlib lib transpile | **379/585** (in-scope **317/395**) |
+| CPython stdlib lib **transpile** | **520/585** (in-scope **370/395**) |
+| CPython stdlib lib **compile** | probe **0/26** on transpile-ok modules (20 SIGSEGV, 6 codegen) |
 | SIGSEGV | **0** |
 | fizzbuzz ELF | **211054** |
-
-Not full CPython. 95th-percentile scripts. AOT stays production; VM is later.
 
 ## Layout
 
