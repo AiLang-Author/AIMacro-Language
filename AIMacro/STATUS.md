@@ -1,160 +1,27 @@
-# AIMacro Status Scorecard
+# AIMacro overnight compile — STATUS (2026-09-24 late)
 
-Living document. Re-run audit scripts and update counts after substantive changes.
+## Applied steering
+- CONFORMANCE ONLY (no optimize/profile)
+- AILang expression sourced from AiLang-Author docs (PYTHON_GAP AddressOf/CallIndirect)
+- One construct per commit
 
-**Last updated:** 2026-09-24 (bar: all 585 must transpile **and** compile. 3.11 transpile **537/585**, in-scope **380/395**. Compile probe **0/26**. Overnight codegen: [GROKBOT_CODEGEN.md](GROKBOT_CODEGEN.md) on branch `grokasaurus2`. curated 25/25; matrix 62/62/62; SIGSEGV 0; fizzbuzz 211054)
+## Local (box) — green
+| Construct | SHA | Repro | Notes |
+|-----------|-----|-------|-------|
+| compile_map_builtin | `5987a9b` | `AIMacro_Tests/compile_map_builtin.aim` → prints `3` | Gen_MapBuiltin map→AIMacro.Map; CallIndirect per elem |
+| compile_iter_builtin | `cd6f726` | `AIMacro_Tests/compile_iter_builtin.aim` → `3` then `2` | Gen_MapBuiltin iter→AIMacro.Iter; IDENT builtins emit AddressOf(mapped) |
 
-## Build artifacts
+Gates (host): curated **25/25**, matrix **71/71/71**, fizzbuzz **211054**, Hash **922**.
+Probe colorsys+keyword+quopri still **3/3**.
 
-| Artifact | Path | Status |
-|----------|------|--------|
-| Transpiler CLI | `aimacro.x` | Rebuilt 2026-09-19 (~393 KB ELF) from `aimacro_cli.ailang` |
-| AILang runtime | `ailang.x` | Present at repo root |
-| Sources | `aimacro_cli.ailang`, `aimacro_console.ailang` | Present |
+## Origin publish
+- No git HTTPS push (no credentials). MCP `push_files` / zlib staging used for small files.
+- Large Library.AIMacro.ailang / CodeGen4 (~100KB) not yet assembled on origin tip `532dcee` (staging partial/orphan parts from overnight MCP).
+- **Action needed:** finish zlib assemble of HEAD libs (md5 lib=`037e45230fdc2d5e56b6899f41c46d77` cg4=`76542a39e86c581b6f19915654025c08`) OR MCP-push the two Library files when large-body path works.
 
-## Phase gate
+## heapq ladder (local aimacro.x with Map+Iter)
+1. ~~Unknown function: map~~ → fixed
+2. ~~Variable not found: iter~~ → fixed  
+3. **NEXT: Unknown function: next**
 
-| Gate | Target | Current |
-|------|--------|---------|
-| M0 — Project docs + branch | Complete | Docs present (on `master`) |
-| M1 — P0 transpile | 100% | **42/42 transpile OK** |
-| M2 — P0 compile + run | ≥95% | **42/42 compile, 42/42 run** |
-| M3 — P1 coverage | Roadmap | Tests in matrix run; feature gaps still in SPEC |
-| M4 — AIMacroVM design lock | SPEC §VM | Draft in SPECIFICATION.md |
-| M5 — VM prototype | JSVM parity sketch | Not started |
-| M6 — Dual-mode (AOT + VM) | Optional | Not started |
-
-## Full matrix (2026-09-18)
-
-| Category | Total | Transpile OK | Compile OK | Run OK |
-|----------|-------|--------------|------------|--------|
-| All `AIMacro_Tests/*.aim` | 62 | 62 | 62 | **62** |
-| P0 | 8 | 8 | 8 | 8 |
-| P1 | 18 | 18 | 18 | 18 |
-| P2 | 16 | 16 | 16 | 16 |
-| Wave extras | 20 | 20 | 20 | 20 |
-
-`dungeon_escape.aim` and `test_input.aim` take stdin from sibling `.stdin` files. `./AIMacro/scripts/run_matrix.sh` pipes them. No skips.
-
-CPython-lite curated: **25/25**. Lib **transpile 520/585** (py3.11.6; in-scope 370/395). Lib **compile** probe on 26 transpile-ok modules: **0/26** (20 compiler SIGSEGV, 6 codegen/`Unknown function`). Goal is 585/585 transpile then 585/585 compile, not an in-scope subset. See [CONFORMANCE.md](CONFORMANCE.md).
-
-
-## Class-body grind (2026-09-19)
-
-- Bare tuple RHS, chained assign, annotated `self.x: T = …`
-- Method/func generic/union annotations skipped for parse coverage
-- `py2aim` multiline `def`/`class` headers; `raise X from Y` skip
-- Hygiene: `Library.Hash` order array at header+32 → curated **25/25**
-- **This session:** genexp/dictcomp/setcomp; star LHS; `b"`/`r"`/`u"` prefixes; except (A,B)/dotted; try/except/else; for multi/paren unpack
-- Lib **148→226/531**; class-body files **119→97**; msgs **121→99**
-- Matrix 62/62/62; fizzbuzz ELF **211054**; SIGSEGV 0
-- Stop: lib ≥210 met (226). Local commit `343e8dbd` on `aimacro/class-body-parse-fixes`
-
-## Wave 16 (this round)
-
-- `print(..., sep=, end=)`; keyword args are not printed as values
-- `range(n)` / `range(a,b)` / `range(a,b,step)` as a value, including negative step
-- `list()` / `list(iterable)` / `list("ab")`
-- Tests: `wave16_print_range.aim`, `tests/python/curated/print_range_list.py`
-
-## Wave 15
-
-- User `def` keyword args: `f(b=2, a=1)` binds by parameter name; defaults still fill holes
-- Tests: `wave15_user_kwargs.aim`, `tests/python/curated/kwargs_user.py`
-
-## Wave 14
-
-- `input()` was never broken (syscall `read(0)`). The matrix skipped two tests rather than piping stdin.
-- `.stdin` fixtures: `dungeon_escape` win path `1 1 3 2 2`; `test_input` `Alice` / `21`
-- Matrix **60/60 run**. Curated: `input_fn.py` + `input_fn.stdin`
-
-## Wave 13
-
-- Keyword args `name=value` in calls (`Node.KW_ARG`)
-- `sorted(..., key=lambda ..., reverse=True)`; `open(..., mode="w")`
-- Tests: `wave13_kwargs.aim`, `tests/python/curated/sorted_key.py`
-
-## Wave 12
-
-- Ternary `x if c else y` with short-circuit (only the taken branch runs)
-- List-comp `if` remains a filter
-- Tests: `wave12_ternary.aim`, `tests/python/curated/ternary.py`
-
-## Wave 11
-
-- `lambda args: expr` hoists to `Function.__lam_N`; value is `AddressOf`; calls use `CallIndirect`
-- No closures (same as nested `def`)
-- Tests: `wave11_lambda.aim`, `tests/python/curated/lambda_fn.py`
-
-## Wave 10
-
-- Dict insertion order on `Hash` (header order array): `print`/`repr`/`keys`/`json.dumps`/`for k in d` match CPython 3.7+
-- `pop`/`delete` remove that key and keep remaining order
-- Tests: `wave10_dict_order.aim`, `tests/python/curated/dict_order.py`
-
-## Wave 9
-
-- `and`/`or` short-circuit via `IfCondition` (`0 and boom()` does not call `boom`)
-- Chained compare short-circuits later links (`5 < 3 < boom()` is safe)
-- Tests: `wave9_short_circuit.aim`, `tests/python/curated/short_circuit.py`
-
-## Wave 8
-
-- Comparisons/`is`/`in`/`not`/`isinstance`/`any`/`all` return boxed `True`/`False`
-- `and`/`or` return the operand (`1 and 2` is `2`, `0 or 5` is `5`); not short-circuit
-- Chained compare boxes the combined predicate
-- Tests: `wave8_compare.aim`, `tests/python/curated/compare_bool.py`
-
-## Wave 7
-
-- Boxed `True`/`False` (`TypeMagic.BOOL`); `print(True)` is `True`, `print(1)` is `1`; `True == 1` still holds
-- `print([1, 2])` / `print({"a": 1})` via `AIMacro.Repr`; inline list/dict lits flatten
-- `repr()` builtin; list/dict `str` uses repr; strings quoted with single quotes
-- `json.dumps({"k": "v"})` / `True` / `None` match CPython (`JsonDumpNative`)
-- Tests: `wave7_print_repr.aim`, `tests/python/curated/print_repr.py`
-
-## Wave 6
-
-- `json.dumps` of strings; `print(e)`/`str(e)` from Plex; traceback ring 0
-- `1e-3` scientific literals; float `**` via `NumPow`
-- `tools/py2aim.py` indent → `{ }`; `tools/aimacro_cpython_runner.py` vs CPython stdout
-- Curated suite: `tests/python/curated/` (3/3 pass)
-- Test: `wave6_json_exc.aim`
-
-## Wave 5
-
-- `try`/`except`/`raise`/`finally` desugar to `Fork`/`Branch` + pending flag (AILang `TryBlock` does not unwind)
-- Exception object is a Plex node (type 20000+kind, slot 0 = message)
-- `open` missing file raises `FileNotFoundError`; uncaught errors `ProcessExit(1)`
-- Test: `wave5_try.aim`
-
-## Wave 4
-
-- `/` is true division via `Float_Div`; `//` stays integer
-- Float literals, `float()`, boxed IEEE binary64 (`Float_*` primitives)
-- `math.sqrt/sin/cos/pi` use real floats; `10 / 2 == 5` is numeric
-- Test: `wave4_float.aim`. Integer-chopping tests switched to `//`
-
-## Wave 3
-
-- `*args`: extras packed into an array and passed as the last Input
-- `import os/json/math/time/sys` skipped (no `Import.os`)
-- `os.path.join/exists/basename/dirname`, `os.listdir`
-- `json.loads` / `json.dumps` via AILang JSON → Hash/Array
-- `math.sqrt/sin/cos/pi` (integer / fixed-point), `time.time`/`sleep`, `sys.stdin`/`stdout`
-- Tests: `wave3_args.aim`, `wave3_os_json.aim`, `wave3_math_time.aim`
-
-## Cleanup done this round
-
-- Removed illegal `RunTask` / file-scope prints from AIMacro libraries and `Library.FixedPointTrig.ailang`
-- Deduped `DictGen_SmartLen` and canonicalized `TypeID` in `AIMacroTypes`
-- Deleted `Library.AIMacroCodeGen2BU.ailang`
-- Stripped codegen debug `PrintMessage` noise
-- Top-level `.aim` statements wrap in `SubRoutine.Main` (compiler contract)
-- Parser no longer hangs on missing `end` / nested `def` / next `class`
-- `print(obj.method())` and `isinstance(obj, Class)` codegen fixed
-
-## Next
-
-- Chase CONFORMANCE.md fail stages (decorators, `**kwargs`, `assert`, `dict()`)
-- VM work (M4+) still not started — AOT emit engine is the production path; bytecode is a later conversion
+Self-Hosting: not pushed.
