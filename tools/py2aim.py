@@ -224,9 +224,12 @@ def _suite_colon_index(s: str) -> int:
             return i
         i += 1
     return -1
-
 def convert(src: str) -> str:
     """Insert `{` / `}` from indentation. Preserve comments."""
+    # Empty / whitespace-only modules (e.g. empty __init__.py): aimacro.x
+    # rejects zero-byte input. Emit a bare `pass` so transpile succeeds.
+    if not src or not src.strip():
+        return "pass\n"
     raw_lines = src.splitlines()
     if src.endswith("\n"):
         raw_lines.append("")  # dummy to flush dedents; dropped if empty
@@ -289,7 +292,7 @@ def convert(src: str) -> str:
 
         if width == stack[-1] and first in CONTINUE_SUITE:
             # replace implicit close: emit `} else {` using this line's indent
-            # Backslash-continued headers: elif a and \<nl> b:  →  } elif a and b {
+            # Backslash-continued headers: elif a and \\<nl> b:  →  } elif a and b {
             # Paren-continued headers: elif (a and\n b): → } elif (a and\n b) {
             #   (do NOT open '{' until the signature ':' closes — same as if/def header_depth)
             # One-liner continue-suite: else: stmt / elif x: stmt → else { stmt }
@@ -374,7 +377,7 @@ def convert(src: str) -> str:
             qstate = line_q
             continue
 
-        # Backslash-continued suite header: if a and \<nl> b:  →  if a and b {
+        # Backslash-continued suite header: if a and \\<nl> b:  →  if a and b {
         if first in SUITE_START and _endswith_cont(code) and not code.endswith(":"):
             parts = [code]
             cont_i = i
