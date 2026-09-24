@@ -1,0 +1,9 @@
+# Module-level constants must be visible inside defs (colorsys ONE_THIRD).
+ONE_THIRD = 1.0 / 3.0
+ONE_SIXTH = 1.0 / 6.0
+
+def use_consts(x) {
+    return x + ONE_THIRD + ONE_SIXTH
+}
+
+print(use_consts(1.0))
