@@ -36,6 +36,7 @@ FixedPool.Gen {
     "lambda_counter": Initialize=0, CanChange=True
     "callable_vars": Initialize=0, CanChange=True
     "module_vars": Initialize=0, CanChange=True
+    "import_stubs": Initialize=0, CanChange=True
 
 }
 
@@ -66,6 +67,7 @@ Function.Gen_Init {
         Gen.lambda_counter = 0
         Gen.callable_vars = Array.Create(32)
         Gen.module_vars = Array.Create(64)
+        Gen.import_stubs = Array.Create(32)
 
     }
 }
@@ -100,6 +102,9 @@ Function.Gen_Free {
         }
         IfCondition NotEqual(Gen.module_vars, 0) ThenBlock: {
             Array.Destroy(Gen.module_vars)
+        }
+        IfCondition NotEqual(Gen.import_stubs, 0) ThenBlock: {
+            Array.Destroy(Gen.import_stubs)
         }
         IfCondition NotEqual(Gen.packed_funcs, 0) ThenBlock: {
             Array.Destroy(Gen.packed_funcs)
@@ -360,6 +365,52 @@ Function.Gen_MarkModuleVar {
         Array.Push(Gen.module_vars, copy)
     }
 }
+Function.Gen_IsImportStub {
+    Input: name: Address
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(name, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(Gen.import_stubs, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        sz = Array.Size(Gen.import_stubs)
+        idx = 0
+        WhileLoop LessThan(idx, sz) {
+            varname = Array.Get(Gen.import_stubs, idx)
+            cmp = StringCompare(name, varname)
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                ReturnValue(1)
+            }
+            idx = Add(idx, 1)
+        }
+        ReturnValue(0)
+    }
+}
+
+Function.Gen_MarkImportStub {
+    Input: name: Address
+    Body: {
+        IfCondition EqualTo(name, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        already = Gen_IsImportStub(name)
+        IfCondition EqualTo(already, 1) ThenBlock: {
+            ReturnValue(0)
+        }
+        len = StringLength(name)
+        copy = Allocate(Add(len, 1))
+        i = 0
+        WhileLoop LessThan(i, len) {
+            c = GetByte(name, i)
+            SetByte(copy, i, c)
+            i = Add(i, 1)
+        }
+        SetByte(copy, len, 0)
+        Array.Push(Gen.import_stubs, copy)
+    }
+}
 
 Function.Gen_IsDictVar {
     Input: name: Address
@@ -506,6 +557,12 @@ Function.Gen_EmitIdent {
         IfCondition EqualTo(is_param, 1) ThenBlock: {
             Gen_Emit("p_")
             Gen_Emit(name)
+            ReturnValue(0)
+        }
+        // Python __name__ guard — compile as literal "__main__"
+        cmp = StringCompare(name, "__name__")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_Emit("\"__main__\"")
             ReturnValue(0)
         }
         // File-scope names live in FixedPool.PyMod so Functions can see them
@@ -756,20 +813,24 @@ Function.Gen_EmitEscaped {
             IfCondition EqualTo(c, 10) ThenBlock: {
                 Gen_Emit("\\n")
             } ElseBlock: {
-                IfCondition EqualTo(c, 9) ThenBlock: {
-                    Gen_Emit("\\t")
+                IfCondition EqualTo(c, 13) ThenBlock: {
+                    Gen_Emit("\\r")
                 } ElseBlock: {
-                    IfCondition EqualTo(c, 34) ThenBlock: {
-                        Gen_Emit("\\\"")
+                    IfCondition EqualTo(c, 9) ThenBlock: {
+                        Gen_Emit("\\t")
                     } ElseBlock: {
-                        IfCondition EqualTo(c, 92) ThenBlock: {
-                            Gen_Emit("\\\\")
+                        IfCondition EqualTo(c, 34) ThenBlock: {
+                            Gen_Emit("\\\"")
                         } ElseBlock: {
-                            buf = Allocate(2)
-                            SetByte(buf, 0, c)
-                            SetByte(buf, 1, 0)
-                            Gen_Emit(buf)
-                            Deallocate(buf, 2)
+                            IfCondition EqualTo(c, 92) ThenBlock: {
+                                Gen_Emit("\\\\")
+                            } ElseBlock: {
+                                buf = Allocate(2)
+                                SetByte(buf, 0, c)
+                                SetByte(buf, 1, 0)
+                                Gen_Emit(buf)
+                                Deallocate(buf, 2)
+                            }
                         }
                     }
                 }
@@ -865,6 +926,12 @@ Function.Gen_IsShimModule {
         cmp = StringCompare(name, "math")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
         cmp = StringCompare(name, "time")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+        cmp = StringCompare(name, "getopt")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+        cmp = StringCompare(name, "binascii")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+        cmp = StringCompare(name, "io")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
         ReturnValue(0)
     }

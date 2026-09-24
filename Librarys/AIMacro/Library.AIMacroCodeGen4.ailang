@@ -860,6 +860,12 @@ Function.Gen_CallExpr {
             Gen_Emit(")")
             ReturnValue(0)
         }
+
+        // from-import stubs (quopri binascii): call compiles as None
+        IfCondition EqualTo(Gen_IsImportStub(name), 1) ThenBlock: {
+            Gen_Emit("Types.GetNone()")
+            ReturnValue(0)
+        }
         
         cmp = StringCompare(name, "str")
         IfCondition EqualTo(cmp, 0) ThenBlock: {
@@ -1543,6 +1549,12 @@ Function.Gen_MapBuiltin {
         cmp = StringCompare(name, "set")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.MakeSet") }
 
+        cmp = StringCompare(name, "bytes")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.Bytes") }
+
+        cmp = StringCompare(name, "bytearray")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.ByteArray") }
+
         ReturnValue(name)
     }
 }
@@ -1563,6 +1575,12 @@ Function.Gen_MapTypeConstant {
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("TypeID.FLOAT") }
         
         cmp = StringCompare(name, "str")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("TypeID.STR") }
+
+        cmp = StringCompare(name, "bytes")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("TypeID.STR") }
+
+        cmp = StringCompare(name, "bytearray")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("TypeID.STR") }
         
         cmp = StringCompare(name, "list")

@@ -29,6 +29,7 @@ Function.Gen_Program {
         
         // Standard library imports (always needed)
         Gen_EmitLine("LibraryImport.AIMacro.AIMacro")
+        Gen_EmitLine("LibraryImport.AIMacro.AIMacroExtra")
         Gen_EmitLine("LibraryImport.AIMacro.AIMacroString")
         Gen_EmitLine("LibraryImport.Array")
         Gen_EmitLine("LibraryImport.Hash")
@@ -102,6 +103,18 @@ Function.Gen_Program {
                 // Skip if this name is also a Function (alias like bisect = bisect_right still OK as PyMod)
                 Gen_MarkModuleVar(mname)
             }
+            IfCondition EqualTo(t, Node.FROM_IMPORT) ThenBlock: {
+                Gen_MarkFromImportVars(decl)
+            }
+            IfCondition EqualTo(t, Node.IMPORT) ThenBlock: {
+                Gen_MarkImportModuleVars(decl)
+            }
+            IfCondition EqualTo(t, Node.TRY_STMT) ThenBlock: {
+                Gen_MarkTryAssignVars(decl)
+            }
+            IfCondition EqualTo(t, Node.FUNCTION) ThenBlock: {
+                Gen_MarkBodyAssignVars(ArrayGet(decl, 5))
+            }
             i = Add(i, 1)
         }
         n_mod = Array.Size(Gen.module_vars)
@@ -118,6 +131,7 @@ Function.Gen_Program {
             Gen_EmitLine("}")
             Gen_Emit("\n")
         }
+
         // =========== END MODULE VAR SCAN ===========
 
         // =========== FIRST PASS: Scan for >6 param functions ===========
@@ -244,24 +258,126 @@ Function.Gen_Program {
 
 
 // =============================================================================
+
+// Mark symbols from `from mod import a, b` as PyMod names
+
+Function.Gen_MarkImportModuleVars {
+    Input: node: Address
+    Body: {
+        modules = ArrayGet(node, 4)
+        IfCondition NotEqual(modules, 0) ThenBlock: {
+            n = Array.Size(modules)
+            i = 0
+            WhileLoop LessThan(i, n) {
+                Gen_MarkModuleVar(Array.Get(modules, i))
+                i = Add(i, 1)
+            }
+            ReturnValue(0)
+        }
+        Gen_MarkModuleVar(ArrayGet(node, 3))
+    }
+}
+
+Function.Gen_MarkFromImportVars {
+    Input: node: Address
+    Body: {
+        symbols = ArrayGet(node, 4)
+        IfCondition EqualTo(symbols, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        n = Array.Size(symbols)
+        i = 0
+        WhileLoop LessThan(i, n) {
+            sym = Array.Get(symbols, i)
+            cmp = StringCompare(sym, "*")
+            IfCondition NotEqual(cmp, 0) ThenBlock: {
+                Gen_MarkModuleVar(sym)
+                Gen_MarkImportStub(sym)
+            }
+            i = Add(i, 1)
+        }
+    }
+}
+
+// Walk a statement list for bare ASSIGNMENTs / nested from-import / try
+Function.Gen_MarkBodyAssignVars {
+    Input: body: Address
+    Body: {
+        IfCondition EqualTo(body, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        n = Array.Size(body)
+        i = 0
+        WhileLoop LessThan(i, n) {
+            stmt = Array.Get(body, i)
+            st = AST_Type(stmt)
+            IfCondition EqualTo(st, Node.ASSIGNMENT) ThenBlock: {
+                Gen_MarkModuleVar(ArrayGet(stmt, 3))
+            }
+            IfCondition EqualTo(st, Node.FROM_IMPORT) ThenBlock: {
+                Gen_MarkFromImportVars(stmt)
+            }
+            IfCondition EqualTo(st, Node.IMPORT) ThenBlock: {
+                Gen_MarkImportModuleVars(stmt)
+            }
+            IfCondition EqualTo(st, Node.TRY_STMT) ThenBlock: {
+                Gen_MarkTryAssignVars(stmt)
+            }
+            i = Add(i, 1)
+        }
+    }
+}
+
+Function.Gen_MarkTryAssignVars {
+    Input: node: Address
+    Body: {
+        try_body = ArrayGet(node, 3)
+        Gen_MarkBodyAssignVars(try_body)
+        except_clauses = ArrayGet(node, 4)
+        IfCondition NotEqual(except_clauses, 0) ThenBlock: {
+            n = Array.Size(except_clauses)
+            i = 0
+            WhileLoop LessThan(i, n) {
+                clause = Array.Get(except_clauses, i)
+                // EXCEPT_CLAUSE: [type, line, col, exc_type, body, as_name]
+                body = ArrayGet(clause, 4)
+                Gen_MarkBodyAssignVars(body)
+                i = Add(i, 1)
+            }
+        }
+        finally_body = ArrayGet(node, 5)
+        Gen_MarkBodyAssignVars(finally_body)
+    }
+}
+
 // IMPORT CODE GENERATION
 // =============================================================================
 Function.Gen_Import {
     Input: node: Address
     Body: {
         // node structure: [Node.IMPORT, line, col, module_name, modules?]
-        // Multi-import: emit Import.X for each name in modules array (slot 4).
         modules = ArrayGet(node, 4)
         IfCondition NotEqual(modules, 0) ThenBlock: {
             n = Array.Size(modules)
             i = 0
             WhileLoop LessThan(i, n) {
                 module_name = Array.Get(modules, i)
-                IfCondition EqualTo(Gen_IsShimModule(module_name), 1) ThenBlock: {
+                IfCondition And(NotEqual(module_name, 0), EqualTo(GetByte(module_name, 0), 46)) ThenBlock: {
                     i = Add(i, 1)
                     ContinueLoop
                 }
-                IfCondition And(NotEqual(module_name, 0), EqualTo(GetByte(module_name, 0), 46)) ThenBlock: {
+                // Nested import: stub PyMod.mod (no Import.X mid-body)
+                IfCondition GreaterThan(Gen.indent, 0) ThenBlock: {
+                    Gen_MarkModuleVar(module_name)
+                    Gen_EmitIndent()
+                    Gen_Emit("PyMod.")
+                    Gen_Emit(module_name)
+                    Gen_Emit(" = Types.GetNone()\n")
+                    i = Add(i, 1)
+                    ContinueLoop
+                }
+                IfCondition EqualTo(Gen_IsShimModule(module_name), 1) ThenBlock: {
+                    Gen_MarkModuleVar(module_name)
                     i = Add(i, 1)
                     ContinueLoop
                 }
@@ -273,10 +389,19 @@ Function.Gen_Import {
             ReturnValue(0)
         }
         module_name = ArrayGet(node, 3)
-        IfCondition EqualTo(Gen_IsShimModule(module_name), 1) ThenBlock: {
+        IfCondition And(NotEqual(module_name, 0), EqualTo(GetByte(module_name, 0), 46)) ThenBlock: {
             ReturnValue(0)
         }
-        IfCondition And(NotEqual(module_name, 0), EqualTo(GetByte(module_name, 0), 46)) ThenBlock: {
+        IfCondition GreaterThan(Gen.indent, 0) ThenBlock: {
+            Gen_MarkModuleVar(module_name)
+            Gen_EmitIndent()
+            Gen_Emit("PyMod.")
+            Gen_Emit(module_name)
+            Gen_Emit(" = Types.GetNone()\n")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(Gen_IsShimModule(module_name), 1) ThenBlock: {
+            Gen_MarkModuleVar(module_name)
             ReturnValue(0)
         }
         Gen_Emit("Import.")
@@ -289,10 +414,42 @@ Function.Gen_FromImport {
     Input: node: Address
     Body: {
         // node structure: [Node.FROM_IMPORT, line, col, module_name, symbols]
-        // For now, from X import a,b,c becomes Import.X
-        // Symbols stored in slot 4 for future tree-shaking
         module_name = ArrayGet(node, 3)
+        symbols = ArrayGet(node, 4)
+        // Nested (inside try / body): stub as PyMod.sym = None (quopri binascii)
+        IfCondition GreaterThan(Gen.indent, 0) ThenBlock: {
+            IfCondition NotEqual(symbols, 0) ThenBlock: {
+                n = Array.Size(symbols)
+                i = 0
+                WhileLoop LessThan(i, n) {
+                    sym = Array.Get(symbols, i)
+                    cmp = StringCompare(sym, "*")
+                    IfCondition NotEqual(cmp, 0) ThenBlock: {
+                        Gen_MarkModuleVar(sym)
+                        Gen_MarkImportStub(sym)
+                        Gen_EmitIndent()
+                        Gen_Emit("PyMod.")
+                        Gen_Emit(sym)
+                        Gen_Emit(" = Types.GetNone()\n")
+                    }
+                    i = Add(i, 1)
+                }
+            }
+            ReturnValue(0)
+        }
         IfCondition EqualTo(Gen_IsShimModule(module_name), 1) ThenBlock: {
+            IfCondition NotEqual(symbols, 0) ThenBlock: {
+                n = Array.Size(symbols)
+                i = 0
+                WhileLoop LessThan(i, n) {
+                    sym = Array.Get(symbols, i)
+                    cmp = StringCompare(sym, "*")
+                    IfCondition NotEqual(cmp, 0) ThenBlock: {
+                        Gen_MarkModuleVar(sym)
+                    }
+                    i = Add(i, 1)
+                }
+            }
             ReturnValue(0)
         }
         IfCondition And(NotEqual(module_name, 0), EqualTo(GetByte(module_name, 0), 46)) ThenBlock: {
@@ -389,6 +546,14 @@ Function.Gen_Node {
 
         IfCondition EqualTo(t, Node.RAISE_STMT) ThenBlock: {
             Gen_Raise(node)
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t, Node.FROM_IMPORT) ThenBlock: {
+            Gen_FromImport(node)
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t, Node.IMPORT) ThenBlock: {
+            Gen_Import(node)
             ReturnValue(0)
         }
         IfCondition EqualTo(t, Node.ASSERT_STMT) ThenBlock: {
@@ -1019,6 +1184,11 @@ Function.Gen_Assert {
         IfCondition EqualTo(Gen_HasCall(cond), 1) ThenBlock: {
             cond = Gen_FlattenExpr(cond)
         }
+        IfCondition NotEqual(msg, 0) ThenBlock: {
+            IfCondition EqualTo(Gen_HasCall(msg), 1) ThenBlock: {
+                msg = Gen_FlattenExpr(msg)
+            }
+        }
         Gen_EmitIndent()
         Gen_Emit("IfCondition EqualTo(AIMacro.SmartBool(")
         Gen_Expr(cond)
@@ -1029,9 +1199,6 @@ Function.Gen_Assert {
         IfCondition EqualTo(msg, 0) ThenBlock: {
             Gen_Emit("\"AssertionError\"")
         } ElseBlock: {
-            IfCondition EqualTo(Gen_HasCall(msg), 1) ThenBlock: {
-                msg = Gen_FlattenExpr(msg)
-            }
             Gen_Expr(msg)
         }
         Gen_Emit(")\n")
@@ -1096,6 +1263,12 @@ Function.Gen_Raise {
                 msg_node = expr
             }
         }
+        IfCondition NotEqual(msg_node, 0) ThenBlock: {
+            has_call = Gen_HasCall(msg_node)
+            IfCondition EqualTo(has_call, 1) ThenBlock: {
+                msg_node = Gen_FlattenExpr(msg_node)
+            }
+        }
         Gen_EmitIndent()
         Gen_Emit("AIMacro.RaiseKind(")
         Gen_EmitNumber(kind)
@@ -1103,10 +1276,6 @@ Function.Gen_Raise {
         IfCondition EqualTo(msg_node, 0) ThenBlock: {
             Gen_Emit("\"\"")
         } ElseBlock: {
-            has_call = Gen_HasCall(msg_node)
-            IfCondition EqualTo(has_call, 1) ThenBlock: {
-                msg_node = Gen_FlattenExpr(msg_node)
-            }
             Gen_Expr(msg_node)
         }
         Gen_Emit(")\n")
