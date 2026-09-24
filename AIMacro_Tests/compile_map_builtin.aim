@@ -1,0 +1,6 @@
+def double(x) {
+    return x + x
+}
+xs = [1, 2, 3]
+ys = map(double, xs)
+print(len(ys))
