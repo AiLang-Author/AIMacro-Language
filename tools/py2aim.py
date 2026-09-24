@@ -177,6 +177,54 @@ def _join_cont_codes(parts: list[str]) -> str:
     return " ".join(x for x in cleaned if x)
 
 
+
+def _suite_colon_index(s: str) -> int:
+    """Index of the suite ':' (bracket-depth 0, outside strings), or -1.
+
+    Slice/dict/lambda colons sit inside [] {} or after lambda and must not be
+    treated as the end of an if/for/def header. Used by one-liner rewrites so
+    `if line[-1:] == '\\n': body` keeps the slice intact.
+    """
+    depth = 0
+    in_s = None
+    esc = False
+    i = 0
+    while i < len(s):
+        c = s[i]
+        if in_s:
+            if esc:
+                esc = False
+            elif c == "\\":
+                esc = True
+            elif c == in_s[0] and s.startswith(in_s, i):
+                i += len(in_s)
+                in_s = None
+                continue
+            i += 1
+            continue
+        if c == "#":
+            break
+        if s.startswith('"""', i):
+            in_s = '"""'
+            i += 3
+            continue
+        if s.startswith("'''", i):
+            in_s = "'''"
+            i += 3
+            continue
+        if c in ("'", '"'):
+            in_s = c
+            i += 1
+            continue
+        if c in "([{":
+            depth += 1
+        elif c in ")]}":
+            depth -= 1
+        elif c == ":" and depth == 0:
+            return i
+        i += 1
+    return -1
+
 def convert(src: str) -> str:
     """Insert `{` / `}` from indentation. Preserve comments."""
     raw_lines = src.splitlines()
@@ -275,7 +323,8 @@ def convert(src: str) -> str:
                 qstate = _advance_quote_state(raw_lines[cont_i], None)
                 continue
             # One-liner: else: stmt  /  elif cond: stmt  /  except E: stmt
-            colon = body.find(":")
+            # Suite colon only (ignore slice/dict/lambda ':' inside brackets)
+            colon = _suite_colon_index(body)
             if colon != -1 and colon < len(body) - 1:
                 head = body[:colon].rstrip()
                 tail = body[colon + 1 :].strip()
@@ -310,7 +359,10 @@ def convert(src: str) -> str:
             qstate = line_q
             continue
 
-        colon = code.find(":")
+        # One-liner suite: if cond: stmt. Use depth-0 ':' so slices like
+        # line[-1:] / data[8:12] are not mistaken for the suite colon (and so
+        # paren-continued headers with slices fall through to header_depth).
+        colon = _suite_colon_index(code)
         if first in SUITE_START and colon != -1 and colon < len(code) - 1 and not code.endswith(":"):
             head = code[:colon].rstrip()
             tail = code[colon + 1 :].strip()
