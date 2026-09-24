@@ -1537,6 +1537,12 @@ Function.Gen_MapBuiltin {
         cmp = StringCompare(name, "type")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("Types.TypeOf") }
 
+        cmp = StringCompare(name, "frozenset")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.FrozenSet") }
+
+        cmp = StringCompare(name, "set")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.MakeSet") }
+
         ReturnValue(name)
     }
 }

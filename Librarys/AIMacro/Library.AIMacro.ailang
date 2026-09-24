@@ -1350,6 +1350,42 @@ Function.AIMacro.ListContains {
     }
 }
 
+
+// =============================================================================
+// FROZENSET / SET - compile-time builtin maps (list-backed for contains)
+// =============================================================================
+Function.AIMacro.FrozenSet {
+    Input: iterable: Address
+    Output: Address
+    Body: {
+        IfCondition EqualTo(iterable, 0) ThenBlock: {
+            ReturnValue(Array.Create(0))
+        }
+        IfCondition EqualTo(AIMacro.IsNone(iterable), 1) ThenBlock: {
+            ReturnValue(Array.Create(0))
+        }
+        IfCondition EqualTo(Array.IsArray(iterable), 1) ThenBlock: {
+            n = Array.Size(iterable)
+            out = Array.Create(n)
+            i = 0
+            WhileLoop LessThan(i, n) {
+                Array.Push(out, Array.Get(iterable, i))
+                i = Add(i, 1)
+            }
+            ReturnValue(out)
+        }
+        ReturnValue(Array.Create(0))
+    }
+}
+
+Function.AIMacro.MakeSet {
+    Input: iterable: Address
+    Output: Address
+    Body: {
+        ReturnValue(AIMacro.FrozenSet(iterable))
+    }
+}
+
 Function.AIMacro.CreateListWithElements {
     Input: e0: Address
     Input: e1: Address

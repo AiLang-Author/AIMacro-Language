@@ -91,6 +91,35 @@ Function.Gen_Program {
             i = Add(i, 1)
         }
         
+        // =========== MODULE VAR SCAN: file-scope IDENT assigns → FixedPool.PyMod ===========
+        i = 0
+        WhileLoop LessThan(i, n) {
+            decl = Array.Get(decls, i)
+            t = AST_Type(decl)
+            IfCondition EqualTo(t, Node.ASSIGNMENT) ThenBlock: {
+                // ASSIGNMENT slot 3 is bare name string
+                mname = ArrayGet(decl, 3)
+                // Skip if this name is also a Function (alias like bisect = bisect_right still OK as PyMod)
+                Gen_MarkModuleVar(mname)
+            }
+            i = Add(i, 1)
+        }
+        n_mod = Array.Size(Gen.module_vars)
+        IfCondition GreaterThan(n_mod, 0) ThenBlock: {
+            Gen_EmitLine("FixedPool.PyMod {")
+            mi = 0
+            WhileLoop LessThan(mi, n_mod) {
+                mname = Array.Get(Gen.module_vars, mi)
+                Gen_Emit("    \"")
+                Gen_Emit(mname)
+                Gen_EmitLine("\": Initialize=0, CanChange=True")
+                mi = Add(mi, 1)
+            }
+            Gen_EmitLine("}")
+            Gen_Emit("\n")
+        }
+        // =========== END MODULE VAR SCAN ===========
+
         // =========== FIRST PASS: Scan for >6 param functions ===========
         i = 0
         WhileLoop LessThan(i, n) {
