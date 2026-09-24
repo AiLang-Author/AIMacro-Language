@@ -1,0 +1,47 @@
+[
+  {
+    "name": "Library.AIMacroCodeGen1.ailang",
+    "prefix": "cg1",
+    "md5": "6cf42a3e23a5c04b34ae1427958babd8",
+    "parts": [
+      "cg1.z.b64.00",
+      "cg1.z.b64.01"
+    ],
+    "zb64_len": 5248
+  },
+  {
+    "name": "Library.AIMacroCodeGen2.ailang",
+    "prefix": "cg2",
+    "md5": "5c7634a60bbc1852969db801745440f2",
+    "parts": [
+      "cg2.z.b64.00",
+      "cg2.z.b64.01",
+      "cg2.z.b64.02",
+      "cg2.z.b64.03"
+    ],
+    "zb64_len": 15408
+  },
+  {
+    "name": "Library.AIMacroCodeGen4.ailang",
+    "prefix": "cg4",
+    "md5": "2826d299817ab03991df46e9072f083c",
+    "parts": [
+      "cg4.z.b64.00",
+      "cg4.z.b64.01",
+      "cg4.z.b64.02"
+    ],
+    "zb64_len": 12560
+  },
+  {
+    "name": "Library.AIMacro.ailang",
+    "prefix": "lib",
+    "md5": "09dccfeb1c790cba80f7dceeee93e29b",
+    "parts": [
+      "lib.z.b64.00",
+      "lib.z.b64.01",
+      "lib.z.b64.02",
+      "lib.z.b64.03"
+    ],
+    "zb64_len": 16228
+  }
+]
