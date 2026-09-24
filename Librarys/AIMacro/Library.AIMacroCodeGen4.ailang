@@ -87,6 +87,13 @@ Function.Gen_Expr {
         
         IfCondition EqualTo(t, Node.IDENT) ThenBlock: {
             name = ArrayGet(node, 3)
+            // Function used as a value: emit AddressOf(fn) so AILang sees a pointer
+            IfCondition EqualTo(Gen_IsKnownFunc(name), 1) ThenBlock: {
+                Gen_Emit("AddressOf(")
+                Gen_Emit(name)
+                Gen_Emit(")")
+                ReturnValue(0)
+            }
             Gen_EmitIdent(name)
             ReturnValue(0)
         }
