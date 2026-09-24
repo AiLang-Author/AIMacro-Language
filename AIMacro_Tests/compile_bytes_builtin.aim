@@ -1,0 +1,8 @@
+# repro: bytes() builtin + isinstance(..., bytes) (quopri)
+def quote_byte(c) {
+    assert isinstance(c, bytes)
+    parts = [65, 66]
+    return bytes(parts)
+}
+print(quote_byte("Z"))
+print(isinstance("hi", bytes))

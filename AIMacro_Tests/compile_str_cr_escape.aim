@@ -1,0 +1,10 @@
+# repro: Gen_EmitEscaped must emit \r for byte 13 (quopri " \t\r" in ...)
+def check(ch) {
+    if ch in " \t\r" {
+        return 1
+    }
+    return 0
+}
+print(check(" "))
+print(check("\r"))
+print(check("x"))

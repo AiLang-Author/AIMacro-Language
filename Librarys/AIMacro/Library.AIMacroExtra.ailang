@@ -1,0 +1,49 @@
+// Library.AIMacroExtra.ailang
+// Optional builtins kept out of Library.AIMacro so fizzbuzz ELF stays 211054.
+// Generated programs import this via codegen preamble.
+
+LibraryImport.Array
+LibraryImport.AIMacro.AIMacroTypes
+LibraryImport.AIMacro.AIMacro
+
+// bytes(iterable) — compile stub: join list elems into a string (quopri HEX digits etc.)
+// isinstance(..., bytes) maps to TypeID.STR; runtime treats bytes-like as strings.
+Function.AIMacro.Bytes {
+    Input: iterable: Address
+    Output: Address
+    Body: {
+        IfCondition EqualTo(iterable, 0) ThenBlock: {
+            ReturnValue("")
+        }
+        IfCondition EqualTo(AIMacro.IsNone(iterable), 1) ThenBlock: {
+            ReturnValue("")
+        }
+        IfCondition EqualTo(Array.IsArray(iterable), 1) ThenBlock: {
+            n = Array.Size(iterable)
+            out = ""
+            i = 0
+            WhileLoop LessThan(i, n) {
+                el = Array.Get(iterable, i)
+                // Small ints are codepoints; heap addresses are already strings
+                IfCondition And(GreaterEqual(el, 0), LessThan(el, 256)) ThenBlock: {
+                    out = String.Concat(out, AIMacro.Chr(el))
+                } ElseBlock: {
+                    out = String.Concat(out, el)
+                }
+                i = Add(i, 1)
+            }
+            ReturnValue(out)
+        }
+        // Already a string / bytes-like
+        ReturnValue(iterable)
+    }
+}
+
+Function.AIMacro.ByteArray {
+    Input: iterable: Address
+    Output: Address
+    Body: {
+        ReturnValue(AIMacro.Bytes(iterable))
+    }
+}
+
