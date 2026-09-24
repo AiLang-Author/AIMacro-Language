@@ -2485,15 +2485,22 @@ Function.Gen_Assignment {
         }
         // =========== END METHOD CALL ASSIGNMENT ===========
         
-        // =========== STRING PROPAGATION FROM IDENT ===========
+        // =========== STRING / CALLABLE PROPAGATION FROM IDENT ===========
         IfCondition EqualTo(value_type, Node.IDENT) ThenBlock: {
             val_name = ArrayGet(value, 3)
             val_is_str = Gen_IsStringVar(val_name)
             IfCondition EqualTo(val_is_str, 1) ThenBlock: {
                 Gen_MarkStringVar(target_name)
             }
+            // f = some_func  → mark f callable so calls use CallIndirect
+            IfCondition EqualTo(Gen_IsKnownFunc(val_name), 1) ThenBlock: {
+                Gen_MarkCallableVar(target_name)
+            }
+            IfCondition EqualTo(Gen_IsCallableVar(val_name), 1) ThenBlock: {
+                Gen_MarkCallableVar(target_name)
+            }
         }
-        // =========== END STRING PROPAGATION ===========
+        // =========== END STRING / CALLABLE PROPAGATION ===========
         
         is_string_value = Gen_InvolvesString(value)
         
