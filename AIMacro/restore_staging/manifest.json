@@ -6,8 +6,7 @@
     "parts": [
       "cg1.z.b64.00",
       "cg1.z.b64.01"
-    ],
-    "zb64_len": 5248
+    ]
   },
   {
     "name": "Library.AIMacroCodeGen2.ailang",
@@ -18,30 +17,47 @@
       "cg2.z.b64.01",
       "cg2.z.b64.02",
       "cg2.z.b64.03"
-    ],
-    "zb64_len": 15408
+    ]
   },
   {
     "name": "Library.AIMacroCodeGen4.ailang",
     "prefix": "cg4",
     "md5": "2826d299817ab03991df46e9072f083c",
     "parts": [
-      "cg4.z.b64.00",
-      "cg4.z.b64.01",
+      "cg4.z.b64.00.0",
+      "cg4.z.b64.00.1",
+      "cg4.z.b64.00.2",
+      "cg4.z.b64.00.3",
+      "cg4.z.b64.00.4",
+      "cg4.z.b64.01.0",
+      "cg4.z.b64.01.1",
+      "cg4.z.b64.01.2",
+      "cg4.z.b64.01.3",
+      "cg4.z.b64.01.4",
       "cg4.z.b64.02"
-    ],
-    "zb64_len": 12560
+    ]
   },
   {
     "name": "Library.AIMacro.ailang",
     "prefix": "lib",
     "md5": "09dccfeb1c790cba80f7dceeee93e29b",
     "parts": [
-      "lib.z.b64.00",
-      "lib.z.b64.01",
-      "lib.z.b64.02",
+      "lib.z.b64.00.0",
+      "lib.z.b64.00.1",
+      "lib.z.b64.00.2",
+      "lib.z.b64.00.3",
+      "lib.z.b64.00.4",
+      "lib.z.b64.01.0",
+      "lib.z.b64.01.1",
+      "lib.z.b64.01.2",
+      "lib.z.b64.01.3",
+      "lib.z.b64.01.4",
+      "lib.z.b64.02.0",
+      "lib.z.b64.02.1",
+      "lib.z.b64.02.2",
+      "lib.z.b64.02.3",
+      "lib.z.b64.02.4",
       "lib.z.b64.03"
-    ],
-    "zb64_len": 16228
+    ]
   }
 ]
