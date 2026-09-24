@@ -105,6 +105,7 @@ Tranches, in order:
 | [AIMacro/STATUS.md](AIMacro/STATUS.md) | Current build and test status |
 | [AIMacro/PYTHON_TESTS.md](AIMacro/PYTHON_TESTS.md) | Test runner and coverage notes |
 | [AIMacro/GROKBOT_CODEGEN.md](AIMacro/GROKBOT_CODEGEN.md) | Unattended codegen shift (`grokasaurus2`) |
+| [AIMacro/GROKBOT_PARSE.md](AIMacro/GROKBOT_PARSE.md) | Parse/transpile grind (`aimacro/class-body-parse-fixes`) |
 
 ## History in this repository
 
