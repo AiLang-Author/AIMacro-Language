@@ -1,8 +1,8 @@
 # AIMacro Language Specification (Project Contract)
 
 This document defines what AIMacro **is**, what the transpiler **must** emit, and
-what the runtime **must** provide. It is the contract for closing the 95th-percentile
-Python feature gap and building the VM.
+what the runtime **must** provide. It is the contract for making the CPython
+stdlib corpus transpile and compile (585/585 on 3.11), then run, and for building the VM.
 
 **Syntax rule:** Python-like grammar with **C-style `{ }` blocks** (not indentation, not `end`).
 
@@ -68,12 +68,16 @@ Python feature gap and building the VM.
 | Attribute `obj.attr` | P1 | OOP |
 | Ternary `x if c else y` | P1 | short-circuit; Wave 12 |
 
-### Not in 95th-percentile scope (explicitly deferred)
+### Must parse and compile (runtime may still be incomplete)
+
+These used to be “out of 95th-percentile scope.” That skip is revoked. They
+must survive `py2aim` + `aimacro.x` + `ailang.x` with the rest of the stdlib
+corpus. Execution can lag; omitting the file is not done.
 
 - `yield`, `async`/`await`
 - Decorators `@`
-- List/dict/set comprehensions (P1 stretch — high value)
-- f-strings `f"..."` (P1 stretch)
+- List/dict/set comprehensions (list comps already shipped)
+- f-strings `f"..."` (shipped Wave 2)
 - `match` / `case`
 - `**kwargs` / keyword-only params (Wave 3 shipped `*args` as a packed array Input)
 

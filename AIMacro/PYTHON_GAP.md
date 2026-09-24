@@ -1,10 +1,15 @@
 # AIMacro vs Python — gap to close
 
-Target is **not** CPython. Target is the 95th percentile of scripts people actually
-write: CLI tools, file munging, small games, glue, OOP-ish classes, dict/list
-wrangling. Syntax is Python-shaped with C-style `{ }` blocks.
+Syntax is Python-shaped with C-style `{ }` blocks. The bar is the **CPython
+stdlib corpus**, not a 95th-percentile subset: every `.py` in Lib (585 on
+3.11 after excludes) must **transpile and compile**. Skip tags (`async`,
+`yield`, `@`, `match`) are triage. Dropping those files is not done.
 
-Matrix as of 2026-09-18: **62 tests, 62 run**. Waves 1–16 shipped. CPython-lite harness: `tools/py2aim.py` + `tools/aimacro_cpython_runner.py`. Mountain scorecard: `--corpus all` → [CONFORMANCE.md](CONFORMANCE.md).
+Tranches: (1) 585/585 transpile, (2) 585/585 compile, (3) run vs CPython.
+Waves 1–16 shipped the daily-script surface. The mountain scorecard is
+`--corpus lib --stage transpile|compile` → [CONFORMANCE.md](CONFORMANCE.md).
+
+Matrix as of 2026-09-18: **62 tests, 62 run**. CPython-lite harness: `tools/py2aim.py` + `tools/aimacro_cpython_runner.py`.
 
 ---
 
@@ -245,15 +250,18 @@ Call-site `name=value` binds to `def` parameter names (plus defaults). `f(b=2, a
 
 Parser/lexer work for the CPython mountain (same day): fail-fast; relative `from .`; parenthesized `from x import (a, b)`; implicit `"a" "b"`; lexer line-joining in `()`/`[]`; class annotations; `@decorators`; `async`/`await`; `*args` at calls. Lib transpile **84/585**. The 313 “codegen” misses were silent `Parse_Consume` failures. See [CONFORMANCE.md](CONFORMANCE.md).
 
-### Explicitly later / never
+### Later (must still parse and compile with the 585)
 
-- `async`/`await`, generators, `yield`
+These are not skip-forever. Files that use them stay in the corpus.
+
+- `async`/`await`, generators, `yield` — parse + AOT; runtime can lag
 - decorators, metaclasses, descriptors
 - `match`/`case`
-- `set`, `bytes`, `bytearray` (add when a test needs them)
+- `set`, `bytes`, `bytearray`
 - `*args/**kwargs` mixing, keyword-only params
-- packaging, venv, pip
 - full CPython object model (`type` as first-class, MRO edge cases)
+
+Still not this project: packaging, venv, pip; a CPython `Lib/test` unittest runner.
 
 ---
 
@@ -261,6 +269,6 @@ Parser/lexer work for the CPython mountain (same day): fail-fast; relative `from
 
 1. Grow `tests/python/curated/` from CONFORMANCE fail stages (dict constructor, `assert`, call-site `*args`).
 2. `input()` EOF → `EOFError` if a script needs it.
-3. Re-run `./AIMacro/scripts/run_conformance.sh` after each wave; chase in-scope lib transpile fails.
+3. Re-run `./AIMacro/scripts/run_conformance.sh` after each wave; chase **all** remaining lib transpile fails (585/585), then `--stage compile`.
 
 Bytecode/VM is a later conversion of the existing emit engine. Do not start it until AOT stays green; AOT is the production path.

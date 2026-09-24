@@ -1,6 +1,23 @@
 # AIMacro CPython conformance scorecard
 
-Generated **2026-09-19**. Remeasured on this box with **Python 3.13.5** stdlib `/usr/lib/python3.13` (531 `.py` files after excludes). Prior Waves 1–16 scorecard used Python 3.11.6 / 585 files.
+**Bar (2026-09-24):** every CPython stdlib `.py` in the corpus must transpile
+and compile. On the grind box that is **585** files (Python 3.11.6
+`/home/bob/tools/oss-cad-suite/lib/python3.11`). Skip tags are triage, not a
+pass. Next scored gate after 585/585 transpile is `--stage compile`.
+
+## Current (this box, py3.11 / 585, tip `a1eb820`)
+
+| Suite | Stage | Total | Pass | Fail | In-scope | Seconds |
+|-------|-------|------:|-----:|-----:|---------:|--------:|
+| `curated` | run vs python3 | 25 | **25** | 0 | 25/25 | ~13 |
+| `lib` | transpile | 585 | **520** | 65 | 370/395 | ~103 |
+| `lib` | compile | 585 | *not scored* | — | — | — |
+
+Compile probe 2026-09-24 (26 transpile-ok non-encoding modules: `colorsys`, `keyword`, `heapq`, `enum`, `pathlib`, `zipfile`, …): **0/26**. Split: **20 SIGSEGV** (`ailang.x` rc=-11, often after `Expected ')' after arguments` in the generated `.ailang`) and **6 rc=1** (`Variable not found: ONE_THIRD`, `Unknown function: frozenset`, …). Transpile-ok does **not** mean the `.ailang` compiles. Full `--stage compile` corpus is the next scored gate. The runner now keeps `ailang.x` stdout on compile fail (it used to look empty).
+
+Historical 3.13/531 numbers below are Grokbot-VM snapshots, not this box.
+
+Generated **2026-09-19**. Remeasured on the VM with **Python 3.13.5** stdlib `/usr/lib/python3.13` (531 `.py` files after excludes). Prior Waves 1–16 scorecard used Python 3.11.6 / 585 files.
 
 ## Suites (this box, after class-body construct grind)
 

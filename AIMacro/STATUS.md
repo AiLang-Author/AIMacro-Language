@@ -2,7 +2,7 @@
 
 Living document. Re-run audit scripts and update counts after substantive changes.
 
-**Last updated:** 2026-09-19 (construct grind: lib 148→226/531; class-body files 119→97; curated 25/25; matrix 62/62/62; SIGSEGV 0; fizzbuzz 211054)
+**Last updated:** 2026-09-24 (bar: all 585 stdlib `.py` must transpile **and** compile. Current 3.11 transpile **520/585**, in-scope **370/395**. Compile corpus not yet scored. curated 25/25; matrix 62/62/62; SIGSEGV 0; fizzbuzz 211054)
 
 ## Build artifacts
 
@@ -36,7 +36,7 @@ Living document. Re-run audit scripts and update counts after substantive change
 
 `dungeon_escape.aim` and `test_input.aim` take stdin from sibling `.stdin` files. `./AIMacro/scripts/run_matrix.sh` pipes them. No skips.
 
-CPython-lite curated: **25/25**. Lib transpile **226/531** (py3.13; VM baseline 148, post-hygiene 170). SIGSEGV **0**. See [CONFORMANCE.md](CONFORMANCE.md).
+CPython-lite curated: **25/25**. Lib **transpile 520/585** (py3.11.6; in-scope 370/395). Lib **compile** probe on 26 transpile-ok modules: **0/26** (20 compiler SIGSEGV, 6 codegen/`Unknown function`). Goal is 585/585 transpile then 585/585 compile, not an in-scope subset. See [CONFORMANCE.md](CONFORMANCE.md).
 
 
 ## Class-body grind (2026-09-19)
