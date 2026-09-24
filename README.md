@@ -93,7 +93,7 @@ Tranches, in order:
 |------|--------|
 | curated (`tests/python/curated`, stdout vs CPython) | **25/25** |
 | internal matrix (`AIMacro_Tests/*.aim`) | **62/62/62** transpile/compile/run |
-| CPython stdlib lib **transpile** | **520/585** (in-scope **370/395**) |
+| CPython stdlib lib **transpile** | **537/585** (in-scope **380/395**) at `a2591f0` |
 | CPython stdlib lib **compile** | probe **0/26** on transpile-ok modules (20 SIGSEGV, 6 codegen) |
 | SIGSEGV | **0** |
 | fizzbuzz ELF | **211054** |
@@ -122,6 +122,7 @@ Keep `Librarys/AIMacro/` at that path. `LibraryImport.AIMacro.*` resolves there.
 | [AIMacro/CONFORMANCE.md](AIMacro/CONFORMANCE.md) | CPython-lite scorecard |
 | [AIMacro/STATUS.md](AIMacro/STATUS.md) | living gates |
 | [AIMacro/PYTHON_TESTS.md](AIMacro/PYTHON_TESTS.md) | runner |
+| [AIMacro/GROKBOT_CODEGEN.md](AIMacro/GROKBOT_CODEGEN.md) | unattended codegen shift (`grokasaurus2`) |
 
 ## History in this GitHub repo
 
