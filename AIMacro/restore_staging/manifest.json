@@ -2,7 +2,7 @@
   {
     "name": "Library.AIMacroCodeGen1.ailang",
     "prefix": "cg1",
-    "md5": "bb62a3b01c9e7e0ae674aa7f3c63086d",
+    "md5": "beccc5a915e3b9cda397efcb6fee8f0a",
     "parts": [
       "cg1.z.b64.00.0",
       "cg1.z.b64.00.1"
@@ -11,7 +11,7 @@
   {
     "name": "Library.AIMacroCodeGen2.ailang",
     "prefix": "cg2",
-    "md5": "c799f366230810b6f63f6c2636852565",
+    "md5": "b6e8d22ea0870457b3e0e0dbcdccd7a8",
     "parts": [
       "cg2.z.b64.00.0",
       "cg2.z.b64.00.1",
@@ -24,7 +24,7 @@
   {
     "name": "Library.AIMacroCodeGen4.ailang",
     "prefix": "cg4",
-    "md5": "b711452a34ceb462b6bdafd71665b9ad",
+    "md5": "011ee1d518d8049180e4431a664633c4",
     "parts": [
       "cg4.z.b64.00.0",
       "cg4.z.b64.00.1",
