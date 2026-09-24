@@ -1,0 +1,35 @@
+name: grokasaurus2 apply compile patches
+on:
+  workflow_dispatch:
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: grokasaurus2
+          fetch-depth: 0
+      - name: Restore CodeGen1 from 65dd589 and apply patches
+        run: |
+          set -euo pipefail
+          git checkout 65dd589 -- Librarys/AIMacro/Library.AIMacroCodeGen1.ailang
+          git checkout 65dd589 -- Librarys/AIMacro/Library.AIMacroCodeGen2.ailang
+          git checkout 65dd589 -- Librarys/AIMacro/Library.AIMacroCodeGen4.ailang
+          git checkout 65dd589 -- Librarys/AIMacro/Library.AIMacro.ailang
+          patch -p1 < AIMacro/patches/compile_module_const_codegen1.patch
+          patch -p1 < AIMacro/patches/compile_module_const_codegen2.patch
+          patch -p1 < AIMacro/patches/compile_frozenset_codegen4.patch
+          patch -p1 < AIMacro/patches/compile_frozenset_runtime.patch
+          git config user.name "Grokbot"
+          git config user.email "grokbot@ailang.local"
+          git add Librarys/AIMacro/Library.AIMacroCodeGen1.ailang \
+                  Librarys/AIMacro/Library.AIMacroCodeGen2.ailang \
+                  Librarys/AIMacro/Library.AIMacroCodeGen4.ailang \
+                  Librarys/AIMacro/Library.AIMacro.ailang
+          git commit -m "feat(aimacro): compile_module_const+frozenset  apply patches
+
+FixedPool.PyMod for file-scope names; frozenset/set → AIMacro.FrozenSet/MakeSet.
+Applied from AIMacro/patches on grokasaurus2 (restores CodeGen1 after bad push)."
+          git push origin grokasaurus2
