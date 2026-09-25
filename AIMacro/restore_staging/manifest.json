@@ -19,5 +19,12 @@
     "parts": [
       "assembled_extra_tip.z.b64"
     ]
+  },
+  {
+    "name": "Library.AIMacroCodeGen3.ailang",
+    "md5": "9672189e8337e821bfe33bbe65563962",
+    "parts": [
+      "assembled_cg3_slice.z.b64"
+    ]
   }
 ]
