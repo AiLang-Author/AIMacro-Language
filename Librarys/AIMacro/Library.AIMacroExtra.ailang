@@ -77,3 +77,37 @@ Function.AIMacro.GetAttr {
         ReturnValue(default)
     }
 }
+
+
+// id(obj) — compile conformance for copy.py (id(x) memo keys).
+// Emitter maps via Gen_MapBuiltin. Return object pointer as identity.
+Function.AIMacro.Id {
+    Input: obj: Address
+    Output: Address
+    Body: {
+        ReturnValue(obj)
+    }
+}
+
+// hasattr(obj, name) — compile conformance for copy.py.
+// Stub: False (skip __setstate__ paths).
+Function.AIMacro.HasAttr {
+    Input: obj: Address
+    Input: name: Address
+    Output: Address
+    Body: {
+        ReturnValue(AIMacro.Bool(0))
+    }
+}
+
+// setattr(obj, name, value) — compile conformance for copy.py.
+// Stub: no-op return None.
+Function.AIMacro.SetAttr {
+    Input: obj: Address
+    Input: name: Address
+    Input: value: Address
+    Output: Address
+    Body: {
+        ReturnValue(Types.GetNone())
+    }
+}
