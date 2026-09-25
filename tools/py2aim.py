@@ -1,20 +1,37 @@
 #!/usr/bin/env python3
-"""py2aim.py — climb tip; materializing from assembled_py2aim.z.b64"""
-import base64, pathlib, sys, zlib
+"""Temporary tip loader: expands tools/py2aim.py from assembled_py2aim.z.b64.
 
-def _materialize() -> None:
-    root = pathlib.Path(__file__).resolve().parents[1]
-    b64 = (root / "AIMacro/restore_staging/assembled_py2aim.z.b64").read_text().strip()
-    data = zlib.decompress(base64.b64decode(b64))
-    pathlib.Path(__file__).write_bytes(data)
+Real tip md5 fddbddcdc64e500b26dd161706f6bb57. Replace via MCP push_py2aim_FULL.json.
+"""
+from __future__ import annotations
+
+import base64
+import pathlib
+import runpy
+import sys
+import zlib
+
+_HERE = pathlib.Path(__file__).resolve()
+_B64 = _HERE.parents[1] / "AIMacro" / "restore_staging" / "assembled_py2aim.z.b64"
+_MARKER = "assembled_py2aim.z.b64"
+
+
+def _maybe_expand() -> bool:
+    if not _B64.is_file():
+        return False
+    text = _HERE.read_text(encoding="utf-8", errors="replace")
+    if _MARKER not in text:
+        return False
+    data = zlib.decompress(base64.b64decode(_B64.read_text().strip()))
+    if not data.startswith(b"#!/usr/bin/env python3"):
+        raise SystemExit(f"bad payload in {_B64}")
+    _HERE.write_bytes(data)
+    return True
+
+
+if _maybe_expand():
+    sys.argv[0] = str(_HERE)
+    raise SystemExit(runpy.run_path(str(_HERE), run_name="__main__"))
 
 if __name__ == "__main__":
-    # If we are still the stub, expand then re-exec.
-    text = pathlib.Path(__file__).read_text(encoding="utf-8")
-    if "assembled_py2aim.z.b64" in text and "desugar_match" not in text:
-        _materialize()
-        raise SystemExit(__import__("runpy").run_path(str(pathlib.Path(__file__).resolve()), run_name="__main__"))
-    # After materialize, real main is in the expanded file; this branch is unreachable
-    # on a fresh expand because re-exec replaces us. Keep a tiny CLI for safety:
-    from pathlib import Path as _P
-    raise SystemExit("py2aim stub: run again after materialize")
+    raise SystemExit("py2aim stub: companion zb64 missing; run assemble_climb.py")
