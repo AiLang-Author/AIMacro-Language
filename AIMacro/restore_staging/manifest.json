@@ -1,55 +1,23 @@
 [
   {
-    "name": "Library.AIMacro.ailang",
-    "md5": "0da5131561020f7da7f039e7bd787f80",
-    "parts": [
-      "lib.z.b64.00",
-      "lib.z.b64.01",
-      "lib.z.b64.02"
-    ]
-  },
-  {
     "name": "Library.AIMacroCodeGen1.ailang",
-    "md5": "e07214bfb6d7741ba4640757c4e13d5d",
+    "md5": "37d1791141b42600d87525d8e8b97560",
     "parts": [
-      "assembled_cg1_valueerror.z.b64"
-    ]
-  },
-  {
-    "name": "Library.AIMacroCodeGen2.ailang",
-    "md5": "3163d633ac310ba465c2dd05aecedd85",
-    "parts": [
-      "assembled_cg2.z.b64"
-    ]
-  },
-  {
-    "name": "Library.AIMacroCodeGen3.ailang",
-    "md5": "0c19d010cd065e4bb7b34736d6c1b416",
-    "parts": [
-      "cg3.z.b64.00",
-      "cg3.z.b64.01"
-    ]
-  },
-  {
-    "name": "Library.AIMacroCodeGen4.ailang",
-    "md5": "509f8ddb94e258f82660eed1acdef339",
-    "parts": [
-      "assembled_cg4_tip.z.b64"
+      "assembled_cg1_warnings.z.b64"
     ]
   },
   {
     "name": "Library.AIMacroCodeGenOOP.ailang",
-    "md5": "1f13f336ea03574005bae1276cd109d2",
+    "md5": "7646560a2d6c536e4c05b33ea6be877e",
     "parts": [
-      "oop.z.b64.00",
-      "oop.z.b64.01"
+      "assembled_oop_chain.z.b64"
     ]
   },
   {
     "name": "Library.AIMacroExtra.ailang",
-    "md5": "8cd6c1915840aea87d93f7c474d6ae70",
+    "md5": "e65c424621b959db2288b26074d67eb9",
     "parts": [
-      "extra.z.b64.00"
+      "assembled_extra_tip.z.b64"
     ]
   },
   {
