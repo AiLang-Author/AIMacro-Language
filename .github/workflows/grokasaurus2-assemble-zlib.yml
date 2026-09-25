@@ -24,10 +24,13 @@ jobs:
                   Librarys/AIMacro/Library.AIMacroCodeGen2.ailang \
                   Librarys/AIMacro/Library.AIMacroCodeGen4.ailang \
                   Librarys/AIMacro/Library.AIMacro.ailang \
-                  AIMacro_Tests/compile_map_builtin.aim || true
+                  Librarys/AIMacro/Library.AIMacroCodeGenOOP.ailang \
+                  AIMacro_Tests/compile_map_builtin.aim \
+                  AIMacro_Tests/compile_iter_builtin.aim \
+                  AIMacro_Tests/compile_next_builtin.aim || true
           if git diff --cached --quiet; then
             echo "No changes to commit"
           else
-            git commit -m "feat(aimacro): compile_map_builtin  map(fn, xs) → AIMacro.Map"
+            git commit -m "feat(aimacro): compile_next_builtin  next(it) + bound __next__ CallIndirect"
             git push origin HEAD:grokasaurus2
           fi
