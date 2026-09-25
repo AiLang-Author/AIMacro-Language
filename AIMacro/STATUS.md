@@ -1,16 +1,17 @@
-# AIMacro overnight compile - STATUS (2026-09-25)
+# AIMacro overnight compile — STATUS (2026-09-25)
 
 ## Tip constructs
 | Construct | notes |
 |-----------|-------|
 | unary_plus / matmul | numbers + operator ok |
 | fstring_nested_quotes | Lex_ReadFString + Parse_ExprFromSource; }} only at depth 0 |
-| dataclasses | nested f-string ok; now fails match/case guard `case x if ...:` (py2aim left Python colons) |
+| match/case (+ guards) | py2aim desugars to if/elif (None / Type(x) / capture / `_` / `if` guard) |
 
 ## Probe
-compile_ok **16**/17 — fail: dataclasses (match/case)
+aimacro_ok **17**/17 — dataclasses match/case cleared
+ailang_ok **16**/17 — dataclasses leftover: tuple-unpack `(a,b)=f()` → `std_init_fields` unbound
 
 ## Gates
-recheck on host
+curated 25/25 (host) · Hash 922 · matrix pending this push
 
 Self-Hosting: not pushed.
