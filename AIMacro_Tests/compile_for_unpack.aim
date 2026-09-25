@@ -1,0 +1,20 @@
+def f(xs) {
+    for _aim_funpack_1 in xs {
+        a = _aim_funpack_1[0]
+        b = _aim_funpack_1[1]
+        print(a, b)
+
+    }
+}
+def g(xs) {
+    for _aim_funpack_2 in xs {
+        i = _aim_funpack_2[0]
+        _aim_funpack_3 = _aim_funpack_2[1]
+        x = _aim_funpack_3[0]
+        y = _aim_funpack_3[1]
+        if x != y {
+            return i
+        }
+    }
+    return -1
+}
