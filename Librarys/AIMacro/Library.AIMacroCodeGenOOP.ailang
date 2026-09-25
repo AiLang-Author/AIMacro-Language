@@ -23,6 +23,7 @@ FixedPool.OOPGen {
     "discovered_fields": Initialize=0    
     "class_init_code": Initialize=0      
     "method_impl_code": Initialize=0    
+    "emitted_methods": Initialize=0
     "temp_counter": Initialize=0        
     "has_classes": Initialize=0         
 }
@@ -62,6 +63,7 @@ Function.OOPGen_Init {
         OOPGen.discovered_fields = Array.Create(16)
         OOPGen.class_init_code = Array.Create(128)
         OOPGen.method_impl_code = Array.Create(256)
+        OOPGen.emitted_methods = Array.Create(256)
         OOPGen.temp_counter = 0
         OOPGen.has_classes = 0
         OOPGen.initialized = 1
@@ -94,6 +96,9 @@ Function.OOPGen_Reset {
             OOPGen.current_class = 0
             OOPGen.current_method = 0
             OOPGen.temp_counter = 0
+            IfCondition NotEqual(OOPGen.emitted_methods, 0) ThenBlock: {
+                Array.Clear(OOPGen.emitted_methods)
+            }
         }
     }
 }
@@ -115,6 +120,10 @@ Function.OOPGen_Free {
         IfCondition NotEqual(OOPGen.method_impl_code, 0) ThenBlock: {
             Array.Destroy(OOPGen.method_impl_code)
             OOPGen.method_impl_code = 0
+        }
+        IfCondition NotEqual(OOPGen.emitted_methods, 0) ThenBlock: {
+            Array.Destroy(OOPGen.emitted_methods)
+            OOPGen.emitted_methods = 0
         }
         OOPGen.initialized = 0
     }
@@ -609,6 +618,31 @@ Function.OOPGen_MethodImpl {
             num_params = Array.Size(params)
         }
         
+        // Property setter overload: getter+setter share Python name but must be
+        // distinct Function.* symbols for ailang (e.g. finalize.atexit).
+        // If Class_method already emitted and this has value param, use _set.
+        IfCondition NotEqual(OOPGen.emitted_methods, 0) ThenBlock: {
+            seen = 0
+            si = 0
+            sn = Array.Size(OOPGen.emitted_methods)
+            WhileLoop LessThan(si, sn) {
+                prev = Array.Get(OOPGen.emitted_methods, si)
+                cmp = StringCompare(prev, func_name)
+                IfCondition EqualTo(cmp, 0) ThenBlock: {
+                    seen = 1
+                }
+                si = Add(si, 1)
+            }
+            IfCondition EqualTo(seen, 1) ThenBlock: {
+                IfCondition GreaterThan(num_params, 1) ThenBlock: {
+                    func_name = StringConcat(func_name, "_set")
+                } ElseBlock: {
+                    func_name = StringConcat(func_name, "_dup")
+                }
+            }
+            Array.Push(OOPGen.emitted_methods, func_name)
+        }
+        
         // SysV limit: >6 Inputs illegal — pack into p__args like Gen_PackedFunction
         IfCondition GreaterThan(num_params, 6) ThenBlock: {
             Array.Push(Gen.packed_funcs, func_name)
@@ -959,6 +993,11 @@ Function.OOPGen_Assign {
             Gen_Node(stmt)
             ReturnValue(0)
         }
+        
+        // Chained: a = b = expr  /  width = max_width = self._width - indent
+        // (ATTR_ASSIGN already unwraps; plain ASSIGN must too — else OOPGen_Expr
+        // falls through and emits 0, dropping the middle name.)
+        value = Gen_ResolveChainValue(value)
         
         // Flatten complex value expressions
         value_has_call = Gen_HasCall(value)

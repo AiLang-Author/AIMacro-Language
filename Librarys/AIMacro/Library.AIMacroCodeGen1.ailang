@@ -802,6 +802,41 @@ Function.Gen_EmitIdent {
             Gen_EmitNumber(5)
             ReturnValue(0)
         }
+        cmp = StringCompare(name, "ImportWarning")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(5)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "EncodingWarning")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(5)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "ResourceWarning")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(5)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "BytesWarning")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(5)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "SyntaxWarning")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(5)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "UnicodeWarning")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(5)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "RuntimeWarning")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(5)
+            ReturnValue(0)
+        }
         cmp = StringCompare(name, "complex")
         IfCondition EqualTo(cmp, 0) ThenBlock: {
             Gen_Emit("AddressOf(AIMacro.Float)")
