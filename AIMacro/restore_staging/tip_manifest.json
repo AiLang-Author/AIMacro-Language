@@ -90,7 +90,7 @@
   },
   {
     "name": "py2aim.py",
-    "md5": "18216a4f739ca3e8936651ad3c3b641d",
+    "md5": "add6189d42dfef28d14f74c8ab33d489",
     "parts": [
       "assembled_py2aim_tip.z.b64.000",
       "assembled_py2aim_tip.z.b64.001",
@@ -112,8 +112,7 @@
       "assembled_py2aim_tip.z.b64.017",
       "assembled_py2aim_tip.z.b64.018",
       "assembled_py2aim_tip.z.b64.019",
-      "assembled_py2aim_tip.z.b64.020",
-      "assembled_py2aim_tip.z.b64.021"
+      "assembled_py2aim_tip.z.b64.020"
     ],
     "dest": "tools/py2aim.py"
   }
