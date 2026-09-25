@@ -1,0 +1,3 @@
+# issubclass(cls, type) — copy.py metaclass branch (compile conformance)
+print(issubclass(type, type))
+print(issubclass(int, type))

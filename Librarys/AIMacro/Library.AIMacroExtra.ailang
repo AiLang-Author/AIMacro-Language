@@ -47,3 +47,19 @@ Function.AIMacro.ByteArray {
     }
 }
 
+
+// issubclass(cls, base) — compile conformance for copy.py (issubclass(cls, type)).
+// Emitter maps via Gen_MapBuiltin; base "type" becomes AddressOf(Types.TypeOf).
+// Pointer-equal → True (covers issubclass(type, type)); else False.
+Function.AIMacro.IsSubclass {
+    Input: cls: Address
+    Input: base: Address
+    Output: Address
+    Body: {
+        IfCondition EqualTo(cls, base) ThenBlock: {
+            ReturnValue(AIMacro.Bool(1))
+        } ElseBlock: {
+            ReturnValue(AIMacro.Bool(0))
+        }
+    }
+}
