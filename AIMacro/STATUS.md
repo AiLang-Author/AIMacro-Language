@@ -4,20 +4,25 @@
 | Construct | notes |
 |-----------|-------|
 | unary_plus / matmul | numbers + operator ok |
-| fstring_nested_quotes | Lex_ReadFString + Parse_ExprFromSource; }} only at depth 0 |
-| match/case (+ guards) | py2aim desugars to if/elif (None / Type(x) / capture / `_` / `if` guard) |
-| tuple_unpack assign | py2aim AST desugar `(a,b)=f()` → `_aim_unpack_N` + index binds |
+| fstring_nested_quotes | Lex_ReadFString + Parse_ExprFromSource; } only at depth 0 |
+| match/case (+ guards) | py2aim desugars to if/elif |
+| tuple_unpack assign | py2aim AST desugar |
+| from_import_as | py2aim: `from M import X as Y` → bind Y (html `_html5`) |
+| for_target_unpack | py2aim: `for a,b` / `for i,(x,y)` → `_aim_funpack_N` + index binds |
+| DeprecationWarning | Gen_EmitIdent ExcKind stub (FutureWarning family) |
+| slice type | Gen_MapTypeConstant → TypeID.UNKNOWN; Gen_EmitIdent → AddressOf(AIMacro.Slice) |
 
 ## Probe
-aimacro_ok **17**/17 · ailang_ok **17**/17 — dataclasses cleared (match/case + tuple unpack)
-expanded aimacro **22**/23 (html package on 3.13); ailang 17/23 (import deps)
+aimacro_ok **17**/17 · ailang_ok **17**/17
+expanded aimacro **23**/23 · ailang **20**/23 (slice mapped; calendar still fails)
+cleared: html, string, textwrap (+ DeprecationWarning on calendar path)
+leftovers: calendar `Variable not found: FEBRUARY`; base64/pprint SIGSEGV `Expected ')' after arguments`
 
 ## Gates
-curated 25/25 · Hash 922 · matrix transpile/compile expected green
+curated **25**/25 · Hash **922** · matrix transpile/compile **99**/99 (run 98/99 pre-existing `compile_module_doc` SIGSEGV)
+Fizzbuzz size not gated this shift.
 
-## Tip17 MCP
-micros in `/workspace/mcp_mega_need/` (25 packs). Verify via **commit-SHA** raw URL (branch raw CDN stale).
-Manifest LAST after all micros MATCH. assemble joins name.000+ and restores tools/py2aim.py.
-Core added to manifest md5=bad17cc74bd271875fe2db5a833f8f2b.
+## Tip17
+Library md5s MATCH origin assemble. py2aim on tip17 assemble was stale (missing match/tuple); this push restores tip desugars + new ones.
 
-Self-Hosting: not pushed.
+Self-Hosting: not pushed. No compiler edits. Conformance only.
