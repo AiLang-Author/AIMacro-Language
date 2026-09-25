@@ -25,7 +25,14 @@
     "md5": "9672189e8337e821bfe33bbe65563962",
     "parts": [
       "assembled_cg3_slice.z.b64"
+    ]
+  },
+  {
+    "name": "Library.AIMacroCodeGen4.ailang",
+    "md5": "91254a26b134602608a782d5feccae89",
+    "parts": [
+      "assembled_cg4_reverse.z.b64"
     ],
-    "note": "tip after .001 FIX"
+    "note": "tip reverse climb"
   }
 ]
