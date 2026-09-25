@@ -102,6 +102,17 @@ Function.Gen_Program {
                 mname = ArrayGet(decl, 3)
                 // Skip if this name is also a Function (alias like bisect = bisect_right still OK as PyMod)
                 Gen_MarkModuleVar(mname)
+                // Pre-mark dict/list so Function bodies see Hash.Get / list methods
+                mval = ArrayGet(decl, 4)
+                IfCondition NotEqual(mval, 0) ThenBlock: {
+                    mvt = AST_Type(mval)
+                    IfCondition EqualTo(mvt, Node.DICT_LIT) ThenBlock: {
+                        Gen_MarkDictVar(mname)
+                    }
+                    IfCondition EqualTo(mvt, Node.LIST_LIT) ThenBlock: {
+                        Gen_MarkListVar(mname)
+                    }
+                }
             }
             IfCondition EqualTo(t, Node.FROM_IMPORT) ThenBlock: {
                 Gen_MarkFromImportVars(decl)
@@ -669,7 +680,25 @@ Function.Gen_Function {
         Array.Clear(Gen.param_names)
         Array.Clear(Gen.string_vars)
         Array.Clear(Gen.list_vars)
-        Array.Clear(Gen.dict_vars) 
+        // Keep module-level dict marks (copy.py _copy_dispatch.get inside Functions)
+        kept = Array.Create(16)
+        dsz = Array.Size(Gen.dict_vars)
+        di = 0
+        WhileLoop LessThan(di, dsz) {
+            dv = Array.Get(Gen.dict_vars, di)
+            IfCondition EqualTo(Gen_IsModuleVar(dv), 1) ThenBlock: {
+                Array.Push(kept, dv)
+            }
+            di = Add(di, 1)
+        }
+        Array.Clear(Gen.dict_vars)
+        di = 0
+        dsz = Array.Size(kept)
+        WhileLoop LessThan(di, dsz) {
+            Array.Push(Gen.dict_vars, Array.Get(kept, di))
+            di = Add(di, 1)
+        }
+        Array.Destroy(kept) 
         
         j = 0
         WhileLoop LessThan(j, num_params) {
@@ -2429,6 +2458,13 @@ Function.Gen_Assignment {
                 IfCondition EqualTo(cmp, 0) ThenBlock: { Gen_MarkStringVar(target_name) }
                 cmp = StringCompare(method, "dirname")
                 IfCondition EqualTo(cmp, 0) ThenBlock: { Gen_MarkStringVar(target_name) }
+                // dict.get / pop / setdefault may return a callable (copy.py dispatch)
+                cmp = StringCompare(method, "get")
+                IfCondition EqualTo(cmp, 0) ThenBlock: { Gen_MarkCallableVar(target_name) }
+                cmp = StringCompare(method, "pop")
+                IfCondition EqualTo(cmp, 0) ThenBlock: { Gen_MarkCallableVar(target_name) }
+                cmp = StringCompare(method, "setdefault")
+                IfCondition EqualTo(cmp, 0) ThenBlock: { Gen_MarkCallableVar(target_name) }
                 ReturnValue(0)
             }
             
@@ -2480,6 +2516,14 @@ Function.Gen_Assignment {
             Gen_Emit("Array.Destroy(")
             Gen_Emit(args_var)
             Gen_Emit(")\n")
+            
+            // Method result may be a callable (dispatch.get → copier)
+            cmp = StringCompare(method, "get")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { Gen_MarkCallableVar(target_name) }
+            cmp = StringCompare(method, "pop")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { Gen_MarkCallableVar(target_name) }
+            cmp = StringCompare(method, "setdefault")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { Gen_MarkCallableVar(target_name) }
             
             ReturnValue(0)
         }
@@ -2773,7 +2817,38 @@ Function.Gen_DictAssignment {
                 Gen_Emit("Hash.Set(")
                 Gen_EmitIdent(target)
                 Gen_Emit(", ")
-                Gen_Expr(key)
+                // Builtin type names as keys → string ("int") so type(x) matches
+                key_as_str = 0
+                IfCondition EqualTo(AST_Type(key), Node.IDENT) ThenBlock: {
+                    kname = ArrayGet(key, 3)
+                    kcmp = StringCompare(kname, "int")
+                    IfCondition EqualTo(kcmp, 0) ThenBlock: { key_as_str = 1 }
+                    kcmp = StringCompare(kname, "float")
+                    IfCondition EqualTo(kcmp, 0) ThenBlock: { key_as_str = 1 }
+                    kcmp = StringCompare(kname, "str")
+                    IfCondition EqualTo(kcmp, 0) ThenBlock: { key_as_str = 1 }
+                    kcmp = StringCompare(kname, "bool")
+                    IfCondition EqualTo(kcmp, 0) ThenBlock: { key_as_str = 1 }
+                    kcmp = StringCompare(kname, "list")
+                    IfCondition EqualTo(kcmp, 0) ThenBlock: { key_as_str = 1 }
+                    kcmp = StringCompare(kname, "dict")
+                    IfCondition EqualTo(kcmp, 0) ThenBlock: { key_as_str = 1 }
+                    kcmp = StringCompare(kname, "tuple")
+                    IfCondition EqualTo(kcmp, 0) ThenBlock: { key_as_str = 1 }
+                    kcmp = StringCompare(kname, "set")
+                    IfCondition EqualTo(kcmp, 0) ThenBlock: { key_as_str = 1 }
+                    kcmp = StringCompare(kname, "bytes")
+                    IfCondition EqualTo(kcmp, 0) ThenBlock: { key_as_str = 1 }
+                    IfCondition EqualTo(key_as_str, 1) ThenBlock: {
+                        Gen_Emit("\"")
+                        Gen_Emit(kname)
+                        Gen_Emit("\"")
+                    } ElseBlock: {
+                        Gen_Expr(key)
+                    }
+                } ElseBlock: {
+                    Gen_Expr(key)
+                }
                 Gen_Emit(", ")
                 Gen_Expr(value)
                 Gen_Emit(")\n")
