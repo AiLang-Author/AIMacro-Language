@@ -1140,16 +1140,16 @@ Function.Gen_CallExpr {
             ReturnValue(0)
         }
         
-        // Handle type() specially
+        // Handle type() specially — string name so dict keys like {int: f} match
         cmp = StringCompare(name, "type")
         IfCondition EqualTo(cmp, 0) ThenBlock: {
-            Gen_Emit("Types.TypeOf(")
+            Gen_Emit("Types.TypeName(Types.TypeOf(")
             n = Array.Size(args)
             IfCondition GreaterThan(n, 0) ThenBlock: {
                 arg0 = Array.Get(args, 0)
                 Gen_Expr(arg0)
             }
-            Gen_Emit(")")
+            Gen_Emit("))")
             ReturnValue(0)
         }
         
