@@ -2813,6 +2813,11 @@ Function.Gen_DictAssignment {
                 Gen_Expr(val)
                 Gen_Emit(")\n")
             } ElseBlock: {
+                // Flatten value BEFORE opening Hash.Set (stmts must not land in args)
+                has_call = Gen_HasCall(value)
+                IfCondition EqualTo(has_call, 1) ThenBlock: {
+                    value = Gen_FlattenExpr(value)
+                }
                 Gen_EmitIndent()
                 Gen_Emit("Hash.Set(")
                 Gen_EmitIdent(target)
