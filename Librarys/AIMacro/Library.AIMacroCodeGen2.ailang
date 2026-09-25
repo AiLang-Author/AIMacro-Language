@@ -134,6 +134,9 @@ Function.Gen_Program {
             IfCondition EqualTo(t, Node.FUNCTION) ThenBlock: {
                 Gen_MarkBodyAssignVars(ArrayGet(decl, 5))
             }
+            IfCondition EqualTo(t, Node.CLASS_DEF) ThenBlock: {
+                Gen_MarkGlobalEnumVars(decl)
+            }
             i = Add(i, 1)
         }
         n_mod = Array.Size(Gen.module_vars)
@@ -199,6 +202,7 @@ Function.Gen_Program {
             } ElseBlock: {
                 IfCondition EqualTo(t, Node.CLASS_DEF) ThenBlock: {
                     Gen_Node(decl)
+                    Gen_BufferGlobalEnumExports(decl, toplevel)
                 } ElseBlock: {
                     Array.Push(toplevel, decl)
                 }
@@ -313,6 +317,91 @@ Function.Gen_Program {
     }
 }
 
+
+
+// =============================================================================
+// @global_enum class Members → FixedPool.PyMod (calendar FEBRUARY / Month / Day)
+// enum.global_enum promotes IntEnum members to module scope; AIMacro must too.
+// =============================================================================
+
+Function.Gen_ClassHasGlobalEnum {
+    Input: node: Address
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(node, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        decos = ArrayGet(node, 6)
+        IfCondition EqualTo(decos, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        n = Array.Size(decos)
+        i = 0
+        WhileLoop LessThan(i, n) {
+            deco = Array.Get(decos, i)
+            IfCondition NotEqual(deco, 0) ThenBlock: {
+                // bare @global_enum → IDENT
+                IfCondition EqualTo(AST_Type(deco), Node.IDENT) ThenBlock: {
+                    dname = ArrayGet(deco, 3)
+                    cmp = StringCompare(dname, "global_enum")
+                    IfCondition EqualTo(cmp, 0) ThenBlock: {
+                        ReturnValue(1)
+                    }
+                }
+            }
+            i = Add(i, 1)
+        }
+        ReturnValue(0)
+    }
+}
+
+Function.Gen_MarkGlobalEnumVars {
+    Input: node: Address
+    Body: {
+        has = Gen_ClassHasGlobalEnum(node)
+        IfCondition EqualTo(has, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        body = ArrayGet(node, 5)
+        IfCondition EqualTo(body, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        n = Array.Size(body)
+        i = 0
+        WhileLoop LessThan(i, n) {
+            item = Array.Get(body, i)
+            IfCondition EqualTo(AST_Type(item), Node.ASSIGNMENT) ThenBlock: {
+                Gen_MarkAssignmentChainVars(item)
+            }
+            i = Add(i, 1)
+        }
+    }
+}
+
+// Push class-body assigns onto toplevel so Main emits PyMod.NAME = value
+Function.Gen_BufferGlobalEnumExports {
+    Input: node: Address
+    Input: toplevel: Address
+    Body: {
+        has = Gen_ClassHasGlobalEnum(node)
+        IfCondition EqualTo(has, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        body = ArrayGet(node, 5)
+        IfCondition EqualTo(body, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        n = Array.Size(body)
+        i = 0
+        WhileLoop LessThan(i, n) {
+            item = Array.Get(body, i)
+            IfCondition EqualTo(AST_Type(item), Node.ASSIGNMENT) ThenBlock: {
+                Array.Push(toplevel, item)
+            }
+            i = Add(i, 1)
+        }
+    }
+}
 
 // =============================================================================
 
@@ -2334,6 +2423,12 @@ Function.Gen_Return {
                     i = Add(i, 1)
                 }
                 
+                // Flatten chained receiver (binascii.hexlify(s).upper())
+                obj_nt = AST_Type(obj)
+                IfCondition Or(EqualTo(obj_nt, Node.METHOD_CALL), Or(EqualTo(obj_nt, Node.CALL), Or(EqualTo(obj_nt, Node.ATTRIBUTE), EqualTo(obj_nt, Node.INDEX_ACCESS)))) ThenBlock: {
+                    obj = Gen_FlattenExpr(obj)
+                }
+
                 result_var = Gen_TempName()
                 Gen_EmitIndent()
                 Gen_Emit(result_var)

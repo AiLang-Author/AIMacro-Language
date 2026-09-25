@@ -712,6 +712,51 @@ Function.Gen_EmitIdent {
             ReturnValue(0)
         }
         // Exception type as value (isinstance / tuple) — emit ExcKind int
+        cmp = StringCompare(name, "Exception")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(1)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "ValueError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(2)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "OSError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(3)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "IOError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(3)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "FileNotFoundError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(4)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "TypeError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(5)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "RuntimeError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(6)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "ZeroDivisionError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(7)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "AssertionError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(8)
+            ReturnValue(0)
+        }
         cmp = StringCompare(name, "StopIteration")
         IfCondition EqualTo(cmp, 0) ThenBlock: {
             Gen_EmitNumber(9)
@@ -737,9 +782,34 @@ Function.Gen_EmitIdent {
             Gen_EmitNumber(5)
             ReturnValue(0)
         }
+        cmp = StringCompare(name, "DeprecationWarning")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(5)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "Warning")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(5)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "UserWarning")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(5)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "PendingDeprecationWarning")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(5)
+            ReturnValue(0)
+        }
         cmp = StringCompare(name, "complex")
         IfCondition EqualTo(cmp, 0) ThenBlock: {
             Gen_Emit("AddressOf(AIMacro.Float)")
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "slice")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_Emit("AddressOf(AIMacro.Slice)")
             ReturnValue(0)
         }
         cmp = StringCompare(name, "match")

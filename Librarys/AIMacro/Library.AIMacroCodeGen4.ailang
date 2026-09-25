@@ -1436,24 +1436,25 @@ Function.Gen_CallExpr {
         // Unknown non-builtin name → CallIndirect (copy.func / statistics.types_add / types.meta)
         mcmp_ci = StringCompare(func_name, name)
         IfCondition And(EqualTo(mcmp_ci, 0), EqualTo(Gen_IsKnownFunc(name), 0)) ThenBlock: {
-            Gen_Emit("CallIndirect(")
-            // Nest free-var after hoist: not a param/callable-local → stub 0
+            // Unbound callee: CallIndirect(0, ...) is illegal AILang
+            // (literal 0 + args → Expected ')' ). Stub whole call as None.
             IfCondition Or(EqualTo(Gen_IsParam(name), 1), EqualTo(Gen_IsCallableVar(name), 1)) ThenBlock: {
+                Gen_Emit("CallIndirect(")
                 Gen_EmitIdent(name)
-            } ElseBlock: {
-                Gen_Emit("0")
-            }
-            i = 0
-            WhileLoop LessThan(i, n) {
-                Gen_Emit(", ")
-                arg = Array.Get(args, i)
-                IfCondition EqualTo(Gen_HasCall(arg), 1) ThenBlock: {
-                    arg = Gen_FlattenExpr(arg)
+                i = 0
+                WhileLoop LessThan(i, n) {
+                    Gen_Emit(", ")
+                    arg = Array.Get(args, i)
+                    IfCondition EqualTo(Gen_HasCall(arg), 1) ThenBlock: {
+                        arg = Gen_FlattenExpr(arg)
+                    }
+                    Gen_Expr(arg)
+                    i = Add(i, 1)
                 }
-                Gen_Expr(arg)
-                i = Add(i, 1)
+                Gen_Emit(")")
+            } ElseBlock: {
+                Gen_Emit("Types.GetNone()")
             }
-            Gen_Emit(")")
             ReturnValue(0)
         }
         
@@ -1701,7 +1702,7 @@ Function.Gen_MapBuiltin {
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("Types.TypeOf") }
 
         cmp = StringCompare(name, "format")
-        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.NumMod") }
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.StringFormat1") }
 
         cmp = StringCompare(name, "sort")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.ListSort") }
@@ -1834,6 +1835,9 @@ Function.Gen_MapTypeConstant {
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("TypeID.NONE") }
 
         cmp = StringCompare(name, "type")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("TypeID.UNKNOWN") }
+
+        cmp = StringCompare(name, "slice")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("TypeID.UNKNOWN") }
 
         // Exception types as isinstance args — ExcKind ints (see Gen_MapExcKind)
@@ -2366,6 +2370,66 @@ Function.Gen_MethodCallExpr {
         
         // =========== END OOP ADDITIONS ===========
 
+        // str.format → arity-specific StringFormatN (NumMod is 2-arg only;
+        // multi-arg .format was emitting illegal AIMacro.NumMod(a,b,c) → Expected ')')
+        cmp = StringCompare(method, "format")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            IfCondition EqualTo(args, 0) ThenBlock: {
+                n = 0
+            } ElseBlock: {
+                n = Array.Size(args)
+            }
+            IfCondition EqualTo(n, 0) ThenBlock: {
+                Gen_Emit("AIMacro.StringFormat0(")
+                Gen_Expr(obj)
+                Gen_Emit(")")
+                ReturnValue(0)
+            }
+            IfCondition EqualTo(n, 1) ThenBlock: {
+                Gen_Emit("AIMacro.StringFormat1(")
+                Gen_Expr(obj)
+                Gen_Emit(", ")
+                Gen_Expr(Array.Get(args, 0))
+                Gen_Emit(")")
+                ReturnValue(0)
+            }
+            IfCondition EqualTo(n, 2) ThenBlock: {
+                Gen_Emit("AIMacro.StringFormat2(")
+                Gen_Expr(obj)
+                Gen_Emit(", ")
+                Gen_Expr(Array.Get(args, 0))
+                Gen_Emit(", ")
+                Gen_Expr(Array.Get(args, 1))
+                Gen_Emit(")")
+                ReturnValue(0)
+            }
+            IfCondition EqualTo(n, 3) ThenBlock: {
+                Gen_Emit("AIMacro.StringFormat3(")
+                Gen_Expr(obj)
+                Gen_Emit(", ")
+                Gen_Expr(Array.Get(args, 0))
+                Gen_Emit(", ")
+                Gen_Expr(Array.Get(args, 1))
+                Gen_Emit(", ")
+                Gen_Expr(Array.Get(args, 2))
+                Gen_Emit(")")
+                ReturnValue(0)
+            }
+            // 4+ args: pack into StringFormat4 using first four (compile bar)
+            Gen_Emit("AIMacro.StringFormat4(")
+            Gen_Expr(obj)
+            Gen_Emit(", ")
+            Gen_Expr(Array.Get(args, 0))
+            Gen_Emit(", ")
+            Gen_Expr(Array.Get(args, 1))
+            Gen_Emit(", ")
+            Gen_Expr(Array.Get(args, 2))
+            Gen_Emit(", ")
+            Gen_Expr(Array.Get(args, 3))
+            Gen_Emit(")")
+            ReturnValue(0)
+        }
+
         // Normal method dispatch for non-ambiguous methods
         func = Gen_MapMethod(method)
         
@@ -2426,7 +2490,7 @@ Function.Gen_MapMethod {
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("String.Replace") }
         
         cmp = StringCompare(method, "format")
-        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.NumMod") }
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.StringFormat1") }
         
         cmp = StringCompare(method, "find")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("String.Find") }
