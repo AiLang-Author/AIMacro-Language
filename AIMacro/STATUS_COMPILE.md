@@ -1,33 +1,32 @@
 # STATUS_COMPILE (grokasaurus2)
 
 ## Widen probe
-**56/76** (was 52; prior stretch 54 with enum lost; now +enum +locale, no losses vs 54)
+**56/76** (was 52 → 54 with enum lost → **56** with enum+locale restored)
 
-Gained this stretch vs 52: gettext, gzip, mimetypes, enum, locale (+maybe others already in 54).
+## Constructs this stretch
+- CodeGen2 `Gen_MarkBodyAssignVars` recurse (gettext `op`) — tip md5 **5c3da1fb** (markslice micros staged)
+- CodeGen2 MethodCall flatten `Node.SLICE_ACCESS` (gzip)
+- py2aim multiline yield/yield-from stub (enum)
+- py2aim `desugar_nameerror_probe` (locale CODESET)
+- py2aim PEP695 / **kwargs ann (typing+ast aimacro parse)
 
-## Constructs
-- CodeGen2 `Gen_MarkBodyAssignVars` recurse IF/WHILE/FOR (gettext `op`)
-- CodeGen2 MethodCall flatten `Node.SLICE_ACCESS` (gzip `do.unused_data[8:].lstrip`)
-- py2aim multiline `yield`/`yield from` stub (enum Flag; bare yield MINUS_ASSIGN)
-- py2aim `desugar_nameerror_probe` (`try: CODESET` / locale)
-- py2aim PEP695 / `**kwargs` ann / yield (typing+ast aimacro parse; ailang leftovers)
-
-## Origin Libraries (target tip md5s)
-| Lib | tip md5 | origin |
-|-----|---------|--------|
-| cg1 | 37d17911… | OK |
-| OOP | 7646560a… | OK |
-| Extra | e65c4246… | OK |
-| cg3 | 9672189e… | assembling |
-| cg2 | 5c3da1fb… (markslice) | climbing |
-| cg4 | 91254a26… | climbing |
-| rt | c1532629… | climbing |
+## Origin tip Libraries
+| Lib | md5 | status |
+|-----|-----|--------|
+| cg1 | 37d17911… | on origin |
+| OOP | 7646560a… | on origin |
+| Extra | e65c4246… | on origin |
+| cg3 | 9672189e… | on origin |
+| cg4 | 91254a26… | on origin |
+| rt | c1532629… | climbing micros (000-009 on origin) |
+| cg2 | 5c3da1fb… | markslice micros staged, not climbed |
+| py2aim | 18216a4f… | local tip; micros staged |
 
 ## Hash
-922 (host)
+922
 
 ## Self-Hosting
 not pushed
 
 ## Next
-Finish climb cg2_markslice / cg4_reverse / rt_listreverse; tip-manifest; verify origin md5s; typing/ast ailang leftovers.
+Finish rt (010-034) + cg2_markslice climb → tip-manifest → verify; push py2aim tip; typing/ast ailang.
