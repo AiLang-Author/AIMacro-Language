@@ -2545,8 +2545,24 @@ Function.Gen_Assignment {
         // =========== OOP ATTRIBUTE FLATTENING ===========
         IfCondition EqualTo(value_type, Node.ATTRIBUTE) ThenBlock: {
             // next = it.__next__  → mark target callable before flatten
+            // h_append = h.append (known list) → AddressOf(SmartPush) + bound self
             attr_name = AST_GetField(value, "attr")
+            attr_obj = AST_GetField(value, "object")
             IfCondition NotEqual(attr_name, 0) ThenBlock: {
+                cmp_append = StringCompare(attr_name, "append")
+                IfCondition EqualTo(cmp_append, 0) ThenBlock: {
+                    IfCondition EqualTo(AST_Type(attr_obj), Node.IDENT) ThenBlock: {
+                        obj_name = ArrayGet(attr_obj, 3)
+                        IfCondition EqualTo(Gen_IsListVar(obj_name), 1) ThenBlock: {
+                            Gen_MarkCallableVar(target_name)
+                            Gen_MarkBoundAppend(target_name, obj_name)
+                            Gen_EmitIndent()
+                            Gen_EmitIdent(target)
+                            Gen_Emit(" = AddressOf(AIMacro.SmartPush)\n")
+                            ReturnValue(0)
+                        }
+                    }
+                }
                 cmp_next = StringCompare(attr_name, "__next__")
                 cmp_call = StringCompare(attr_name, "__call__")
                 IfCondition Or(EqualTo(cmp_next, 0), EqualTo(cmp_call, 0)) ThenBlock: {

@@ -860,6 +860,25 @@ Function.Gen_CallExpr {
         args = ArrayGet(node, 4)
 
         IfCondition EqualTo(Gen_IsCallableVar(name), 1) ThenBlock: {
+            // Bound list.append → AIMacro.SmartPush(self, args...)
+            bound_self = Gen_GetBoundAppendSelf(name)
+            IfCondition NotEqual(bound_self, 0) ThenBlock: {
+                Gen_Emit("AIMacro.SmartPush(")
+                Gen_EmitIdent(bound_self)
+                n = Array.Size(args)
+                i = 0
+                WhileLoop LessThan(i, n) {
+                    Gen_Emit(", ")
+                    arg = Array.Get(args, i)
+                    IfCondition EqualTo(Gen_HasCall(arg), 1) ThenBlock: {
+                        arg = Gen_FlattenExpr(arg)
+                    }
+                    Gen_Expr(arg)
+                    i = Add(i, 1)
+                }
+                Gen_Emit(")")
+                ReturnValue(0)
+            }
             Gen_Emit("CallIndirect(")
             Gen_EmitIdent(name)
             n = Array.Size(args)

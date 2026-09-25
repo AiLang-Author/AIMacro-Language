@@ -180,7 +180,8 @@ Function.OOPGen_FlattenExpr {
             // Bound methods (__next__/__call__) must CallIndirect when invoked
             cmp_next = StringCompare(attr, "__next__")
             cmp_call = StringCompare(attr, "__call__")
-            IfCondition Or(EqualTo(cmp_next, 0), EqualTo(cmp_call, 0)) ThenBlock: {
+            cmp_append = StringCompare(attr, "append")
+            IfCondition Or(Or(EqualTo(cmp_next, 0), EqualTo(cmp_call, 0)), EqualTo(cmp_append, 0)) ThenBlock: {
                 Gen_MarkCallableVar(temp)
             }
             ReturnValue(Gen_MakeIdent(temp))

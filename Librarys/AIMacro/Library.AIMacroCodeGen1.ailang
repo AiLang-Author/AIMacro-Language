@@ -35,6 +35,8 @@ FixedPool.Gen {
     "loop_else_flag": Initialize=0, CanChange=True
     "lambda_counter": Initialize=0, CanChange=True
     "callable_vars": Initialize=0, CanChange=True
+    "bound_append_names": Initialize=0, CanChange=True
+    "bound_append_selves": Initialize=0, CanChange=True
     "module_vars": Initialize=0, CanChange=True
     "import_stubs": Initialize=0, CanChange=True
 
@@ -66,6 +68,8 @@ Function.Gen_Init {
         Gen.loop_else_flag = 0
         Gen.lambda_counter = 0
         Gen.callable_vars = Array.Create(32)
+        Gen.bound_append_names = Array.Create(16)
+        Gen.bound_append_selves = Array.Create(16)
         Gen.module_vars = Array.Create(64)
         Gen.import_stubs = Array.Create(32)
 
@@ -99,6 +103,12 @@ Function.Gen_Free {
         }
         IfCondition NotEqual(Gen.callable_vars, 0) ThenBlock: {
             Array.Destroy(Gen.callable_vars)
+        }
+        IfCondition NotEqual(Gen.bound_append_names, 0) ThenBlock: {
+            Array.Destroy(Gen.bound_append_names)
+        }
+        IfCondition NotEqual(Gen.bound_append_selves, 0) ThenBlock: {
+            Array.Destroy(Gen.bound_append_selves)
         }
         IfCondition NotEqual(Gen.module_vars, 0) ThenBlock: {
             Array.Destroy(Gen.module_vars)
@@ -496,6 +506,77 @@ Function.Gen_MarkCallableVar {
         }
         SetByte(copy, len, 0)
         Array.Push(Gen.callable_vars, copy)
+    }
+}
+
+
+// Bound list.append: name → self (so h_append(x) → AIMacro.SmartPush(h, x))
+Function.Gen_GetBoundAppendSelf {
+    Input: name: Address
+    Output: Address
+    Body: {
+        IfCondition Or(EqualTo(name, 0), EqualTo(Gen.bound_append_names, 0)) ThenBlock: {
+            ReturnValue(0)
+        }
+        sz = Array.Size(Gen.bound_append_names)
+        idx = 0
+        WhileLoop LessThan(idx, sz) {
+            varname = Array.Get(Gen.bound_append_names, idx)
+            cmp = StringCompare(name, varname)
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                ReturnValue(Array.Get(Gen.bound_append_selves, idx))
+            }
+            idx = Add(idx, 1)
+        }
+        ReturnValue(0)
+    }
+}
+
+Function.Gen_MarkBoundAppend {
+    Input: name: Address
+    Input: self_name: Address
+    Body: {
+        IfCondition Or(EqualTo(name, 0), EqualTo(self_name, 0)) ThenBlock: {
+            ReturnValue(0)
+        }
+        // Replace if already present
+        sz = Array.Size(Gen.bound_append_names)
+        idx = 0
+        WhileLoop LessThan(idx, sz) {
+            varname = Array.Get(Gen.bound_append_names, idx)
+            cmp = StringCompare(name, varname)
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                len = StringLength(self_name)
+                copy = Allocate(Add(len, 1))
+                i = 0
+                WhileLoop LessThan(i, len) {
+                    SetByte(copy, i, GetByte(self_name, i))
+                    i = Add(i, 1)
+                }
+                SetByte(copy, len, 0)
+                Array.Set(Gen.bound_append_selves, idx, copy)
+                ReturnValue(0)
+            }
+            idx = Add(idx, 1)
+        }
+        len = StringLength(name)
+        ncopy = Allocate(Add(len, 1))
+        i = 0
+        WhileLoop LessThan(i, len) {
+            SetByte(ncopy, i, GetByte(name, i))
+            i = Add(i, 1)
+        }
+        SetByte(ncopy, len, 0)
+        len2 = StringLength(self_name)
+        scopy = Allocate(Add(len2, 1))
+        i = 0
+        WhileLoop LessThan(i, len2) {
+            SetByte(scopy, i, GetByte(self_name, i))
+            i = Add(i, 1)
+        }
+        SetByte(scopy, len2, 0)
+        Array.Push(Gen.bound_append_names, ncopy)
+        Array.Push(Gen.bound_append_selves, scopy)
     }
 }
 
