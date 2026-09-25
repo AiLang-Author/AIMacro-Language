@@ -87,6 +87,15 @@ Function.Gen_Expr {
         
         IfCondition EqualTo(t, Node.IDENT) ThenBlock: {
             name = ArrayGet(node, 3)
+            // Builtin used as a value: AddressOf(AIMacro.X) (heapq map(iter, xs))
+            mapped = Gen_MapBuiltin(name)
+            mcmp = StringCompare(mapped, name)
+            IfCondition NotEqual(mcmp, 0) ThenBlock: {
+                Gen_Emit("AddressOf(")
+                Gen_Emit(mapped)
+                Gen_Emit(")")
+                ReturnValue(0)
+            }
             // Function used as a value: emit AddressOf(fn) so AILang sees a pointer
             IfCondition EqualTo(Gen_IsKnownFunc(name), 1) ThenBlock: {
                 Gen_Emit("AddressOf(")
@@ -1539,6 +1548,15 @@ Function.Gen_MapBuiltin {
         
         cmp = StringCompare(name, "zip")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.Zip") }
+
+        cmp = StringCompare(name, "map")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.Map") }
+
+        cmp = StringCompare(name, "iter")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.Iter") }
+
+        cmp = StringCompare(name, "next")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.Next") }
 
         // Use typed sorted that returns TArray
         cmp = StringCompare(name, "sorted")

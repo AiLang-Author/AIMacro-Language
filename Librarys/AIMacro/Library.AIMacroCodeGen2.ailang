@@ -2544,7 +2544,23 @@ Function.Gen_Assignment {
         
         // =========== OOP ATTRIBUTE FLATTENING ===========
         IfCondition EqualTo(value_type, Node.ATTRIBUTE) ThenBlock: {
+            // next = it.__next__  → mark target callable before flatten
+            attr_name = AST_GetField(value, "attr")
+            IfCondition NotEqual(attr_name, 0) ThenBlock: {
+                cmp_next = StringCompare(attr_name, "__next__")
+                cmp_call = StringCompare(attr_name, "__call__")
+                IfCondition Or(EqualTo(cmp_next, 0), EqualTo(cmp_call, 0)) ThenBlock: {
+                    Gen_MarkCallableVar(target_name)
+                }
+            }
             value = OOPGen_FlattenExpr(value)
+            // Propagate callable from flattened temp (ObjectGet __next__)
+            IfCondition EqualTo(AST_Type(value), Node.IDENT) ThenBlock: {
+                flat_name = ArrayGet(value, 3)
+                IfCondition EqualTo(Gen_IsCallableVar(flat_name), 1) ThenBlock: {
+                    Gen_MarkCallableVar(target_name)
+                }
+            }
         }
         // =========== END OOP ATTRIBUTE FLATTENING ===========
         

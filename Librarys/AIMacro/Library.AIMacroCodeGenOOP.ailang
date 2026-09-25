@@ -177,6 +177,12 @@ Function.OOPGen_FlattenExpr {
             Gen_Emit(", \"")
             Gen_Emit(attr)
             Gen_Emit("\")\n")
+            // Bound methods (__next__/__call__) must CallIndirect when invoked
+            cmp_next = StringCompare(attr, "__next__")
+            cmp_call = StringCompare(attr, "__call__")
+            IfCondition Or(EqualTo(cmp_next, 0), EqualTo(cmp_call, 0)) ThenBlock: {
+                Gen_MarkCallableVar(temp)
+            }
             ReturnValue(Gen_MakeIdent(temp))
         }
         
