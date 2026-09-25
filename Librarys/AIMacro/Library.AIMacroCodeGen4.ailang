@@ -1803,6 +1803,16 @@ Function.Gen_MapTypeConstant {
 
         cmp = StringCompare(name, "type")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("TypeID.UNKNOWN") }
+
+        // Exception types as isinstance args — ExcKind ints (see Gen_MapExcKind)
+        cmp = StringCompare(name, "StopIteration")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("9") }
+        cmp = StringCompare(name, "StopAsyncIteration")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("10") }
+        cmp = StringCompare(name, "BaseExceptionGroup")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("11") }
+        cmp = StringCompare(name, "ExceptionGroup")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("12") }
         
         // Unknown type - return as-is (might be a variable)
         ReturnValue(name)

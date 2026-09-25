@@ -674,6 +674,27 @@ Function.Gen_EmitIdent {
             Gen_Emit("\"\"")
             ReturnValue(0)
         }
+        // Exception type as value (isinstance / tuple) — emit ExcKind int
+        cmp = StringCompare(name, "StopIteration")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(9)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "StopAsyncIteration")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(10)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "BaseExceptionGroup")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(11)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "ExceptionGroup")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(12)
+            ReturnValue(0)
+        }
         // File-scope names live in FixedPool.PyMod so Functions can see them
         is_mod = Gen_IsModuleVar(name)
         IfCondition EqualTo(is_mod, 1) ThenBlock: {
@@ -1212,6 +1233,14 @@ Function.Gen_MapExcKind {
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(7) }
         cmp = StringCompare(name, "AssertionError")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(8) }
+        cmp = StringCompare(name, "StopIteration")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(9) }
+        cmp = StringCompare(name, "StopAsyncIteration")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(10) }
+        cmp = StringCompare(name, "BaseExceptionGroup")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(11) }
+        cmp = StringCompare(name, "ExceptionGroup")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(12) }
         ReturnValue(1)
     }
 }
