@@ -10,20 +10,16 @@
   },
   {
     "name": "Library.AIMacroCodeGen1.ailang",
-    "md5": "a3b308a6a4ec27158dff91c063ee7b43",
+    "md5": "e07214bfb6d7741ba4640757c4e13d5d",
     "parts": [
-      "cg1.z.b64.00",
-      "cg1.z.b64.01"
+      "assembled_cg1_valueerror.z.b64"
     ]
   },
   {
     "name": "Library.AIMacroCodeGen2.ailang",
-    "md5": "2e226affa95c504f1863b7b2b936eb31",
+    "md5": "3163d633ac310ba465c2dd05aecedd85",
     "parts": [
-      "cg2.z.b64.00",
-      "cg2.z.b64.01",
-      "cg2.z.b64.02",
-      "cg2.z.b64.03"
+      "assembled_cg2.z.b64"
     ]
   },
   {
@@ -36,11 +32,9 @@
   },
   {
     "name": "Library.AIMacroCodeGen4.ailang",
-    "md5": "8900aede57eb4f32ae3c04a3bc19fde5",
+    "md5": "509f8ddb94e258f82660eed1acdef339",
     "parts": [
-      "cg4.z.b64.00",
-      "cg4.z.b64.01",
-      "cg4.z.b64.02"
+      "assembled_cg4_tip.z.b64"
     ]
   },
   {
