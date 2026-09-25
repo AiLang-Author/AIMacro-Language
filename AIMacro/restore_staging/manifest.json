@@ -87,8 +87,20 @@
       "lib.z.b64.08.2",
       "lib.z.b64.08.3"
     ],
-    "md5": "7f9326010e9ba34e211024dbf5c31cab",
-    "_touch": "restore_oop_after_probe_corrupt"
+    "md5": "7f9326010e9ba34e211024dbf5c31cab"
+  },
+  {
+    "name": "Library.AIMacroCodeGen1.ailang",
+    "parts": [
+      "cg1.z.b64.00",
+      "cg1.z.b64.01",
+      "cg1.z.b64.02",
+      "cg1.z.b64.03",
+      "cg1.z.b64.04",
+      "cg1.z.b64.05",
+      "cg1.z.b64.06"
+    ],
+    "md5": "be383d1a94f078197d25e76866e52248"
   },
   {
     "name": "Library.AIMacroCodeGen4.ailang",
@@ -101,7 +113,7 @@
       "cg4.z.b64.05",
       "cg4.z.b64.06"
     ],
-    "md5": "7731c93bd2f50fd22562ccf3a0fec51d"
+    "md5": "3ceacecb4d3d459085e7c177d873b79d"
   },
   {
     "name": "Library.AIMacroCodeGen2.ailang",
@@ -181,7 +193,7 @@
       "cg2.z.b64.08.1",
       "cg2.z.b64.08.2"
     ],
-    "md5": "a70d70a494ba869a493ecda2d9534342"
+    "md5": "62b4c4cf2e4e10edd88ce66a4194b129"
   },
   {
     "name": "Library.AIMacroCodeGenOOP.ailang",
@@ -231,6 +243,6 @@
       "oop.z.b64.04.2",
       "oop.z.b64.04.3"
     ],
-    "md5": "14f0e4b130cfe1f9edba55f4f87fed04"
+    "md5": "01c2a9ea8830e684bc07cd5d7be2b4f0"
   }
 ]
