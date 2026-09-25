@@ -1,32 +1,32 @@
-# STATUS_COMPILE (grokasaurus2)
+# AIMacro overnight compile — STATUS (2026-09-25)
 
-## Widen probe
-**56/76** (was 52 → 54 with enum lost → **56** with enum+locale restored)
+## Widen
+**57/76** (was 56). `typing` newly OK.
 
-## Constructs this stretch
-- CodeGen2 `Gen_MarkBodyAssignVars` recurse (gettext `op`) — tip md5 **5c3da1fb** (markslice micros staged)
-- CodeGen2 MethodCall flatten `Node.SLICE_ACCESS` (gzip)
-- py2aim multiline yield/yield-from stub (enum)
-- py2aim `desugar_nameerror_probe` (locale CODESET)
-- py2aim PEP695 / **kwargs ann (typing+ast aimacro parse)
+## Tip constructs (this stretch)
+| Construct | notes |
+|-----------|-------|
+| nested tuple-unpack assign | py2aim `desugar_tuple_unpack` via `_for_unpack_assigns` (cleared `\\x04`) |
+| nested class freevars | py2aim `_aim_ncells` module dict (typing `superclass_name`) |
+| AILang kw escape Tuple/Add | CodeGen1 `Gen_EmitIdent`/`Lhs` → `PyMod.Tuple`/`Add` (ast PARSE cleared) |
+| rt listreverse | micros .000-.034 → md5 c1532629 |
+| cg2 markslice | micros .000-.039 → md5 5c3da1fb |
 
-## Origin tip Libraries
-| Lib | md5 | status |
-|-----|-----|--------|
-| cg1 | 37d17911… | on origin |
-| OOP | 7646560a… | on origin |
-| Extra | e65c4246… | on origin |
-| cg3 | 9672189e… | on origin |
-| cg4 | 91254a26… | on origin |
-| rt | c1532629… | climbing micros (000-009 on origin) |
-| cg2 | 5c3da1fb… | markslice micros staged, not climbed |
-| py2aim | 18216a4f… | local tip; micros staged |
+## Tip md5s (host / tip_manifest)
+| artifact | md5 |
+|----------|-----|
+| CodeGen1 | `793bdc4ce4798adc4660f10a042350a4` |
+| CodeGen2 | `5c3da1fbb75adcbc8b804de9d2655124` |
+| AIMacro.ailang (rt) | `c15326296d8dbdc13a246b0dc531a1c1` |
+| tools/py2aim.py | `eac63c5166ac4bbb47369bea173bd40a` |
+| Hash | 922 |
 
-## Hash
-922
+## Leftovers (widen fails)
+ast: PARSE cleared; `Variable not found: PyCF_ONLY_AST` (`from _ast import *` shim)
+others: pathlib/zipfile/tokenize/inspect/… (ailang); dis/turtle/configparser/concurrent (aimacro/py2aim)
 
-## Self-Hosting
-not pushed
+## Gates
+Host tip Libraries assembled; `aimacro.x` rebuilt OK (~490796).
+Origin: tip micros for rt/cg2/cg1/py2aim; Library tip_direct rt/cg2 still pending inbox.
 
-## Next
-Finish rt (010-034) + cg2_markslice climb → tip-manifest → verify; push py2aim tip; typing/ast ailang.
+Self-Hosting: not pushed. No compiler edits. Conformance only.
