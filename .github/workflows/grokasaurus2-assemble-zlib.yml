@@ -28,6 +28,8 @@ jobs:
                   Librarys/AIMacro/Library.AIMacro.ailang \
                   Librarys/AIMacro/Library.AIMacroCodeGenOOP.ailang \
                   Librarys/AIMacro/Library.AIMacroExtra.ailang \
+                  Librarys/AIMacro/Library.AIMacroParserCore.ailang \
+                  Librarys/AIMacro/Library.AIMacroParserOOP.ailang \
                   AIMacro/restore_staging/manifest.json || true
           if git diff --cached --quiet; then
             echo "No changes to commit"
