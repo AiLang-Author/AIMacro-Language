@@ -1,4 +1,3 @@
-// @global_enum promotes IntEnum members to module scope (calendar FEBRUARY)
 @global_enum
 class Month {
     FEBRUARY = 2
