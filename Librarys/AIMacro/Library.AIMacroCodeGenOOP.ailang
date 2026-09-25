@@ -267,6 +267,13 @@ Function.OOPGen_FlattenExpr {
             ReturnValue(Gen_FlattenExpr(node))
         }
         
+        // LIST_COMP / setcomp / genexp share Node.LIST_COMP — must hoist
+        // before ReturnValue(...). Without this, method returns emit
+        // ReturnValue( t = Array.Create... ) and AILang Expected ')'.
+        IfCondition EqualTo(node_type, Node.LIST_COMP) ThenBlock: {
+            ReturnValue(Gen_FlattenExpr(node))
+        }
+        
         // Default - return as-is
         ReturnValue(node)
     }
