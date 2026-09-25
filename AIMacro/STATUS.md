@@ -7,31 +7,29 @@
 - MCP zlib publish; never path-as-content
 
 ## Tip construct
-| Lib | md5 | notes |
-|-----|-----|-------|
-| cg1 | 6bd8afa6b74b191c08992a8ff3d29f26 | nest freevar locals + enclosing_params |
-| cg2 | 425caad1469e15b10b6c7d77b370a921 | deferred freevars; MarkEnclosingLocal |
-| cg3 | eddf62a25df175ba148ea38457b5b02f | lambda PushDeferred freevars |
-| oop | 4c34ef07f0c596ffab9e2d77738803be | method params → enclosing; assign mark |
-| ParserCore | fc21e1e34a11fc2d855ed41010f29c9d | **kwargs kept in params |
+| Lib | notes |
+|-----|-------|
+| cg1 | Gen_EmitIdentLhs; removed EJECT/KEEP/STRICT/CONFORM string stubs |
+| cg2 | chain+tuple module-var mark; UnpackOne/Assign use EmitIdentLhs |
 
 ## Climb
 | Module | result |
 |--------|--------|
-| contextlib | **ok** (method/outer freevars as nest locals) |
-| statistics | `match` leftover (feature) |
-| enum/fractions/functools | SIGSEGV parse |
-| numbers/operator/dataclasses | aimacro_fail |
+| enum | **ok** (chained assign + FlagBoundary unpack to PyMod) |
+| functools | **ok** (NEXT/PREV/KEY/RESULT LHS no longer value-stubbed) |
+| fractions/statistics | **ok** |
+| numbers/operator/dataclasses | aimacro **parse** fail |
 
 ## Gates (host)
-curated **25/25**, matrix **87/87/86** (compile_module_doc run SIGSEGV pre-existing), fizzbuzz **215150**, Hash **922**
+curated **25/25**, matrix compile **91/91** run **90/1** (compile_module_doc SIGSEGV pre-existing), fizzbuzz **215153**, Hash **922**
 
 ## Probe counts
-compile_ok **10**/17 (types copy heapq colorsys keyword quopri bisect abc decimal **contextlib**)
-fail: statistics(match) enum/fractions/functools(SIGSEGV) numbers/operator/dataclasses
+compile_ok **14**/17
+fail: numbers/operator/dataclasses (aimacro parse)
 
 ## Ladder next
-1. statistics match / enum parse SIGSEGV
-2. numbers/operator/dataclasses aimacro_fail
+1. numbers Unexpected token / class body
+2. operator decorator after
+3. dataclasses class body tokens
 
 Self-Hosting: not pushed.
