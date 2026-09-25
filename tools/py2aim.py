@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Temporary tip loader: expands tools/py2aim.py from assembled_py2aim_tip.z.b64.* micros.
 
-Real tip md5 add6189d42dfef28d14f74c8ab33d489. Prefer tip_direct.push.json when MCP can carry full file.
+Real tip md5 eac63c5166ac4bbb47369bea173bd40a. Prefer tip_direct.push.json when MCP can carry full file.
 """
 from __future__ import annotations
 
