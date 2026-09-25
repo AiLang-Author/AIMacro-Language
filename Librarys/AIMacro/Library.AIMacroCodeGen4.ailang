@@ -1607,6 +1607,9 @@ Function.Gen_MapBuiltin {
         cmp = StringCompare(name, "bytearray")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.ByteArray") }
 
+        cmp = StringCompare(name, "issubclass")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.IsSubclass") }
+
         ReturnValue(name)
     }
 }
