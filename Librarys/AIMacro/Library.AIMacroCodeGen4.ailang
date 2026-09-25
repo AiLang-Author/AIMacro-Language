@@ -1650,6 +1650,18 @@ Function.Gen_MapBuiltin {
         cmp = StringCompare(name, "getattr")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.GetAttr") }
 
+        cmp = StringCompare(name, "id")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.Id") }
+
+        cmp = StringCompare(name, "tuple")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.Tuple") }
+
+        cmp = StringCompare(name, "hasattr")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.HasAttr") }
+
+        cmp = StringCompare(name, "setattr")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.SetAttr") }
+
         ReturnValue(name)
     }
 }
@@ -1679,6 +1691,9 @@ Function.Gen_MapTypeConstant {
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("TypeID.STR") }
         
         cmp = StringCompare(name, "list")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("TypeID.LIST") }
+
+        cmp = StringCompare(name, "tuple")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("TypeID.LIST") }
         
         cmp = StringCompare(name, "dict")

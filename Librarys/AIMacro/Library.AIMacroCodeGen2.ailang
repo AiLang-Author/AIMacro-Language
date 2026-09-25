@@ -498,8 +498,14 @@ Function.Gen_Node {
 
         IfCondition EqualTo(t, Node.FUNCTION) ThenBlock: {
             IfCondition GreaterThan(Gen.indent, 0) ThenBlock: {
-                fname = ArrayGet(node, 3)
-                Array.Push(Gen.func_names, fname)
+                // Nested def → unique Function name (statistics.py pdf/cdf x2)
+                orig = ArrayGet(node, 3)
+                uname = StringConcat("__nest_", NumberToString(Gen.lambda_counter))
+                Gen.lambda_counter = Add(Gen.lambda_counter, 1)
+                uname = StringConcat(uname, "_")
+                uname = StringConcat(uname, orig)
+                ArraySet(node, 3, uname)
+                Array.Push(Gen.func_names, uname)
                 Array.Push(Gen.func_defaults, ArrayGet(node, 7))
                 Array.Push(Gen.func_params, ArrayGet(node, 4))
                 star = ArrayGet(node, 8)
@@ -509,6 +515,12 @@ Function.Gen_Node {
                     Array.Push(Gen.func_varargs, 0)
                 }
                 Array.Push(Gen.deferred_functions, node)
+                Gen_EmitIndent()
+                Gen_Emit(orig)
+                Gen_Emit(" = AddressOf(")
+                Gen_Emit(uname)
+                Gen_Emit(")\n")
+                Gen_MarkCallableVar(orig)
                 ReturnValue(0)
             }
             Gen_Function(node)
