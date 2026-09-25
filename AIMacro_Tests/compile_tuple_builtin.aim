@@ -1,0 +1,2 @@
+# tuple(x) — copy.py deepcopy path
+print(tuple([1, 2]))

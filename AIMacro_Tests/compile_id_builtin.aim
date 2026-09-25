@@ -1,0 +1,4 @@
+# id(x) — copy.py memo keys
+x = [1]
+print(id(x))
+print(id(x) == id(x))
