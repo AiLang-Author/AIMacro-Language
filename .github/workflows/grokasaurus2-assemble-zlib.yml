@@ -22,15 +22,14 @@ jobs:
           git config user.email "grokbot@ailang.local"
           git add Librarys/AIMacro/Library.AIMacroCodeGen1.ailang \
                   Librarys/AIMacro/Library.AIMacroCodeGen2.ailang \
+                  Librarys/AIMacro/Library.AIMacroCodeGen3.ailang \
                   Librarys/AIMacro/Library.AIMacroCodeGen4.ailang \
                   Librarys/AIMacro/Library.AIMacro.ailang \
                   Librarys/AIMacro/Library.AIMacroCodeGenOOP.ailang \
-                  AIMacro_Tests/compile_map_builtin.aim \
-                  AIMacro_Tests/compile_iter_builtin.aim \
-                  AIMacro_Tests/compile_next_builtin.aim || true
+                  Librarys/AIMacro/Library.AIMacroExtra.ailang || true
           if git diff --cached --quiet; then
             echo "No changes to commit"
           else
-            git commit -m "feat(aimacro): compile_next_builtin  next(it) + bound __next__ CallIndirect"
+            git commit -m "chore(aimacro): assemble zlib restore from staging manifest"
             git push origin HEAD:grokasaurus2
           fi
