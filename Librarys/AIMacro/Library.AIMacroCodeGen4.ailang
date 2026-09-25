@@ -1200,6 +1200,43 @@ Function.Gen_CallExpr {
 
         // ===== END len() dict handling =====
 
+        // getattr(obj, name[, default]) → AIMacro.GetAttr (pad default)
+        cmp = StringCompare(name, "getattr")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            a0 = Gen_NthPosArg(args, 0)
+            a1 = Gen_NthPosArg(args, 1)
+            a2 = Gen_NthPosArg(args, 2)
+            Gen_Emit("AIMacro.GetAttr(")
+            IfCondition NotEqual(a0, 0) ThenBlock: {
+                IfCondition EqualTo(Gen_HasCall(a0), 1) ThenBlock: {
+                    a0 = Gen_FlattenExpr(a0)
+                }
+                Gen_Expr(a0)
+            } ElseBlock: {
+                Gen_Emit("Types.GetNone()")
+            }
+            Gen_Emit(", ")
+            IfCondition NotEqual(a1, 0) ThenBlock: {
+                IfCondition EqualTo(Gen_HasCall(a1), 1) ThenBlock: {
+                    a1 = Gen_FlattenExpr(a1)
+                }
+                Gen_Expr(a1)
+            } ElseBlock: {
+                Gen_Emit("\"\"")
+            }
+            Gen_Emit(", ")
+            IfCondition NotEqual(a2, 0) ThenBlock: {
+                IfCondition EqualTo(Gen_HasCall(a2), 1) ThenBlock: {
+                    a2 = Gen_FlattenExpr(a2)
+                }
+                Gen_Expr(a2)
+            } ElseBlock: {
+                Gen_Emit("Types.GetNone()")
+            }
+            Gen_Emit(")")
+            ReturnValue(0)
+        }
+
         // =========== OOP ADDITIONS ===========
         
         // Check for isinstance(obj, ClassName)
@@ -1609,6 +1646,9 @@ Function.Gen_MapBuiltin {
 
         cmp = StringCompare(name, "issubclass")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.IsSubclass") }
+
+        cmp = StringCompare(name, "getattr")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.GetAttr") }
 
         ReturnValue(name)
     }
