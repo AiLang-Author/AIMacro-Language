@@ -668,6 +668,12 @@ Function.Gen_EmitIdent {
             Gen_Emit("\"__main__\"")
             ReturnValue(0)
         }
+        // Module __doc__ — emit empty string stub (module docstring already emitted as expr)
+        cmp = StringCompare(name, "__doc__")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_Emit("\"\"")
+            ReturnValue(0)
+        }
         // File-scope names live in FixedPool.PyMod so Functions can see them
         is_mod = Gen_IsModuleVar(name)
         IfCondition EqualTo(is_mod, 1) ThenBlock: {
