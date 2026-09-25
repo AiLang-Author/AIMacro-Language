@@ -221,7 +221,10 @@ Function.Gen_Expr {
         }
         
         IfCondition EqualTo(t, Node.SLICE_ACCESS) ThenBlock: {
-            Gen_SliceAccess(node)
+            // Flatten to temp first (same as METHOD_CALL) so ReturnValue(
+            // / outer calls never embed Array.Create mid-arg.
+            ident = Gen_FlattenExpr(node)
+            Gen_Expr(ident)
             ReturnValue(0)
         }
         
@@ -2503,6 +2506,12 @@ Function.Gen_MapMethod {
         
         cmp = StringCompare(method, "count")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("String.Count") }
+
+        cmp = StringCompare(method, "encode")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.Encode") }
+
+        cmp = StringCompare(method, "decode")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.Decode") }
         
         cmp = StringCompare(method, "isdigit")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("String.IsDigit") }
@@ -2534,6 +2543,9 @@ Function.Gen_MapMethod {
         
         cmp = StringCompare(method, "sort")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.ListSort") }
+
+        cmp = StringCompare(method, "reverse")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.ListReverse") }
                 
         ReturnValue(method)
     }
