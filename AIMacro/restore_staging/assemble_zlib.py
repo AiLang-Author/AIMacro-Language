@@ -32,4 +32,14 @@ for m in manifest:
     if got != m["md5"]:
         ok = False
     print(f"wrote {out} {len(data)} bytes md5={got} expect={m['md5']} {status}")
+
+# Also restore tools/py2aim.py from py2aim.z.b64.NNN micros (tip17+)
+py_micros = sorted(st.glob("py2aim.z.b64.[0-9][0-9][0-9]"))
+if py_micros:
+    b64 = "".join(p.read_text() for p in py_micros)
+    data = zlib.decompress(base64.b64decode(b64))
+    outp = root / "tools" / "py2aim.py"
+    outp.write_bytes(data)
+    print(f"wrote {outp} {len(data)} bytes md5={hashlib.md5(data).hexdigest()}")
+
 sys.exit(0 if ok else 1)
