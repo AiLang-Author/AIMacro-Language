@@ -680,6 +680,21 @@ Function.Gen_EmitIdentLhs {
             Gen_Emit(name)
             ReturnValue(0)
         }
+        // AILang keywords as LHS (ObjectSet(Tuple, ...))
+        cmp = StringCompare(name, "Tuple")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_MarkModuleVar(name)
+            Gen_Emit("PyMod.")
+            Gen_Emit(name)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "Add")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_MarkModuleVar(name)
+            Gen_Emit("PyMod.")
+            Gen_Emit(name)
+            ReturnValue(0)
+        }
         is_mod = Gen_IsModuleVar(name)
         IfCondition EqualTo(is_mod, 1) ThenBlock: {
             Gen_Emit("PyMod.")
@@ -907,6 +922,21 @@ Function.Gen_EmitIdent {
                 }
                 ni = Add(ni, 1)
             }
+        }
+        // AILang keywords used as Python values (ast.Tuple / ast.Add) — PyMod escape
+        cmp = StringCompare(name, "Tuple")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_MarkModuleVar(name)
+            Gen_Emit("PyMod.")
+            Gen_Emit(name)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "Add")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_MarkModuleVar(name)
+            Gen_Emit("PyMod.")
+            Gen_Emit(name)
+            ReturnValue(0)
         }
         // File-scope names live in FixedPool.PyMod so Functions can see them
         is_mod = Gen_IsModuleVar(name)

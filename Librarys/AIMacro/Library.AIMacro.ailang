@@ -1561,6 +1561,31 @@ Function.AIMacro.ListPopAt {
 }
 
 // =============================================================================
+// LISTREVERSE - In-place reverse (list.reverse())
+// =============================================================================
+Function.AIMacro.ListReverse {
+    Input: list: Address
+    Output: Address
+    Body: {
+        IfCondition EqualTo(list, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        size = Array.Size(list)
+        i = 0
+        j = Subtract(size, 1)
+        WhileLoop LessThan(i, j) {
+            a = Array.Get(list, i)
+            b = Array.Get(list, j)
+            Array.Set(list, i, b)
+            Array.Set(list, j, a)
+            i = Add(i, 1)
+            j = Subtract(j, 1)
+        }
+        ReturnValue(0)
+    }
+}
+
+// =============================================================================
 // REVERSED - Return new list in reverse order
 // =============================================================================
 Function.AIMacro.Reversed {
@@ -3434,6 +3459,59 @@ Function.AIMacro.NumMod {
             ib = Float_ToInt(AIMacro.FloatBits(b))
         }
         ReturnValue(Modulo(ia, ib))
+    }
+}
+
+
+// str.format(...) — arity overloads (AILang has fixed arity; NumMod is 2-arg only)
+Function.AIMacro.StringFormat0 {
+    Input: fmt: Address
+    Output: Address
+    Body: {
+        ReturnValue(fmt)
+    }
+}
+
+Function.AIMacro.StringFormat1 {
+    Input: fmt: Address
+    Input: a0: Address
+    Output: Address
+    Body: {
+        // Stub: compile-legal stand-in for str.format / %-format
+        ReturnValue(fmt)
+    }
+}
+
+Function.AIMacro.StringFormat2 {
+    Input: fmt: Address
+    Input: a0: Address
+    Input: a1: Address
+    Output: Address
+    Body: {
+        ReturnValue(fmt)
+    }
+}
+
+Function.AIMacro.StringFormat3 {
+    Input: fmt: Address
+    Input: a0: Address
+    Input: a1: Address
+    Input: a2: Address
+    Output: Address
+    Body: {
+        ReturnValue(fmt)
+    }
+}
+
+Function.AIMacro.StringFormat4 {
+    Input: fmt: Address
+    Input: a0: Address
+    Input: a1: Address
+    Input: a2: Address
+    Input: a3: Address
+    Output: Address
+    Body: {
+        ReturnValue(fmt)
     }
 }
 

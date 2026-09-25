@@ -519,8 +519,12 @@ Function.Gen_MarkBodyAssignVars {
         WhileLoop LessThan(i, n) {
             stmt = Array.Get(body, i)
             st = AST_Type(stmt)
+            // IDENT assigns (incl. chains) → FixedPool.PyMod so Function locals are legal AILang
             IfCondition EqualTo(st, Node.ASSIGNMENT) ThenBlock: {
-                Gen_MarkModuleVar(ArrayGet(stmt, 3))
+                Gen_MarkAssignmentChainVars(stmt)
+            }
+            IfCondition EqualTo(st, Node.TUPLE_UNPACK) ThenBlock: {
+                Gen_MarkTupleUnpackVars(stmt)
             }
             IfCondition EqualTo(st, Node.FROM_IMPORT) ThenBlock: {
                 Gen_MarkFromImportVars(stmt)
@@ -530,6 +534,26 @@ Function.Gen_MarkBodyAssignVars {
             }
             IfCondition EqualTo(st, Node.TRY_STMT) ThenBlock: {
                 Gen_MarkTryAssignVars(stmt)
+            }
+            // Recurse into compound bodies (gettext `op` lives inside while)
+            IfCondition EqualTo(st, Node.IF_STMT) ThenBlock: {
+                Gen_MarkBodyAssignVars(ArrayGet(stmt, 4))
+                Gen_MarkBodyAssignVars(ArrayGet(stmt, 5))
+            }
+            IfCondition EqualTo(st, Node.WHILE_STMT) ThenBlock: {
+                Gen_MarkBodyAssignVars(ArrayGet(stmt, 4))
+                Gen_MarkBodyAssignVars(ArrayGet(stmt, 5))
+            }
+            IfCondition EqualTo(st, Node.FOR_STMT) ThenBlock: {
+                // for var in iter: mark loop var + body assigns
+                loop_var = ArrayGet(stmt, 3)
+                IfCondition EqualTo(AST_Type(loop_var), Node.IDENT) ThenBlock: {
+                    Gen_MarkModuleVar(ArrayGet(loop_var, 3))
+                } ElseBlock: {
+                    Gen_MarkModuleVar(loop_var)
+                }
+                Gen_MarkBodyAssignVars(ArrayGet(stmt, 5))
+                Gen_MarkBodyAssignVars(ArrayGet(stmt, 6))
             }
             i = Add(i, 1)
         }
@@ -1109,6 +1133,20 @@ Function.Gen_SliceAccess {
         start_expr = ArrayGet(node, 4)
         end_expr = ArrayGet(node, 5)
         step_expr = ArrayGet(node, 6)
+
+        // Flatten BEFORE opening ListSlice/StringSlice so join/star-list
+        // temps (reprlib sep.join(('', *pieces, ''))[1:...]) are not mid-arg
+        // (Expected ')' then SIGSEGV).
+        expr = Gen_FlattenExpr(expr)
+        IfCondition NotEqual(start_expr, 0) ThenBlock: {
+            start_expr = Gen_FlattenExpr(start_expr)
+        }
+        IfCondition NotEqual(end_expr, 0) ThenBlock: {
+            end_expr = Gen_FlattenExpr(end_expr)
+        }
+        IfCondition NotEqual(step_expr, 0) ThenBlock: {
+            step_expr = Gen_FlattenExpr(step_expr)
+        }
         
         // Check if slicing a string
         expr_type = AST_Type(expr)
@@ -2425,7 +2463,7 @@ Function.Gen_Return {
                 
                 // Flatten chained receiver (binascii.hexlify(s).upper())
                 obj_nt = AST_Type(obj)
-                IfCondition Or(EqualTo(obj_nt, Node.METHOD_CALL), Or(EqualTo(obj_nt, Node.CALL), Or(EqualTo(obj_nt, Node.ATTRIBUTE), EqualTo(obj_nt, Node.INDEX_ACCESS)))) ThenBlock: {
+                IfCondition Or(EqualTo(obj_nt, Node.METHOD_CALL), Or(EqualTo(obj_nt, Node.CALL), Or(EqualTo(obj_nt, Node.ATTRIBUTE), Or(EqualTo(obj_nt, Node.INDEX_ACCESS), EqualTo(obj_nt, Node.SLICE_ACCESS))))) ThenBlock: {
                     obj = Gen_FlattenExpr(obj)
                 }
 
@@ -2686,6 +2724,10 @@ Function.Gen_Assignment {
                 IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
                 cmp = StringCompare(method, "count")
                 IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+                cmp = StringCompare(method, "encode")
+                IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+                cmp = StringCompare(method, "decode")
+                IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
             }
             
             // If it's a builtin method, use standard method call handling
@@ -2723,7 +2765,7 @@ Function.Gen_Assignment {
             // Flatten chained receiver (e.g. bltns.bin(...).replace(...)) so
             // OOPGen setup statements are not emitted inside MethodCall(...).
             obj_nt = AST_Type(obj)
-            IfCondition Or(EqualTo(obj_nt, Node.METHOD_CALL), Or(EqualTo(obj_nt, Node.CALL), Or(EqualTo(obj_nt, Node.ATTRIBUTE), EqualTo(obj_nt, Node.INDEX_ACCESS)))) ThenBlock: {
+            IfCondition Or(EqualTo(obj_nt, Node.METHOD_CALL), Or(EqualTo(obj_nt, Node.CALL), Or(EqualTo(obj_nt, Node.ATTRIBUTE), Or(EqualTo(obj_nt, Node.INDEX_ACCESS), EqualTo(obj_nt, Node.SLICE_ACCESS))))) ThenBlock: {
                 obj = Gen_FlattenExpr(obj)
             }
             IfCondition EqualTo(args, 0) ThenBlock: {
