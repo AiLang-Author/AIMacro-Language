@@ -87,7 +87,8 @@
       "lib.z.b64.08.2",
       "lib.z.b64.08.3"
     ],
-    "md5": "7f9326010e9ba34e211024dbf5c31cab"
+    "md5": "7f9326010e9ba34e211024dbf5c31cab",
+    "_touch": "restore_oop_after_probe_corrupt"
   },
   {
     "name": "Library.AIMacroCodeGen4.ailang",
