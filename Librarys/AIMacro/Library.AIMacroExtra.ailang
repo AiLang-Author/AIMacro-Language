@@ -213,31 +213,3 @@ Function.AIMacro.ListSort {
     }
 }
 
-// str.encode(encoding, errors) — compile stub: bytes-as-str identity
-// Free-call form after Join/temp: encode(s, encoding, errors)
-Function.AIMacro.Encode {
-    Input: s: Address
-    Input: encoding: Address
-    Input: errors: Address
-    Output: Address
-    Body: {
-        IfCondition EqualTo(s, 0) ThenBlock: {
-            ReturnValue("")
-        }
-        ReturnValue(s)
-    }
-}
-
-// bytes.decode(encoding, errors) — compile stub: identity
-Function.AIMacro.Decode {
-    Input: s: Address
-    Input: encoding: Address
-    Input: errors: Address
-    Output: Address
-    Body: {
-        IfCondition EqualTo(s, 0) ThenBlock: {
-            ReturnValue("")
-        }
-        ReturnValue(s)
-    }
-}
