@@ -4,6 +4,7 @@ on:
     branches: [grokasaurus2]
     paths:
       - "AIMacro/restore_staging/manifest.json"
+      - "AIMacro/restore_staging/manifest.z.b64"
   workflow_dispatch:
 jobs:
   assemble:
@@ -26,7 +27,8 @@ jobs:
                   Librarys/AIMacro/Library.AIMacroCodeGen4.ailang \
                   Librarys/AIMacro/Library.AIMacro.ailang \
                   Librarys/AIMacro/Library.AIMacroCodeGenOOP.ailang \
-                  Librarys/AIMacro/Library.AIMacroExtra.ailang || true
+                  Librarys/AIMacro/Library.AIMacroExtra.ailang \
+                  AIMacro/restore_staging/manifest.json || true
           if git diff --cached --quiet; then
             echo "No changes to commit"
           else
