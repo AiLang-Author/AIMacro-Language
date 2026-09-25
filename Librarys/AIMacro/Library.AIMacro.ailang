@@ -3277,6 +3277,17 @@ Function.AIMacro.NumMul {
     }
 }
 
+Function.AIMacro.NumMatMul {
+    Input: a: Address
+    Input: b: Address
+    Output: Address
+    Body: {
+        args = Array.Create(1)
+        Array.Push(args, b)
+        ReturnValue(OOP.MethodCall(a, "__matmul__", args))
+    }
+}
+
 Function.AIMacro.NumBitOr {
     Input: a: Address
     Input: b: Address
@@ -3435,6 +3446,16 @@ Function.AIMacro.NumNeg {
             ReturnValue(AIMacro.FloatBox(Float_Sub(0, AIMacro.FloatBits(a))))
         }
         ReturnValue(Subtract(0, a))
+    }
+}
+
+Function.AIMacro.NumPos {
+    Input: a: Address
+    Output: Address
+    Body: {
+        // unary + : identity for ints/floats; objects may define __pos__
+        a = AIMacro.BoolVal(a)
+        ReturnValue(a)
     }
 }
 

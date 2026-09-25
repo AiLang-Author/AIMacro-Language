@@ -196,3 +196,20 @@ Function.AIMacro.ObjectType {
         ReturnValue(0)
     }
 }
+
+// In-place list.sort stub — compile coverage (mutates via TypedSorted replace)
+Function.AIMacro.ListSort {
+    Input: lst: Address
+    Input: key: Address
+    Input: reverse: Address
+    Output: Address
+    Body: {
+        IfCondition EqualTo(key, 0) ThenBlock: {
+            sorted = AIMacro.TypedSorted(lst)
+            ReturnValue(sorted)
+        }
+        sorted = AIMacro.TypedSortedKey(lst, key)
+        ReturnValue(sorted)
+    }
+}
+

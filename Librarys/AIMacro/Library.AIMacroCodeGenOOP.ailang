@@ -273,6 +273,11 @@ Function.OOPGen_FlattenExpr {
         IfCondition EqualTo(node_type, Node.LIST_COMP) ThenBlock: {
             ReturnValue(Gen_FlattenExpr(node))
         }
+        // Lambda / ternary / dict / etc. — Gen_FlattenExpr emits setup stmts;
+        // never leave them for Gen_Expr mid-argument (ObjectSet Expected ')').
+        IfCondition EqualTo(Gen_HasCall(node), 1) ThenBlock: {
+            ReturnValue(Gen_FlattenExpr(node))
+        }
         
         // Default - return as-is
         ReturnValue(node)
@@ -598,16 +603,69 @@ Function.OOPGen_MethodImpl {
         func_name = StringConcat(class_name, "_")
         func_name = StringConcat(func_name, method_name)
         
-        // Start function definition
-        Gen_Emit("Function.")
-        Gen_Emit(func_name)
-        Gen_Emit(" {\n")
-        
         // Emit parameters
         num_params = 0
         IfCondition NotEqual(params, 0) ThenBlock: {
             num_params = Array.Size(params)
         }
+        
+        // SysV limit: >6 Inputs illegal — pack into p__args like Gen_PackedFunction
+        IfCondition GreaterThan(num_params, 6) ThenBlock: {
+            Array.Push(Gen.packed_funcs, func_name)
+            Gen_Emit("Function.")
+            Gen_Emit(func_name)
+            Gen_Emit(" {\n")
+            Gen_Emit("    Input: p__args: Address\n")
+            Gen_Emit("    Output: Address\n")
+            Gen_Emit("    Body: {\n")
+            old_indent = Gen.indent
+            Gen.indent = 2
+            i = 0
+            WhileLoop LessThan(i, num_params) {
+                param = Array.Get(params, i)
+                param_name = ArrayGet(param, 0)
+                Gen_EmitIndent()
+                Gen_Emit(param_name)
+                Gen_Emit(" = DictGen_SmartGet(p__args, ")
+                Gen_EmitNumber(i)
+                Gen_Emit(")\n")
+                i = Add(i, 1)
+            }
+            enc_names = Array.Create(8)
+            ei = 0
+            WhileLoop LessThan(ei, num_params) {
+                eparam = Array.Get(params, ei)
+                Array.Push(enc_names, ArrayGet(eparam, 0))
+                ei = Add(ei, 1)
+            }
+            enc_saved = Gen_PushEnclosingParams(enc_names)
+            Array.Destroy(enc_names)
+            OOPGen_MethodBody(body)
+            Gen_TruncateEnclosing(enc_saved)
+            num_stmts = Array.Size(body)
+            has_return = 0
+            IfCondition GreaterThan(num_stmts, 0) ThenBlock: {
+                last_stmt = Array.Get(body, Subtract(num_stmts, 1))
+                IfCondition EqualTo(AST_Type(last_stmt), Node.RETURN_STMT) ThenBlock: {
+                    has_return = 1
+                }
+            }
+            IfCondition EqualTo(has_return, 0) ThenBlock: {
+                Gen_EmitIndent()
+                Gen_Emit("ReturnValue(0)\n")
+            }
+            Gen.indent = old_indent
+            Gen_Emit("    }\n")
+            Gen_Emit("}\n\n")
+            OOPGen.current_method = 0
+            ReturnValue(0)
+        }
+        
+        // Start function definition
+        Gen_Emit("Function.")
+        Gen_Emit(func_name)
+        Gen_Emit(" {\n")
+        
         i = 0
         WhileLoop LessThan(i, num_params) {
             param = Array.Get(params, i)
@@ -663,8 +721,20 @@ Function.OOPGen_MethodImpl {
         old_indent = Gen.indent
         Gen.indent = 2
         
+        // Register method params for nested-def freevar capture (self, ...)
+        enc_names = Array.Create(8)
+        ei = 0
+        WhileLoop LessThan(ei, num_params) {
+            eparam = Array.Get(params, ei)
+            Array.Push(enc_names, ArrayGet(eparam, 0))
+            ei = Add(ei, 1)
+        }
+        enc_saved = Gen_PushEnclosingParams(enc_names)
+        Array.Destroy(enc_names)
+        
        // Generate method body with OOP-aware transformations
         OOPGen_MethodBody(body)
+        Gen_TruncateEnclosing(enc_saved)
         
         // Check if last statement was a return
         num_stmts = Array.Size(body)
@@ -896,6 +966,9 @@ Function.OOPGen_Assign {
             value = Gen_FlattenExpr(value)
         }
         
+        // Bare name string target (ASSIGNMENT slot 3) → enclosing freevar
+        Gen_MarkEnclosingLocal(target)
+        
         Gen_EmitIndent()
         Gen_EmitIdent(target)
         Gen_Emit(" = ")
@@ -994,6 +1067,11 @@ Function.OOPGen_MethodCall {
         IfCondition Or(EqualTo(obj, 0), EqualTo(method, 0)) ThenBlock: {
             Gen_Emit("0")
             ReturnValue(0)
+        }
+        // Flatten chained receiver before emitting MethodCall expr
+        obj_nt = AST_Type(obj)
+        IfCondition Or(EqualTo(obj_nt, Node.METHOD_CALL), Or(EqualTo(obj_nt, Node.CALL), Or(EqualTo(obj_nt, Node.ATTRIBUTE), EqualTo(obj_nt, Node.INDEX_ACCESS)))) ThenBlock: {
+            obj = Gen_FlattenExpr(obj)
         }
         
         num_args = 0

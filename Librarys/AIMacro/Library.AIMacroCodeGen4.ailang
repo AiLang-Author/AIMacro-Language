@@ -133,6 +133,12 @@ Function.Gen_Expr {
         IfCondition EqualTo(t, Node.STR_EQ) ThenBlock: {
             left = ArrayGet(node, 3)
             right = ArrayGet(node, 5)
+            IfCondition EqualTo(Gen_HasCall(left), 1) ThenBlock: {
+                left = Gen_FlattenExpr(left)
+            }
+            IfCondition EqualTo(Gen_HasCall(right), 1) ThenBlock: {
+                right = Gen_FlattenExpr(right)
+            }
             Gen_Emit("EqualTo(StringCompare(")
             Gen_Expr(left)
             Gen_Emit(", ")
@@ -144,6 +150,12 @@ Function.Gen_Expr {
         IfCondition EqualTo(t, Node.STR_NE) ThenBlock: {
             left = ArrayGet(node, 3)
             right = ArrayGet(node, 5)
+            IfCondition EqualTo(Gen_HasCall(left), 1) ThenBlock: {
+                left = Gen_FlattenExpr(left)
+            }
+            IfCondition EqualTo(Gen_HasCall(right), 1) ThenBlock: {
+                right = Gen_FlattenExpr(right)
+            }
             Gen_Emit("NotEqual(StringCompare(")
             Gen_Expr(left)
             Gen_Emit(", ")
@@ -163,7 +175,9 @@ Function.Gen_Expr {
         }
         
         IfCondition EqualTo(t, Node.METHOD_CALL) ThenBlock: {
-            Gen_MethodCallExpr(node)
+            // Expression context: flatten so OOP setup stmts are not mid-arg
+            ident = Gen_FlattenExpr(node)
+            Gen_Expr(ident)
             ReturnValue(0)
         }
         
@@ -813,6 +827,12 @@ Function.Gen_UnaryOp {
                     Gen_Emit("AIMacro.NumBitNot(")
                     Gen_Expr(operand)
                     Gen_Emit(")")
+                } ElseBlock: {
+                    IfCondition EqualTo(op, Token.PLUS) ThenBlock: {
+                        Gen_Emit("AIMacro.NumPos(")
+                        Gen_Expr(operand)
+                        Gen_Emit(")")
+                    }
                 }
             }
         }
@@ -1146,7 +1166,13 @@ Function.Gen_CallExpr {
                 Gen_Expr(arg0)
                 Gen_Emit(", ")
                 type_const = Gen_MapTypeConstant(type_name)
-                Gen_Emit(type_const)
+                cmp_tc = StringCompare(type_const, type_name)
+                IfCondition EqualTo(cmp_tc, 0) ThenBlock: {
+                    // Imported / module name (Decimal) — use PyMod./param emit
+                    Gen_EmitIdent(type_name)
+                } ElseBlock: {
+                    Gen_Emit(type_const)
+                }
                 Gen_Emit(")")
                 ReturnValue(0)
             }
@@ -1674,6 +1700,12 @@ Function.Gen_MapBuiltin {
         cmp = StringCompare(name, "type")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("Types.TypeOf") }
 
+        cmp = StringCompare(name, "format")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.NumMod") }
+
+        cmp = StringCompare(name, "sort")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.ListSort") }
+
         cmp = StringCompare(name, "frozenset")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.FrozenSet") }
 
@@ -1805,6 +1837,10 @@ Function.Gen_MapTypeConstant {
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("TypeID.UNKNOWN") }
 
         // Exception types as isinstance args — ExcKind ints (see Gen_MapExcKind)
+        cmp = StringCompare(name, "ValueError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("2") }
+        cmp = StringCompare(name, "TypeError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("5") }
         cmp = StringCompare(name, "StopIteration")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("9") }
         cmp = StringCompare(name, "StopAsyncIteration")
@@ -2389,6 +2425,9 @@ Function.Gen_MapMethod {
         cmp = StringCompare(method, "replace")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("String.Replace") }
         
+        cmp = StringCompare(method, "format")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.NumMod") }
+        
         cmp = StringCompare(method, "find")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("String.Find") }
         
@@ -2428,6 +2467,9 @@ Function.Gen_MapMethod {
         
         cmp = StringCompare(method, "insert")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.ListInsert") }
+        
+        cmp = StringCompare(method, "sort")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.ListSort") }
                 
         ReturnValue(method)
     }

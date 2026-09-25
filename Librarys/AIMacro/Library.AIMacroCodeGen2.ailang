@@ -98,12 +98,17 @@ Function.Gen_Program {
             decl = Array.Get(decls, i)
             t = AST_Type(decl)
             IfCondition EqualTo(t, Node.ASSIGNMENT) ThenBlock: {
-                // ASSIGNMENT slot 3 is bare name string
+                // Chained a = b = expr: mark every LHS
+                Gen_MarkAssignmentChainVars(decl)
                 mname = ArrayGet(decl, 3)
-                // Skip if this name is also a Function (alias like bisect = bisect_right still OK as PyMod)
-                Gen_MarkModuleVar(mname)
-                // Pre-mark dict/list so Function bodies see Hash.Get / list methods
+                IfCondition EqualTo(AST_Type(mname), Node.IDENT) ThenBlock: {
+                    mname = ArrayGet(mname, 3)
+                }
                 mval = ArrayGet(decl, 4)
+                // Walk to final RHS through chain
+                WhileLoop EqualTo(AST_Type(mval), Node.ASSIGNMENT) {
+                    mval = ArrayGet(mval, 4)
+                }
                 IfCondition NotEqual(mval, 0) ThenBlock: {
                     mvt = AST_Type(mval)
                     IfCondition EqualTo(mvt, Node.DICT_LIT) ThenBlock: {
@@ -113,6 +118,9 @@ Function.Gen_Program {
                         Gen_MarkListVar(mname)
                     }
                 }
+            }
+            IfCondition EqualTo(t, Node.TUPLE_UNPACK) ThenBlock: {
+                Gen_MarkTupleUnpackVars(decl)
             }
             IfCondition EqualTo(t, Node.FROM_IMPORT) ThenBlock: {
                 Gen_MarkFromImportVars(decl)
@@ -207,14 +215,34 @@ Function.Gen_Program {
                 BreakLoop
             }
             pending = Gen.deferred_functions
+            pending_fv = Gen.deferred_freevars
             Gen.deferred_functions = Array.Create(64)
+            Gen.deferred_freevars = Array.Create(64)
             i = 0
             WhileLoop LessThan(i, n_def) {
+                Gen.pending_freevars = Array.Get(pending_fv, i)
                 Gen_Function(Array.Get(pending, i))
+                Gen.pending_freevars = 0
                 i = Add(i, 1)
             }
         }
         
+
+        // Hoist nested classes to file scope
+        WhileLoop EqualTo(1, 1) {
+            n_cls = Array.Size(Gen.deferred_classes)
+            IfCondition EqualTo(n_cls, 0) ThenBlock: {
+                BreakLoop
+            }
+            pending_cls = Gen.deferred_classes
+            Gen.deferred_classes = Array.Create(32)
+            ci = 0
+            WhileLoop LessThan(ci, n_cls) {
+                OOPGen_ClassDef(Array.Get(pending_cls, ci))
+                ci = Add(ci, 1)
+            }
+        }
+
         OOPGen_EmitClassInitSubroutine()
         
         n_top = Array.Size(toplevel)
@@ -255,11 +283,29 @@ Function.Gen_Program {
                     BreakLoop
                 }
                 pending = Gen.deferred_functions
+                pending_fv = Gen.deferred_freevars
                 Gen.deferred_functions = Array.Create(64)
+                Gen.deferred_freevars = Array.Create(64)
                 i = 0
                 WhileLoop LessThan(i, n_def) {
+                    Gen.pending_freevars = Array.Get(pending_fv, i)
                     Gen_Function(Array.Get(pending, i))
+                    Gen.pending_freevars = 0
                     i = Add(i, 1)
+                }
+            }
+            // Hoist nested classes discovered inside Main
+            WhileLoop EqualTo(1, 1) {
+                n_cls = Array.Size(Gen.deferred_classes)
+                IfCondition EqualTo(n_cls, 0) ThenBlock: {
+                    BreakLoop
+                }
+                pending_cls = Gen.deferred_classes
+                Gen.deferred_classes = Array.Create(32)
+                ci = 0
+                WhileLoop LessThan(ci, n_cls) {
+                    OOPGen_ClassDef(Array.Get(pending_cls, ci))
+                    ci = Add(ci, 1)
                 }
             }
             Gen_EmitLine("RunTask(Main)")
@@ -311,6 +357,68 @@ Function.Gen_MarkFromImportVars {
 }
 
 // Walk a statement list for bare ASSIGNMENTs / nested from-import / try
+
+// Mark all names in a (possibly chained) ASSIGNMENT as module vars
+Function.Gen_MarkAssignmentChainVars {
+    Input: node: Address
+    Body: {
+        IfCondition EqualTo(node, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        // Walk nested ASSIGNMENT values: a = b = c = expr
+        cur = node
+        WhileLoop EqualTo(AST_Type(cur), Node.ASSIGNMENT) {
+            tgt = ArrayGet(cur, 3)
+            // bare string or IDENT node
+            IfCondition EqualTo(AST_Type(tgt), Node.IDENT) ThenBlock: {
+                Gen_MarkModuleVar(ArrayGet(tgt, 3))
+            } ElseBlock: {
+                Gen_MarkModuleVar(tgt)
+            }
+            cur = ArrayGet(cur, 4)
+            IfCondition EqualTo(cur, 0) ThenBlock: {
+                ReturnValue(0)
+            }
+        }
+    }
+}
+
+Function.Gen_MarkTupleUnpackVars {
+    Input: node: Address
+    Body: {
+        IfCondition EqualTo(node, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        targets = ArrayGet(node, 3)
+        IfCondition EqualTo(targets, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        n = Array.Size(targets)
+        i = 0
+        WhileLoop LessThan(i, n) {
+            tgt = Array.Get(targets, i)
+            tt = AST_Type(tgt)
+            IfCondition EqualTo(tt, Node.IDENT) ThenBlock: {
+                Gen_MarkModuleVar(ArrayGet(tgt, 3))
+            }
+            // ATTRIBUTE / INDEX_ACCESS: not a module binding
+            IfCondition EqualTo(tt, Node.ATTRIBUTE) ThenBlock: {
+                // skip
+            } ElseBlock: {
+                IfCondition EqualTo(tt, Node.INDEX_ACCESS) ThenBlock: {
+                    // skip
+                } ElseBlock: {
+                    IfCondition NotEqual(tt, Node.IDENT) ThenBlock: {
+                        // bare name string (AST_Type not a node)
+                        Gen_MarkModuleVar(tgt)
+                    }
+                }
+            }
+            i = Add(i, 1)
+        }
+    }
+}
+
 Function.Gen_MarkBodyAssignVars {
     Input: body: Address
     Body: {
@@ -392,6 +500,7 @@ Function.Gen_Import {
                     i = Add(i, 1)
                     ContinueLoop
                 }
+                Gen_MarkModuleVar(module_name)
                 Gen_Emit("Import.")
                 Gen_Emit(module_name)
                 Gen_Emit("\n")
@@ -415,6 +524,7 @@ Function.Gen_Import {
             Gen_MarkModuleVar(module_name)
             ReturnValue(0)
         }
+        Gen_MarkModuleVar(module_name)
         Gen_Emit("Import.")
         Gen_Emit(module_name)
         Gen_Emit("\n")
@@ -485,6 +595,25 @@ Function.Gen_Node {
         t = AST_Type(node)
 
         IfCondition EqualTo(t, Node.CLASS_DEF) ThenBlock: {
+            // Nested class → hoist to file scope (AILang cannot nest Function/Class in Body)
+            IfCondition GreaterThan(Gen.indent, 0) ThenBlock: {
+                orig = AST_GetField(node, "name")
+                uname = StringConcat("__nest_", NumberToString(Gen.lambda_counter))
+                Gen.lambda_counter = Add(Gen.lambda_counter, 1)
+                uname = StringConcat(uname, "_")
+                uname = StringConcat(uname, orig)
+                // Rename class so methods are unique across nestings
+                // AST name field — ClassDef uses AST_GetField("name"); also ArraySet slot if needed
+                ArraySet(node, 3, uname)
+                Array.Push(Gen.deferred_classes, node)
+                Gen_EmitIndent()
+                Gen_Emit(orig)
+                Gen_Emit(" = \"")
+                Gen_Emit(uname)
+                Gen_Emit("\"\n")
+                Gen_MarkCallableVar(orig)
+                ReturnValue(0)
+            }
             OOPGen_ClassDef(node)
             ReturnValue(0)
         }
@@ -514,13 +643,15 @@ Function.Gen_Node {
                 } ElseBlock: {
                     Array.Push(Gen.func_varargs, 0)
                 }
-                Array.Push(Gen.deferred_functions, node)
+                Gen_PushDeferredFunction(node)
                 Gen_EmitIndent()
+                Gen_MarkCallableVar(orig)
+                Array.Push(Gen.nest_bind_names, orig)
+                Array.Push(Gen.nest_bind_funcs, uname)
                 Gen_Emit(orig)
                 Gen_Emit(" = AddressOf(")
                 Gen_Emit(uname)
                 Gen_Emit(")\n")
-                Gen_MarkCallableVar(orig)
                 ReturnValue(0)
             }
             Gen_Function(node)
@@ -747,9 +878,12 @@ Function.Gen_Function {
         
         Gen_EmitLine("    Body: {")
         
+        enc_saved = Gen_PushEnclosingParams(params)
         Gen.indent = Add(Gen.indent, 2)
+        Gen_EmitFreevarLocals()
         Gen_Body(body)
         Gen.indent = Subtract(Gen.indent, 2)
+        Gen_TruncateEnclosing(enc_saved)
         
         Gen_EmitLine("    }")
         Gen_EmitLine("}")
@@ -987,7 +1121,7 @@ Function.Gen_UnpackOne {
         tt = AST_Type(target)
         IfCondition EqualTo(tt, Node.IDENT) ThenBlock: {
             Gen_EmitIndent()
-            Gen_Emit(ArrayGet(target, 3))
+            Gen_EmitIdentLhs(ArrayGet(target, 3))
             Gen_Emit(" = ")
             Gen_Expr(val)
             Gen_Emit("\n")
@@ -1011,7 +1145,7 @@ Function.Gen_UnpackOne {
             ReturnValue(0)
         }
         Gen_EmitIndent()
-        Gen_Emit(target)
+        Gen_EmitIdentLhs(target)
         Gen_Emit(" = ")
         Gen_Expr(val)
         Gen_Emit("\n")
@@ -2296,6 +2430,8 @@ Function.Gen_Assignment {
         IfCondition EqualTo(target_type, Node.IDENT) ThenBlock: {
             target_name = ArrayGet(target, 3)
         }
+        // Locals closed over by nested defs
+        Gen_MarkEnclosingLocal(target_name)
         IfCondition EqualTo(value_type, Node.LAMBDA) ThenBlock: {
             Gen_MarkCallableVar(target_name)
         }
@@ -2342,7 +2478,7 @@ Function.Gen_Assignment {
                 instance_var = OOPGen_InstanceCreation(call_name, call_args)
                 
                 Gen_EmitIndent()
-                Gen_EmitIdent(target)
+                Gen_EmitIdentLhs(target)
                 Gen_Emit(" = ")
                 Gen_Emit(instance_var)
                 Gen_Emit("\n")
@@ -2462,7 +2598,7 @@ Function.Gen_Assignment {
                 Gen_FlattenMethodArgs(value)
                 
                 Gen_EmitIndent()
-                Gen_EmitIdent(target)
+                Gen_EmitIdentLhs(target)
                 Gen_Emit(" = ")
                 Gen_MethodCallExpr(value)
                 Gen_Emit("\n")
@@ -2489,6 +2625,12 @@ Function.Gen_Assignment {
             }
             
             // =========== OOP METHOD CALL (non-builtin) ===========
+            // Flatten chained receiver (e.g. bltns.bin(...).replace(...)) so
+            // OOPGen setup statements are not emitted inside MethodCall(...).
+            obj_nt = AST_Type(obj)
+            IfCondition Or(EqualTo(obj_nt, Node.METHOD_CALL), Or(EqualTo(obj_nt, Node.CALL), Or(EqualTo(obj_nt, Node.ATTRIBUTE), EqualTo(obj_nt, Node.INDEX_ACCESS)))) ThenBlock: {
+                obj = Gen_FlattenExpr(obj)
+            }
             IfCondition EqualTo(args, 0) ThenBlock: {
                 num_args = 0
             } ElseBlock: {
@@ -2523,7 +2665,7 @@ Function.Gen_Assignment {
             }
             
             Gen_EmitIndent()
-            Gen_EmitIdent(target)
+            Gen_EmitIdentLhs(target)
             Gen_Emit(" = OOP.MethodCall(")
             Gen_Expr(obj)
             Gen_Emit(", \"")
@@ -2577,7 +2719,7 @@ Function.Gen_Assignment {
                     value = Gen_FlattenExpr(value)
                     
                     Gen_EmitIndent()
-                    Gen_EmitIdent(target)
+                    Gen_EmitIdentLhs(target)
                     Gen_Emit(" = ")
                     Gen_Expr(value)
                     Gen_Emit("\n")
@@ -2588,7 +2730,7 @@ Function.Gen_Assignment {
             IfCondition EqualTo(value_type, Node.CALL) ThenBlock: {
                 Gen_FlattenCallArgs(value)
                 Gen_EmitIndent()
-                Gen_EmitIdent(target)
+                Gen_EmitIdentLhs(target)
                 Gen_Emit(" = ")
                 Gen_CallExpr(value)
                 Gen_Emit("\n")
@@ -2598,7 +2740,7 @@ Function.Gen_Assignment {
             IfCondition EqualTo(value_type, Node.METHOD_CALL) ThenBlock: {
                 Gen_FlattenMethodArgs(value)
                 Gen_EmitIndent()
-                Gen_EmitIdent(target)
+                Gen_EmitIdentLhs(target)
                 Gen_Emit(" = ")
                 Gen_MethodCallExpr(value)
                 Gen_Emit("\n")
@@ -2621,7 +2763,7 @@ Function.Gen_Assignment {
                             Gen_MarkCallableVar(target_name)
                             Gen_MarkBoundAppend(target_name, obj_name)
                             Gen_EmitIndent()
-                            Gen_EmitIdent(target)
+                            Gen_EmitIdentLhs(target)
                             Gen_Emit(" = AddressOf(AIMacro.SmartPush)\n")
                             ReturnValue(0)
                         }
@@ -2651,7 +2793,7 @@ Function.Gen_Assignment {
         }
         
         Gen_EmitIndent()
-        Gen_EmitIdent(target)
+        Gen_EmitIdentLhs(target)
         Gen_Emit(" = ")
         Gen_Expr(value)
         Gen_Emit("\n")
@@ -2694,7 +2836,7 @@ Function.Gen_PackedCallAssignment {
         
         // Emit: target = func(pack)
         Gen_EmitIndent()
-        Gen_EmitIdent(target)
+        Gen_EmitIdentLhs(target)
         Gen_Emit(" = ")
         Gen_Emit(name)
         Gen_Emit("(")
@@ -2723,7 +2865,7 @@ Function.Gen_AugAssignment {
         op_name = Gen_OpName(op)
         
         Gen_EmitIndent()
-        Gen_EmitIdent(name)
+        Gen_EmitIdentLhs(name)
         Gen_Emit(" = ")
         Gen_Emit(op_name)
         Gen_Emit("(")
@@ -2752,7 +2894,7 @@ Function.Gen_ListAssignment {
         }
         
         Gen_EmitIndent()
-        Gen_EmitIdent(target_name)
+        Gen_EmitIdentLhs(target_name)
         Gen_Emit(" = Array.Create(")
         Gen_EmitNumber(n)
         Gen_Emit(")\n")
@@ -2769,7 +2911,7 @@ Function.Gen_ListAssignment {
                 }
                 Gen_EmitIndent()
                 Gen_Emit("AIMacro.ListExtend(")
-                Gen_EmitIdent(target_name)
+                Gen_EmitIdentLhs(target_name)
                 Gen_Emit(", ")
                 Gen_Expr(val)
                 Gen_Emit(")\n")
@@ -2780,7 +2922,7 @@ Function.Gen_ListAssignment {
                 }
                 Gen_EmitIndent()
                 Gen_Emit("Array.Push(")
-                Gen_EmitIdent(target_name)
+                Gen_EmitIdentLhs(target_name)
                 Gen_Emit(", ")
                 Gen_Expr(elem)
                 Gen_Emit(")\n")
@@ -2811,7 +2953,7 @@ Function.Gen_DictAssignment {
         }
         
         Gen_EmitIndent()
-        Gen_EmitIdent(target)
+        Gen_EmitIdentLhs(target)
         Gen_Emit(" = Hash.Create(")
         Gen_EmitNumber(capacity)
         Gen_Emit(")\n")
@@ -2829,7 +2971,7 @@ Function.Gen_DictAssignment {
                 }
                 Gen_EmitIndent()
                 Gen_Emit("DictGen_Update(")
-                Gen_EmitIdent(target)
+                Gen_EmitIdentLhs(target)
                 Gen_Emit(", ")
                 Gen_Expr(val)
                 Gen_Emit(")\n")
@@ -2841,7 +2983,7 @@ Function.Gen_DictAssignment {
                 }
                 Gen_EmitIndent()
                 Gen_Emit("Hash.Set(")
-                Gen_EmitIdent(target)
+                Gen_EmitIdentLhs(target)
                 Gen_Emit(", ")
                 // Builtin type names as keys → string ("int") so type(x) matches
                 key_as_str = 0
