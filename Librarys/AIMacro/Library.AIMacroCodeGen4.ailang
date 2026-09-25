@@ -859,7 +859,8 @@ Function.Gen_CallExpr {
         name = ArrayGet(node, 3)
         args = ArrayGet(node, 4)
 
-        IfCondition EqualTo(Gen_IsCallableVar(name), 1) ThenBlock: {
+        // Param/local holding a callable (e.g. key=fn) → CallIndirect
+        IfCondition Or(EqualTo(Gen_IsCallableVar(name), 1), EqualTo(Gen_IsParam(name), 1)) ThenBlock: {
             // Bound list.append → AIMacro.SmartPush(self, args...)
             bound_self = Gen_GetBoundAppendSelf(name)
             IfCondition NotEqual(bound_self, 0) ThenBlock: {
@@ -899,6 +900,13 @@ Function.Gen_CallExpr {
         // from-import stubs (quopri binascii): call compiles as None
         IfCondition EqualTo(Gen_IsImportStub(name), 1) ThenBlock: {
             Gen_Emit("Types.GetNone()")
+            ReturnValue(0)
+        }
+
+        // object() → unique sentinel (empty array pointer)
+        cmp = StringCompare(name, "object")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_Emit("Array.Create(0)")
             ReturnValue(0)
         }
         
