@@ -1,0 +1,2 @@
+Enum = Flag = EJECT = _stdlib_enums = ReprEnum = None
+print(Enum)
