@@ -1,39 +1,25 @@
-# AIMacro overnight compile — STATUS (2026-09-25)
+# AIMacro overnight compile — STATUS (2026-09-25 cont.)
 
 ## Tip constructs
-| Construct | notes |
-|-----------|-------|
-| unary_plus / matmul | numbers + operator ok |
-| fstring_nested_quotes | Lex_ReadFString + Parse_ExprFromSource; } only at depth 0 |
-| match/case (+ guards) | py2aim desugars to if/elif |
-| tuple_unpack assign | py2aim AST desugar |
-| from_import_as | py2aim: `from M import X as Y` → bind Y |
-| for_target_unpack | py2aim: `for a,b` / nested → `_aim_funpack_N` |
-| DeprecationWarning | Gen_EmitIdent ExcKind stub |
-| slice type | TypeID.UNKNOWN / AddressOf(AIMacro.Slice) |
-| @global_enum | CodeGen2 → FixedPool.PyMod exports (calendar FEBRUARY) |
-| str.format | CodeGen4 StringFormat0..4 (was NumMod illegal arity) |
-| chained method return | CodeGen2 Gen_Return flatten receiver |
-| unbound CallIndirect(0,) | CodeGen4 → Types.GetNone() |
+unary_plus/matmul · fstring_nested_quotes · match/case · tuple_unpack · from_import_as · for_target_unpack · DeprecationWarning · slice type · @global_enum · str.format · chained method return · unbound CallIndirect(0,) · str.encode · chain assign in method · **ValueError (+ ExcKind siblings)** Gen_EmitIdent ints like StopIteration
 
 ## Probe
-aimacro_ok **17**/17 · ailang_ok **17**/17
-expanded aimacro **23**/23 · ailang ~**21**/23 (base64 compile cleared this stretch)
-leftovers: calendar `Unknown function: encode`; pprint `Variable not found: max_width`
-cleared: FEBRUARY; base64/pprint SIGSEGV `Expected ')' after arguments`
+aimacro_ok 17/17 · ailang_ok 17/17 (pre-ValueError tip)
+expanded: pprint COMPILE_OK; encode cleared; ValueError COMPILE_OK; **calendar COMPILE_OK**
+leftovers: widen probe (datetime/fractions/…); install CodeGen1 ValueError tip on origin
+cleared: encode; pprint max_width; **cg2 climb 39/39** md5 `3163d633`; ValueError EmitIdent; calendar
 
 ## Gates
-curated **25**/25 · Hash **922** · matrix transpile/compile **100**/100 (run 99/100 pre-existing `compile_module_doc` SIGSEGV)
+curated 25/25 · Hash 922 · matrix T/C 103/103 (run 102/103 pre-existing compile_module_doc SIGSEGV)
+fizzbuzz ELF 215166
 
-## Climb / tip md5s (local)
+## Climb md5s (local)
 | artifact | md5 |
 |----------|-----|
-| CodeGen1 | `b65521dbdf5989419ee8346b920cf3a6` |
-| CodeGen2 | `3163d633ac310ba465c2dd05aecedd85` |
-| CodeGen4 | `509f8ddb94e258f82660eed1acdef339` (diverged from climb tip 6b985870… by format/CallIndirect) |
-| AIMacro.ailang | `23285a410951414b7664e857c2cba649` |
-| tools/py2aim.py | `fddbddcdc64e500b26dd161706f6bb57` |
+| CodeGen1 | `e07214bfb6d7741ba4640757c4e13d5d` (ValueError) — origin Library older; micros assembled_cg1_valueerror.z.b64.000+ |
+| CodeGen2 | `3163d633ac310ba465c2dd05aecedd85` assembled_cg2.z.b64 **39/39 on origin** |
 
-Companions: `AIMacro/restore_staging/assembled_{cg2,cg4_tip,aimacro_rt}.z.b64`. Origin py2aim may still be expand-stub; verify via commit-SHA raw. Full tip: `/workspace/mcp_climb/push_py2aim_LIVE.json`.
-
-Self-Hosting: not pushed. No compiler edits. Conformance only.
+## MCP drain
+cg2 micro batches 02–09 drained + verified commit-SHA raw (39/39). cg1 ValueError micros + cg4/rt/py leftovers remain.
+Probes deleted: _trunc_500 _trunc_2000 _size_probe_4801.
+Never path-as-content. Self-Hosting: not pushed. No compiler edits. Conformance only.
