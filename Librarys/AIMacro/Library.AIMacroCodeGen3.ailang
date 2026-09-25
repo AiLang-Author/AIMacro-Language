@@ -1447,6 +1447,72 @@ Function.Gen_FlattenExpr {
                 ReturnValue(Gen_MakeIdent(temp))
             }
         }
+
+        // SLICE_ACCESS - flatten children FIRST, then temp = ListSlice(...)
+        // so ReturnValue(slice) never embeds Array.Create mid-arg (reprlib).
+        IfCondition EqualTo(t, Node.SLICE_ACCESS) ThenBlock: {
+            expr = ArrayGet(node, 3)
+            start_expr = ArrayGet(node, 4)
+            end_expr = ArrayGet(node, 5)
+            step_expr = ArrayGet(node, 6)
+            expr = Gen_FlattenExpr(expr)
+            IfCondition NotEqual(start_expr, 0) ThenBlock: {
+                start_expr = Gen_FlattenExpr(start_expr)
+            }
+            IfCondition NotEqual(end_expr, 0) ThenBlock: {
+                end_expr = Gen_FlattenExpr(end_expr)
+            }
+            IfCondition NotEqual(step_expr, 0) ThenBlock: {
+                step_expr = Gen_FlattenExpr(step_expr)
+            }
+            expr_type = AST_Type(expr)
+            is_string = 0
+            IfCondition EqualTo(expr_type, Node.IDENT) ThenBlock: {
+                is_string = Gen_IsStringVar(ArrayGet(expr, 3))
+            }
+            IfCondition EqualTo(expr_type, Node.STR_LIT) ThenBlock: {
+                is_string = 1
+            }
+            temp = Gen_TempName()
+            IfCondition EqualTo(is_string, 1) ThenBlock: {
+                Gen_MarkStringVar(temp)
+            }
+            Gen_EmitIndent()
+            Gen_Emit(temp)
+            Gen_Emit(" = ")
+            IfCondition EqualTo(is_string, 1) ThenBlock: {
+                Gen_Emit("AIMacro.StringSlice(")
+            } ElseBlock: {
+                Gen_Emit("AIMacro.ListSlice(")
+            }
+            Gen_Expr(expr)
+            Gen_Emit(", ")
+            IfCondition EqualTo(start_expr, 0) ThenBlock: {
+                Gen_Emit("0")
+            } ElseBlock: {
+                Gen_Expr(start_expr)
+            }
+            Gen_Emit(", ")
+            IfCondition EqualTo(end_expr, 0) ThenBlock: {
+                IfCondition EqualTo(is_string, 1) ThenBlock: {
+                    Gen_Emit("StringLength(")
+                } ElseBlock: {
+                    Gen_Emit("Array.Size(")
+                }
+                Gen_Expr(expr)
+                Gen_Emit(")")
+            } ElseBlock: {
+                Gen_Expr(end_expr)
+            }
+            Gen_Emit(", ")
+            IfCondition EqualTo(step_expr, 0) ThenBlock: {
+                Gen_Emit("1")
+            } ElseBlock: {
+                Gen_Expr(step_expr)
+            }
+            Gen_Emit(")\n")
+            ReturnValue(Gen_MakeIdent(temp))
+        }
         
         // BINARY_OP - flatten both sides, then ALWAYS extract to temp
         IfCondition EqualTo(t, Node.BINARY_OP) ThenBlock: {
