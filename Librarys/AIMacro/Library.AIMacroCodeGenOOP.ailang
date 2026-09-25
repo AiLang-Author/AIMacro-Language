@@ -1144,11 +1144,20 @@ Function.OOPGen_EmitClassRegistration {
         // Generate: OOP.ClassDefine("ClassName", parent_or_0)
         reg = StringConcat("    OOP.ClassDefine(\"", class_name)
         reg = StringConcat(reg, "\", ")
-        IfCondition EqualTo(parent, 0) ThenBlock: {
+        use_parent = parent
+        IfCondition NotEqual(parent, 0) ThenBlock: {
+            cmp_ex = StringCompare(parent, "Exception")
+            cmp_be = StringCompare(parent, "BaseException")
+            cmp_ob = StringCompare(parent, "object")
+            IfCondition Or(EqualTo(cmp_ex, 0), Or(EqualTo(cmp_be, 0), EqualTo(cmp_ob, 0))) ThenBlock: {
+                use_parent = 0
+            }
+        }
+        IfCondition EqualTo(use_parent, 0) ThenBlock: {
             reg = StringConcat(reg, "0")
         } ElseBlock: {
             reg = StringConcat(reg, "\"")
-            reg = StringConcat(reg, parent)
+            reg = StringConcat(reg, use_parent)
             reg = StringConcat(reg, "\"")
         }
         reg = StringConcat(reg, ")\n")

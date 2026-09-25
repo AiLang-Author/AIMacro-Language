@@ -2299,6 +2299,14 @@ Function.Gen_Assignment {
         IfCondition EqualTo(value_type, Node.LAMBDA) ThenBlock: {
             Gen_MarkCallableVar(target_name)
         }
+        // getattr may return a callable (copy.replace: func = getattr(cls, "__replace__", None))
+        IfCondition EqualTo(value_type, Node.CALL) ThenBlock: {
+            call_name = ArrayGet(value, 3)
+            cmp_ga = StringCompare(call_name, "getattr")
+            IfCondition EqualTo(cmp_ga, 0) ThenBlock: {
+                Gen_MarkCallableVar(target_name)
+            }
+        }
         
         // List literal - special handling
         IfCondition EqualTo(value_type, Node.LIST_LIT) ThenBlock: {
@@ -2621,7 +2629,8 @@ Function.Gen_Assignment {
                 }
                 cmp_next = StringCompare(attr_name, "__next__")
                 cmp_call = StringCompare(attr_name, "__call__")
-                IfCondition Or(EqualTo(cmp_next, 0), EqualTo(cmp_call, 0)) ThenBlock: {
+                cmp_add = StringCompare(attr_name, "add")
+                IfCondition Or(EqualTo(cmp_next, 0), Or(EqualTo(cmp_call, 0), EqualTo(cmp_add, 0))) ThenBlock: {
                     Gen_MarkCallableVar(target_name)
                 }
             }

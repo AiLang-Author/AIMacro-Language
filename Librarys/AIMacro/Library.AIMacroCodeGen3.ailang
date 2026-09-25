@@ -952,6 +952,17 @@ Function.Gen_FlattenExpr {
                     idx = Add(idx, 1)
                 }
             }
+
+            // Class ctor: OOPGen_InstanceCreation emits multi-stmt; must NOT
+            // wrap as "temp = <stmts>" (illegal). Capture returned inst name.
+            is_class = OOPGen_IsClassName(call_name)
+            IfCondition EqualTo(is_class, 1) ThenBlock: {
+                IfCondition EqualTo(args, 0) ThenBlock: {
+                    args = Array.Create(0)
+                }
+                instance_var = OOPGen_InstanceCreation(call_name, args)
+                ReturnValue(Gen_MakeIdent(instance_var))
+            }
             
             // Emit this call to a temp
             temp = Gen_TempName()

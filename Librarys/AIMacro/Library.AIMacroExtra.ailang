@@ -65,4 +65,134 @@ Function.AIMacro.IsSubclass {
 }
 
 
-function_PLACEHOLDER_DO_NOT_USE
+// getattr(obj, name, default) — compile conformance for copy.py / types / reprlib.
+// Emitter maps via Gen_MapBuiltin + Gen_CallExpr (pads missing default with None).
+// Stub: return default (covers getattr(x, "__copy__", None) skip paths).
+Function.AIMacro.GetAttr {
+    Input: obj: Address
+    Input: name: Address
+    Input: default: Address
+    Output: Address
+    Body: {
+        ReturnValue(default)
+    }
+}
+
+
+// id(obj) — compile conformance for copy.py (id(x) memo keys).
+// Emitter maps via Gen_MapBuiltin. Return object pointer as identity.
+Function.AIMacro.Id {
+    Input: obj: Address
+    Output: Address
+    Body: {
+        ReturnValue(obj)
+    }
+}
+
+// hasattr(obj, name) — compile conformance for copy.py.
+// Stub: False (skip __setstate__ paths).
+Function.AIMacro.HasAttr {
+    Input: obj: Address
+    Input: name: Address
+    Output: Address
+    Body: {
+        ReturnValue(AIMacro.Bool(0))
+    }
+}
+
+// setattr(obj, name, value) — compile conformance for copy.py.
+// Stub: no-op return None.
+Function.AIMacro.SetAttr {
+    Input: obj: Address
+    Input: name: Address
+    Input: value: Address
+    Output: Address
+    Body: {
+        ReturnValue(Types.GetNone())
+    }
+}
+
+// complex type object stand-in (copy._copy_dispatch keys)
+Function.AIMacro.Complex {
+    Input: real: Integer
+    Input: imag: Integer
+    Output: Integer
+    Body: {
+        ReturnValue(0)
+    }
+}
+
+// callable(x) — types.py; stub False
+Function.AIMacro.Callable {
+    Input: obj: Integer
+    Output: Integer
+    Body: {
+        ReturnValue(AIMacro.FalseVal())
+    }
+}
+
+Function.AIMacro.Range {
+    Input: a: Integer
+    Input: b: Integer
+    Input: c: Integer
+    Output: Integer
+    Body: {
+        ReturnValue(0)
+    }
+}
+
+Function.AIMacro.MemoryView {
+    Input: obj: Integer
+    Output: Integer
+    Body: {
+        ReturnValue(0)
+    }
+}
+
+Function.AIMacro.Property {
+    Input: fget: Integer
+    Output: Integer
+    Body: {
+        ReturnValue(0)
+    }
+}
+
+Function.AIMacro.ClassMethod {
+    Input: f: Integer
+    Output: Integer
+    Body: {
+        ReturnValue(f)
+    }
+}
+
+Function.AIMacro.StaticMethod {
+    Input: f: Integer
+    Output: Integer
+    Body: {
+        ReturnValue(f)
+    }
+}
+
+Function.AIMacro.Super {
+    Output: Integer
+    Body: {
+        ReturnValue(0)
+    }
+}
+
+Function.AIMacro.Slice {
+    Input: a: Integer
+    Input: b: Integer
+    Input: c: Integer
+    Output: Integer
+    Body: {
+        ReturnValue(0)
+    }
+}
+
+Function.AIMacro.ObjectType {
+    Output: Integer
+    Body: {
+        ReturnValue(0)
+    }
+}

@@ -103,6 +103,24 @@ Function.Gen_Expr {
                 Gen_Emit(")")
                 ReturnValue(0)
             }
+            // Class name as value (error = Error) → string stand-in for class object
+            IfCondition EqualTo(OOPGen_IsClassName(name), 1) ThenBlock: {
+                Gen_Emit("\"")
+                Gen_Emit(name)
+                Gen_Emit("\"")
+                ReturnValue(0)
+            }
+            // Ellipsis / NotImplemented as values (types.py EllipsisType=type(Ellipsis))
+            cmp_el = StringCompare(name, "Ellipsis")
+            IfCondition EqualTo(cmp_el, 0) ThenBlock: {
+                Gen_Emit("Types.GetNone()")
+                ReturnValue(0)
+            }
+            cmp_ni = StringCompare(name, "NotImplemented")
+            IfCondition EqualTo(cmp_ni, 0) ThenBlock: {
+                Gen_Emit("Types.GetNone()")
+                ReturnValue(0)
+            }
             Gen_EmitIdent(name)
             ReturnValue(0)
         }
@@ -1389,6 +1407,30 @@ Function.Gen_CallExpr {
             ReturnValue(0)
         }
         
+        // Unknown non-builtin name → CallIndirect (copy.func / statistics.types_add / types.meta)
+        mcmp_ci = StringCompare(func_name, name)
+        IfCondition And(EqualTo(mcmp_ci, 0), EqualTo(Gen_IsKnownFunc(name), 0)) ThenBlock: {
+            Gen_Emit("CallIndirect(")
+            // Nest free-var after hoist: not a param/callable-local → stub 0
+            IfCondition Or(EqualTo(Gen_IsParam(name), 1), EqualTo(Gen_IsCallableVar(name), 1)) ThenBlock: {
+                Gen_EmitIdent(name)
+            } ElseBlock: {
+                Gen_Emit("0")
+            }
+            i = 0
+            WhileLoop LessThan(i, n) {
+                Gen_Emit(", ")
+                arg = Array.Get(args, i)
+                IfCondition EqualTo(Gen_HasCall(arg), 1) ThenBlock: {
+                    arg = Gen_FlattenExpr(arg)
+                }
+                Gen_Expr(arg)
+                i = Add(i, 1)
+            }
+            Gen_Emit(")")
+            ReturnValue(0)
+        }
+        
         Gen_Emit(func_name)
         Gen_Emit("(")
         
@@ -1662,6 +1704,57 @@ Function.Gen_MapBuiltin {
         cmp = StringCompare(name, "setattr")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.SetAttr") }
 
+        cmp = StringCompare(name, "list")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.List") }
+
+        cmp = StringCompare(name, "dict")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.Dict") }
+
+        cmp = StringCompare(name, "set")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.MakeSet") }
+
+        cmp = StringCompare(name, "int")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.Int") }
+
+        cmp = StringCompare(name, "float")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.Float") }
+
+        cmp = StringCompare(name, "bool")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.Bool") }
+
+        cmp = StringCompare(name, "str")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.Str") }
+
+        cmp = StringCompare(name, "complex")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.Complex") }
+
+        cmp = StringCompare(name, "callable")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.Callable") }
+
+        cmp = StringCompare(name, "range")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.Range") }
+
+        cmp = StringCompare(name, "memoryview")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.MemoryView") }
+
+        cmp = StringCompare(name, "property")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.Property") }
+
+        cmp = StringCompare(name, "classmethod")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.ClassMethod") }
+
+        cmp = StringCompare(name, "staticmethod")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.StaticMethod") }
+
+        cmp = StringCompare(name, "super")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.Super") }
+
+        cmp = StringCompare(name, "slice")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.Slice") }
+
+        cmp = StringCompare(name, "object")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.ObjectType") }
+
         ReturnValue(name)
     }
 }
@@ -1707,6 +1800,9 @@ Function.Gen_MapTypeConstant {
         
         cmp = StringCompare(name, "NoneType")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("TypeID.NONE") }
+
+        cmp = StringCompare(name, "type")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("TypeID.UNKNOWN") }
         
         // Unknown type - return as-is (might be a variable)
         ReturnValue(name)
