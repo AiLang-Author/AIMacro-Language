@@ -9,9 +9,9 @@
 ## Local tip constructs (box)
 | Lib | md5 | notes |
 |-----|-----|-------|
-| cg1 | 8f7ac0de8a084c4560d9a12f25c8c5b2 | Gen_EmitIdent `__doc__` -> `""` |
+| cg1 | cf5a93c0d581890b6d25219de974d672 | StopIteration/StopAsync/BaseExceptionGroup/ExceptionGroup -> ExcKind |
 | cg2 | 9dc72a9214531a21ff78897cbe7b1e09 | getattr->callable; attr.add |
-| cg4 | 4f94b5cae7bf4e25bc94fe2400731c31 | CallIndirect; type MapBuiltin; free-var stub 0; Ellipsis/NotImplemented |
+| cg4 | 68e436f5aab5a65b86c13f73d840aef5 | MapTypeConstant StopIteration kinds |
 | oop | bc8af2d04dd0bec87069179d45917732 | Exception/BaseException/object -> parent 0 |
 | Extra | 65b7f1372710e5071410d83e537073c0 | Complex/Callable/Range/... |
 
@@ -20,24 +20,23 @@
 |--------|--------|
 | copy | **ok** |
 | types | **ok** |
-| **decimal** | **ok** (`__doc__`) |
+| decimal | **ok** (`__doc__`) |
+| contextlib | StopIteration **fixed**; leftover `self` |
 | statistics | `match` leftover (feature) |
-| contextlib | StopIteration |
 
 ## Gates (host)
-curated **25/25**, matrix **84/84/84**, fizzbuzz **215153**, Hash **922**
+curated **25/25**, matrix **85/85/85**, fizzbuzz **215153**, Hash **922**
 
 ## Probe counts
-compile_ok **9**/17 (types copy heapq colorsys keyword quopri bisect abc **decimal**)
-fail: statistics(match) enum/fractions/functools(SIGSEGV parse) contextlib(StopIteration)
+compile_ok **9**/17 (types copy heapq colorsys keyword quopri bisect abc decimal)
+fail: statistics(match) contextlib(self) enum/fractions/functools(SIGSEGV parse)
 aimacro_fail: numbers operator dataclasses
 
 ## MCP publish state
-- cg2/cg4/oop/Extra zlib assembled; remote md5s MATCH local targets
-- cg1 `__doc__` zlib + manifest.z.b64 pushed; awaiting assemble
+- cg1/cg2/cg4/oop/Extra zlib parts verified; stopit manifest.z.b64 pushed
 
 ## Ladder next
-1. contextlib StopIteration
+1. contextlib `self` (method param emit)
 2. statistics match / enum parse SIGSEGV
 3. numbers/operator/dataclasses aimacro_fail
 
