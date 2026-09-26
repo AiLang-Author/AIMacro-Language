@@ -726,6 +726,22 @@ Function.Gen_EmitIdent {
             Gen_Emit("\"\"")
             ReturnValue(0)
         }
+        // __debug__ is True unless -O; compile stub as 1
+        cmp = StringCompare(name, "__debug__")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(1)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "__file__")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_Emit("\"<aimacro>\"")
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "__package__")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_Emit("\"\"")
+            ReturnValue(0)
+        }
         // Exception type as value (isinstance / tuple) — emit ExcKind int
         cmp = StringCompare(name, "Exception")
         IfCondition EqualTo(cmp, 0) ThenBlock: {
