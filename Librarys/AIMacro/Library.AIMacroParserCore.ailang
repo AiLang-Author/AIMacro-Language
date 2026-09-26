@@ -2323,9 +2323,9 @@ Function.Parse_Yield {
             ReturnValue(Parse_Expr())
         }
 
-        // Bare yield?
+        // Bare yield? Terminators include ) ] , so (yield) / [(yield), x] parse.
         next = Parse_Type()
-        IfCondition Or(EqualTo(next, Token.SEMICOLON), Or(EqualTo(next, Token.NEWLINE), Or(EqualTo(next, Token.RBRACE), EqualTo(next, Token.EOF)))) ThenBlock: {
+        IfCondition Or(EqualTo(next, Token.SEMICOLON), Or(EqualTo(next, Token.NEWLINE), Or(EqualTo(next, Token.RBRACE), Or(EqualTo(next, Token.EOF), Or(EqualTo(next, Token.RPAREN), Or(EqualTo(next, Token.RBRACKET), EqualTo(next, Token.COMMA))))))) ThenBlock: {
             IfCondition EqualTo(as_stmt, 1) ThenBlock: {
                 node = AST_Create(Node.PASS_STMT, 0)
                 ReturnValue(node)

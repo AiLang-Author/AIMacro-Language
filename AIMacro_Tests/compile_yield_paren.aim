@@ -1,0 +1,6 @@
+generator = type((lambda: (yield))())
+def g() {
+    x = (yield)
+    y = [(yield), 1]
+}
+print(1)
