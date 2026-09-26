@@ -67,6 +67,16 @@ Function.AIMacro.IsSubclass {
 
 // getattr(obj, name, default) — compile conformance for copy.py / types / reprlib.
 // Emitter maps via Gen_MapBuiltin + Gen_CallExpr (pads missing default with None).
+// str/bytes.translate(table) — compile stub: return the original buffer.
+Function.AIMacro.Translate {
+    Input: s: Address
+    Input: table: Address
+    Output: Address
+    Body: {
+        ReturnValue(s)
+    }
+}
+
 // Stub: return default (covers getattr(x, "__copy__", None) skip paths).
 Function.AIMacro.GetAttr {
     Input: obj: Address

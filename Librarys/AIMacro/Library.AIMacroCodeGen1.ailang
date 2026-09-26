@@ -792,6 +792,186 @@ Function.Gen_EmitIdent {
             Gen_EmitNumber(12)
             ReturnValue(0)
         }
+        cmp = StringCompare(name, "BaseException")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(13)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "AttributeError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(14)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "KeyError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(15)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "NameError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(16)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "IndexError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(17)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "LookupError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(18)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "EOFError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(19)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "ImportError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(20)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "ModuleNotFoundError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(20)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "NotImplementedError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(21)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "UnboundLocalError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(16)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "OverflowError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(22)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "MemoryError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(23)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "RecursionError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(6)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "ArithmeticError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(22)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "SyntaxError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(24)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "IndentationError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(24)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "TabError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(24)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "SystemExit")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(25)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "KeyboardInterrupt")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(26)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "GeneratorExit")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(27)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "PermissionError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(3)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "FileExistsError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(3)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "TimeoutError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(3)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "ConnectionError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(3)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "BrokenPipeError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(3)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "BlockingIOError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(3)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "AF_INET")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(2)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "AF_INET6")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(10)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "AF_UNIX")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(1)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "SOCK_STREAM")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(1)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "SOCK_DGRAM")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(2)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "SOL_SOCKET")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(1)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "SO_REUSEADDR")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(2)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "IPPROTO_TCP")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(6)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "IPPROTO_UDP")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(17)
+            ReturnValue(0)
+        }
         cmp = StringCompare(name, "FutureWarning")
         IfCondition EqualTo(cmp, 0) ThenBlock: {
             Gen_EmitNumber(5)
@@ -1491,6 +1671,60 @@ Function.Gen_MapExcKind {
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(11) }
         cmp = StringCompare(name, "ExceptionGroup")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(12) }
+        cmp = StringCompare(name, "BaseException")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(13) }
+        cmp = StringCompare(name, "AttributeError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(14) }
+        cmp = StringCompare(name, "KeyError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(15) }
+        cmp = StringCompare(name, "NameError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(16) }
+        cmp = StringCompare(name, "IndexError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(17) }
+        cmp = StringCompare(name, "LookupError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(18) }
+        cmp = StringCompare(name, "EOFError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(19) }
+        cmp = StringCompare(name, "ImportError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(20) }
+        cmp = StringCompare(name, "ModuleNotFoundError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(20) }
+        cmp = StringCompare(name, "NotImplementedError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(21) }
+        cmp = StringCompare(name, "UnboundLocalError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(16) }
+        cmp = StringCompare(name, "OverflowError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(22) }
+        cmp = StringCompare(name, "MemoryError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(23) }
+        cmp = StringCompare(name, "RecursionError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(6) }
+        cmp = StringCompare(name, "ArithmeticError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(22) }
+        cmp = StringCompare(name, "SyntaxError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(24) }
+        cmp = StringCompare(name, "IndentationError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(24) }
+        cmp = StringCompare(name, "TabError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(24) }
+        cmp = StringCompare(name, "SystemExit")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(25) }
+        cmp = StringCompare(name, "KeyboardInterrupt")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(26) }
+        cmp = StringCompare(name, "GeneratorExit")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(27) }
+        cmp = StringCompare(name, "PermissionError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(3) }
+        cmp = StringCompare(name, "FileExistsError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(3) }
+        cmp = StringCompare(name, "TimeoutError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(3) }
+        cmp = StringCompare(name, "ConnectionError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(3) }
+        cmp = StringCompare(name, "BrokenPipeError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(3) }
+        cmp = StringCompare(name, "BlockingIOError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(3) }
         ReturnValue(1)
     }
 }
