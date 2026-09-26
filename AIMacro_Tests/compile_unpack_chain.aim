@@ -1,0 +1,6 @@
+class T {
+    def set(self, state) {
+        self.size, self.name = self._state = state
+    }
+}
+print(1)
