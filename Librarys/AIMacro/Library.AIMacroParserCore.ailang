@@ -1450,24 +1450,59 @@ Function.Parse_Lambda {
         Parse_SkipNoise()
         params = Array.Create(8)
         defaults = Array.Create(8)
-        is_colon = Parse_Match(Token.COLON)
-        IfCondition EqualTo(is_colon, 0) ThenBlock: {
-            WhileLoop EqualTo(1, 1) {
+        star_name = 0
+        // lambda d=1, *args, **kwargs: expr  — must advance on '='/'*'/'**'
+        // or Parse_Consume(IDENT) retries the same token forever (hmac hang).
+        WhileLoop EqualTo(1, 1) {
+            IfCondition EqualTo(Parse.err, 1) ThenBlock: {
+                BreakLoop
+            }
+            is_star = 0
+            Parse_SkipNoise()
+            IfCondition EqualTo(Parse_Match(Token.COLON), 1) ThenBlock: {
+                BreakLoop
+            }
+            IfCondition EqualTo(Parse_Match(Token.COMMA), 1) ThenBlock: {
+                Parse_Advance()
+                ContinueLoop
+            }
+            IfCondition EqualTo(Parse_Match(Token.POWER), 1) ThenBlock: {
+                Parse_Advance()
                 Parse_SkipNoise()
-                is_colon = Parse_Match(Token.COLON)
-                IfCondition EqualTo(is_colon, 1) ThenBlock: {
+                IfCondition EqualTo(Parse_Match(Token.IDENTIFIER), 1) ThenBlock: {
+                    param_name = Parse_CopyStr(Parse_Val())
+                    Parse_Advance()
+                    Array.Push(params, param_name)
+                    Array.Push(defaults, 0)
+                }
+                ContinueLoop
+            }
+            is_star = Parse_Match(Token.STAR)
+            IfCondition EqualTo(is_star, 1) ThenBlock: {
+                Parse_Advance()
+                Parse_SkipNoise()
+                IfCondition EqualTo(Parse_Match(Token.COLON), 1) ThenBlock: {
                     BreakLoop
                 }
-                is_comma = Parse_Match(Token.COMMA)
-                IfCondition EqualTo(is_comma, 1) ThenBlock: {
-                    Parse_Advance()
+                IfCondition EqualTo(Parse_Match(Token.COMMA), 1) ThenBlock: {
                     ContinueLoop
                 }
-                param_ptr = Parse_Val()
-                param_name = Parse_CopyStr(param_ptr)
-                Parse_Consume(Token.IDENTIFIER)
-                Array.Push(params, param_name)
-                Array.Push(defaults, 0)
+            }
+            IfCondition NotEqual(Parse_Type(), Token.IDENTIFIER) ThenBlock: {
+                Parse_Error("Expected lambda parameter")
+                BreakLoop
+            }
+            param_name = Parse_CopyStr(Parse_Val())
+            Parse_Advance()
+            def_expr = 0
+            IfCondition EqualTo(Parse_Match(Token.ASSIGN), 1) ThenBlock: {
+                Parse_Advance()
+                def_expr = Parse_Expr()
+            }
+            Array.Push(params, param_name)
+            Array.Push(defaults, def_expr)
+            IfCondition EqualTo(is_star, 1) ThenBlock: {
+                star_name = param_name
             }
         }
         Parse_Consume(Token.COLON)
@@ -1486,7 +1521,7 @@ Function.Parse_Lambda {
         ArraySet(node, 5, body)
         ArraySet(node, 6, 1)
         ArraySet(node, 7, defaults)
-        ArraySet(node, 8, 0)
+        ArraySet(node, 8, star_name)
         ReturnValue(node)
     }
 }
