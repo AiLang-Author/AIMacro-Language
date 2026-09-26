@@ -581,7 +581,11 @@ def desugar_yield(src: str) -> str:
             i += 1
             continue
         else:
-            expr = rest.rstrip(",")
+            # Do not rstrip(",") here: a continued call
+            #   yield TokenInfo(STRING, a[:end],
+            #          start, (n, end), line)
+            # would lose the comma after a[:end] and parse as IDENT after RPAREN.
+            expr = rest
         # Accumulate until paren/bracket balance non-negative and closed when opened
         buf = expr
         def _bal(s: str) -> int:
