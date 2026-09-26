@@ -1,0 +1,6 @@
+xs = [1, 2, 3]
+tag = 1
+attrs = [2]
+qnames = {tag, *attrs}
+x = {'__complex__': 1j}
+print(1)
