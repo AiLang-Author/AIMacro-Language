@@ -1,0 +1,8 @@
+# repro: assert msg with call must flatten BEFORE RaiseKind( (quopri unhex)
+def unhex_digit(c) {
+    if c == "x" {
+        assert False, "non-hex digit " + repr(c)
+    }
+    return 1
+}
+print(unhex_digit("a"))

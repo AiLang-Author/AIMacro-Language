@@ -1,0 +1,6 @@
+# getattr(obj, name, default) — copy.py conformance
+class C {
+}
+c = C()
+print(getattr(c, "__copy__", None))
+print(getattr(c, "missing"))

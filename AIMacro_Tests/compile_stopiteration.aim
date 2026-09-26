@@ -1,0 +1,10 @@
+# compile_stopiteration: exception type idents emit ExcKind ints
+def f(value) {
+    if isinstance(value, StopIteration) {
+        return 1
+    }
+    return 0
+}
+t = (StopIteration, StopAsyncIteration)
+print(f(None))
+print(len(t))

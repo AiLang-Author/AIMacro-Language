@@ -1,0 +1,10 @@
+class Deco {
+    def __call__(self, func) {
+        def inner(*args) {
+            return self
+        }
+        return inner
+    }
+}
+d = Deco()
+print(d)

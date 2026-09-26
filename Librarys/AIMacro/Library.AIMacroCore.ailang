@@ -85,6 +85,7 @@ FixedPool.Token {
     "DOT": Initialize=89
     "ARROW": Initialize=90
     "AT": Initialize=91
+    "AT_EQ": Initialize=92
     "NEWLINE": Initialize=100
     "EOF": Initialize=101
     "COMMENT": Initialize=102
@@ -469,6 +470,191 @@ Function.Lex_ReadString {
         }
         SetByte(result, buf_pos, 0)
 
+        ReturnValue(result)
+    }
+}
+
+// F-string body (PEP 701): quotes allowed inside {expr}; track brace depth.
+Function.Lex_ReadFString {
+    Output: Address
+    Body: {
+        quote = Lex_Char()
+        Lex_Advance()
+        triple = 0
+        empty_done = 0
+        IfCondition EqualTo(Lex_Char(), quote) ThenBlock: {
+            IfCondition EqualTo(Lex_Peek(1), quote) ThenBlock: {
+                triple = 1
+                Lex_Advance()
+                Lex_Advance()
+            } ElseBlock: {
+                empty_done = 1
+                Lex_Advance()
+            }
+        }
+
+        buf_pos = 0
+        done = empty_done
+        depth = 0
+
+        WhileLoop EqualTo(done, 0) {
+            ch = Lex_Char()
+            IfCondition EqualTo(ch, 0) ThenBlock: {
+                done = 1
+                ContinueLoop
+            }
+
+            // End of f-string at depth 0
+            IfCondition And(EqualTo(depth, 0), EqualTo(ch, quote)) ThenBlock: {
+                IfCondition EqualTo(triple, 1) ThenBlock: {
+                    IfCondition And(EqualTo(Lex_Peek(1), quote), EqualTo(Lex_Peek(2), quote)) ThenBlock: {
+                        Lex_Advance()
+                        Lex_Advance()
+                        Lex_Advance()
+                        done = 1
+                        ContinueLoop
+                    }
+                    buf_pos = Lex_BufPut(ch, buf_pos)
+                    Lex_Advance()
+                    ContinueLoop
+                }
+                Lex_Advance()
+                done = 1
+                ContinueLoop
+            }
+
+            // Escapes
+            IfCondition EqualTo(ch, 92) ThenBlock: {
+                Lex_Advance()
+                esc = Lex_Char()
+                IfCondition EqualTo(esc, 110) ThenBlock: {
+                    buf_pos = Lex_BufPut(10, buf_pos)
+                } ElseBlock: {
+                    IfCondition EqualTo(esc, 116) ThenBlock: {
+                        buf_pos = Lex_BufPut(9, buf_pos)
+                    } ElseBlock: {
+                        IfCondition EqualTo(esc, 114) ThenBlock: {
+                            buf_pos = Lex_BufPut(13, buf_pos)
+                        } ElseBlock: {
+                            buf_pos = Lex_BufPut(esc, buf_pos)
+                        }
+                    }
+                }
+                Lex_Advance()
+                ContinueLoop
+            }
+
+            // Literal doubled braces only outside expressions (depth 0).
+            // Inside {expr}, "}}" is two closers (e.g. {a:{b}}).
+            IfCondition And(EqualTo(depth, 0), And(EqualTo(ch, 123), EqualTo(Lex_Peek(1), 123))) ThenBlock: {
+                buf_pos = Lex_BufPut(123, buf_pos)
+                buf_pos = Lex_BufPut(123, buf_pos)
+                Lex_Advance()
+                Lex_Advance()
+                ContinueLoop
+            }
+            IfCondition And(EqualTo(depth, 0), And(EqualTo(ch, 125), EqualTo(Lex_Peek(1), 125))) ThenBlock: {
+                buf_pos = Lex_BufPut(125, buf_pos)
+                buf_pos = Lex_BufPut(125, buf_pos)
+                Lex_Advance()
+                Lex_Advance()
+                ContinueLoop
+            }
+
+            // Brace depth for expressions
+            IfCondition EqualTo(ch, 123) ThenBlock: {
+                depth = Add(depth, 1)
+                buf_pos = Lex_BufPut(ch, buf_pos)
+                Lex_Advance()
+                ContinueLoop
+            }
+            IfCondition EqualTo(ch, 125) ThenBlock: {
+                IfCondition GreaterThan(depth, 0) ThenBlock: {
+                    depth = Subtract(depth, 1)
+                }
+                buf_pos = Lex_BufPut(ch, buf_pos)
+                Lex_Advance()
+                ContinueLoop
+            }
+
+            // Nested string inside {expr}: copy through matching close quote
+            IfCondition And(GreaterThan(depth, 0), Or(EqualTo(ch, 34), EqualTo(ch, 39))) ThenBlock: {
+                nq = ch
+                buf_pos = Lex_BufPut(nq, buf_pos)
+                Lex_Advance()
+                ntriple = 0
+                nest_empty = 0
+                IfCondition EqualTo(Lex_Char(), nq) ThenBlock: {
+                    IfCondition EqualTo(Lex_Peek(1), nq) ThenBlock: {
+                        ntriple = 1
+                        buf_pos = Lex_BufPut(nq, buf_pos)
+                        buf_pos = Lex_BufPut(nq, buf_pos)
+                        Lex_Advance()
+                        Lex_Advance()
+                    } ElseBlock: {
+                        nest_empty = 1
+                        buf_pos = Lex_BufPut(nq, buf_pos)
+                        Lex_Advance()
+                    }
+                }
+                IfCondition EqualTo(nest_empty, 0) ThenBlock: {
+                    nended = 0
+                    WhileLoop EqualTo(nended, 0) {
+                        nc = Lex_Char()
+                        IfCondition EqualTo(nc, 0) ThenBlock: {
+                            nended = 1
+                            ContinueLoop
+                        }
+                        IfCondition EqualTo(nc, 92) ThenBlock: {
+                            buf_pos = Lex_BufPut(92, buf_pos)
+                            Lex_Advance()
+                            ne = Lex_Char()
+                            IfCondition NotEqual(ne, 0) ThenBlock: {
+                                buf_pos = Lex_BufPut(ne, buf_pos)
+                                Lex_Advance()
+                            }
+                            ContinueLoop
+                        }
+                        IfCondition EqualTo(nc, nq) ThenBlock: {
+                            IfCondition EqualTo(ntriple, 1) ThenBlock: {
+                                IfCondition And(EqualTo(Lex_Peek(1), nq), EqualTo(Lex_Peek(2), nq)) ThenBlock: {
+                                    buf_pos = Lex_BufPut(nq, buf_pos)
+                                    buf_pos = Lex_BufPut(nq, buf_pos)
+                                    buf_pos = Lex_BufPut(nq, buf_pos)
+                                    Lex_Advance()
+                                    Lex_Advance()
+                                    Lex_Advance()
+                                    nended = 1
+                                    ContinueLoop
+                                }
+                                buf_pos = Lex_BufPut(nc, buf_pos)
+                                Lex_Advance()
+                                ContinueLoop
+                            }
+                            buf_pos = Lex_BufPut(nq, buf_pos)
+                            Lex_Advance()
+                            nended = 1
+                            ContinueLoop
+                        }
+                        buf_pos = Lex_BufPut(nc, buf_pos)
+                        Lex_Advance()
+                    }
+                }
+                ContinueLoop
+            }
+
+            buf_pos = Lex_BufPut(ch, buf_pos)
+            Lex_Advance()
+        }
+
+        result_size = Add(buf_pos, 1)
+        result = Allocate(result_size)
+        i = 0
+        WhileLoop LessThan(i, buf_pos) {
+            SetByte(result, i, GetByte(Lex.buf, i))
+            i = Add(i, 1)
+        }
+        SetByte(result, buf_pos, 0)
         ReturnValue(result)
     }
 }
@@ -931,7 +1117,7 @@ Function.Lex_Tokenize {
                 }
                 IfCondition EqualTo(is_fstr, 1) ThenBlock: {
                     Lex_Advance()
-                    fstr = Lex_ReadString()
+                    fstr = Lex_ReadFString()
                     Lex_Emit(Token.FSTRING, fstr)
                 } ElseBlock: {
                     ident = Lex_ReadIdent()
@@ -1148,7 +1334,17 @@ Function.Lex_Tokenize {
             IfCondition EqualTo(ch, 44) ThenBlock: { Lex_EmitSimple(Token.COMMA) Lex_Advance() ContinueLoop }
             IfCondition EqualTo(ch, 58) ThenBlock: { Lex_EmitSimple(Token.COLON) Lex_Advance() ContinueLoop }
             IfCondition EqualTo(ch, 59) ThenBlock: { Lex_EmitSimple(Token.SEMICOLON) Lex_Advance() ContinueLoop }
-            IfCondition EqualTo(ch, 64) ThenBlock: { Lex_EmitSimple(Token.AT) Lex_Advance() ContinueLoop }
+            IfCondition EqualTo(ch, 64) ThenBlock: {
+                IfCondition EqualTo(Lex_Peek(1), 61) ThenBlock: {
+                    Lex_EmitSimple(Token.AT_EQ)
+                    Lex_Advance()
+                    Lex_Advance()
+                    ContinueLoop
+                }
+                Lex_EmitSimple(Token.AT)
+                Lex_Advance()
+                ContinueLoop
+            }
             IfCondition EqualTo(ch, 124) ThenBlock: { Lex_EmitSimple(Token.BIT_OR) Lex_Advance() ContinueLoop }
             IfCondition EqualTo(ch, 94) ThenBlock: { Lex_EmitSimple(Token.BIT_XOR) Lex_Advance() ContinueLoop }
             IfCondition EqualTo(ch, 38) ThenBlock: { Lex_EmitSimple(Token.BIT_AND) Lex_Advance() ContinueLoop }

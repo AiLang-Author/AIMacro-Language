@@ -1,0 +1,4 @@
+def warn_it(msg) {
+    return DeprecationWarning
+}
+print(warn_it("x"))

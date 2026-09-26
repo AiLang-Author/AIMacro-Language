@@ -1,0 +1,5 @@
+def formatpage(encoding) {
+    v = ["a", "b"]
+    return ''.join(v).encode(encoding, 'xmlcharrefreplace')
+}
+print(formatpage('utf-8'))

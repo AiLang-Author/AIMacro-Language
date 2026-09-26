@@ -1,0 +1,9 @@
+# getattr result assigned then called → CallIndirect (copy.replace)
+class C {
+    def __replace__(self, **kw) {
+        return 42
+    }
+}
+obj = C()
+func = getattr(type(obj), "__replace__", None)
+print(func(obj))

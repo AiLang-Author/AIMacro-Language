@@ -1,0 +1,13 @@
+# NormalDist().inv_cdf — statistics.py _kernel_invcdfs (illegal emit fix)
+class NormalDist {
+    def inv_cdf(self, p) {
+        return p
+    }
+}
+f = NormalDist().inv_cdf
+d = {
+    "normal": NormalDist().inv_cdf,
+    "logistic": lambda p: p,
+}
+print(f)
+print(d)

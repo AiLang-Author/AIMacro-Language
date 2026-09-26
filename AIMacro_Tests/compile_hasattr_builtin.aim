@@ -1,0 +1,2 @@
+# hasattr(obj, name) — copy.py __setstate__ skip
+print(hasattr([1], "__setstate__"))

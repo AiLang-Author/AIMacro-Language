@@ -1,0 +1,14 @@
+# repro: from-import inside try must stub PyMod names (quopri binascii)
+try {
+    from binascii import a2b_qp, b2a_qp
+} except ImportError {
+    a2b_qp = None
+    b2a_qp = None
+}
+def use_it() {
+    if b2a_qp is not None {
+        return 1
+    }
+    return 0
+}
+print(use_it())

@@ -1,0 +1,14 @@
+class PrettyPrinter {
+    def __init__(self, width) {
+        self._width = width
+    }
+    def _format_items(self, indent, allowance) {
+        width = max_width = self._width - indent + 1
+        max_width = max_width - allowance
+        width = max_width
+        print(width)
+        print(max_width)
+    }
+}
+p = PrettyPrinter(80)
+p._format_items(0, 1)

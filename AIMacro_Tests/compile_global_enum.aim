@@ -1,0 +1,6 @@
+@global_enum
+class Month {
+    FEBRUARY = 2
+    MARCH = 3
+}
+print(FEBRUARY + MARCH)

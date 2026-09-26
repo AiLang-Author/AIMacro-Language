@@ -1,0 +1,5 @@
+from bogomod import _html5
+
+def f(s) {
+    return _html5
+}

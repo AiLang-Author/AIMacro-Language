@@ -1,0 +1,9 @@
+# setattr — copy.py
+class A {
+    def __init__(self) {
+        self.x = 1
+    }
+}
+a = A()
+setattr(a, "y", 2)
+print(1)

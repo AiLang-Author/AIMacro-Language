@@ -1,0 +1,8 @@
+decorator = "@d"
+name = "f"
+args = "x"
+return_annotation = ""
+body = "  pass"
+lst = []
+lst.append(f'{f' {decorator}\n' if decorator else ''} def {name}({args}){return_annotation}:\n{body}')
+print(lst)

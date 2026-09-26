@@ -1,0 +1,21 @@
+class PrettyPrinter {
+    def __init__(self) {
+        self._width = 80
+    }
+    def format(self, object, indent, allowance, level) {
+        chunks = []
+        lines = ["a", "b"]
+        max_width1 = max_width = self._width - indent
+        for i in [0, 1] {
+            if i == 1 {
+                max_width1 -= allowance
+            }
+            max_width2 = max_width
+            print(max_width1)
+            print(max_width2)
+        }
+        return chunks
+    }
+}
+p = PrettyPrinter()
+print(p.format("x", 2, 1, 1))

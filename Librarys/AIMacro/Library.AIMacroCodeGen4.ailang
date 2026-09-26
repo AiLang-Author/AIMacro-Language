@@ -87,6 +87,40 @@ Function.Gen_Expr {
         
         IfCondition EqualTo(t, Node.IDENT) ThenBlock: {
             name = ArrayGet(node, 3)
+            // Builtin used as a value: AddressOf(AIMacro.X) (heapq map(iter, xs))
+            mapped = Gen_MapBuiltin(name)
+            mcmp = StringCompare(mapped, name)
+            IfCondition NotEqual(mcmp, 0) ThenBlock: {
+                Gen_Emit("AddressOf(")
+                Gen_Emit(mapped)
+                Gen_Emit(")")
+                ReturnValue(0)
+            }
+            // Function used as a value: emit AddressOf(fn) so AILang sees a pointer
+            IfCondition EqualTo(Gen_IsKnownFunc(name), 1) ThenBlock: {
+                Gen_Emit("AddressOf(")
+                Gen_Emit(name)
+                Gen_Emit(")")
+                ReturnValue(0)
+            }
+            // Class name as value (error = Error) → string stand-in for class object
+            IfCondition EqualTo(OOPGen_IsClassName(name), 1) ThenBlock: {
+                Gen_Emit("\"")
+                Gen_Emit(name)
+                Gen_Emit("\"")
+                ReturnValue(0)
+            }
+            // Ellipsis / NotImplemented as values (types.py EllipsisType=type(Ellipsis))
+            cmp_el = StringCompare(name, "Ellipsis")
+            IfCondition EqualTo(cmp_el, 0) ThenBlock: {
+                Gen_Emit("Types.GetNone()")
+                ReturnValue(0)
+            }
+            cmp_ni = StringCompare(name, "NotImplemented")
+            IfCondition EqualTo(cmp_ni, 0) ThenBlock: {
+                Gen_Emit("Types.GetNone()")
+                ReturnValue(0)
+            }
             Gen_EmitIdent(name)
             ReturnValue(0)
         }
@@ -99,6 +133,12 @@ Function.Gen_Expr {
         IfCondition EqualTo(t, Node.STR_EQ) ThenBlock: {
             left = ArrayGet(node, 3)
             right = ArrayGet(node, 5)
+            IfCondition EqualTo(Gen_HasCall(left), 1) ThenBlock: {
+                left = Gen_FlattenExpr(left)
+            }
+            IfCondition EqualTo(Gen_HasCall(right), 1) ThenBlock: {
+                right = Gen_FlattenExpr(right)
+            }
             Gen_Emit("EqualTo(StringCompare(")
             Gen_Expr(left)
             Gen_Emit(", ")
@@ -110,6 +150,12 @@ Function.Gen_Expr {
         IfCondition EqualTo(t, Node.STR_NE) ThenBlock: {
             left = ArrayGet(node, 3)
             right = ArrayGet(node, 5)
+            IfCondition EqualTo(Gen_HasCall(left), 1) ThenBlock: {
+                left = Gen_FlattenExpr(left)
+            }
+            IfCondition EqualTo(Gen_HasCall(right), 1) ThenBlock: {
+                right = Gen_FlattenExpr(right)
+            }
             Gen_Emit("NotEqual(StringCompare(")
             Gen_Expr(left)
             Gen_Emit(", ")
@@ -129,7 +175,9 @@ Function.Gen_Expr {
         }
         
         IfCondition EqualTo(t, Node.METHOD_CALL) ThenBlock: {
-            Gen_MethodCallExpr(node)
+            // Expression context: flatten so OOP setup stmts are not mid-arg
+            ident = Gen_FlattenExpr(node)
+            Gen_Expr(ident)
             ReturnValue(0)
         }
         
@@ -173,7 +221,10 @@ Function.Gen_Expr {
         }
         
         IfCondition EqualTo(t, Node.SLICE_ACCESS) ThenBlock: {
-            Gen_SliceAccess(node)
+            // Flatten to temp first (same as METHOD_CALL) so ReturnValue(
+            // / outer calls never embed Array.Create mid-arg.
+            ident = Gen_FlattenExpr(node)
+            Gen_Expr(ident)
             ReturnValue(0)
         }
         
@@ -779,6 +830,12 @@ Function.Gen_UnaryOp {
                     Gen_Emit("AIMacro.NumBitNot(")
                     Gen_Expr(operand)
                     Gen_Emit(")")
+                } ElseBlock: {
+                    IfCondition EqualTo(op, Token.PLUS) ThenBlock: {
+                        Gen_Emit("AIMacro.NumPos(")
+                        Gen_Expr(operand)
+                        Gen_Emit(")")
+                    }
                 }
             }
         }
@@ -843,7 +900,27 @@ Function.Gen_CallExpr {
         name = ArrayGet(node, 3)
         args = ArrayGet(node, 4)
 
-        IfCondition EqualTo(Gen_IsCallableVar(name), 1) ThenBlock: {
+        // Param/local holding a callable (e.g. key=fn) → CallIndirect
+        IfCondition Or(EqualTo(Gen_IsCallableVar(name), 1), EqualTo(Gen_IsParam(name), 1)) ThenBlock: {
+            // Bound list.append → AIMacro.SmartPush(self, args...)
+            bound_self = Gen_GetBoundAppendSelf(name)
+            IfCondition NotEqual(bound_self, 0) ThenBlock: {
+                Gen_Emit("AIMacro.SmartPush(")
+                Gen_EmitIdent(bound_self)
+                n = Array.Size(args)
+                i = 0
+                WhileLoop LessThan(i, n) {
+                    Gen_Emit(", ")
+                    arg = Array.Get(args, i)
+                    IfCondition EqualTo(Gen_HasCall(arg), 1) ThenBlock: {
+                        arg = Gen_FlattenExpr(arg)
+                    }
+                    Gen_Expr(arg)
+                    i = Add(i, 1)
+                }
+                Gen_Emit(")")
+                ReturnValue(0)
+            }
             Gen_Emit("CallIndirect(")
             Gen_EmitIdent(name)
             n = Array.Size(args)
@@ -858,6 +935,19 @@ Function.Gen_CallExpr {
                 i = Add(i, 1)
             }
             Gen_Emit(")")
+            ReturnValue(0)
+        }
+
+        // from-import stubs (quopri binascii): call compiles as None
+        IfCondition EqualTo(Gen_IsImportStub(name), 1) ThenBlock: {
+            Gen_Emit("Types.GetNone()")
+            ReturnValue(0)
+        }
+
+        // object() → unique sentinel (empty array pointer)
+        cmp = StringCompare(name, "object")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_Emit("Array.Create(0)")
             ReturnValue(0)
         }
         
@@ -1079,7 +1169,13 @@ Function.Gen_CallExpr {
                 Gen_Expr(arg0)
                 Gen_Emit(", ")
                 type_const = Gen_MapTypeConstant(type_name)
-                Gen_Emit(type_const)
+                cmp_tc = StringCompare(type_const, type_name)
+                IfCondition EqualTo(cmp_tc, 0) ThenBlock: {
+                    // Imported / module name (Decimal) — use PyMod./param emit
+                    Gen_EmitIdent(type_name)
+                } ElseBlock: {
+                    Gen_Emit(type_const)
+                }
                 Gen_Emit(")")
                 ReturnValue(0)
             }
@@ -1091,16 +1187,16 @@ Function.Gen_CallExpr {
             ReturnValue(0)
         }
         
-        // Handle type() specially
+        // Handle type() specially — string name so dict keys like {int: f} match
         cmp = StringCompare(name, "type")
         IfCondition EqualTo(cmp, 0) ThenBlock: {
-            Gen_Emit("Types.TypeOf(")
+            Gen_Emit("Types.TypeName(Types.TypeOf(")
             n = Array.Size(args)
             IfCondition GreaterThan(n, 0) ThenBlock: {
                 arg0 = Array.Get(args, 0)
                 Gen_Expr(arg0)
             }
-            Gen_Emit(")")
+            Gen_Emit("))")
             ReturnValue(0)
         }
         
@@ -1150,6 +1246,43 @@ Function.Gen_CallExpr {
         }
 
         // ===== END len() dict handling =====
+
+        // getattr(obj, name[, default]) → AIMacro.GetAttr (pad default)
+        cmp = StringCompare(name, "getattr")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            a0 = Gen_NthPosArg(args, 0)
+            a1 = Gen_NthPosArg(args, 1)
+            a2 = Gen_NthPosArg(args, 2)
+            Gen_Emit("AIMacro.GetAttr(")
+            IfCondition NotEqual(a0, 0) ThenBlock: {
+                IfCondition EqualTo(Gen_HasCall(a0), 1) ThenBlock: {
+                    a0 = Gen_FlattenExpr(a0)
+                }
+                Gen_Expr(a0)
+            } ElseBlock: {
+                Gen_Emit("Types.GetNone()")
+            }
+            Gen_Emit(", ")
+            IfCondition NotEqual(a1, 0) ThenBlock: {
+                IfCondition EqualTo(Gen_HasCall(a1), 1) ThenBlock: {
+                    a1 = Gen_FlattenExpr(a1)
+                }
+                Gen_Expr(a1)
+            } ElseBlock: {
+                Gen_Emit("\"\"")
+            }
+            Gen_Emit(", ")
+            IfCondition NotEqual(a2, 0) ThenBlock: {
+                IfCondition EqualTo(Gen_HasCall(a2), 1) ThenBlock: {
+                    a2 = Gen_FlattenExpr(a2)
+                }
+                Gen_Expr(a2)
+            } ElseBlock: {
+                Gen_Emit("Types.GetNone()")
+            }
+            Gen_Emit(")")
+            ReturnValue(0)
+        }
 
         // =========== OOP ADDITIONS ===========
         
@@ -1300,6 +1433,31 @@ Function.Gen_CallExpr {
                 i = Add(i, 1)
             }
             Gen_Emit(")")
+            ReturnValue(0)
+        }
+        
+        // Unknown non-builtin name → CallIndirect (copy.func / statistics.types_add / types.meta)
+        mcmp_ci = StringCompare(func_name, name)
+        IfCondition And(EqualTo(mcmp_ci, 0), EqualTo(Gen_IsKnownFunc(name), 0)) ThenBlock: {
+            // Unbound callee: CallIndirect(0, ...) is illegal AILang
+            // (literal 0 + args → Expected ')' ). Stub whole call as None.
+            IfCondition Or(EqualTo(Gen_IsParam(name), 1), EqualTo(Gen_IsCallableVar(name), 1)) ThenBlock: {
+                Gen_Emit("CallIndirect(")
+                Gen_EmitIdent(name)
+                i = 0
+                WhileLoop LessThan(i, n) {
+                    Gen_Emit(", ")
+                    arg = Array.Get(args, i)
+                    IfCondition EqualTo(Gen_HasCall(arg), 1) ThenBlock: {
+                        arg = Gen_FlattenExpr(arg)
+                    }
+                    Gen_Expr(arg)
+                    i = Add(i, 1)
+                }
+                Gen_Emit(")")
+            } ElseBlock: {
+                Gen_Emit("Types.GetNone()")
+            }
             ReturnValue(0)
         }
         
@@ -1527,6 +1685,15 @@ Function.Gen_MapBuiltin {
         cmp = StringCompare(name, "zip")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.Zip") }
 
+        cmp = StringCompare(name, "map")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.Map") }
+
+        cmp = StringCompare(name, "iter")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.Iter") }
+
+        cmp = StringCompare(name, "next")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.Next") }
+
         // Use typed sorted that returns TArray
         cmp = StringCompare(name, "sorted")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.TypedSorted") }
@@ -1536,6 +1703,96 @@ Function.Gen_MapBuiltin {
         
         cmp = StringCompare(name, "type")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("Types.TypeOf") }
+
+        cmp = StringCompare(name, "format")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.StringFormat1") }
+
+        cmp = StringCompare(name, "sort")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.ListSort") }
+
+        cmp = StringCompare(name, "frozenset")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.FrozenSet") }
+
+        cmp = StringCompare(name, "translate")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.Translate") }
+
+        cmp = StringCompare(name, "set")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.MakeSet") }
+
+        cmp = StringCompare(name, "bytes")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.Bytes") }
+
+        cmp = StringCompare(name, "bytearray")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.ByteArray") }
+
+        cmp = StringCompare(name, "issubclass")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.IsSubclass") }
+
+        cmp = StringCompare(name, "getattr")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.GetAttr") }
+
+        cmp = StringCompare(name, "id")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.Id") }
+
+        cmp = StringCompare(name, "tuple")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.Tuple") }
+
+        cmp = StringCompare(name, "hasattr")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.HasAttr") }
+
+        cmp = StringCompare(name, "setattr")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.SetAttr") }
+
+        cmp = StringCompare(name, "list")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.List") }
+
+        cmp = StringCompare(name, "dict")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.Dict") }
+
+        cmp = StringCompare(name, "set")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.MakeSet") }
+
+        cmp = StringCompare(name, "int")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.Int") }
+
+        cmp = StringCompare(name, "float")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.Float") }
+
+        cmp = StringCompare(name, "bool")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.Bool") }
+
+        cmp = StringCompare(name, "str")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.Str") }
+
+        cmp = StringCompare(name, "complex")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.Complex") }
+
+        cmp = StringCompare(name, "callable")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.Callable") }
+
+        cmp = StringCompare(name, "range")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.Range") }
+
+        cmp = StringCompare(name, "memoryview")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.MemoryView") }
+
+        cmp = StringCompare(name, "property")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.Property") }
+
+        cmp = StringCompare(name, "classmethod")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.ClassMethod") }
+
+        cmp = StringCompare(name, "staticmethod")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.StaticMethod") }
+
+        cmp = StringCompare(name, "super")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.Super") }
+
+        cmp = StringCompare(name, "slice")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.Slice") }
+
+        cmp = StringCompare(name, "object")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.ObjectType") }
 
         ReturnValue(name)
     }
@@ -1558,8 +1815,17 @@ Function.Gen_MapTypeConstant {
         
         cmp = StringCompare(name, "str")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("TypeID.STR") }
+
+        cmp = StringCompare(name, "bytes")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("TypeID.STR") }
+
+        cmp = StringCompare(name, "bytearray")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("TypeID.STR") }
         
         cmp = StringCompare(name, "list")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("TypeID.LIST") }
+
+        cmp = StringCompare(name, "tuple")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("TypeID.LIST") }
         
         cmp = StringCompare(name, "dict")
@@ -1573,6 +1839,26 @@ Function.Gen_MapTypeConstant {
         
         cmp = StringCompare(name, "NoneType")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("TypeID.NONE") }
+
+        cmp = StringCompare(name, "type")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("TypeID.UNKNOWN") }
+
+        cmp = StringCompare(name, "slice")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("TypeID.UNKNOWN") }
+
+        // Exception types as isinstance args — ExcKind ints (see Gen_MapExcKind)
+        cmp = StringCompare(name, "ValueError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("2") }
+        cmp = StringCompare(name, "TypeError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("5") }
+        cmp = StringCompare(name, "StopIteration")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("9") }
+        cmp = StringCompare(name, "StopAsyncIteration")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("10") }
+        cmp = StringCompare(name, "BaseExceptionGroup")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("11") }
+        cmp = StringCompare(name, "ExceptionGroup")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("12") }
         
         // Unknown type - return as-is (might be a variable)
         ReturnValue(name)
@@ -2090,6 +2376,66 @@ Function.Gen_MethodCallExpr {
         
         // =========== END OOP ADDITIONS ===========
 
+        // str.format → arity-specific StringFormatN (NumMod is 2-arg only;
+        // multi-arg .format was emitting illegal AIMacro.NumMod(a,b,c) → Expected ')')
+        cmp = StringCompare(method, "format")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            IfCondition EqualTo(args, 0) ThenBlock: {
+                n = 0
+            } ElseBlock: {
+                n = Array.Size(args)
+            }
+            IfCondition EqualTo(n, 0) ThenBlock: {
+                Gen_Emit("AIMacro.StringFormat0(")
+                Gen_Expr(obj)
+                Gen_Emit(")")
+                ReturnValue(0)
+            }
+            IfCondition EqualTo(n, 1) ThenBlock: {
+                Gen_Emit("AIMacro.StringFormat1(")
+                Gen_Expr(obj)
+                Gen_Emit(", ")
+                Gen_Expr(Array.Get(args, 0))
+                Gen_Emit(")")
+                ReturnValue(0)
+            }
+            IfCondition EqualTo(n, 2) ThenBlock: {
+                Gen_Emit("AIMacro.StringFormat2(")
+                Gen_Expr(obj)
+                Gen_Emit(", ")
+                Gen_Expr(Array.Get(args, 0))
+                Gen_Emit(", ")
+                Gen_Expr(Array.Get(args, 1))
+                Gen_Emit(")")
+                ReturnValue(0)
+            }
+            IfCondition EqualTo(n, 3) ThenBlock: {
+                Gen_Emit("AIMacro.StringFormat3(")
+                Gen_Expr(obj)
+                Gen_Emit(", ")
+                Gen_Expr(Array.Get(args, 0))
+                Gen_Emit(", ")
+                Gen_Expr(Array.Get(args, 1))
+                Gen_Emit(", ")
+                Gen_Expr(Array.Get(args, 2))
+                Gen_Emit(")")
+                ReturnValue(0)
+            }
+            // 4+ args: pack into StringFormat4 using first four (compile bar)
+            Gen_Emit("AIMacro.StringFormat4(")
+            Gen_Expr(obj)
+            Gen_Emit(", ")
+            Gen_Expr(Array.Get(args, 0))
+            Gen_Emit(", ")
+            Gen_Expr(Array.Get(args, 1))
+            Gen_Emit(", ")
+            Gen_Expr(Array.Get(args, 2))
+            Gen_Emit(", ")
+            Gen_Expr(Array.Get(args, 3))
+            Gen_Emit(")")
+            ReturnValue(0)
+        }
+
         // Normal method dispatch for non-ambiguous methods
         func = Gen_MapMethod(method)
         
@@ -2149,6 +2495,9 @@ Function.Gen_MapMethod {
         cmp = StringCompare(method, "replace")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("String.Replace") }
         
+        cmp = StringCompare(method, "format")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.StringFormat1") }
+        
         cmp = StringCompare(method, "find")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("String.Find") }
         
@@ -2160,6 +2509,12 @@ Function.Gen_MapMethod {
         
         cmp = StringCompare(method, "count")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("String.Count") }
+
+        cmp = StringCompare(method, "encode")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.Encode") }
+
+        cmp = StringCompare(method, "decode")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.Decode") }
         
         cmp = StringCompare(method, "isdigit")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("String.IsDigit") }
@@ -2188,6 +2543,12 @@ Function.Gen_MapMethod {
         
         cmp = StringCompare(method, "insert")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.ListInsert") }
+        
+        cmp = StringCompare(method, "sort")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.ListSort") }
+
+        cmp = StringCompare(method, "reverse")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.ListReverse") }
                 
         ReturnValue(method)
     }

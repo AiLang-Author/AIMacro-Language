@@ -1,0 +1,7 @@
+def main() {
+    xs = [1, 2, 3]
+    xs.reverse()
+    print(xs[0])
+    print(xs[2])
+}
+main()

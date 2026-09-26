@@ -752,6 +752,40 @@ Function.Gen_FlattenExpr {
         IfCondition EqualTo(t, Node.CHAIN_COMPARE) ThenBlock: {
             ReturnValue(Gen_FlattenChainCompare(node))
         }
+        IfCondition EqualTo(t, Node.STR_EQ) ThenBlock: {
+            left = ArrayGet(node, 3)
+            right = ArrayGet(node, 5)
+            flat_l = Gen_FlattenExpr(left)
+            flat_r = Gen_FlattenExpr(right)
+            ArraySet(node, 3, flat_l)
+            ArraySet(node, 5, flat_r)
+            temp = Gen_TempName()
+            Gen_EmitIndent()
+            Gen_Emit(temp)
+            Gen_Emit(" = EqualTo(StringCompare(")
+            Gen_Expr(flat_l)
+            Gen_Emit(", ")
+            Gen_Expr(flat_r)
+            Gen_Emit("), 0)\n")
+            ReturnValue(Gen_MakeIdent(temp))
+        }
+        IfCondition EqualTo(t, Node.STR_NE) ThenBlock: {
+            left = ArrayGet(node, 3)
+            right = ArrayGet(node, 5)
+            flat_l = Gen_FlattenExpr(left)
+            flat_r = Gen_FlattenExpr(right)
+            ArraySet(node, 3, flat_l)
+            ArraySet(node, 5, flat_r)
+            temp = Gen_TempName()
+            Gen_EmitIndent()
+            Gen_Emit(temp)
+            Gen_Emit(" = NotEqual(StringCompare(")
+            Gen_Expr(flat_l)
+            Gen_Emit(", ")
+            Gen_Expr(flat_r)
+            Gen_Emit("), 0)\n")
+            ReturnValue(Gen_MakeIdent(temp))
+        }
         IfCondition EqualTo(t, Node.LAMBDA) ThenBlock: {
             ReturnValue(Gen_FlattenLambda(node))
         }
@@ -951,6 +985,17 @@ Function.Gen_FlattenExpr {
                     Array.Set(args, idx, flat_arg)
                     idx = Add(idx, 1)
                 }
+            }
+
+            // Class ctor: OOPGen_InstanceCreation emits multi-stmt; must NOT
+            // wrap as "temp = <stmts>" (illegal). Capture returned inst name.
+            is_class = OOPGen_IsClassName(call_name)
+            IfCondition EqualTo(is_class, 1) ThenBlock: {
+                IfCondition EqualTo(args, 0) ThenBlock: {
+                    args = Array.Create(0)
+                }
+                instance_var = OOPGen_InstanceCreation(call_name, args)
+                ReturnValue(Gen_MakeIdent(instance_var))
             }
             
             // Emit this call to a temp
@@ -1402,6 +1447,72 @@ Function.Gen_FlattenExpr {
                 ReturnValue(Gen_MakeIdent(temp))
             }
         }
+
+        // SLICE_ACCESS - flatten children FIRST, then temp = ListSlice(...)
+        // so ReturnValue(slice) never embeds Array.Create mid-arg (reprlib).
+        IfCondition EqualTo(t, Node.SLICE_ACCESS) ThenBlock: {
+            expr = ArrayGet(node, 3)
+            start_expr = ArrayGet(node, 4)
+            end_expr = ArrayGet(node, 5)
+            step_expr = ArrayGet(node, 6)
+            expr = Gen_FlattenExpr(expr)
+            IfCondition NotEqual(start_expr, 0) ThenBlock: {
+                start_expr = Gen_FlattenExpr(start_expr)
+            }
+            IfCondition NotEqual(end_expr, 0) ThenBlock: {
+                end_expr = Gen_FlattenExpr(end_expr)
+            }
+            IfCondition NotEqual(step_expr, 0) ThenBlock: {
+                step_expr = Gen_FlattenExpr(step_expr)
+            }
+            expr_type = AST_Type(expr)
+            is_string = 0
+            IfCondition EqualTo(expr_type, Node.IDENT) ThenBlock: {
+                is_string = Gen_IsStringVar(ArrayGet(expr, 3))
+            }
+            IfCondition EqualTo(expr_type, Node.STR_LIT) ThenBlock: {
+                is_string = 1
+            }
+            temp = Gen_TempName()
+            IfCondition EqualTo(is_string, 1) ThenBlock: {
+                Gen_MarkStringVar(temp)
+            }
+            Gen_EmitIndent()
+            Gen_Emit(temp)
+            Gen_Emit(" = ")
+            IfCondition EqualTo(is_string, 1) ThenBlock: {
+                Gen_Emit("AIMacro.StringSlice(")
+            } ElseBlock: {
+                Gen_Emit("AIMacro.ListSlice(")
+            }
+            Gen_Expr(expr)
+            Gen_Emit(", ")
+            IfCondition EqualTo(start_expr, 0) ThenBlock: {
+                Gen_Emit("0")
+            } ElseBlock: {
+                Gen_Expr(start_expr)
+            }
+            Gen_Emit(", ")
+            IfCondition EqualTo(end_expr, 0) ThenBlock: {
+                IfCondition EqualTo(is_string, 1) ThenBlock: {
+                    Gen_Emit("StringLength(")
+                } ElseBlock: {
+                    Gen_Emit("Array.Size(")
+                }
+                Gen_Expr(expr)
+                Gen_Emit(")")
+            } ElseBlock: {
+                Gen_Expr(end_expr)
+            }
+            Gen_Emit(", ")
+            IfCondition EqualTo(step_expr, 0) ThenBlock: {
+                Gen_Emit("1")
+            } ElseBlock: {
+                Gen_Expr(step_expr)
+            }
+            Gen_Emit(")\n")
+            ReturnValue(Gen_MakeIdent(temp))
+        }
         
         // BINARY_OP - flatten both sides, then ALWAYS extract to temp
         IfCondition EqualTo(t, Node.BINARY_OP) ThenBlock: {
@@ -1547,6 +1658,12 @@ Function.Gen_FlattenExpr {
                         Gen_Emit("AIMacro.NumBitNot(")
                         Gen_Expr(flat_operand)
                         Gen_Emit(")")
+                    } ElseBlock: {
+                        IfCondition EqualTo(op, Token.PLUS) ThenBlock: {
+                            Gen_Emit("AIMacro.NumPos(")
+                            Gen_Expr(flat_operand)
+                            Gen_Emit(")")
+                        }
                     }
                 }
             }
@@ -1877,7 +1994,7 @@ Function.Gen_FlattenLambda {
             Gen.lambda_counter = Add(Gen.lambda_counter, 1)
             ArraySet(node, 3, name)
             ArraySet(node, 0, Node.FUNCTION)
-            Array.Push(Gen.deferred_functions, node)
+            Gen_PushDeferredFunction(node)
         }
         temp = Gen_TempName()
         Gen_EmitIndent()

@@ -1,0 +1,103 @@
+diff --git a/Librarys/AIMacro/Library.AIMacroCodeGen1.ailang b/Librarys/AIMacro/Library.AIMacroCodeGen1.ailang
+index a25ed42..227e35e 100644
+--- a/Librarys/AIMacro/Library.AIMacroCodeGen1.ailang
++++ b/Librarys/AIMacro/Library.AIMacroCodeGen1.ailang
+@@ -35,6 +35,7 @@ FixedPool.Gen {
+     "loop_else_flag": Initialize=0, CanChange=True
+     "lambda_counter": Initialize=0, CanChange=True
+     "callable_vars": Initialize=0, CanChange=True
++    "module_vars": Initialize=0, CanChange=True
+ 
+ }
+ 
+@@ -64,6 +65,7 @@ Function.Gen_Init {
+         Gen.loop_else_flag = 0
+         Gen.lambda_counter = 0
+         Gen.callable_vars = Array.Create(32)
++        Gen.module_vars = Array.Create(64)
+ 
+     }
+ }
+@@ -96,6 +98,9 @@ Function.Gen_Free {
+         IfCondition NotEqual(Gen.callable_vars, 0) ThenBlock: {
+             Array.Destroy(Gen.callable_vars)
+         }
++        IfCondition NotEqual(Gen.module_vars, 0) ThenBlock: {
++            Array.Destroy(Gen.module_vars)
++        }
+         IfCondition NotEqual(Gen.packed_funcs, 0) ThenBlock: {
+             Array.Destroy(Gen.packed_funcs)
+         }
+@@ -306,6 +311,56 @@ Function.Gen_MarkListVar {
+     }
+ }
+ 
++// =============================================================================
++// MODULE (FILE-SCOPE) VARIABLE TRACKING → FixedPool.PyMod
++// =============================================================================
++Function.Gen_IsModuleVar {
++    Input: name: Address
++    Output: Integer
++    Body: {
++        IfCondition EqualTo(name, 0) ThenBlock: {
++            ReturnValue(0)
++        }
++        IfCondition EqualTo(Gen.module_vars, 0) ThenBlock: {
++            ReturnValue(0)
++        }
++        sz = Array.Size(Gen.module_vars)
++        idx = 0
++        WhileLoop LessThan(idx, sz) {
++            varname = Array.Get(Gen.module_vars, idx)
++            cmp = StringCompare(name, varname)
++            IfCondition EqualTo(cmp, 0) ThenBlock: {
++                ReturnValue(1)
++            }
++            idx = Add(idx, 1)
++        }
++        ReturnValue(0)
++    }
++}
++
++Function.Gen_MarkModuleVar {
++    Input: name: Address
++    Body: {
++        IfCondition EqualTo(name, 0) ThenBlock: {
++            ReturnValue(0)
++        }
++        already = Gen_IsModuleVar(name)
++        IfCondition EqualTo(already, 1) ThenBlock: {
++            ReturnValue(0)
++        }
++        len = StringLength(name)
++        copy = Allocate(Add(len, 1))
++        i = 0
++        WhileLoop LessThan(i, len) {
++            c = GetByte(name, i)
++            SetByte(copy, i, c)
++            i = Add(i, 1)
++        }
++        SetByte(copy, len, 0)
++        Array.Push(Gen.module_vars, copy)
++    }
++}
++
+ Function.Gen_IsDictVar {
+     Input: name: Address
+     Output: Integer
+@@ -450,6 +505,15 @@ Function.Gen_EmitIdent {
+         is_param = Gen_IsParam(name)
+         IfCondition EqualTo(is_param, 1) ThenBlock: {
+             Gen_Emit("p_")
++            Gen_Emit(name)
++            ReturnValue(0)
++        }
++        // File-scope names live in FixedPool.PyMod so Functions can see them
++        is_mod = Gen_IsModuleVar(name)
++        IfCondition EqualTo(is_mod, 1) ThenBlock: {
++            Gen_Emit("PyMod.")
++            Gen_Emit(name)
++            ReturnValue(0)
+         }
+         Gen_Emit(name)
+     }

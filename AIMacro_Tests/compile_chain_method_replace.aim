@@ -1,0 +1,6 @@
+bltns = 0
+def demo(n) {
+    s = bltns.bin(n).replace("1", "0", 1)
+    return s
+}
+print(demo)

@@ -23,6 +23,7 @@ FixedPool.OOPGen {
     "discovered_fields": Initialize=0    
     "class_init_code": Initialize=0      
     "method_impl_code": Initialize=0    
+    "emitted_methods": Initialize=0
     "temp_counter": Initialize=0        
     "has_classes": Initialize=0         
 }
@@ -62,6 +63,7 @@ Function.OOPGen_Init {
         OOPGen.discovered_fields = Array.Create(16)
         OOPGen.class_init_code = Array.Create(128)
         OOPGen.method_impl_code = Array.Create(256)
+        OOPGen.emitted_methods = Array.Create(256)
         OOPGen.temp_counter = 0
         OOPGen.has_classes = 0
         OOPGen.initialized = 1
@@ -94,6 +96,9 @@ Function.OOPGen_Reset {
             OOPGen.current_class = 0
             OOPGen.current_method = 0
             OOPGen.temp_counter = 0
+            IfCondition NotEqual(OOPGen.emitted_methods, 0) ThenBlock: {
+                Array.Clear(OOPGen.emitted_methods)
+            }
         }
     }
 }
@@ -115,6 +120,10 @@ Function.OOPGen_Free {
         IfCondition NotEqual(OOPGen.method_impl_code, 0) ThenBlock: {
             Array.Destroy(OOPGen.method_impl_code)
             OOPGen.method_impl_code = 0
+        }
+        IfCondition NotEqual(OOPGen.emitted_methods, 0) ThenBlock: {
+            Array.Destroy(OOPGen.emitted_methods)
+            OOPGen.emitted_methods = 0
         }
         OOPGen.initialized = 0
     }
@@ -177,6 +186,13 @@ Function.OOPGen_FlattenExpr {
             Gen_Emit(", \"")
             Gen_Emit(attr)
             Gen_Emit("\")\n")
+            // Bound methods (__next__/__call__) must CallIndirect when invoked
+            cmp_next = StringCompare(attr, "__next__")
+            cmp_call = StringCompare(attr, "__call__")
+            cmp_append = StringCompare(attr, "append")
+            IfCondition Or(Or(EqualTo(cmp_next, 0), EqualTo(cmp_call, 0)), EqualTo(cmp_append, 0)) ThenBlock: {
+                Gen_MarkCallableVar(temp)
+            }
             ReturnValue(Gen_MakeIdent(temp))
         }
         
@@ -257,6 +273,18 @@ Function.OOPGen_FlattenExpr {
         
         // CALL - use standard flattening
         IfCondition EqualTo(node_type, Node.CALL) ThenBlock: {
+            ReturnValue(Gen_FlattenExpr(node))
+        }
+        
+        // LIST_COMP / setcomp / genexp share Node.LIST_COMP — must hoist
+        // before ReturnValue(...). Without this, method returns emit
+        // ReturnValue( t = Array.Create... ) and AILang Expected ')'.
+        IfCondition EqualTo(node_type, Node.LIST_COMP) ThenBlock: {
+            ReturnValue(Gen_FlattenExpr(node))
+        }
+        // Lambda / ternary / dict / etc. — Gen_FlattenExpr emits setup stmts;
+        // never leave them for Gen_Expr mid-argument (ObjectSet Expected ')').
+        IfCondition EqualTo(Gen_HasCall(node), 1) ThenBlock: {
             ReturnValue(Gen_FlattenExpr(node))
         }
         
@@ -584,16 +612,94 @@ Function.OOPGen_MethodImpl {
         func_name = StringConcat(class_name, "_")
         func_name = StringConcat(func_name, method_name)
         
-        // Start function definition
-        Gen_Emit("Function.")
-        Gen_Emit(func_name)
-        Gen_Emit(" {\n")
-        
         // Emit parameters
         num_params = 0
         IfCondition NotEqual(params, 0) ThenBlock: {
             num_params = Array.Size(params)
         }
+        
+        // Property setter overload: getter+setter share Python name but must be
+        // distinct Function.* symbols for ailang (e.g. finalize.atexit).
+        // If Class_method already emitted and this has value param, use _set.
+        IfCondition NotEqual(OOPGen.emitted_methods, 0) ThenBlock: {
+            seen = 0
+            si = 0
+            sn = Array.Size(OOPGen.emitted_methods)
+            WhileLoop LessThan(si, sn) {
+                prev = Array.Get(OOPGen.emitted_methods, si)
+                cmp = StringCompare(prev, func_name)
+                IfCondition EqualTo(cmp, 0) ThenBlock: {
+                    seen = 1
+                }
+                si = Add(si, 1)
+            }
+            IfCondition EqualTo(seen, 1) ThenBlock: {
+                IfCondition GreaterThan(num_params, 1) ThenBlock: {
+                    func_name = StringConcat(func_name, "_set")
+                } ElseBlock: {
+                    func_name = StringConcat(func_name, "_dup")
+                }
+            }
+            Array.Push(OOPGen.emitted_methods, func_name)
+        }
+        
+        // SysV limit: >6 Inputs illegal — pack into p__args like Gen_PackedFunction
+        IfCondition GreaterThan(num_params, 6) ThenBlock: {
+            Array.Push(Gen.packed_funcs, func_name)
+            Gen_Emit("Function.")
+            Gen_Emit(func_name)
+            Gen_Emit(" {\n")
+            Gen_Emit("    Input: p__args: Address\n")
+            Gen_Emit("    Output: Address\n")
+            Gen_Emit("    Body: {\n")
+            old_indent = Gen.indent
+            Gen.indent = 2
+            i = 0
+            WhileLoop LessThan(i, num_params) {
+                param = Array.Get(params, i)
+                param_name = ArrayGet(param, 0)
+                Gen_EmitIndent()
+                Gen_Emit(param_name)
+                Gen_Emit(" = DictGen_SmartGet(p__args, ")
+                Gen_EmitNumber(i)
+                Gen_Emit(")\n")
+                i = Add(i, 1)
+            }
+            enc_names = Array.Create(8)
+            ei = 0
+            WhileLoop LessThan(ei, num_params) {
+                eparam = Array.Get(params, ei)
+                Array.Push(enc_names, ArrayGet(eparam, 0))
+                ei = Add(ei, 1)
+            }
+            enc_saved = Gen_PushEnclosingParams(enc_names)
+            Array.Destroy(enc_names)
+            OOPGen_MethodBody(body)
+            Gen_TruncateEnclosing(enc_saved)
+            num_stmts = Array.Size(body)
+            has_return = 0
+            IfCondition GreaterThan(num_stmts, 0) ThenBlock: {
+                last_stmt = Array.Get(body, Subtract(num_stmts, 1))
+                IfCondition EqualTo(AST_Type(last_stmt), Node.RETURN_STMT) ThenBlock: {
+                    has_return = 1
+                }
+            }
+            IfCondition EqualTo(has_return, 0) ThenBlock: {
+                Gen_EmitIndent()
+                Gen_Emit("ReturnValue(0)\n")
+            }
+            Gen.indent = old_indent
+            Gen_Emit("    }\n")
+            Gen_Emit("}\n\n")
+            OOPGen.current_method = 0
+            ReturnValue(0)
+        }
+        
+        // Start function definition
+        Gen_Emit("Function.")
+        Gen_Emit(func_name)
+        Gen_Emit(" {\n")
+        
         i = 0
         WhileLoop LessThan(i, num_params) {
             param = Array.Get(params, i)
@@ -649,8 +755,20 @@ Function.OOPGen_MethodImpl {
         old_indent = Gen.indent
         Gen.indent = 2
         
+        // Register method params for nested-def freevar capture (self, ...)
+        enc_names = Array.Create(8)
+        ei = 0
+        WhileLoop LessThan(ei, num_params) {
+            eparam = Array.Get(params, ei)
+            Array.Push(enc_names, ArrayGet(eparam, 0))
+            ei = Add(ei, 1)
+        }
+        enc_saved = Gen_PushEnclosingParams(enc_names)
+        Array.Destroy(enc_names)
+        
        // Generate method body with OOP-aware transformations
         OOPGen_MethodBody(body)
+        Gen_TruncateEnclosing(enc_saved)
         
         // Check if last statement was a return
         num_stmts = Array.Size(body)
@@ -876,11 +994,19 @@ Function.OOPGen_Assign {
             ReturnValue(0)
         }
         
+        // Chained: a = b = expr  /  width = max_width = self._width - indent
+        // (ATTR_ASSIGN already unwraps; plain ASSIGN must too — else OOPGen_Expr
+        // falls through and emits 0, dropping the middle name.)
+        value = Gen_ResolveChainValue(value)
+        
         // Flatten complex value expressions
         value_has_call = Gen_HasCall(value)
         IfCondition EqualTo(value_has_call, 1) ThenBlock: {
             value = Gen_FlattenExpr(value)
         }
+        
+        // Bare name string target (ASSIGNMENT slot 3) → enclosing freevar
+        Gen_MarkEnclosingLocal(target)
         
         Gen_EmitIndent()
         Gen_EmitIdent(target)
@@ -980,6 +1106,11 @@ Function.OOPGen_MethodCall {
         IfCondition Or(EqualTo(obj, 0), EqualTo(method, 0)) ThenBlock: {
             Gen_Emit("0")
             ReturnValue(0)
+        }
+        // Flatten chained receiver before emitting MethodCall expr
+        obj_nt = AST_Type(obj)
+        IfCondition Or(EqualTo(obj_nt, Node.METHOD_CALL), Or(EqualTo(obj_nt, Node.CALL), Or(EqualTo(obj_nt, Node.ATTRIBUTE), EqualTo(obj_nt, Node.INDEX_ACCESS)))) ThenBlock: {
+            obj = Gen_FlattenExpr(obj)
         }
         
         num_args = 0
@@ -1130,11 +1261,20 @@ Function.OOPGen_EmitClassRegistration {
         // Generate: OOP.ClassDefine("ClassName", parent_or_0)
         reg = StringConcat("    OOP.ClassDefine(\"", class_name)
         reg = StringConcat(reg, "\", ")
-        IfCondition EqualTo(parent, 0) ThenBlock: {
+        use_parent = parent
+        IfCondition NotEqual(parent, 0) ThenBlock: {
+            cmp_ex = StringCompare(parent, "Exception")
+            cmp_be = StringCompare(parent, "BaseException")
+            cmp_ob = StringCompare(parent, "object")
+            IfCondition Or(EqualTo(cmp_ex, 0), Or(EqualTo(cmp_be, 0), EqualTo(cmp_ob, 0))) ThenBlock: {
+                use_parent = 0
+            }
+        }
+        IfCondition EqualTo(use_parent, 0) ThenBlock: {
             reg = StringConcat(reg, "0")
         } ElseBlock: {
             reg = StringConcat(reg, "\"")
-            reg = StringConcat(reg, parent)
+            reg = StringConcat(reg, use_parent)
             reg = StringConcat(reg, "\"")
         }
         reg = StringConcat(reg, ")\n")

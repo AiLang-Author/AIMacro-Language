@@ -1,0 +1,4 @@
+print(AttributeError)
+print(BaseException)
+print(KeyError)
+print(AF_INET)

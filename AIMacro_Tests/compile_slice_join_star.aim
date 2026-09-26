@@ -1,0 +1,8 @@
+def fmt(sep, pieces, indent) {
+    return sep.join(('', *pieces, ''))[1:-len(indent) or None]
+
+}
+def main() {
+    print(fmt(',', ['a', 'b'], '  '))
+}
+main()

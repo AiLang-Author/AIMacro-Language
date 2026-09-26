@@ -1,0 +1,5 @@
+"""module docstring here"""
+class M {
+}
+M.__doc__ = __doc__
+print("ok")

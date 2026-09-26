@@ -1,0 +1,40 @@
+name: grokasaurus2 assemble zlib restore
+on:
+  push:
+    branches: [grokasaurus2]
+    paths:
+      - "AIMacro/restore_staging/manifest.json"
+      - "AIMacro/restore_staging/manifest.z.b64"
+  workflow_dispatch:
+jobs:
+  assemble:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: grokasaurus2
+      - name: Assemble emitters from zlib staging
+        run: |
+          set -euo pipefail
+          python3 AIMacro/restore_staging/assemble_zlib.py
+          git config user.name "Grokbot"
+          git config user.email "grokbot@ailang.local"
+          git add Librarys/AIMacro/Library.AIMacroCodeGen1.ailang \
+                  Librarys/AIMacro/Library.AIMacroCodeGen2.ailang \
+                  Librarys/AIMacro/Library.AIMacroCodeGen3.ailang \
+                  Librarys/AIMacro/Library.AIMacroCodeGen4.ailang \
+                  Librarys/AIMacro/Library.AIMacro.ailang \
+                  Librarys/AIMacro/Library.AIMacroCodeGenOOP.ailang \
+                  Librarys/AIMacro/Library.AIMacroExtra.ailang \
+                  Librarys/AIMacro/Library.AIMacroParserCore.ailang \
+                  Librarys/AIMacro/Library.AIMacroParserOOP.ailang \
+                  Librarys/AIMacro/Library.AIMacroCore.ailang \
+                  AIMacro/restore_staging/manifest.json || true
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "chore(aimacro): assemble zlib restore from staging manifest"
+            git push origin HEAD:grokasaurus2
+          fi

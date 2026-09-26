@@ -1,0 +1,12 @@
+def pair() {
+    return (10, 20)
+}
+
+def main() {
+    _aim_unpack_1 = pair()
+    a = _aim_unpack_1[0]
+    b = _aim_unpack_1[1]
+    print(a)
+    print(b)
+}
+main()

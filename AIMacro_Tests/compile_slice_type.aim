@@ -1,0 +1,7 @@
+def take(i) {
+    if isinstance(i, slice) {
+        return 1
+    }
+    return 0
+}
+print(take(1))

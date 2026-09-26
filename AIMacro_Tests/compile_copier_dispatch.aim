@@ -1,0 +1,13 @@
+def _copy_int(x) {
+    return x
+}
+_copy_dispatch = {int: _copy_int}
+def copy(x) {
+    cls = type(x)
+    copier = _copy_dispatch.get(cls)
+    if copier {
+        return copier(x)
+    }
+    return x
+}
+print(copy(7))

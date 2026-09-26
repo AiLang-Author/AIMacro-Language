@@ -506,14 +506,18 @@ Function.Parse_MethodParams {
 
         IfCondition EqualTo(Parse_Check(Token.POWER), 1) ThenBlock: {
             Parse_Advance()
-            IfCondition EqualTo(Parse_Check(Token.IDENTIFIER), 1) ThenBlock: {
-                Parse_Advance()
+            param = Parse_MethodParam()
+            IfCondition NotEqual(param, 0) ThenBlock: {
+                Array.Push(params, param)
             }
         } ElseBlock: {
         IfCondition EqualTo(Parse_Check(Token.STAR), 1) ThenBlock: {
             Parse_Advance()
             IfCondition EqualTo(Parse_Check(Token.IDENTIFIER), 1) ThenBlock: {
-                Parse_Advance()
+                param = Parse_MethodParam()
+                IfCondition NotEqual(param, 0) ThenBlock: {
+                    Array.Push(params, param)
+                }
             }
         } ElseBlock: {
         IfCondition EqualTo(Parse_Check(Token.SLASH), 1) ThenBlock: {
@@ -542,8 +546,9 @@ Function.Parse_MethodParams {
             }
             IfCondition EqualTo(Parse_Check(Token.POWER), 1) ThenBlock: {
                 Parse_Advance()
-                IfCondition EqualTo(Parse_Check(Token.IDENTIFIER), 1) ThenBlock: {
-                    Parse_Advance()
+                param = Parse_MethodParam()
+                IfCondition NotEqual(param, 0) ThenBlock: {
+                    Array.Push(params, param)
                 }
                 ContinueLoop
             }
@@ -553,6 +558,13 @@ Function.Parse_MethodParams {
                     BreakLoop
                 }
                 IfCondition EqualTo(Parse_Check(Token.COMMA), 1) ThenBlock: {
+                    ContinueLoop
+                }
+                IfCondition EqualTo(Parse_Check(Token.IDENTIFIER), 1) ThenBlock: {
+                    param = Parse_MethodParam()
+                    IfCondition NotEqual(param, 0) ThenBlock: {
+                        Array.Push(params, param)
+                    }
                     ContinueLoop
                 }
             }

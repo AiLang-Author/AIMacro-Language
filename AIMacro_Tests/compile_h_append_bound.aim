@@ -1,0 +1,6 @@
+# Bound-method alias: h_append = h.append then call
+h = []
+h_append = h.append
+h_append(1)
+h_append(2)
+print(len(h))

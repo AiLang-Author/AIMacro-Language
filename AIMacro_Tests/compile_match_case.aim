@@ -1,0 +1,19 @@
+def classify(x) {
+    _aim_match_1 = x
+    if _aim_match_1 is None {
+        return "none"
+    } elif isinstance(_aim_match_1, str) {
+        s = _aim_match_1
+        return "str:" + s
+    } elif (isinstance(_aim_match_1, int) and _aim_match_1 > 0) {
+        n = _aim_match_1
+        return "pos"
+    } else {
+        return "other"
+
+    }
+}
+print(classify(None))
+print(classify("hi"))
+print(classify(3))
+print(classify(-1))

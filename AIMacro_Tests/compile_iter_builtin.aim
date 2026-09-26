@@ -1,0 +1,10 @@
+def id(x) {
+    return x
+}
+xs = [1, 2, 3]
+# iter as call
+it = iter(xs)
+print(len(it))
+# iter as value into map (heapq pattern)
+ys = map(iter, [xs, [4, 5]])
+print(len(ys))

@@ -1,0 +1,4 @@
+# frozenset(list) builtin map (keyword.py)
+kwlist = ["def", "class", "if"]
+fs = frozenset(kwlist)
+print(len(fs))

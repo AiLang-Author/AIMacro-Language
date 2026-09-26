@@ -1,0 +1,10 @@
+# compile_return_listcomp_method
+# return [x for x in xs] inside a method must hoist listcomp before ReturnValue.
+# (C().f() chained construct is a separate leftover — use named instance.)
+class C {
+    def f(self) {
+        return [x for x in [1, 2, 3]]
+    }
+}
+c = C()
+print(c.f())

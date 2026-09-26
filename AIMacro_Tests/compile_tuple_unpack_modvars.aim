@@ -1,0 +1,8 @@
+class FlagBoundary {
+    A = 1
+}
+STRICT, CONFORM, EJECT, KEEP = FlagBoundary
+def use() {
+    return KEEP
+}
+print(use)

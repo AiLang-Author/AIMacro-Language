@@ -1,0 +1,16 @@
+def heapify(x) {
+    return x
+}
+def _heapify_max(x) {
+    return x
+}
+def merge(reverse) {
+    if reverse {
+        _heapify = _heapify_max
+    } else {
+        _heapify = heapify
+    }
+    return _heapify(42)
+}
+print(merge(0))
+print(merge(1))

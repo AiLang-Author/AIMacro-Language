@@ -1,0 +1,3 @@
+# ExcKind stubs for Warning siblings used as values
+t = (ImportWarning, EncodingWarning, ResourceWarning, BytesWarning, SyntaxWarning, UnicodeWarning, RuntimeWarning, DeprecationWarning)
+print(t)

@@ -24,6 +24,7 @@ FixedPool.Gen {
     "packed_funcs": Initialize=0, CanChange=True
 
     "deferred_functions": Initialize=0
+    "deferred_classes": Initialize=0
     "deferred_stmts": Initialize=0
     "collect_mode": Initialize=0
     "func_names": Initialize=0, CanChange=True
@@ -35,6 +36,15 @@ FixedPool.Gen {
     "loop_else_flag": Initialize=0, CanChange=True
     "lambda_counter": Initialize=0, CanChange=True
     "callable_vars": Initialize=0, CanChange=True
+    "bound_append_names": Initialize=0, CanChange=True
+    "bound_append_selves": Initialize=0, CanChange=True
+    "module_vars": Initialize=0, CanChange=True
+    "import_stubs": Initialize=0, CanChange=True
+    "enclosing_params": Initialize=0, CanChange=True
+    "deferred_freevars": Initialize=0, CanChange=True
+    "nest_bind_names": Initialize=0, CanChange=True
+    "nest_bind_funcs": Initialize=0, CanChange=True
+    "pending_freevars": Initialize=0, CanChange=True
 
 }
 
@@ -53,6 +63,7 @@ Function.Gen_Init {
         Gen.packed_funcs = Array.Create(16)
 
         Gen.deferred_functions = Array.Create(64)
+        Gen.deferred_classes = Array.Create(32)
         Gen.deferred_stmts = Array.Create(128)
         Gen.collect_mode = 0
         Gen.func_names = Array.Create(32)
@@ -64,6 +75,15 @@ Function.Gen_Init {
         Gen.loop_else_flag = 0
         Gen.lambda_counter = 0
         Gen.callable_vars = Array.Create(32)
+        Gen.bound_append_names = Array.Create(16)
+        Gen.bound_append_selves = Array.Create(16)
+        Gen.module_vars = Array.Create(64)
+        Gen.import_stubs = Array.Create(32)
+        Gen.enclosing_params = Array.Create(32)
+        Gen.deferred_freevars = Array.Create(64)
+        Gen.nest_bind_names = Array.Create(64)
+        Gen.nest_bind_funcs = Array.Create(64)
+        Gen.pending_freevars = 0
 
     }
 }
@@ -95,6 +115,18 @@ Function.Gen_Free {
         }
         IfCondition NotEqual(Gen.callable_vars, 0) ThenBlock: {
             Array.Destroy(Gen.callable_vars)
+        }
+        IfCondition NotEqual(Gen.bound_append_names, 0) ThenBlock: {
+            Array.Destroy(Gen.bound_append_names)
+        }
+        IfCondition NotEqual(Gen.bound_append_selves, 0) ThenBlock: {
+            Array.Destroy(Gen.bound_append_selves)
+        }
+        IfCondition NotEqual(Gen.module_vars, 0) ThenBlock: {
+            Array.Destroy(Gen.module_vars)
+        }
+        IfCondition NotEqual(Gen.import_stubs, 0) ThenBlock: {
+            Array.Destroy(Gen.import_stubs)
         }
         IfCondition NotEqual(Gen.packed_funcs, 0) ThenBlock: {
             Array.Destroy(Gen.packed_funcs)
@@ -196,6 +228,28 @@ Function.Gen_IsPackedFunc {
                 ReturnValue(1)
             }
             idx = Add(idx, 1)
+        }
+        ReturnValue(0)
+    }
+}
+
+// Known user Function names (for AddressOf when used as values)
+Function.Gen_IsKnownFunc {
+    Input: name: Address
+    Output: Integer
+    Body: {
+        IfCondition Or(EqualTo(name, 0), EqualTo(Gen.func_names, 0)) ThenBlock: {
+            ReturnValue(0)
+        }
+        n = Array.Size(Gen.func_names)
+        i = 0
+        WhileLoop LessThan(i, n) {
+            fn = Array.Get(Gen.func_names, i)
+            cmp = StringCompare(fn, name)
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                ReturnValue(1)
+            }
+            i = Add(i, 1)
         }
         ReturnValue(0)
     }
@@ -306,6 +360,102 @@ Function.Gen_MarkListVar {
     }
 }
 
+// =============================================================================
+// MODULE (FILE-SCOPE) VARIABLE TRACKING → FixedPool.PyMod
+// =============================================================================
+Function.Gen_IsModuleVar {
+    Input: name: Address
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(name, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(Gen.module_vars, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        sz = Array.Size(Gen.module_vars)
+        idx = 0
+        WhileLoop LessThan(idx, sz) {
+            varname = Array.Get(Gen.module_vars, idx)
+            cmp = StringCompare(name, varname)
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                ReturnValue(1)
+            }
+            idx = Add(idx, 1)
+        }
+        ReturnValue(0)
+    }
+}
+
+Function.Gen_MarkModuleVar {
+    Input: name: Address
+    Body: {
+        IfCondition EqualTo(name, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        already = Gen_IsModuleVar(name)
+        IfCondition EqualTo(already, 1) ThenBlock: {
+            ReturnValue(0)
+        }
+        len = StringLength(name)
+        copy = Allocate(Add(len, 1))
+        i = 0
+        WhileLoop LessThan(i, len) {
+            c = GetByte(name, i)
+            SetByte(copy, i, c)
+            i = Add(i, 1)
+        }
+        SetByte(copy, len, 0)
+        Array.Push(Gen.module_vars, copy)
+    }
+}
+Function.Gen_IsImportStub {
+    Input: name: Address
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(name, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(Gen.import_stubs, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        sz = Array.Size(Gen.import_stubs)
+        idx = 0
+        WhileLoop LessThan(idx, sz) {
+            varname = Array.Get(Gen.import_stubs, idx)
+            cmp = StringCompare(name, varname)
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                ReturnValue(1)
+            }
+            idx = Add(idx, 1)
+        }
+        ReturnValue(0)
+    }
+}
+
+Function.Gen_MarkImportStub {
+    Input: name: Address
+    Body: {
+        IfCondition EqualTo(name, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        already = Gen_IsImportStub(name)
+        IfCondition EqualTo(already, 1) ThenBlock: {
+            ReturnValue(0)
+        }
+        len = StringLength(name)
+        copy = Allocate(Add(len, 1))
+        i = 0
+        WhileLoop LessThan(i, len) {
+            c = GetByte(name, i)
+            SetByte(copy, i, c)
+            i = Add(i, 1)
+        }
+        SetByte(copy, len, 0)
+        Array.Push(Gen.import_stubs, copy)
+    }
+}
+
 Function.Gen_IsDictVar {
     Input: name: Address
     Output: Integer
@@ -368,6 +518,77 @@ Function.Gen_MarkCallableVar {
         }
         SetByte(copy, len, 0)
         Array.Push(Gen.callable_vars, copy)
+    }
+}
+
+
+// Bound list.append: name → self (so h_append(x) → AIMacro.SmartPush(h, x))
+Function.Gen_GetBoundAppendSelf {
+    Input: name: Address
+    Output: Address
+    Body: {
+        IfCondition Or(EqualTo(name, 0), EqualTo(Gen.bound_append_names, 0)) ThenBlock: {
+            ReturnValue(0)
+        }
+        sz = Array.Size(Gen.bound_append_names)
+        idx = 0
+        WhileLoop LessThan(idx, sz) {
+            varname = Array.Get(Gen.bound_append_names, idx)
+            cmp = StringCompare(name, varname)
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                ReturnValue(Array.Get(Gen.bound_append_selves, idx))
+            }
+            idx = Add(idx, 1)
+        }
+        ReturnValue(0)
+    }
+}
+
+Function.Gen_MarkBoundAppend {
+    Input: name: Address
+    Input: self_name: Address
+    Body: {
+        IfCondition Or(EqualTo(name, 0), EqualTo(self_name, 0)) ThenBlock: {
+            ReturnValue(0)
+        }
+        // Replace if already present
+        sz = Array.Size(Gen.bound_append_names)
+        idx = 0
+        WhileLoop LessThan(idx, sz) {
+            varname = Array.Get(Gen.bound_append_names, idx)
+            cmp = StringCompare(name, varname)
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                len = StringLength(self_name)
+                copy = Allocate(Add(len, 1))
+                i = 0
+                WhileLoop LessThan(i, len) {
+                    SetByte(copy, i, GetByte(self_name, i))
+                    i = Add(i, 1)
+                }
+                SetByte(copy, len, 0)
+                Array.Set(Gen.bound_append_selves, idx, copy)
+                ReturnValue(0)
+            }
+            idx = Add(idx, 1)
+        }
+        len = StringLength(name)
+        ncopy = Allocate(Add(len, 1))
+        i = 0
+        WhileLoop LessThan(i, len) {
+            SetByte(ncopy, i, GetByte(name, i))
+            i = Add(i, 1)
+        }
+        SetByte(ncopy, len, 0)
+        len2 = StringLength(self_name)
+        scopy = Allocate(Add(len2, 1))
+        i = 0
+        WhileLoop LessThan(i, len2) {
+            SetByte(scopy, i, GetByte(self_name, i))
+            i = Add(i, 1)
+        }
+        SetByte(scopy, len2, 0)
+        Array.Push(Gen.bound_append_names, ncopy)
+        Array.Push(Gen.bound_append_selves, scopy)
     }
 }
 
@@ -444,12 +665,465 @@ Function.Gen_IsParam {
     }
 }
 
+
+// LHS of assignment / unpack: PyMod + param prefix only — never value stubs
+// (NEXT/PREV/KEY/RESULT/match/case must remain writable names).
+Function.Gen_EmitIdentLhs {
+    Input: name: Address
+    Body: {
+        IfCondition EqualTo(AST_Type(name), Node.IDENT) ThenBlock: {
+            name = ArrayGet(name, 3)
+        }
+        is_param = Gen_IsParam(name)
+        IfCondition EqualTo(is_param, 1) ThenBlock: {
+            Gen_Emit("p_")
+            Gen_Emit(name)
+            ReturnValue(0)
+        }
+        // AILang keywords as LHS (ObjectSet(Tuple, ...))
+        cmp = StringCompare(name, "Tuple")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_MarkModuleVar(name)
+            Gen_Emit("PyMod.")
+            Gen_Emit(name)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "Add")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_MarkModuleVar(name)
+            Gen_Emit("PyMod.")
+            Gen_Emit(name)
+            ReturnValue(0)
+        }
+        is_mod = Gen_IsModuleVar(name)
+        IfCondition EqualTo(is_mod, 1) ThenBlock: {
+            Gen_Emit("PyMod.")
+            Gen_Emit(name)
+            ReturnValue(0)
+        }
+        Gen_Emit(name)
+    }
+}
+
 Function.Gen_EmitIdent {
     Input: name: Address
     Body: {
         is_param = Gen_IsParam(name)
         IfCondition EqualTo(is_param, 1) ThenBlock: {
             Gen_Emit("p_")
+            Gen_Emit(name)
+            ReturnValue(0)
+        }
+        // Python __name__ guard — compile as literal "__main__"
+        cmp = StringCompare(name, "__name__")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_Emit("\"__main__\"")
+            ReturnValue(0)
+        }
+        // Module __doc__ — emit empty string stub (module docstring already emitted as expr)
+        cmp = StringCompare(name, "__doc__")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_Emit("\"\"")
+            ReturnValue(0)
+        }
+        // Exception type as value (isinstance / tuple) — emit ExcKind int
+        cmp = StringCompare(name, "Exception")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(1)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "ValueError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(2)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "OSError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(3)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "IOError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(3)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "FileNotFoundError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(4)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "TypeError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(5)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "RuntimeError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(6)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "ZeroDivisionError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(7)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "AssertionError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(8)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "StopIteration")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(9)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "StopAsyncIteration")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(10)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "BaseExceptionGroup")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(11)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "ExceptionGroup")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(12)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "BaseException")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(13)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "AttributeError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(14)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "KeyError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(15)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "NameError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(16)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "IndexError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(17)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "LookupError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(18)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "EOFError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(19)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "ImportError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(20)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "ModuleNotFoundError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(20)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "NotImplementedError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(21)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "UnboundLocalError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(16)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "OverflowError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(22)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "MemoryError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(23)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "RecursionError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(6)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "ArithmeticError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(22)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "SyntaxError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(24)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "IndentationError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(24)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "TabError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(24)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "SystemExit")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(25)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "KeyboardInterrupt")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(26)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "GeneratorExit")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(27)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "PermissionError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(3)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "FileExistsError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(3)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "TimeoutError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(3)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "ConnectionError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(3)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "BrokenPipeError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(3)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "BlockingIOError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(3)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "AF_INET")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(2)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "AF_INET6")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(10)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "AF_UNIX")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(1)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "SOCK_STREAM")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(1)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "SOCK_DGRAM")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(2)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "SOL_SOCKET")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(1)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "SO_REUSEADDR")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(2)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "IPPROTO_TCP")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(6)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "IPPROTO_UDP")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(17)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "FutureWarning")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(5)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "DeprecationWarning")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(5)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "Warning")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(5)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "UserWarning")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(5)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "PendingDeprecationWarning")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(5)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "ImportWarning")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(5)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "EncodingWarning")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(5)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "ResourceWarning")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(5)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "BytesWarning")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(5)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "SyntaxWarning")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(5)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "UnicodeWarning")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(5)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "RuntimeWarning")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(5)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "complex")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_Emit("AddressOf(AIMacro.Float)")
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "slice")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_Emit("AddressOf(AIMacro.Slice)")
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "match")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_Emit("Types.GetNone()")
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "case")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_Emit("Types.GetNone()")
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "staticmethod")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_Emit("AddressOf(AIMacro.StaticMethod)")
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "classmethod")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_Emit("AddressOf(AIMacro.ClassMethod)")
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "property")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_Emit("AddressOf(AIMacro.Property)")
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "NEXT")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(0)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "PREV")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(1)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "KEY")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(2)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "RESULT")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(3)
+            ReturnValue(0)
+        }
+        // Nested-def hoist: use AddressOf(__nest_N_name) across functions
+        IfCondition NotEqual(Gen.nest_bind_names, 0) ThenBlock: {
+            nsz = Array.Size(Gen.nest_bind_names)
+            ni = 0
+            WhileLoop LessThan(ni, nsz) {
+                bn = Array.Get(Gen.nest_bind_names, ni)
+                cmpn = StringCompare(name, bn)
+                IfCondition EqualTo(cmpn, 0) ThenBlock: {
+                    Gen_Emit("AddressOf(")
+                    Gen_Emit(Array.Get(Gen.nest_bind_funcs, ni))
+                    Gen_Emit(")")
+                    ReturnValue(0)
+                }
+                ni = Add(ni, 1)
+            }
+        }
+        // AILang keywords used as Python values (ast.Tuple / ast.Add) — PyMod escape
+        cmp = StringCompare(name, "Tuple")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_MarkModuleVar(name)
+            Gen_Emit("PyMod.")
+            Gen_Emit(name)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "Add")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_MarkModuleVar(name)
+            Gen_Emit("PyMod.")
+            Gen_Emit(name)
+            ReturnValue(0)
+        }
+        // File-scope names live in FixedPool.PyMod so Functions can see them
+        is_mod = Gen_IsModuleVar(name)
+        IfCondition EqualTo(is_mod, 1) ThenBlock: {
+            Gen_Emit("PyMod.")
+            Gen_Emit(name)
+            ReturnValue(0)
         }
         Gen_Emit(name)
     }
@@ -514,6 +1188,7 @@ Function.Gen_OpName {
         IfCondition EqualTo(op, Token.PLUS) ThenBlock: { ReturnValue("AIMacro.NumAdd") }
         IfCondition EqualTo(op, Token.MINUS) ThenBlock: { ReturnValue("AIMacro.NumSub") }
         IfCondition EqualTo(op, Token.STAR) ThenBlock: { ReturnValue("AIMacro.NumMul") }
+        IfCondition EqualTo(op, Token.AT) ThenBlock: { ReturnValue("AIMacro.NumMatMul") }
         IfCondition EqualTo(op, Token.SLASH) ThenBlock: { ReturnValue("AIMacro.TrueDiv") }
         IfCondition EqualTo(op, Token.PERCENT) ThenBlock: { ReturnValue("AIMacro.NumMod") }
         IfCondition EqualTo(op, Token.POWER) ThenBlock: { ReturnValue("AIMacro.NumPow") }
@@ -571,6 +1246,12 @@ Function.Gen_HasCall {
             ReturnValue(1)
         }
         IfCondition EqualTo(t, Node.DICT_LIT) ThenBlock: {
+            ReturnValue(1)
+        }
+        IfCondition EqualTo(t, Node.STR_EQ) ThenBlock: {
+            ReturnValue(1)
+        }
+        IfCondition EqualTo(t, Node.STR_NE) ThenBlock: {
             ReturnValue(1)
         }
         IfCondition EqualTo(t, Node.LAMBDA) ThenBlock: {
@@ -692,20 +1373,24 @@ Function.Gen_EmitEscaped {
             IfCondition EqualTo(c, 10) ThenBlock: {
                 Gen_Emit("\\n")
             } ElseBlock: {
-                IfCondition EqualTo(c, 9) ThenBlock: {
-                    Gen_Emit("\\t")
+                IfCondition EqualTo(c, 13) ThenBlock: {
+                    Gen_Emit("\\r")
                 } ElseBlock: {
-                    IfCondition EqualTo(c, 34) ThenBlock: {
-                        Gen_Emit("\\\"")
+                    IfCondition EqualTo(c, 9) ThenBlock: {
+                        Gen_Emit("\\t")
                     } ElseBlock: {
-                        IfCondition EqualTo(c, 92) ThenBlock: {
-                            Gen_Emit("\\\\")
+                        IfCondition EqualTo(c, 34) ThenBlock: {
+                            Gen_Emit("\\\"")
                         } ElseBlock: {
-                            buf = Allocate(2)
-                            SetByte(buf, 0, c)
-                            SetByte(buf, 1, 0)
-                            Gen_Emit(buf)
-                            Deallocate(buf, 2)
+                            IfCondition EqualTo(c, 92) ThenBlock: {
+                                Gen_Emit("\\\\")
+                            } ElseBlock: {
+                                buf = Allocate(2)
+                                SetByte(buf, 0, c)
+                                SetByte(buf, 1, 0)
+                                Gen_Emit(buf)
+                                Deallocate(buf, 2)
+                            }
                         }
                     }
                 }
@@ -801,6 +1486,12 @@ Function.Gen_IsShimModule {
         cmp = StringCompare(name, "math")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
         cmp = StringCompare(name, "time")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+        cmp = StringCompare(name, "getopt")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+        cmp = StringCompare(name, "binascii")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+        cmp = StringCompare(name, "io")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
         ReturnValue(0)
     }
@@ -972,6 +1663,68 @@ Function.Gen_MapExcKind {
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(7) }
         cmp = StringCompare(name, "AssertionError")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(8) }
+        cmp = StringCompare(name, "StopIteration")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(9) }
+        cmp = StringCompare(name, "StopAsyncIteration")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(10) }
+        cmp = StringCompare(name, "BaseExceptionGroup")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(11) }
+        cmp = StringCompare(name, "ExceptionGroup")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(12) }
+        cmp = StringCompare(name, "BaseException")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(13) }
+        cmp = StringCompare(name, "AttributeError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(14) }
+        cmp = StringCompare(name, "KeyError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(15) }
+        cmp = StringCompare(name, "NameError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(16) }
+        cmp = StringCompare(name, "IndexError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(17) }
+        cmp = StringCompare(name, "LookupError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(18) }
+        cmp = StringCompare(name, "EOFError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(19) }
+        cmp = StringCompare(name, "ImportError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(20) }
+        cmp = StringCompare(name, "ModuleNotFoundError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(20) }
+        cmp = StringCompare(name, "NotImplementedError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(21) }
+        cmp = StringCompare(name, "UnboundLocalError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(16) }
+        cmp = StringCompare(name, "OverflowError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(22) }
+        cmp = StringCompare(name, "MemoryError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(23) }
+        cmp = StringCompare(name, "RecursionError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(6) }
+        cmp = StringCompare(name, "ArithmeticError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(22) }
+        cmp = StringCompare(name, "SyntaxError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(24) }
+        cmp = StringCompare(name, "IndentationError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(24) }
+        cmp = StringCompare(name, "TabError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(24) }
+        cmp = StringCompare(name, "SystemExit")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(25) }
+        cmp = StringCompare(name, "KeyboardInterrupt")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(26) }
+        cmp = StringCompare(name, "GeneratorExit")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(27) }
+        cmp = StringCompare(name, "PermissionError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(3) }
+        cmp = StringCompare(name, "FileExistsError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(3) }
+        cmp = StringCompare(name, "TimeoutError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(3) }
+        cmp = StringCompare(name, "ConnectionError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(3) }
+        cmp = StringCompare(name, "BrokenPipeError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(3) }
+        cmp = StringCompare(name, "BlockingIOError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(3) }
         ReturnValue(1)
     }
 }
@@ -1012,5 +1765,259 @@ Function.Gen_EmitStdlibAttr {
             }
         }
         ReturnValue(0)
+    }
+}
+
+// =============================================================================
+// NESTED DEF FREEVARS (method/outer params closed over by __nest_*)
+// AILang has no closures — hoist adds outer names as bare Inputs.
+// =============================================================================
+Function.Gen_NameInArray {
+    Input: name: Address
+    Input: arr: Address
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(arr, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        n = Array.Size(arr)
+        i = 0
+        WhileLoop LessThan(i, n) {
+            cmp = StringCompare(name, Array.Get(arr, i))
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                ReturnValue(1)
+            }
+            i = Add(i, 1)
+        }
+        ReturnValue(0)
+    }
+}
+
+Function.Gen_CollectIdentsFromNode {
+    Input: node: Address
+    Input: out: Address
+    Body: {
+        IfCondition EqualTo(node, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        is_arr = Array.IsArray(node)
+        IfCondition EqualTo(is_arr, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        n = Array.Size(node)
+        IfCondition EqualTo(n, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        t = Array.Get(node, 0)
+        // IDENT use
+        IfCondition EqualTo(t, Node.IDENT) ThenBlock: {
+            IfCondition GreaterThan(n, 3) ThenBlock: {
+                iname = Array.Get(node, 3)
+                IfCondition EqualTo(Gen_NameInArray(iname, out), 0) ThenBlock: {
+                    Array.Push(out, iname)
+                }
+            }
+            ReturnValue(0)
+        }
+        // Recurse slots; treat list-of-nodes vs single child node
+        i = 1
+        WhileLoop LessThan(i, n) {
+            child = Array.Get(node, i)
+            IfCondition EqualTo(Array.IsArray(child), 1) ThenBlock: {
+                cn = Array.Size(child)
+                IfCondition GreaterThan(cn, 0) ThenBlock: {
+                    c0 = Array.Get(child, 0)
+                    IfCondition EqualTo(Array.IsArray(c0), 1) ThenBlock: {
+                        ci = 0
+                        WhileLoop LessThan(ci, cn) {
+                            Gen_CollectIdentsFromNode(Array.Get(child, ci), out)
+                            ci = Add(ci, 1)
+                        }
+                    } ElseBlock: {
+                        Gen_CollectIdentsFromNode(child, out)
+                    }
+                }
+            }
+            i = Add(i, 1)
+        }
+    }
+}
+
+Function.Gen_SnapshotFreevars {
+    Input: nest_params: Address
+    Input: nest_body: Address
+    Output: Address
+    Body: {
+        fv = Array.Create(8)
+        IfCondition EqualTo(Gen.enclosing_params, 0) ThenBlock: {
+            ReturnValue(fv)
+        }
+        refs = Array.Create(32)
+        IfCondition NotEqual(nest_body, 0) ThenBlock: {
+            bn = Array.Size(nest_body)
+            bi = 0
+            WhileLoop LessThan(bi, bn) {
+                Gen_CollectIdentsFromNode(Array.Get(nest_body, bi), refs)
+                bi = Add(bi, 1)
+            }
+        }
+        n = Array.Size(Gen.enclosing_params)
+        i = 0
+        WhileLoop LessThan(i, n) {
+            name = Array.Get(Gen.enclosing_params, i)
+            skip = Gen_NameInArray(name, nest_params)
+            IfCondition EqualTo(skip, 0) ThenBlock: {
+                used = Gen_NameInArray(name, refs)
+                IfCondition EqualTo(used, 1) ThenBlock: {
+                    dup = Gen_NameInArray(name, fv)
+                    IfCondition EqualTo(dup, 0) ThenBlock: {
+                        Array.Push(fv, name)
+                    }
+                }
+            }
+            i = Add(i, 1)
+        }
+        Array.Destroy(refs)
+        ReturnValue(fv)
+    }
+}
+
+Function.Gen_PushDeferredFunction {
+    Input: node: Address
+    Body: {
+        nest_params = ArrayGet(node, 4)
+        fv = Gen_SnapshotFreevarsAll(nest_params)
+        Array.Push(Gen.deferred_functions, node)
+        Array.Push(Gen.deferred_freevars, fv)
+    }
+}
+
+Function.Gen_SnapshotFreevarsAll {
+    Input: nest_params: Address
+    Output: Address
+    Body: {
+        fv = Array.Create(8)
+        // Outer function params (e.g. maxsize) — Gen.param_names at defer time
+        IfCondition NotEqual(Gen.param_names, 0) ThenBlock: {
+            n = Array.Size(Gen.param_names)
+            i = 0
+            WhileLoop LessThan(i, n) {
+                name = Array.Get(Gen.param_names, i)
+                skip = Gen_NameInArray(name, nest_params)
+                IfCondition EqualTo(skip, 0) ThenBlock: {
+                    dup = Gen_NameInArray(name, fv)
+                    IfCondition EqualTo(dup, 0) ThenBlock: {
+                        Array.Push(fv, name)
+                    }
+                }
+                i = Add(i, 1)
+            }
+        }
+        // Freevars of the function currently being generated (outer closed-overs)
+        IfCondition NotEqual(Gen.pending_freevars, 0) ThenBlock: {
+            n = Array.Size(Gen.pending_freevars)
+            i = 0
+            WhileLoop LessThan(i, n) {
+                name = Array.Get(Gen.pending_freevars, i)
+                skip = Gen_NameInArray(name, nest_params)
+                IfCondition EqualTo(skip, 0) ThenBlock: {
+                    dup = Gen_NameInArray(name, fv)
+                    IfCondition EqualTo(dup, 0) ThenBlock: {
+                        Array.Push(fv, name)
+                    }
+                }
+                i = Add(i, 1)
+            }
+        }
+        IfCondition EqualTo(Gen.enclosing_params, 0) ThenBlock: {
+            ReturnValue(fv)
+        }
+        n = Array.Size(Gen.enclosing_params)
+        i = 0
+        WhileLoop LessThan(i, n) {
+            name = Array.Get(Gen.enclosing_params, i)
+            skip = Gen_NameInArray(name, nest_params)
+            IfCondition EqualTo(skip, 0) ThenBlock: {
+                dup = Gen_NameInArray(name, fv)
+                IfCondition EqualTo(dup, 0) ThenBlock: {
+                    Array.Push(fv, name)
+                }
+            }
+            i = Add(i, 1)
+        }
+        ReturnValue(fv)
+    }
+}
+
+Function.Gen_EmitFreevarLocals {
+    Body: {
+        IfCondition EqualTo(Gen.pending_freevars, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        fv = Gen.pending_freevars
+        nfv = Array.Size(fv)
+        fi = 0
+        WhileLoop LessThan(fi, nfv) {
+            fname = Array.Get(fv, fi)
+            already = Gen_IsParam(fname)
+            IfCondition EqualTo(already, 0) ThenBlock: {
+                // Declare as local so nested body can see method/outer names
+                // (AILang has no closures; AddressOf cannot bind freevars)
+                Gen_EmitIndent()
+                Gen_Emit(fname)
+                Gen_Emit(" = Types.GetNone()\n")
+            }
+            fi = Add(fi, 1)
+        }
+    }
+}
+
+Function.Gen_PushEnclosingParams {
+    Input: params: Address
+    Output: Integer
+    Body: {
+        saved = Array.Size(Gen.enclosing_params)
+        IfCondition EqualTo(params, 0) ThenBlock: {
+            ReturnValue(saved)
+        }
+        n = Array.Size(params)
+        i = 0
+        WhileLoop LessThan(i, n) {
+            Array.Push(Gen.enclosing_params, Array.Get(params, i))
+            i = Add(i, 1)
+        }
+        ReturnValue(saved)
+    }
+}
+
+Function.Gen_TruncateEnclosing {
+    Input: saved: Integer
+    Body: {
+        esz = Array.Size(Gen.enclosing_params)
+        WhileLoop GreaterThan(esz, saved) {
+            Array.Pop(Gen.enclosing_params)
+            esz = Array.Size(Gen.enclosing_params)
+        }
+    }
+}
+
+
+Function.Gen_MarkEnclosingLocal {
+    Input: name: Address
+    Body: {
+        IfCondition EqualTo(name, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(Gen.enclosing_params, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        esz = Array.Size(Gen.enclosing_params)
+        IfCondition EqualTo(esz, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        dup = Gen_NameInArray(name, Gen.enclosing_params)
+        IfCondition EqualTo(dup, 0) ThenBlock: {
+            Array.Push(Gen.enclosing_params, name)
+        }
     }
 }

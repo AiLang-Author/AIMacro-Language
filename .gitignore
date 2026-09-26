@@ -12,6 +12,9 @@ __pycache__/
 *.pyc
 .pytest_cache/
 
+# Overnight MCP chunk farm — sources are already in Librarys/AIMacro and tools/
+AIMacro/restore_staging/
+
 # Editor / OS
 .DS_Store
 *.swp

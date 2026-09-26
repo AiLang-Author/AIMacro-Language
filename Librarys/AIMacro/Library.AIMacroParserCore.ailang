@@ -200,12 +200,14 @@ Function.Parse_Import {
         IfCondition EqualTo(Parse_Match(Token.AS), 1) ThenBlock: {
             Parse_Advance()
             IfCondition EqualTo(Parse_Match(Token.IDENTIFIER), 1) ThenBlock: {
+                // Bind the alias name (import builtins as bltns → bltns)
+                alias_ptr = Parse_Val()
+                module_name = Parse_CopyStr(alias_ptr)
                 Parse_Advance()
             }
         }
 
         // Multi-import: import a, b  /  import a as x, b as y
-        // modules: [first, ...] — Gen emits Import for each (as-aliases ignored, same as before)
         modules = Array.Create(4)
         Array.Push(modules, module_name)
         WhileLoop EqualTo(Parse_Match(Token.COMMA), 1) {
@@ -235,6 +237,8 @@ Function.Parse_Import {
             IfCondition EqualTo(Parse_Match(Token.AS), 1) ThenBlock: {
                 Parse_Advance()
                 IfCondition EqualTo(Parse_Match(Token.IDENTIFIER), 1) ThenBlock: {
+                    alias_ptr = Parse_Val()
+                    next_name = Parse_CopyStr(alias_ptr)
                     Parse_Advance()
                 }
             }
@@ -1361,7 +1365,12 @@ Function.Parse_FuncDef {
             IfCondition EqualTo(is_pow, 1) ThenBlock: {
                 Parse_Advance()
                 IfCondition EqualTo(Parse_Match(Token.IDENTIFIER), 1) ThenBlock: {
+                    // **kwargs — keep name as Address-like param (was dropped)
+                    kw_ptr = Parse_Val()
+                    kw_name = Parse_CopyStr(kw_ptr)
                     Parse_Advance()
+                    Array.Push(params, kw_name)
+                    Array.Push(defaults, 0)
                 }
                 ContinueLoop
             }
@@ -2987,6 +2996,9 @@ Function.Parse_GetAugOp {
         IfCondition EqualTo(t, Token.BIT_AND_EQ) ThenBlock: {
             ReturnValue(Token.BIT_AND)
         }
+        IfCondition EqualTo(t, Token.AT_EQ) ThenBlock: {
+            ReturnValue(Token.AT)
+        }
         
         ReturnValue(0)
     }
@@ -3509,6 +3521,7 @@ Function.Parse_Multiplication {
             IfCondition EqualTo(t, Token.SLASH) ThenBlock: { op = Token.SLASH }
             IfCondition EqualTo(t, Token.PERCENT) ThenBlock: { op = Token.PERCENT }
             IfCondition EqualTo(t, Token.FLOOR_DIV) ThenBlock: { op = Token.FLOOR_DIV }
+            IfCondition EqualTo(t, Token.AT) ThenBlock: { op = Token.AT }
             
             IfCondition EqualTo(op, 0) ThenBlock: {
                 BreakLoop
@@ -3583,6 +3596,23 @@ Function.Parse_Unary {
             ArraySet(node, 3, Token.MINUS)
             ArraySet(node, 4, operand)
             
+            ReturnValue(node)
+        }
+
+        // Unary plus (+self / +x)
+        IfCondition EqualTo(t, Token.PLUS) ThenBlock: {
+            line = Parse_Line()
+            col = Parse_Col()
+            Parse_Advance()
+
+            operand = Parse_Unary()
+
+            node = AST_Create(Node.UNARY_OP, 2)
+            ArraySet(node, 1, line)
+            ArraySet(node, 2, col)
+            ArraySet(node, 3, Token.PLUS)
+            ArraySet(node, 4, operand)
+
             ReturnValue(node)
         }
 
@@ -3670,6 +3700,102 @@ Function.Parse_InterpIdent {
     }
 }
 
+// Lex+parse a source fragment as an expression, restoring the outer token stream.
+// Used for f-string {expr} when expr is more than a bare ident/attr/call.
+Function.Parse_ExprFromSource {
+    Input: src: Address
+    Input: length: Integer
+    Output: Address
+    Body: {
+        IfCondition Or(EqualTo(src, 0), LessEqual(length, 0)) ThenBlock: {
+            ReturnValue(Parse_MakeStrLit(""))
+        }
+
+        // Save outer lexer/parser state (do not Lex_Free — keeps outer tokens alive)
+        old_src = Lex.src
+        old_len = Lex.len
+        old_pos = Lex.pos
+        old_line = Lex.line
+        old_col = Lex.col
+        old_count = Lex.count
+        old_types = Lex.tok_types
+        old_vals = Lex.tok_vals
+        old_lines = Lex.tok_lines
+        old_cols = Lex.tok_cols
+        old_buf = Lex.buf
+        old_paren = Lex.paren_depth
+        old_bracket = Lex.bracket_depth
+        old_parse_pos = Parse.pos
+        old_parse_count = Parse.count
+        old_err = Parse.err
+        old_err_line = Parse.err_line
+        old_err_col = Parse.err_col
+        old_err_msg = Parse.err_msg
+
+        // Fresh tokenize of the fragment
+        Lex.src = src
+        Lex.len = length
+        Lex.pos = 0
+        Lex.line = 1
+        Lex.col = 1
+        Lex.count = 0
+        Lex.paren_depth = 0
+        Lex.bracket_depth = 0
+        Lex.tok_types = Array.Create(64)
+        Lex.tok_vals = Array.Create(64)
+        Lex.tok_lines = Array.Create(64)
+        Lex.tok_cols = Array.Create(64)
+        Lex.buf = Allocate(Lex.buf_size)
+        Lex_Tokenize()
+        Parse.pos = 0
+        Parse.count = Lex_Count()
+        Parse.err = 0
+
+        expr = Parse_Expr()
+
+        // Keep STRING/IDENT/FSTRING token values — AST nodes alias them.
+        // Only destroy the fragment token arrays and temp lex buf.
+        IfCondition NotEqual(Lex.tok_types, 0) ThenBlock: {
+            Array.Destroy(Lex.tok_types)
+        }
+        IfCondition NotEqual(Lex.tok_vals, 0) ThenBlock: {
+            Array.Destroy(Lex.tok_vals)
+        }
+        IfCondition NotEqual(Lex.tok_lines, 0) ThenBlock: {
+            Array.Destroy(Lex.tok_lines)
+        }
+        IfCondition NotEqual(Lex.tok_cols, 0) ThenBlock: {
+            Array.Destroy(Lex.tok_cols)
+        }
+        IfCondition NotEqual(Lex.buf, 0) ThenBlock: {
+            Deallocate(Lex.buf, Lex.buf_size)
+        }
+
+        // Restore outer state
+        Lex.src = old_src
+        Lex.len = old_len
+        Lex.pos = old_pos
+        Lex.line = old_line
+        Lex.col = old_col
+        Lex.count = old_count
+        Lex.tok_types = old_types
+        Lex.tok_vals = old_vals
+        Lex.tok_lines = old_lines
+        Lex.tok_cols = old_cols
+        Lex.buf = old_buf
+        Lex.paren_depth = old_paren
+        Lex.bracket_depth = old_bracket
+        Parse.pos = old_parse_pos
+        Parse.count = old_parse_count
+        Parse.err = old_err
+        Parse.err_line = old_err_line
+        Parse.err_col = old_err_col
+        Parse.err_msg = old_err_msg
+
+        ReturnValue(expr)
+    }
+}
+
 Function.Parse_FString {
     Input: s: Address
     Output: Address
@@ -3711,95 +3837,160 @@ Function.Parse_FString {
                             result = Parse_Concat(result, Parse_MakeStrLit(chunk))
                             lit_n = 0
                         }
+                        // Skip '{'
                         i = Add(i, 1)
-                        WhileLoop And(LessThan(i, slen), Or(EqualTo(GetByte(s, i), 32), EqualTo(GetByte(s, i), 9))) {
-                            i = Add(i, 1)
-                        }
-                        id_start = i
-                        IfCondition LessThan(i, slen) ThenBlock: {
-                            c0 = GetByte(s, i)
-                            is_id = Or(EqualTo(c0, 95), Or(And(GreaterEqual(c0, 65), LessEqual(c0, 90)), And(GreaterEqual(c0, 97), LessEqual(c0, 122))))
-                            IfCondition EqualTo(is_id, 1) ThenBlock: {
+                        // Extract {expr} with brace+string awareness (PEP 701 nested quotes)
+                        expr_start = i
+                        edepth = 1
+                        WhileLoop And(LessThan(i, slen), GreaterThan(edepth, 0)) {
+                            ech = GetByte(s, i)
+                            // No {{/}} escapes inside an active expression field —
+                            // each brace changes edepth (format specs nest).
+                            IfCondition EqualTo(ech, 123) ThenBlock: {
+                                edepth = Add(edepth, 1)
                                 i = Add(i, 1)
-                                WhileLoop LessThan(i, slen) {
-                                    c1 = GetByte(s, i)
-                                    okc = Or(EqualTo(c1, 95), Or(And(GreaterEqual(c1, 48), LessEqual(c1, 57)), Or(And(GreaterEqual(c1, 65), LessEqual(c1, 90)), And(GreaterEqual(c1, 97), LessEqual(c1, 122)))))
-                                    IfCondition EqualTo(okc, 0) ThenBlock: {
-                                        BreakLoop
-                                    }
-                                    i = Add(i, 1)
-                                }
+                                ContinueLoop
                             }
-                        }
-                        expr = Parse_InterpIdent(s, id_start, i)
-                        WhileLoop And(LessThan(i, slen), EqualTo(GetByte(s, i), 46)) {
-                            i = Add(i, 1)
-                            attr_start = i
-                            WhileLoop LessThan(i, slen) {
-                                c2 = GetByte(s, i)
-                                okc = Or(EqualTo(c2, 95), Or(And(GreaterEqual(c2, 48), LessEqual(c2, 57)), Or(And(GreaterEqual(c2, 65), LessEqual(c2, 90)), And(GreaterEqual(c2, 97), LessEqual(c2, 122)))))
-                                IfCondition EqualTo(okc, 0) ThenBlock: {
+                            IfCondition EqualTo(ech, 125) ThenBlock: {
+                                edepth = Subtract(edepth, 1)
+                                IfCondition EqualTo(edepth, 0) ThenBlock: {
                                     BreakLoop
                                 }
                                 i = Add(i, 1)
+                                ContinueLoop
                             }
-                            attr = Parse_InterpIdent(s, attr_start, i)
-                            attr_name = ArrayGet(attr, 3)
-                            anode = AST_Create(Node.ATTRIBUTE, 2)
-                            ArraySet(anode, 3, expr)
-                            ArraySet(anode, 4, attr_name)
-                            expr = anode
-                        }
-                        IfCondition And(LessThan(i, slen), EqualTo(GetByte(s, i), 40)) ThenBlock: {
-                            i = Add(i, 1)
-                            call_args = Array.Create(4)
-                            fname = ArrayGet(expr, 3)
-                            WhileLoop And(LessThan(i, slen), And(NotEqual(GetByte(s, i), 41), NotEqual(GetByte(s, i), 125))) {
-                                WhileLoop And(LessThan(i, slen), Or(EqualTo(GetByte(s, i), 32), EqualTo(GetByte(s, i), 44))) {
-                                    i = Add(i, 1)
-                                }
-                                IfCondition Or(GreaterEqual(i, slen), Or(EqualTo(GetByte(s, i), 41), EqualTo(GetByte(s, i), 125))) ThenBlock: {
-                                    BreakLoop
-                                }
-                                c3 = GetByte(s, i)
-                                is_num = And(GreaterEqual(c3, 48), LessEqual(c3, 57))
-                                is_idc = Or(EqualTo(c3, 95), Or(And(GreaterEqual(c3, 65), LessEqual(c3, 90)), And(GreaterEqual(c3, 97), LessEqual(c3, 122))))
-                                IfCondition And(EqualTo(is_num, 0), EqualTo(is_idc, 0)) ThenBlock: {
-                                    BreakLoop
-                                }
-                                IfCondition And(GreaterEqual(c3, 48), LessEqual(c3, 57)) ThenBlock: {
-                                    // Digit-string IDENT so f-string call args match
-                                    // working IDENT shape (NUM_LIT here SIGSEGVs in codegen).
-                                    astart = i
-                                    WhileLoop And(LessThan(i, slen), And(GreaterEqual(GetByte(s, i), 48), LessEqual(GetByte(s, i), 57))) {
+                            // Nested quotes inside expr
+                            IfCondition Or(EqualTo(ech, 34), EqualTo(ech, 39)) ThenBlock: {
+                                nq = ech
+                                i = Add(i, 1)
+                                ntriple = 0
+                                IfCondition And(LessThan(i, slen), EqualTo(GetByte(s, i), nq)) ThenBlock: {
+                                    IfCondition And(LessThan(Add(i, 1), slen), EqualTo(GetByte(s, Add(i, 1)), nq)) ThenBlock: {
+                                        ntriple = 1
+                                        i = Add(i, 2)
+                                    } ElseBlock: {
+                                        // empty ''
                                         i = Add(i, 1)
+                                        ContinueLoop
                                     }
-                                    Array.Push(call_args, Parse_InterpIdent(s, astart, i))
-                                } ElseBlock: {
-                                    astart = i
-                                    WhileLoop LessThan(i, slen) {
-                                        c4 = GetByte(s, i)
-                                        okc = Or(EqualTo(c4, 95), Or(And(GreaterEqual(c4, 48), LessEqual(c4, 57)), Or(And(GreaterEqual(c4, 65), LessEqual(c4, 90)), And(GreaterEqual(c4, 97), LessEqual(c4, 122)))))
-                                        IfCondition EqualTo(okc, 0) ThenBlock: {
-                                            BreakLoop
+                                }
+                                nended = 0
+                                WhileLoop And(EqualTo(nended, 0), LessThan(i, slen)) {
+                                    nc = GetByte(s, i)
+                                    IfCondition EqualTo(nc, 92) ThenBlock: {
+                                        i = Add(i, 2)
+                                        ContinueLoop
+                                    }
+                                    IfCondition EqualTo(nc, nq) ThenBlock: {
+                                        IfCondition EqualTo(ntriple, 1) ThenBlock: {
+                                            IfCondition And(LessThan(Add(i, 2), slen), And(EqualTo(GetByte(s, Add(i, 1)), nq), EqualTo(GetByte(s, Add(i, 2)), nq))) ThenBlock: {
+                                                i = Add(i, 3)
+                                                nended = 1
+                                                ContinueLoop
+                                            }
+                                            i = Add(i, 1)
+                                            ContinueLoop
                                         }
                                         i = Add(i, 1)
+                                        nended = 1
+                                        ContinueLoop
                                     }
-                                    Array.Push(call_args, Parse_InterpIdent(s, astart, i))
+                                    i = Add(i, 1)
                                 }
+                                ContinueLoop
                             }
-                            IfCondition And(LessThan(i, slen), EqualTo(GetByte(s, i), 41)) ThenBlock: {
-                                i = Add(i, 1)
-                            }
-                            calln = AST_Create(Node.CALL, 2)
-                            ArraySet(calln, 3, fname)
-                            ArraySet(calln, 4, call_args)
-                            expr = calln
-                        }
-                        WhileLoop And(LessThan(i, slen), NotEqual(GetByte(s, i), 125)) {
                             i = Add(i, 1)
                         }
-                        IfCondition LessThan(i, slen) ThenBlock: {
+                        expr_end = i
+                        // Copy expression substring
+                        elen = Subtract(expr_end, expr_start)
+                        ebuf = Allocate(Add(elen, 1))
+                        ek = 0
+                        WhileLoop LessThan(ek, elen) {
+                            SetByte(ebuf, ek, GetByte(s, Add(expr_start, ek)))
+                            ek = Add(ek, 1)
+                        }
+                                                SetByte(ebuf, elen, 0)
+                        // Strip !conversion / :format_spec at top level (not inside ()[]{} or strings)
+                        cut = elen
+                        pdepth = 0
+                        bdepth = 0
+                        cdepth = 0
+                        in_str = 0
+                        sq = 0
+                        si = 0
+                        WhileLoop LessThan(si, elen) {
+                            sc = GetByte(ebuf, si)
+                            IfCondition EqualTo(in_str, 1) ThenBlock: {
+                                IfCondition EqualTo(sc, 92) ThenBlock: {
+                                    si = Add(si, 2)
+                                    ContinueLoop
+                                }
+                                IfCondition EqualTo(sc, sq) ThenBlock: {
+                                    in_str = 0
+                                }
+                                si = Add(si, 1)
+                                ContinueLoop
+                            }
+                            IfCondition Or(EqualTo(sc, 34), EqualTo(sc, 39)) ThenBlock: {
+                                in_str = 1
+                                sq = sc
+                                si = Add(si, 1)
+                                ContinueLoop
+                            }
+                            IfCondition EqualTo(sc, 40) ThenBlock: {
+                                pdepth = Add(pdepth, 1)
+                                si = Add(si, 1)
+                                ContinueLoop
+                            }
+                            IfCondition EqualTo(sc, 41) ThenBlock: {
+                                IfCondition GreaterThan(pdepth, 0) ThenBlock: {
+                                    pdepth = Subtract(pdepth, 1)
+                                }
+                                si = Add(si, 1)
+                                ContinueLoop
+                            }
+                            IfCondition EqualTo(sc, 91) ThenBlock: {
+                                bdepth = Add(bdepth, 1)
+                                si = Add(si, 1)
+                                ContinueLoop
+                            }
+                            IfCondition EqualTo(sc, 93) ThenBlock: {
+                                IfCondition GreaterThan(bdepth, 0) ThenBlock: {
+                                    bdepth = Subtract(bdepth, 1)
+                                }
+                                si = Add(si, 1)
+                                ContinueLoop
+                            }
+                            IfCondition EqualTo(sc, 123) ThenBlock: {
+                                cdepth = Add(cdepth, 1)
+                                si = Add(si, 1)
+                                ContinueLoop
+                            }
+                            IfCondition EqualTo(sc, 125) ThenBlock: {
+                                IfCondition GreaterThan(cdepth, 0) ThenBlock: {
+                                    cdepth = Subtract(cdepth, 1)
+                                }
+                                si = Add(si, 1)
+                                ContinueLoop
+                            }
+                            IfCondition And(EqualTo(pdepth, 0), And(EqualTo(bdepth, 0), EqualTo(cdepth, 0))) ThenBlock: {
+                                // '!' conversion or ':' format — cut value here
+                                IfCondition Or(EqualTo(sc, 33), EqualTo(sc, 58)) ThenBlock: {
+                                    cut = si
+                                    BreakLoop
+                                }
+                            }
+                            si = Add(si, 1)
+                        }
+                        IfCondition LessThan(cut, elen) ThenBlock: {
+                            SetByte(ebuf, cut, 0)
+                            elen = cut
+                        }
+                        expr = Parse_ExprFromSource(ebuf, elen)
+                        Deallocate(ebuf, 0)
+                        // Consume closing '}'
+                        IfCondition And(LessThan(i, slen), EqualTo(GetByte(s, i), 125)) ThenBlock: {
                             i = Add(i, 1)
                         }
                         result = Parse_Concat(result, Parse_MakeStrCall(expr))

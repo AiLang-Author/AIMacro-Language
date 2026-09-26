@@ -1,0 +1,13 @@
+# compile_valueerror: exception type idents emit ExcKind ints
+def f(value) {
+    if isinstance(value, ValueError) {
+        return 1
+    }
+    if isinstance(value, TypeError) {
+        return 2
+    }
+    return 0
+}
+t = (ValueError, OSError, TypeError, Exception)
+print(f(None))
+print(len(t))
