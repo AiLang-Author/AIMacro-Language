@@ -546,6 +546,48 @@ def desugar_nameerror_probe(src: str) -> str:
         return f"{indent}{name} = None\n{m.group(0)}"
     return _NAMEERROR_PROBE_RE.sub(repl, src)
 
+def _scan_depth_and_string(s: str) -> tuple[int, str | None]:
+    """Paren/bracket depth and open string delimiter (handles ''' / \"\"\")."""
+    depth = 0
+    in_s: str | None = None
+    i = 0
+    n = len(s)
+    while i < n:
+        if in_s:
+            if in_s in ("'''", '"""'):
+                if s.startswith(in_s, i):
+                    in_s = None
+                    i += 3
+                    continue
+            else:
+                if s[i] == "\\":
+                    i += 2
+                    continue
+                if s[i] == in_s:
+                    in_s = None
+            i += 1
+            continue
+        if s.startswith('"""', i):
+            in_s = '"""'
+            i += 3
+            continue
+        if s.startswith("'''", i):
+            in_s = "'''"
+            i += 3
+            continue
+        c = s[i]
+        if c in ("'", '"'):
+            in_s = c
+            i += 1
+            continue
+        if c in "([{":
+            depth += 1
+        elif c in ")]}":
+            depth -= 1
+        i += 1
+    return depth, in_s
+
+
 _YIELD_RE = re.compile(r"^(\s*)yield(\b.*)$")
 _PEP695_DEF_RE = re.compile(
     r"^(\s*)(def|class)\s+([A-Za-z_][A-Za-z0-9_]*)\s*\[[^\]]*\]\s*(\()"
@@ -586,27 +628,12 @@ def desugar_yield(src: str) -> str:
             #          start, (n, end), line)
             # would lose the comma after a[:end] and parse as IDENT after RPAREN.
             expr = rest
-        # Accumulate until paren/bracket balance non-negative and closed when opened
         buf = expr
-        def _bal(s: str) -> int:
-            depth = 0
-            in_s = None
-            for ch in s:
-                if in_s:
-                    if ch == in_s:
-                        in_s = None
-                    continue
-                if ch in "\"\'":
-                    in_s = ch
-                    continue
-                if ch in "([{":
-                    depth += 1
-                elif ch in ")]}":
-                    depth -= 1
-            return depth
-        while _bal(buf) > 0 and i + 1 < len(lines):
+        depth, in_s = _scan_depth_and_string(buf)
+        while (depth > 0 or in_s) and i + 1 < len(lines):
             i += 1
             buf += " " + lines[i].strip()
+            depth, in_s = _scan_depth_and_string(buf)
         # Drop trailing comment on last physical line piece
         if "#" in buf:
             # keep simple: strip line comments only when not inside strings — best-effort
