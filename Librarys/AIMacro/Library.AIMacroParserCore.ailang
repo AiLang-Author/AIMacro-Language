@@ -1834,6 +1834,10 @@ Function.Parse_Try {
                             BreakLoop
                         }
                     }
+                    // except Type() as e  (call, not a type tuple)
+                    IfCondition EqualTo(Parse_Match(Token.LPAREN), 1) ThenBlock: {
+                        Parse_SkipParens()
+                    }
                 }
             }
             is_as = Parse_Match(Token.AS)
@@ -2927,12 +2931,8 @@ Function.Parse_UnpackTarget {
         IfCondition EqualTo(is_star, 1) ThenBlock: {
             Parse_Advance()
             Parse_SkipNoise()
-            name_ptr = Parse_Val()
-            name = Parse_CopyStr(name_ptr)
-            Parse_Consume(Token.IDENTIFIER)
-            idn = AST_Create(Node.IDENT, 1)
-            ArraySet(idn, 3, name)
-            ReturnValue(idn)
+            // *name / *obj.attr / *_forkserver._inherited_fds
+            ReturnValue(Parse_Expr())
         }
         ReturnValue(Parse_Expr())
     }
@@ -4066,9 +4066,16 @@ Function.Parse_With {
             is_as = Parse_Match(Token.AS)
             IfCondition EqualTo(is_as, 1) ThenBlock: {
                 Parse_Advance()
-                name_ptr = Parse_Val()
-                as_name = Parse_CopyStr(name_ptr)
-                Parse_Consume(Token.IDENTIFIER)
+                Parse_SkipNoise()
+                // with expr as (a, b) — tuple target, parse coverage
+                IfCondition EqualTo(Parse_Match(Token.LPAREN), 1) ThenBlock: {
+                    Parse_SkipParens()
+                    as_name = 0
+                } ElseBlock: {
+                    name_ptr = Parse_Val()
+                    as_name = Parse_CopyStr(name_ptr)
+                    Parse_Consume(Token.IDENTIFIER)
+                }
             }
             Array.Push(exprs, expr)
             Array.Push(as_names, as_name)
@@ -4962,6 +4969,25 @@ Function.Parse_DictPairOrStar {
     }
 }
 
+Function.Parse_StarOrExpr {
+    Output: Address
+    Body: {
+        IfCondition EqualTo(Parse_Match(Token.STAR), 1) ThenBlock: {
+            line = Parse_Line()
+            col = Parse_Col()
+            Parse_Advance()
+            Parse_SkipNoise()
+            inner = Parse_Expr()
+            node = AST_Create(Node.STARRED, 1)
+            ArraySet(node, 1, line)
+            ArraySet(node, 2, col)
+            ArraySet(node, 3, inner)
+            ReturnValue(node)
+        }
+        ReturnValue(Parse_Expr())
+    }
+}
+
 Function.Parse_Dict {
     Output: Address
     Body: {
@@ -4998,7 +5024,7 @@ Function.Parse_Dict {
                     Array.Push(pairs, Array.Get(pair, 1))
                 }
             } ElseBlock: {
-                first = Parse_Expr()
+                first = Parse_StarOrExpr()
                 Parse_SkipNoise()
                 // Set comprehension: {x for x in y}
                 IfCondition EqualTo(Parse_Match(Token.FOR), 1) ThenBlock: {
@@ -5019,7 +5045,7 @@ Function.Parse_Dict {
                         IfCondition EqualTo(is_rb2, 1) ThenBlock: {
                             BreakLoop
                         }
-                        elem = Parse_Expr()
+                        elem = Parse_StarOrExpr()
                         Array.Push(elems, elem)
                         Parse_SkipNoise()
                         is_comma = Parse_Match(Token.COMMA)

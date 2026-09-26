@@ -1097,6 +1097,12 @@ Function.Lex_Tokenize {
                 IfCondition EqualTo(had_exp, 1) ThenBlock: {
                     is_float = 1
                 }
+                // Imaginary: 1j / 3.14j / 1e0J — parse coverage (emit FLOAT)
+                chj = Lex_Char()
+                IfCondition Or(EqualTo(chj, 106), EqualTo(chj, 74)) ThenBlock: {
+                    Lex_Advance()
+                    is_float = 1
+                }
                 IfCondition EqualTo(is_float, 1) ThenBlock: {
                     Lex_EmitFloatSlice(start)
                     ContinueLoop
