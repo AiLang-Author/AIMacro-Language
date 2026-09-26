@@ -1,0 +1,4 @@
+digest_cons = lambda d=b'': 1
+x = lambda *args, **kwargs: args
+y = lambda n=0: n
+print(1)
