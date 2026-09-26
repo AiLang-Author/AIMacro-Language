@@ -1,0 +1,5 @@
+if __debug__ {
+    x = __file__
+    y = __package__
+}
+print(1)
