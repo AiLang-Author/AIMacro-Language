@@ -1,0 +1,6 @@
+def g() {
+    _ = TokenInfo("STRING", a, start, line)
+    _ = (1,)
+    _ = None
+}
+print(1)
