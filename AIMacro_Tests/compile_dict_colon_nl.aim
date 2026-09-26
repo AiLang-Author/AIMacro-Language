@@ -1,0 +1,7 @@
+exc = 0
+context = {
+    'message':
+        f'hello',
+    'exception': exc,
+}
+print(1)

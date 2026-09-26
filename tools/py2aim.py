@@ -588,6 +588,45 @@ def _scan_depth_and_string(s: str) -> tuple[int, str | None]:
     return depth, in_s
 
 
+def _strip_physical_comment(s: str) -> str:
+    """Drop a `#` comment on one physical line; keep `#` inside strings."""
+    in_s: str | None = None
+    i = 0
+    n = len(s)
+    while i < n:
+        if in_s:
+            if in_s in ("'''", '"""'):
+                if s.startswith(in_s, i):
+                    in_s = None
+                    i += 3
+                    continue
+            else:
+                if s[i] == "\\":
+                    i += 2
+                    continue
+                if s[i] == in_s:
+                    in_s = None
+            i += 1
+            continue
+        if s.startswith('"""', i):
+            in_s = '"""'
+            i += 3
+            continue
+        if s.startswith("'''", i):
+            in_s = "'''"
+            i += 3
+            continue
+        c = s[i]
+        if c in ("'", '"'):
+            in_s = c
+            i += 1
+            continue
+        if c == "#":
+            return s[:i].rstrip()
+        i += 1
+    return s
+
+
 _YIELD_RE = re.compile(r"^(\s*)yield(\b.*)$")
 _PEP695_DEF_RE = re.compile(
     r"^(\s*)(def|class)\s+([A-Za-z_][A-Za-z0-9_]*)\s*\[[^\]]*\]\s*(\()"
@@ -628,16 +667,12 @@ def desugar_yield(src: str) -> str:
             #          start, (n, end), line)
             # would lose the comma after a[:end] and parse as IDENT after RPAREN.
             expr = rest
-        buf = expr
+        buf = _strip_physical_comment(expr)
         depth, in_s = _scan_depth_and_string(buf)
         while (depth > 0 or in_s) and i + 1 < len(lines):
             i += 1
-            buf += " " + lines[i].strip()
+            buf += " " + _strip_physical_comment(lines[i].strip())
             depth, in_s = _scan_depth_and_string(buf)
-        # Drop trailing comment on last physical line piece
-        if "#" in buf:
-            # keep simple: strip line comments only when not inside strings — best-effort
-            pass
         out.append(f"{indent}_ = ({buf})  # yield stub\n")
         i += 1
     return "".join(out)

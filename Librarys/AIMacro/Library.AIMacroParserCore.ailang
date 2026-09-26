@@ -4919,6 +4919,7 @@ Function.Parse_DictPairOrStar {
         }
         key = Parse_Expr()
         Parse_Consume(Token.COLON)
+        Parse_SkipNoise()
         val = Parse_Expr()
         Array.Push(pair, key)
         Array.Push(pair, val)
@@ -4996,8 +4997,10 @@ Function.Parse_Dict {
                     ArraySet(node, 3, elems)
                     ReturnValue(node)
                 }
-                // Dict entry or dict comprehension
+                // Dict entry or dict comprehension. Newline after ':' is legal
+                // ('message':\n    f'...').
                 Parse_Consume(Token.COLON)
+                Parse_SkipNoise()
                 val = Parse_Expr()
                 Parse_SkipNoise()
                 // Dict comprehension: {k: v for x in y}
