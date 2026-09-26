@@ -251,6 +251,15 @@ Function.Parse_ClassBase {
             Parse_Expr()
             ReturnValue(0)
         }
+        // Ternary base: class X(gzip.GzipFile if gzip else object)
+        IfCondition EqualTo(Parse_Check(Token.IF), 1) ThenBlock: {
+            Parse_Advance()
+            Parse_Expr()
+            IfCondition EqualTo(Parse_Check(Token.ELSE), 1) ThenBlock: {
+                Parse_Advance()
+                Parse_Expr()
+            }
+        }
         Array.Push(bases, base)
     }
 }

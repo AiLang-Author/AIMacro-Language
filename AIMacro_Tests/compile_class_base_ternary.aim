@@ -1,0 +1,8 @@
+gzip = 0
+class GzipDecodedResponse(gzip.GzipFile if gzip else object) {
+    pass
+}
+class X(A if cond else B) {
+    pass
+}
+print(1)
