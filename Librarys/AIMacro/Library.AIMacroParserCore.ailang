@@ -2772,16 +2772,9 @@ Function.Parse_AssignOrExpr {
                 Array.Push(targets, Parse_UnpackTarget())
             }
             Parse_Consume(Token.ASSIGN)
+            // Chained attr unpack: self.size, self.name = self._state = state
             values = Array.Create(8)
-            Array.Push(values, Parse_Expr())
-            WhileLoop EqualTo(1, 1) {
-                is_comma = Parse_Match(Token.COMMA)
-                IfCondition EqualTo(is_comma, 0) ThenBlock: {
-                    BreakLoop
-                }
-                Parse_Advance()
-                Array.Push(values, Parse_Expr())
-            }
+            Array.Push(values, Parse_AssignRhs())
             node = AST_Create(Node.TUPLE_UNPACK, 2)
             ArraySet(node, 1, line)
             ArraySet(node, 2, col)
