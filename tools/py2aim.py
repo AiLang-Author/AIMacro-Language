@@ -779,6 +779,10 @@ def desugar_nested_class_cells(src: str) -> str:
 
 
 def convert(src: str) -> str:
+    # Empty / whitespace-only modules (e.g. empty __init__.py): aimacro.x
+    # rejects zero-byte input. Emit a bare `pass` so transpile succeeds.
+    if not src or not src.strip():
+        return "pass\n"
     # match/case already desugared if called via main;
     # accept raw match too when convert() used alone
     if re.search(r"(?m)^\s*match\s+.+:\s*$", src):
