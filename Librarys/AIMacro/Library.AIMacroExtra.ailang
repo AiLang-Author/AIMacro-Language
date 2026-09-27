@@ -77,6 +77,32 @@ Function.AIMacro.Translate {
     }
 }
 
+Function.AIMacro.MakeTrans {
+    Input: a: Address
+    Input: b: Address
+    Input: c: Address
+    Output: Address
+    Body: {
+        ReturnValue("")
+    }
+}
+
+// getopt.getopt(args, ...) — compile/run stub: ( [], args )
+Function.AIMacro.GetOpt {
+    Input: args: Address
+    Output: Address
+    Body: {
+        pair = Array.Create(2)
+        Array.Push(pair, Array.Create(0))
+        IfCondition EqualTo(args, 0) ThenBlock: {
+            Array.Push(pair, Array.Create(0))
+        } ElseBlock: {
+            Array.Push(pair, args)
+        }
+        ReturnValue(pair)
+    }
+}
+
 // Stub: return default (covers getattr(x, "__copy__", None) skip paths).
 Function.AIMacro.GetAttr {
     Input: obj: Address
