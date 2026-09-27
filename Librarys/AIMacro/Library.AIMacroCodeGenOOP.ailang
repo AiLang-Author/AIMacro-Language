@@ -1140,6 +1140,30 @@ Function.OOPGen_MethodCall {
             Gen_Emit(", 0, 0)")
             ReturnValue(0)
         }
+        cmp_mid = StringCompare(method, "make_identity_dict")
+        IfCondition EqualTo(cmp_mid, 0) ThenBlock: {
+            Gen_Emit("AIMacro.MakeIdentityDict(")
+            IfCondition And(NotEqual(args, 0), GreaterThan(Array.Size(args), 0)) ThenBlock: {
+                OOPGen_Expr(Array.Get(args, 0))
+            } ElseBlock: {
+                Gen_Emit("256")
+            }
+            Gen_Emit(")")
+            ReturnValue(0)
+        }
+        cmp_upd = StringCompare(method, "update")
+        IfCondition EqualTo(cmp_upd, 0) ThenBlock: {
+            Gen_Emit("AIMacro.DictUpdate(")
+            OOPGen_Expr(obj)
+            Gen_Emit(", ")
+            IfCondition And(NotEqual(args, 0), GreaterThan(Array.Size(args), 0)) ThenBlock: {
+                OOPGen_Expr(Array.Get(args, 0))
+            } ElseBlock: {
+                Gen_Emit("0")
+            }
+            Gen_Emit(")")
+            ReturnValue(0)
+        }
         cmp_go = StringCompare(method, "getopt")
         IfCondition EqualTo(cmp_go, 0) ThenBlock: {
             Gen_Emit("AIMacro.GetOpt(")
