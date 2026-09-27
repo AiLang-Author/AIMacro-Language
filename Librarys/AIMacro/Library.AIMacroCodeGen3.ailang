@@ -842,7 +842,9 @@ Function.Gen_FlattenExpr {
             Gen_Emit(temp)
             cmp_contains = StringCompare(attr, "__contains__")
             cmp_copy = StringCompare(attr, "copy")
-            IfCondition Or(EqualTo(cmp_contains, 0), EqualTo(cmp_copy, 0)) ThenBlock: {
+            cmp_code = StringCompare(attr, "__code__")
+            cmp_dict = StringCompare(attr, "__dict__")
+            IfCondition Or(EqualTo(cmp_contains, 0), Or(EqualTo(cmp_copy, 0), Or(EqualTo(cmp_code, 0), EqualTo(cmp_dict, 0)))) ThenBlock: {
                 Gen_Emit(" = 0\n")
             } ElseBlock: {
                 Gen_Emit(" = OOP.ObjectGet(")
@@ -1243,7 +1245,8 @@ Function.Gen_FlattenExpr {
             cmp_mid = StringCompare(method, "make_identity_dict")
             cmp_upd = StringCompare(method, "update")
             cmp_fs = StringCompare(method, "fspath")
-            IfCondition Or(EqualTo(cmp_go, 0), Or(EqualTo(cmp_mt, 0), Or(EqualTo(cmp_mid, 0), Or(EqualTo(cmp_upd, 0), EqualTo(cmp_fs, 0))))) ThenBlock: {
+            cmp_reg = StringCompare(method, "register")
+            IfCondition Or(EqualTo(cmp_go, 0), Or(EqualTo(cmp_mt, 0), Or(EqualTo(cmp_mid, 0), Or(EqualTo(cmp_upd, 0), Or(EqualTo(cmp_fs, 0), EqualTo(cmp_reg, 0)))))) ThenBlock: {
                 is_known = 1
             }
             // OOP MethodCall emits setup statements; do not prefix "temp = "

@@ -122,6 +122,14 @@ Function.AIMacro.MakeTrans {
     }
 }
 
+Function.AIMacro.NoOp {
+    Input: a: Address
+    Output: Address
+    Body: {
+        ReturnValue(0)
+    }
+}
+
 Function.AIMacro.FsPath {
     Input: p: Address
     Output: Address

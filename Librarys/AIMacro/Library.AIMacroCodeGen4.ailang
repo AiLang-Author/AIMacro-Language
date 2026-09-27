@@ -2572,6 +2572,9 @@ Function.Gen_MapMethod {
         cmp = StringCompare(method, "fspath")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.FsPath") }
 
+        cmp = StringCompare(method, "register")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.NoOp") }
+
         // Other list methods
         cmp = StringCompare(method, "clear")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.SmartClear") }
