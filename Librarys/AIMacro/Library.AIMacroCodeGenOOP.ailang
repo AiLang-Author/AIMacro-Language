@@ -898,6 +898,11 @@ Function.OOPGen_AttrAssign {
         IfCondition Or(EqualTo(obj, 0), EqualTo(attr, 0)) ThenBlock: {
             ReturnValue(0)
         }
+        // process.current_process()._inheriting = True — flatten receiver
+        // before ObjectSet( so MethodCall setup is not mid-arg.
+        IfCondition EqualTo(Gen_HasCall(obj), 1) ThenBlock: {
+            obj = Gen_FlattenExpr(obj)
+        }
         // Chained: self.x = y = expr  /  self.x = self.y = expr
         value = Gen_ResolveChainValue(value)
         

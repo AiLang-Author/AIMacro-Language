@@ -1,0 +1,10 @@
+h = []
+h.append(5)
+h.append(1)
+h.append(4)
+h.append(2)
+h.sort()
+print(h[0])
+print(h[1])
+print(h[2])
+print(h[3])
