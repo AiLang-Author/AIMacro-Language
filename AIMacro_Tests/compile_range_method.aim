@@ -1,0 +1,11 @@
+class L {
+    def part_count(self) {
+        return 3
+    }
+}
+obj = L()
+n = 0
+for i in range(obj.part_count() - 1, 0, -1) {
+    n = n + i
+}
+print(n)

@@ -148,6 +148,7 @@ FixedPool.Node {
     "STARRED": Initialize=43
     "GLOBAL_STMT": Initialize=44
     "NONLOCAL_STMT": Initialize=45
+    "SLICE_ASSIGN": Initialize=46
      "CLASS_DEF": Initialize=100
     "METHOD_DEF": Initialize=101
     "ATTRIBUTE": Initialize=102

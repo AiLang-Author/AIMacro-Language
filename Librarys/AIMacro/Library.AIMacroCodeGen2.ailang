@@ -870,6 +870,10 @@ Function.Gen_Node {
             Gen_IndexAssign(node)
             ReturnValue(0)
         }
+        IfCondition EqualTo(t, Node.SLICE_ASSIGN) ThenBlock: {
+            Gen_SliceAssign(node)
+            ReturnValue(0)
+        }
         
         // CALL as statement - flatten arguments first
         IfCondition EqualTo(t, Node.CALL) ThenBlock: {
@@ -2286,6 +2290,33 @@ Function.Gen_ForRange {
         // range(a, b)    -> start=a, stop=b, step=1
         // range(a, b, c) -> start=a, stop=b, step=c
         
+        // Flatten range(start, stop, step) before `lc = ` so
+        // range(obj.part_count()-1, 0, -1) is not `lc = t = MethodCall`.
+        start_arg = 0
+        stop_arg = 0
+        step_arg = 0
+        IfCondition EqualTo(num_args, 1) ThenBlock: {
+            stop_arg = Array.Get(args, 0)
+            IfCondition EqualTo(Gen_HasCall(stop_arg), 1) ThenBlock: {
+                stop_arg = Gen_FlattenExpr(stop_arg)
+            }
+        } ElseBlock: {
+            start_arg = Array.Get(args, 0)
+            IfCondition EqualTo(Gen_HasCall(start_arg), 1) ThenBlock: {
+                start_arg = Gen_FlattenExpr(start_arg)
+            }
+            stop_arg = Array.Get(args, 1)
+            IfCondition EqualTo(Gen_HasCall(stop_arg), 1) ThenBlock: {
+                stop_arg = Gen_FlattenExpr(stop_arg)
+            }
+        }
+        IfCondition EqualTo(num_args, 3) ThenBlock: {
+            step_arg = Array.Get(args, 2)
+            IfCondition EqualTo(Gen_HasCall(step_arg), 1) ThenBlock: {
+                step_arg = Gen_FlattenExpr(step_arg)
+            }
+        }
+
         // Create internal loop counter name: lc<id> (loop counter)
         Gen_EmitIndent()
         Gen_Emit("lc")
@@ -2294,7 +2325,6 @@ Function.Gen_ForRange {
         IfCondition EqualTo(num_args, 1) ThenBlock: {
             Gen_Emit("0")
         } ElseBlock: {
-            start_arg = Array.Get(args, 0)
             Gen_Expr(start_arg)
         }
         Gen_Emit("\n")
@@ -2304,13 +2334,7 @@ Function.Gen_ForRange {
         Gen_Emit("ls")
         Gen_Emit(loop_suffix)
         Gen_Emit(" = ")
-        IfCondition EqualTo(num_args, 1) ThenBlock: {
-            stop_arg = Array.Get(args, 0)
-            Gen_Expr(stop_arg)
-        } ElseBlock: {
-            stop_arg = Array.Get(args, 1)
-            Gen_Expr(stop_arg)
-        }
+        Gen_Expr(stop_arg)
         Gen_Emit("\n")
         
         // Set step value: lt<id> (loop step)
@@ -2319,7 +2343,6 @@ Function.Gen_ForRange {
         Gen_Emit(loop_suffix)
         Gen_Emit(" = ")
         IfCondition EqualTo(num_args, 3) ThenBlock: {
-            step_arg = Array.Get(args, 2)
             Gen_Expr(step_arg)
         } ElseBlock: {
             Gen_Emit("1")
@@ -3169,6 +3192,84 @@ Function.Gen_DictAssignment {
 // =============================================================================
 // INDEX ASSIGNMENT
 // =============================================================================
+Function.Gen_SliceAssign {
+    Input: node: Address
+    Body: {
+        // a[start:end] = seq  — insert seq items at start (covers a[:0] = ['']).
+        expr = ArrayGet(node, 3)
+        start_expr = ArrayGet(node, 4)
+        value = ArrayGet(node, 7)
+        value = Gen_ResolveChainValue(value)
+        IfCondition EqualTo(Gen_HasCall(expr), 1) ThenBlock: {
+            expr = Gen_FlattenExpr(expr)
+        }
+        IfCondition And(NotEqual(start_expr, 0), EqualTo(Gen_HasCall(start_expr), 1)) ThenBlock: {
+            start_expr = Gen_FlattenExpr(start_expr)
+        }
+        IfCondition EqualTo(Gen_HasCall(value), 1) ThenBlock: {
+            value = Gen_FlattenExpr(value)
+        }
+        seq = Gen_TempName()
+        st = Gen_TempName()
+        n = Gen_TempName()
+        i = Gen_TempName()
+        item = Gen_TempName()
+        Gen_EmitIndent()
+        Gen_Emit(seq)
+        Gen_Emit(" = ")
+        Gen_Expr(value)
+        Gen_Emit("\n")
+        Gen_EmitIndent()
+        Gen_Emit(st)
+        Gen_Emit(" = ")
+        IfCondition EqualTo(start_expr, 0) ThenBlock: {
+            Gen_Emit("0")
+        } ElseBlock: {
+            Gen_Expr(start_expr)
+        }
+        Gen_Emit("\n")
+        Gen_EmitIndent()
+        Gen_Emit(n)
+        Gen_Emit(" = AIMacro.SmartSize(")
+        Gen_Emit(seq)
+        Gen_Emit(")\n")
+        Gen_EmitIndent()
+        Gen_Emit(i)
+        Gen_Emit(" = ")
+        Gen_Emit(n)
+        Gen_Emit("\n")
+        Gen_EmitIndent()
+        Gen_Emit("WhileLoop GreaterThan(")
+        Gen_Emit(i)
+        Gen_Emit(", 0) {\n")
+        Gen.indent = Add(Gen.indent, 1)
+        Gen_EmitIndent()
+        Gen_Emit(i)
+        Gen_Emit(" = Subtract(")
+        Gen_Emit(i)
+        Gen_Emit(", 1)\n")
+        Gen_EmitIndent()
+        Gen_Emit(item)
+        Gen_Emit(" = DictGen_SmartGet(")
+        Gen_Emit(seq)
+        Gen_Emit(", ")
+        Gen_Emit(i)
+        Gen_Emit(")\n")
+        Gen_EmitIndent()
+        Gen_Emit("AIMacro.ListInsert(")
+        Gen_Expr(expr)
+        Gen_Emit(", ")
+        Gen_Emit(st)
+        Gen_Emit(", ")
+        Gen_Emit(item)
+        Gen_Emit(")\n")
+        Gen.indent = Subtract(Gen.indent, 1)
+        Gen_EmitIndent()
+        Gen_Emit("}\n")
+        ReturnValue(0)
+    }
+}
+
 Function.Gen_IndexAssign {
     Input: node: Address
     Body: {
