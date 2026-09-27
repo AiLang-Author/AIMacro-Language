@@ -1685,6 +1685,26 @@ Function.Gen_IsStdlibAttr {
             IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
             ReturnValue(0)
         }
+        cmp = StringCompare(name, "types")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            cmp = StringCompare(attr, "BuiltinFunctionType")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+            cmp = StringCompare(attr, "FunctionType")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+            cmp = StringCompare(attr, "CodeType")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+            cmp = StringCompare(attr, "MethodType")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+            cmp = StringCompare(attr, "ModuleType")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "weakref")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            cmp = StringCompare(attr, "ref")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+            ReturnValue(0)
+        }
         ReturnValue(0)
     }
 }
@@ -1822,6 +1842,21 @@ Function.Gen_EmitStdlibAttr {
             cmp = StringCompare(attr, "pi")
             IfCondition EqualTo(cmp, 0) ThenBlock: {
                 Gen_Emit("AIMacro.Math.Pi()")
+                ReturnValue(1)
+            }
+        }
+        cmp = StringCompare(name, "types")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_Emit("\"")
+            Gen_Emit(attr)
+            Gen_Emit("\"")
+            ReturnValue(1)
+        }
+        cmp = StringCompare(name, "weakref")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            cmp = StringCompare(attr, "ref")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                Gen_Emit("\"weakref.ref\"")
                 ReturnValue(1)
             }
         }

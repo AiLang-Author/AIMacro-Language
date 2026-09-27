@@ -183,7 +183,8 @@ Function.OOPGen_FlattenExpr {
             Gen_Emit(temp)
             // frozenset(x).__contains__ — ObjectGet on an array SIGSEGV'd keyword.py
             cmp_contains = StringCompare(attr, "__contains__")
-            IfCondition EqualTo(cmp_contains, 0) ThenBlock: {
+            cmp_copy = StringCompare(attr, "copy")
+            IfCondition Or(EqualTo(cmp_contains, 0), EqualTo(cmp_copy, 0)) ThenBlock: {
                 Gen_Emit(" = 0\n")
             } ElseBlock: {
                 Gen_Emit(" = OOP.ObjectGet(")
@@ -1106,7 +1107,8 @@ Function.OOPGen_AttrAccess {
         }
         
         cmp_contains = StringCompare(attr, "__contains__")
-        IfCondition EqualTo(cmp_contains, 0) ThenBlock: {
+        cmp_copy = StringCompare(attr, "copy")
+        IfCondition Or(EqualTo(cmp_contains, 0), EqualTo(cmp_copy, 0)) ThenBlock: {
             Gen_Emit("0")
         } ElseBlock: {
             Gen_Emit("OOP.ObjectGet(")

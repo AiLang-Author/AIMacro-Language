@@ -3423,7 +3423,7 @@ Function.Gen_IndexAssign {
             Gen_Emit("Hash.Set(")
             Gen_Expr(expr)
             Gen_Emit(", ")
-            Gen_Expr(index)
+            DictGen_EmitKey(index)
             Gen_Emit(", ")
             Gen_Expr(value)
             Gen_Emit(")\n")
