@@ -1,0 +1,5 @@
+s = "a b\nc"
+print(s.isspace())
+print(" \t".isspace())
+print(len(s.splitlines()))
+print(s.translate(0))
