@@ -1,0 +1,8 @@
+class P {
+    def current_process(self) {
+        return self
+    }
+}
+process = P()
+process.current_process()._inheriting = 1
+print(1)
