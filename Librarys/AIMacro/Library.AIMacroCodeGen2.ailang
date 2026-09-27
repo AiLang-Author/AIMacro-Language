@@ -138,6 +138,19 @@ Function.Gen_Program {
                 Gen_MarkGlobalEnumVars(decl)
                 Gen_MarkClassMethodVars(decl)
             }
+            // if hasattr: import array  — mark names inside module-level if/while/for
+            IfCondition EqualTo(t, Node.IF_STMT) ThenBlock: {
+                Gen_MarkBodyAssignVars(ArrayGet(decl, 4))
+                Gen_MarkBodyAssignVars(ArrayGet(decl, 5))
+            }
+            IfCondition EqualTo(t, Node.WHILE_STMT) ThenBlock: {
+                Gen_MarkBodyAssignVars(ArrayGet(decl, 4))
+                Gen_MarkBodyAssignVars(ArrayGet(decl, 5))
+            }
+            IfCondition EqualTo(t, Node.FOR_STMT) ThenBlock: {
+                Gen_MarkBodyAssignVars(ArrayGet(decl, 5))
+                Gen_MarkBodyAssignVars(ArrayGet(decl, 6))
+            }
             i = Add(i, 1)
         }
         n_mod = Array.Size(Gen.module_vars)
