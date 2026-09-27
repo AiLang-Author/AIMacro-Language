@@ -904,6 +904,11 @@ Function.OOPGen_AttrAssign {
         IfCondition Or(EqualTo(obj, 0), EqualTo(attr, 0)) ThenBlock: {
             ReturnValue(0)
         }
+        // func.__doc__ = "..." — ObjectSet on AddressOf(function) SIGSEGV (base64)
+        cmp_doc = StringCompare(attr, "__doc__")
+        IfCondition EqualTo(cmp_doc, 0) ThenBlock: {
+            ReturnValue(0)
+        }
         // process.current_process()._inheriting = True — flatten receiver
         // before ObjectSet( so MethodCall setup is not mid-arg.
         IfCondition EqualTo(Gen_HasCall(obj), 1) ThenBlock: {
