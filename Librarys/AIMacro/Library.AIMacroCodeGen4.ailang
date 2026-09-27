@@ -2569,6 +2569,9 @@ Function.Gen_MapMethod {
         cmp = StringCompare(method, "update")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.DictUpdate") }
 
+        cmp = StringCompare(method, "fspath")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.FsPath") }
+
         // Other list methods
         cmp = StringCompare(method, "clear")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.SmartClear") }

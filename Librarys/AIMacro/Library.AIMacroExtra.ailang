@@ -74,17 +74,59 @@ Function.AIMacro.Translate {
     Input: table: Address
     Output: Address
     Body: {
-        ReturnValue(s)
+        IfCondition Or(EqualTo(s, 0), EqualTo(table, 0)) ThenBlock: {
+            ReturnValue(s)
+        }
+        IfCondition EqualTo(Hash.IsHash(table), 0) ThenBlock: {
+            ReturnValue(s)
+        }
+        n = StringLength(s)
+        out = Allocate(Add(n, 1))
+        i = 0
+        WhileLoop LessThan(i, n) {
+            c = GetByte(s, i)
+            k = NumberToString(c)
+            v = Hash.Get(table, k)
+            IfCondition EqualTo(v, 0) ThenBlock: {
+                SetByte(out, i, c)
+            } ElseBlock: {
+                SetByte(out, i, v)
+            }
+            i = Add(i, 1)
+        }
+        SetByte(out, n, 0)
+        ReturnValue(out)
     }
 }
 
 Function.AIMacro.MakeTrans {
-    Input: a: Address
-    Input: b: Address
-    Input: c: Address
+    Input: frm: Address
+    Input: to: Address
+    Input: extra: Address
     Output: Address
     Body: {
-        ReturnValue("")
+        IfCondition Or(EqualTo(frm, 0), EqualTo(to, 0)) ThenBlock: {
+            ReturnValue(0)
+        }
+        nf = StringLength(frm)
+        nt = StringLength(to)
+        n = nf
+        IfCondition LessThan(nt, n) ThenBlock: { n = nt }
+        h = Hash.Create(n)
+        i = 0
+        WhileLoop LessThan(i, n) {
+            Hash.Set(h, NumberToString(GetByte(frm, i)), GetByte(to, i))
+            i = Add(i, 1)
+        }
+        ReturnValue(h)
+    }
+}
+
+Function.AIMacro.FsPath {
+    Input: p: Address
+    Output: Address
+    Body: {
+        ReturnValue(p)
     }
 }
 
