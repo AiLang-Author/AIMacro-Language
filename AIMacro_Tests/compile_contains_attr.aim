@@ -1,0 +1,3 @@
+kwlist = ["if", "else"]
+iskeyword = frozenset(kwlist).__contains__
+print(1)

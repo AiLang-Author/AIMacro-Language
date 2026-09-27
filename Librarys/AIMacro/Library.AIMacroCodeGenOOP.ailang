@@ -181,11 +181,17 @@ Function.OOPGen_FlattenExpr {
             temp = Gen_TempName()
             Gen_EmitIndent()
             Gen_Emit(temp)
-            Gen_Emit(" = OOP.ObjectGet(")
-            OOPGen_Expr(obj)
-            Gen_Emit(", \"")
-            Gen_Emit(attr)
-            Gen_Emit("\")\n")
+            // frozenset(x).__contains__ — ObjectGet on an array SIGSEGV'd keyword.py
+            cmp_contains = StringCompare(attr, "__contains__")
+            IfCondition EqualTo(cmp_contains, 0) ThenBlock: {
+                Gen_Emit(" = 0\n")
+            } ElseBlock: {
+                Gen_Emit(" = OOP.ObjectGet(")
+                OOPGen_Expr(obj)
+                Gen_Emit(", \"")
+                Gen_Emit(attr)
+                Gen_Emit("\")\n")
+            }
             // Bound methods (__next__/__call__) must CallIndirect when invoked
             cmp_next = StringCompare(attr, "__next__")
             cmp_call = StringCompare(attr, "__call__")
@@ -1090,11 +1096,16 @@ Function.OOPGen_AttrAccess {
             ReturnValue(0)
         }
         
-        Gen_Emit("OOP.ObjectGet(")
-        OOPGen_Expr(obj)
-        Gen_Emit(", \"")
-        Gen_Emit(attr)
-        Gen_Emit("\")")
+        cmp_contains = StringCompare(attr, "__contains__")
+        IfCondition EqualTo(cmp_contains, 0) ThenBlock: {
+            Gen_Emit("0")
+        } ElseBlock: {
+            Gen_Emit("OOP.ObjectGet(")
+            OOPGen_Expr(obj)
+            Gen_Emit(", \"")
+            Gen_Emit(attr)
+            Gen_Emit("\")")
+        }
     }
 }
 
