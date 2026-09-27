@@ -1679,6 +1679,10 @@ Function.Gen_IsStdlibAttr {
             IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
             cmp = StringCompare(attr, "implementation")
             IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+            cmp = StringCompare(attr, "byteorder")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+            cmp = StringCompare(attr, "maxsize")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
             ReturnValue(0)
         }
         cmp = StringCompare(name, "math")
@@ -1847,6 +1851,16 @@ Function.Gen_EmitStdlibAttr {
             cmp = StringCompare(attr, "implementation")
             IfCondition EqualTo(cmp, 0) ThenBlock: {
                 Gen_Emit("0")
+                ReturnValue(1)
+            }
+            cmp = StringCompare(attr, "byteorder")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                Gen_Emit("\"little\"")
+                ReturnValue(1)
+            }
+            cmp = StringCompare(attr, "maxsize")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                Gen_EmitNumber(2147483647)
                 ReturnValue(1)
             }
         }
