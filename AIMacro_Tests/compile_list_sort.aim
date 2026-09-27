@@ -1,0 +1,6 @@
+h = []
+h.append(5)
+h.append(1)
+h.append(4)
+h.sort()
+print(h[0])
