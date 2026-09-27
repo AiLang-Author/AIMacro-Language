@@ -122,6 +122,14 @@ Function.AIMacro.MakeTrans {
     }
 }
 
+Function.AIMacro.ReCompile {
+    Input: pat: Address
+    Output: Address
+    Body: {
+        ReturnValue(pat)
+    }
+}
+
 Function.AIMacro.NoOp {
     Input: a: Address
     Output: Address

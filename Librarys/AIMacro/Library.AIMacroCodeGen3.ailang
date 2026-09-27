@@ -1254,7 +1254,8 @@ Function.Gen_FlattenExpr {
             cmp_upd = StringCompare(method, "update")
             cmp_fs = StringCompare(method, "fspath")
             cmp_reg = StringCompare(method, "register")
-            IfCondition Or(EqualTo(cmp_go, 0), Or(EqualTo(cmp_mt, 0), Or(EqualTo(cmp_mid, 0), Or(EqualTo(cmp_upd, 0), Or(EqualTo(cmp_fs, 0), EqualTo(cmp_reg, 0)))))) ThenBlock: {
+            cmp_comp = StringCompare(method, "compile")
+            IfCondition Or(EqualTo(cmp_go, 0), Or(EqualTo(cmp_mt, 0), Or(EqualTo(cmp_mid, 0), Or(EqualTo(cmp_upd, 0), Or(EqualTo(cmp_fs, 0), Or(EqualTo(cmp_reg, 0), EqualTo(cmp_comp, 0))))))) ThenBlock: {
                 is_known = 1
             }
             // OOP MethodCall emits setup statements; do not prefix "temp = "
