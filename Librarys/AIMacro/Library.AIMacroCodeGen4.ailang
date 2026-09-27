@@ -2563,6 +2563,12 @@ Function.Gen_MapMethod {
         cmp = StringCompare(method, "maketrans")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.MakeTrans") }
 
+        cmp = StringCompare(method, "make_identity_dict")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.MakeIdentityDict") }
+
+        cmp = StringCompare(method, "update")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.DictUpdate") }
+
         // Other list methods
         cmp = StringCompare(method, "clear")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.SmartClear") }

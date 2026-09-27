@@ -11,6 +11,7 @@ LibraryImport.AIMacro.AIMacroCore
 LibraryImport.AIMacro.AIMacroParserCore
 LibraryImport.AIMacro.AIMacroCodeGen1
 LibraryImport.AIMacro.AIMacroCodeGen4
+LibraryImport.AIMacro.AIMacroCodeGenDict
 
 // =============================================================================
 // EXTRACT ALL CALLS FROM CONDITION EXPRESSION
@@ -1233,7 +1234,9 @@ Function.Gen_FlattenExpr {
             
             cmp_go = StringCompare(method, "getopt")
             cmp_mt = StringCompare(method, "maketrans")
-            IfCondition Or(EqualTo(cmp_go, 0), EqualTo(cmp_mt, 0)) ThenBlock: {
+            cmp_mid = StringCompare(method, "make_identity_dict")
+            cmp_upd = StringCompare(method, "update")
+            IfCondition Or(EqualTo(cmp_go, 0), Or(EqualTo(cmp_mt, 0), Or(EqualTo(cmp_mid, 0), EqualTo(cmp_upd, 0)))) ThenBlock: {
                 is_known = 1
             }
             // OOP MethodCall emits setup statements; do not prefix "temp = "
@@ -1892,7 +1895,7 @@ Function.Gen_CreateDictLiteral {
                 Gen_Emit("Hash.Set(")
                 Gen_Emit(temp)
                 Gen_Emit(", ")
-                Gen_Expr(key)
+                DictGen_EmitKey(key)
                 Gen_Emit(", ")
                 Gen_Expr(value)
                 Gen_Emit(")\n")

@@ -122,6 +122,20 @@ Function.DictGen_MarkDictVar {
 //         Hash.Set(d, "name", "test")
 //         Hash.Set(d, "count", 42)
 // =============================================================================
+Function.DictGen_EmitKey {
+    Input: key: Address
+    Body: {
+        kt = AST_Type(key)
+        IfCondition EqualTo(kt, Node.STR_LIT) ThenBlock: {
+            Gen_Expr(key)
+        } ElseBlock: {
+            Gen_Emit("NumberToString(")
+            Gen_Expr(key)
+            Gen_Emit(")")
+        }
+    }
+}
+
 Function.DictGen_Assignment {
     Input: target: Address
     Input: dict_node: Address
@@ -168,7 +182,7 @@ Function.DictGen_Assignment {
             Gen_Emit("Hash.Set(")
             Gen_EmitIdent(target)
             Gen_Emit(", ")
-            Gen_Expr(key)
+            DictGen_EmitKey(key)
             Gen_Emit(", ")
             Gen_Expr(value)
             Gen_Emit(")\n")
@@ -628,7 +642,7 @@ Function.DictGen_CreateLiteral {
             Gen_Emit("Hash.Set(")
             Gen_Emit(temp)
             Gen_Emit(", ")
-            Gen_Expr(key)
+            DictGen_EmitKey(key)
             Gen_Emit(", ")
             Gen_Expr(value)
             Gen_Emit(")\n")

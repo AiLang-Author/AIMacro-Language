@@ -3,6 +3,7 @@
 // Generated programs import this via codegen preamble.
 
 LibraryImport.Array
+LibraryImport.Hash
 LibraryImport.AIMacro.AIMacroTypes
 LibraryImport.AIMacro.AIMacro
 
@@ -88,6 +89,24 @@ Function.AIMacro.MakeTrans {
 }
 
 // getopt.getopt(args, ...) — compile/run stub: ( [], args )
+Function.AIMacro.MakeIdentityDict {
+    Input: seq: Address
+    Output: Address
+    Body: {
+        // Hash.Create in Main SIGSEGV'd; empty list is enough for import.
+        ReturnValue(Array.Create(0))
+    }
+}
+
+Function.AIMacro.DictUpdate {
+    Input: dst: Address
+    Input: src: Address
+    Output: Address
+    Body: {
+        ReturnValue(dst)
+    }
+}
+
 Function.AIMacro.GetOpt {
     Input: args: Address
     Output: Address
