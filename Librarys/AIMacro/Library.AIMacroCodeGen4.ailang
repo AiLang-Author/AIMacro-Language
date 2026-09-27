@@ -2305,6 +2305,21 @@ Function.Gen_MethodCallExpr {
 
         IfCondition EqualTo(AST_Type(obj), Node.IDENT) ThenBlock: {
             obj_name = ArrayGet(obj, 3)
+            go_cmp = StringCompare(obj_name, "getopt")
+            IfCondition EqualTo(go_cmp, 0) ThenBlock: {
+                cmp = StringCompare(method, "getopt")
+                IfCondition EqualTo(cmp, 0) ThenBlock: {
+                    Gen_Emit("AIMacro.GetOpt(")
+                    n = Array.Size(args)
+                    IfCondition GreaterThan(n, 0) ThenBlock: {
+                        Gen_Expr(Array.Get(args, 0))
+                    } ElseBlock: {
+                        Gen_Emit("0")
+                    }
+                    Gen_Emit(")")
+                    ReturnValue(0)
+                }
+            }
             sys_cmp = StringCompare(obj_name, "sys")
             IfCondition EqualTo(sys_cmp, 0) ThenBlock: {
                 cmp = StringCompare(method, "exit")
@@ -2544,6 +2559,9 @@ Function.Gen_MapMethod {
 
         cmp = StringCompare(method, "translate")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.Translate") }
+
+        cmp = StringCompare(method, "maketrans")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.MakeTrans") }
 
         // Other list methods
         cmp = StringCompare(method, "clear")

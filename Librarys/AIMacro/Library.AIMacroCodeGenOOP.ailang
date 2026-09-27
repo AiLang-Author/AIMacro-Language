@@ -1127,6 +1127,25 @@ Function.OOPGen_MethodCall {
         IfCondition EqualTo(Gen_HasCall(obj), 1) ThenBlock: {
             obj = Gen_FlattenExpr(obj)
         }
+        // bytes.maketrans / getopt.getopt go OOP (unknown obj) and SIGSEGV
+        cmp_mt = StringCompare(method, "maketrans")
+        IfCondition EqualTo(cmp_mt, 0) ThenBlock: {
+            Gen_Emit("AIMacro.MakeTrans(")
+            OOPGen_Expr(obj)
+            Gen_Emit(", 0, 0)")
+            ReturnValue(0)
+        }
+        cmp_go = StringCompare(method, "getopt")
+        IfCondition EqualTo(cmp_go, 0) ThenBlock: {
+            Gen_Emit("AIMacro.GetOpt(")
+            IfCondition And(NotEqual(args, 0), GreaterThan(Array.Size(args), 0)) ThenBlock: {
+                OOPGen_Expr(Array.Get(args, 0))
+            } ElseBlock: {
+                Gen_Emit("0")
+            }
+            Gen_Emit(")")
+            ReturnValue(0)
+        }
         
         num_args = 0
         IfCondition NotEqual(args, 0) ThenBlock: {

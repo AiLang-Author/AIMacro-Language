@@ -1231,6 +1231,11 @@ Function.Gen_FlattenExpr {
                 is_known = 1
             }
             
+            cmp_go = StringCompare(method, "getopt")
+            cmp_mt = StringCompare(method, "maketrans")
+            IfCondition Or(EqualTo(cmp_go, 0), EqualTo(cmp_mt, 0)) ThenBlock: {
+                is_known = 1
+            }
             // OOP MethodCall emits setup statements; do not prefix "temp = "
             IfCondition EqualTo(is_known, 0) ThenBlock: {
                 IfCondition EqualTo(args, 0) ThenBlock: {

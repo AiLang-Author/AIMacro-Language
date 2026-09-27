@@ -2768,6 +2768,10 @@ Function.Gen_Assignment {
             IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
             cmp = StringCompare(method, "close")
             IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+            cmp = StringCompare(method, "getopt")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+            cmp = StringCompare(method, "maketrans")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
             
             // List methods - only if object is known list
             IfCondition EqualTo(is_known_list, 1) ThenBlock: {
