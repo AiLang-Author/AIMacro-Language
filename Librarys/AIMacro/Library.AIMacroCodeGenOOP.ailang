@@ -186,7 +186,11 @@ Function.OOPGen_FlattenExpr {
             cmp_copy = StringCompare(attr, "copy")
             cmp_code = StringCompare(attr, "__code__")
             cmp_dict = StringCompare(attr, "__dict__")
-            IfCondition Or(EqualTo(cmp_contains, 0), Or(EqualTo(cmp_copy, 0), Or(EqualTo(cmp_code, 0), EqualTo(cmp_dict, 0)))) ThenBlock: {
+            cmp_app = StringCompare(attr, "append")
+            cmp_join = StringCompare(attr, "join")
+            cmp_init = StringCompare(attr, "__init__")
+            cmp_str = StringCompare(attr, "__str__")
+            IfCondition Or(EqualTo(cmp_contains, 0), Or(EqualTo(cmp_copy, 0), Or(EqualTo(cmp_code, 0), Or(EqualTo(cmp_dict, 0), Or(EqualTo(cmp_app, 0), Or(EqualTo(cmp_join, 0), Or(EqualTo(cmp_init, 0), EqualTo(cmp_str, 0)))))))) ThenBlock: {
                 Gen_Emit(" = 0\n")
             } ElseBlock: {
                 Gen_Emit(" = OOP.ObjectGet(")
@@ -1112,7 +1116,11 @@ Function.OOPGen_AttrAccess {
         cmp_copy = StringCompare(attr, "copy")
         cmp_code = StringCompare(attr, "__code__")
         cmp_dict = StringCompare(attr, "__dict__")
-        IfCondition Or(EqualTo(cmp_contains, 0), Or(EqualTo(cmp_copy, 0), Or(EqualTo(cmp_code, 0), EqualTo(cmp_dict, 0)))) ThenBlock: {
+        cmp_app = StringCompare(attr, "append")
+        cmp_join = StringCompare(attr, "join")
+        cmp_init = StringCompare(attr, "__init__")
+        cmp_str = StringCompare(attr, "__str__")
+        IfCondition Or(EqualTo(cmp_contains, 0), Or(EqualTo(cmp_copy, 0), Or(EqualTo(cmp_code, 0), Or(EqualTo(cmp_dict, 0), Or(EqualTo(cmp_app, 0), Or(EqualTo(cmp_join, 0), Or(EqualTo(cmp_init, 0), EqualTo(cmp_str, 0)))))))) ThenBlock: {
             Gen_Emit("0")
         } ElseBlock: {
             Gen_Emit("OOP.ObjectGet(")

@@ -276,12 +276,10 @@ Function.DictGen_SmartGet {
         // Check if it's a TArray (list)
         is_array = Array.IsArray(container)
         IfCondition EqualTo(is_array, 1) ThenBlock: {
-            // Key should be an integer index
             ReturnValue(Array.Get(container, key))
         }
-        
-        // Fallback: try XArray
-        ReturnValue(Array.Get(container, key))
+        // String/int/other — do not Array.Get (SIGSEGV on enum FlagBoundary unpack)
+        ReturnValue(0)
     }
 }
 
