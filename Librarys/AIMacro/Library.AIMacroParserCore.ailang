@@ -2865,6 +2865,19 @@ Function.Parse_AssignOrExpr {
                 
                 ReturnValue(node)
             }
+
+            // Slice assignment: parts[:0] = ['']
+            IfCondition EqualTo(expr_type, Node.SLICE_ACCESS) ThenBlock: {
+                node = AST_Create(Node.SLICE_ASSIGN, 5)
+                ArraySet(node, 1, line)
+                ArraySet(node, 2, col)
+                ArraySet(node, 3, ArrayGet(expr, 3))
+                ArraySet(node, 4, ArrayGet(expr, 4))
+                ArraySet(node, 5, ArrayGet(expr, 5))
+                ArraySet(node, 6, ArrayGet(expr, 6))
+                ArraySet(node, 7, value)
+                ReturnValue(node)
+            }
             
             // =================================================================
             // ATTRIBUTE ASSIGNMENT: self.x = value (NEW FIX!)
