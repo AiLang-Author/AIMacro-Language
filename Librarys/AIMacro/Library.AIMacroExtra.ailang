@@ -93,8 +93,14 @@ Function.AIMacro.MakeIdentityDict {
     Input: seq: Address
     Output: Address
     Body: {
-        // Hash.Create in Main SIGSEGV'd; empty list is enough for import.
-        ReturnValue(Array.Create(0))
+        n = 256
+        h = Hash.Create(n)
+        i = 0
+        WhileLoop LessThan(i, n) {
+            Hash.Set(h, NumberToString(i), i)
+            i = Add(i, 1)
+        }
+        ReturnValue(h)
     }
 }
 
@@ -103,6 +109,23 @@ Function.AIMacro.DictUpdate {
     Input: src: Address
     Output: Address
     Body: {
+        IfCondition Or(EqualTo(dst, 0), EqualTo(src, 0)) ThenBlock: {
+            ReturnValue(dst)
+        }
+        IfCondition EqualTo(Hash.IsHash(src), 0) ThenBlock: {
+            ReturnValue(dst)
+        }
+        IfCondition EqualTo(Hash.IsHash(dst), 0) ThenBlock: {
+            ReturnValue(dst)
+        }
+        keys = Hash.Keys(src)
+        nk = Array.Size(keys)
+        i = 0
+        WhileLoop LessThan(i, nk) {
+            k = Array.Get(keys, i)
+            Hash.Set(dst, k, Hash.Get(src, k))
+            i = Add(i, 1)
+        }
         ReturnValue(dst)
     }
 }
