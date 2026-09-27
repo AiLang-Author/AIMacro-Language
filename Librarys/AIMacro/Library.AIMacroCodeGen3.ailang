@@ -1236,7 +1236,8 @@ Function.Gen_FlattenExpr {
             cmp_mt = StringCompare(method, "maketrans")
             cmp_mid = StringCompare(method, "make_identity_dict")
             cmp_upd = StringCompare(method, "update")
-            IfCondition Or(EqualTo(cmp_go, 0), Or(EqualTo(cmp_mt, 0), Or(EqualTo(cmp_mid, 0), EqualTo(cmp_upd, 0)))) ThenBlock: {
+            cmp_fs = StringCompare(method, "fspath")
+            IfCondition Or(EqualTo(cmp_go, 0), Or(EqualTo(cmp_mt, 0), Or(EqualTo(cmp_mid, 0), Or(EqualTo(cmp_upd, 0), EqualTo(cmp_fs, 0))))) ThenBlock: {
                 is_known = 1
             }
             // OOP MethodCall emits setup statements; do not prefix "temp = "

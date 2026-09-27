@@ -2774,6 +2774,8 @@ Function.Gen_Assignment {
             IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
             cmp = StringCompare(method, "update")
             IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+            cmp = StringCompare(method, "fspath")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
             
             // List methods - only if object is known list
             IfCondition EqualTo(is_known_list, 1) ThenBlock: {

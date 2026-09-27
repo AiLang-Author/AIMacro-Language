@@ -1100,6 +1100,10 @@ Function.OOPGen_AttrAccess {
             Gen_Emit("0")
             ReturnValue(0)
         }
+        IfCondition EqualTo(Gen_IsStdlibAttr(obj, attr), 1) ThenBlock: {
+            Gen_EmitStdlibAttr(obj, attr)
+            ReturnValue(0)
+        }
         
         cmp_contains = StringCompare(attr, "__contains__")
         IfCondition EqualTo(cmp_contains, 0) ThenBlock: {
@@ -1135,9 +1139,32 @@ Function.OOPGen_MethodCall {
         // bytes.maketrans / getopt.getopt go OOP (unknown obj) and SIGSEGV
         cmp_mt = StringCompare(method, "maketrans")
         IfCondition EqualTo(cmp_mt, 0) ThenBlock: {
+            n_mt = 0
+            IfCondition NotEqual(args, 0) ThenBlock: { n_mt = Array.Size(args) }
             Gen_Emit("AIMacro.MakeTrans(")
-            OOPGen_Expr(obj)
-            Gen_Emit(", 0, 0)")
+            IfCondition GreaterThan(n_mt, 0) ThenBlock: {
+                OOPGen_Expr(Array.Get(args, 0))
+            } ElseBlock: { Gen_Emit("0") }
+            Gen_Emit(", ")
+            IfCondition GreaterThan(n_mt, 1) ThenBlock: {
+                OOPGen_Expr(Array.Get(args, 1))
+            } ElseBlock: { Gen_Emit("0") }
+            Gen_Emit(", ")
+            IfCondition GreaterThan(n_mt, 2) ThenBlock: {
+                OOPGen_Expr(Array.Get(args, 2))
+            } ElseBlock: { Gen_Emit("0") }
+            Gen_Emit(")")
+            ReturnValue(0)
+        }
+        cmp_fs = StringCompare(method, "fspath")
+        IfCondition EqualTo(cmp_fs, 0) ThenBlock: {
+            Gen_Emit("AIMacro.FsPath(")
+            IfCondition And(NotEqual(args, 0), GreaterThan(Array.Size(args), 0)) ThenBlock: {
+                OOPGen_Expr(Array.Get(args, 0))
+            } ElseBlock: {
+                Gen_Emit("0")
+            }
+            Gen_Emit(")")
             ReturnValue(0)
         }
         cmp_mid = StringCompare(method, "make_identity_dict")

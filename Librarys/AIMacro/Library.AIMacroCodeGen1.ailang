@@ -1673,6 +1673,10 @@ Function.Gen_IsStdlibAttr {
             IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
             cmp = StringCompare(attr, "stdout")
             IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+            cmp = StringCompare(attr, "stderr")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+            cmp = StringCompare(attr, "platform")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
             ReturnValue(0)
         }
         cmp = StringCompare(name, "math")
@@ -1800,6 +1804,16 @@ Function.Gen_EmitStdlibAttr {
             cmp = StringCompare(attr, "stdout")
             IfCondition EqualTo(cmp, 0) ThenBlock: {
                 Gen_Emit("AIMacro.StdHandle(1, 1)")
+                ReturnValue(1)
+            }
+            cmp = StringCompare(attr, "stderr")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                Gen_Emit("AIMacro.StdHandle(2, 2)")
+                ReturnValue(1)
+            }
+            cmp = StringCompare(attr, "platform")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                Gen_Emit("\"linux\"")
                 ReturnValue(1)
             }
         }
