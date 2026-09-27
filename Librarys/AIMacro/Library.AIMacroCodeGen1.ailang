@@ -1677,6 +1677,8 @@ Function.Gen_IsStdlibAttr {
             IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
             cmp = StringCompare(attr, "platform")
             IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+            cmp = StringCompare(attr, "implementation")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
             ReturnValue(0)
         }
         cmp = StringCompare(name, "math")
@@ -1702,6 +1704,12 @@ Function.Gen_IsStdlibAttr {
         cmp = StringCompare(name, "weakref")
         IfCondition EqualTo(cmp, 0) ThenBlock: {
             cmp = StringCompare(attr, "ref")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "aliases")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            cmp = StringCompare(attr, "aliases")
             IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
             ReturnValue(0)
         }
@@ -1836,6 +1844,11 @@ Function.Gen_EmitStdlibAttr {
                 Gen_Emit("\"linux\"")
                 ReturnValue(1)
             }
+            cmp = StringCompare(attr, "implementation")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                Gen_Emit("0")
+                ReturnValue(1)
+            }
         }
         cmp = StringCompare(name, "math")
         IfCondition EqualTo(cmp, 0) ThenBlock: {
@@ -1857,6 +1870,14 @@ Function.Gen_EmitStdlibAttr {
             cmp = StringCompare(attr, "ref")
             IfCondition EqualTo(cmp, 0) ThenBlock: {
                 Gen_Emit("\"weakref.ref\"")
+                ReturnValue(1)
+            }
+        }
+        cmp = StringCompare(name, "aliases")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            cmp = StringCompare(attr, "aliases")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                Gen_Emit("Hash.Create(16)")
                 ReturnValue(1)
             }
         }

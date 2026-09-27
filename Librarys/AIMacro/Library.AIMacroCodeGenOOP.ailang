@@ -184,7 +184,9 @@ Function.OOPGen_FlattenExpr {
             // frozenset(x).__contains__ — ObjectGet on an array SIGSEGV'd keyword.py
             cmp_contains = StringCompare(attr, "__contains__")
             cmp_copy = StringCompare(attr, "copy")
-            IfCondition Or(EqualTo(cmp_contains, 0), EqualTo(cmp_copy, 0)) ThenBlock: {
+            cmp_code = StringCompare(attr, "__code__")
+            cmp_dict = StringCompare(attr, "__dict__")
+            IfCondition Or(EqualTo(cmp_contains, 0), Or(EqualTo(cmp_copy, 0), Or(EqualTo(cmp_code, 0), EqualTo(cmp_dict, 0)))) ThenBlock: {
                 Gen_Emit(" = 0\n")
             } ElseBlock: {
                 Gen_Emit(" = OOP.ObjectGet(")
@@ -1108,7 +1110,9 @@ Function.OOPGen_AttrAccess {
         
         cmp_contains = StringCompare(attr, "__contains__")
         cmp_copy = StringCompare(attr, "copy")
-        IfCondition Or(EqualTo(cmp_contains, 0), EqualTo(cmp_copy, 0)) ThenBlock: {
+        cmp_code = StringCompare(attr, "__code__")
+        cmp_dict = StringCompare(attr, "__dict__")
+        IfCondition Or(EqualTo(cmp_contains, 0), Or(EqualTo(cmp_copy, 0), Or(EqualTo(cmp_code, 0), EqualTo(cmp_dict, 0)))) ThenBlock: {
             Gen_Emit("0")
         } ElseBlock: {
             Gen_Emit("OOP.ObjectGet(")
@@ -1191,6 +1195,11 @@ Function.OOPGen_MethodCall {
                 Gen_Emit("0")
             }
             Gen_Emit(")")
+            ReturnValue(0)
+        }
+        cmp_reg = StringCompare(method, "register")
+        IfCondition EqualTo(cmp_reg, 0) ThenBlock: {
+            Gen_Emit("0")
             ReturnValue(0)
         }
         cmp_go = StringCompare(method, "getopt")
