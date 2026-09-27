@@ -2755,6 +2755,12 @@ Function.Gen_Assignment {
                 IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
                 cmp = StringCompare(method, "decode")
                 IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+                cmp = StringCompare(method, "isspace")
+                IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+                cmp = StringCompare(method, "splitlines")
+                IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+                cmp = StringCompare(method, "translate")
+                IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
             }
             
             // If it's a builtin method, use standard method call handling

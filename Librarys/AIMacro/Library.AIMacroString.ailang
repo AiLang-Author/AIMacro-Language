@@ -911,7 +911,43 @@ Function.String.IsAlnum {
     }
 }
 
+Function.String.IsSpace {
+    Input: str: Address
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(str, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        len = StringLength(str)
+        IfCondition EqualTo(len, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        i = 0
+        WhileLoop LessThan(i, len) {
+            c = GetByte(str, i)
+            // space tab lf vt ff cr
+            sp = EqualTo(c, 32)
+            tb = EqualTo(c, 9)
+            lf = EqualTo(c, 10)
+            vt = EqualTo(c, 11)
+            ff = EqualTo(c, 12)
+            cr = EqualTo(c, 13)
+            IfCondition EqualTo(Or(sp, Or(tb, Or(lf, Or(vt, Or(ff, cr))))), 0) ThenBlock: {
+                ReturnValue(0)
+            }
+            i = Add(i, 1)
+        }
+        ReturnValue(1)
+    }
+}
 
+Function.String.SplitLines {
+    Input: str: Address
+    Output: Address
+    Body: {
+        ReturnValue(String.Split(str, "\n"))
+    }
+}
 
 // Concatenate two strings - returns newly allocated string
 Function.String.Concat {

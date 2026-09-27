@@ -2533,6 +2533,15 @@ Function.Gen_MapMethod {
         cmp = StringCompare(method, "isalnum")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("String.IsAlnum") }
 
+        cmp = StringCompare(method, "isspace")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("String.IsSpace") }
+
+        cmp = StringCompare(method, "splitlines")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("String.SplitLines") }
+
+        cmp = StringCompare(method, "translate")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.Translate") }
+
         // Other list methods
         cmp = StringCompare(method, "clear")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.SmartClear") }
