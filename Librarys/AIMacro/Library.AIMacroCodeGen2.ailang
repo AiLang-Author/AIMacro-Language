@@ -136,6 +136,7 @@ Function.Gen_Program {
             }
             IfCondition EqualTo(t, Node.CLASS_DEF) ThenBlock: {
                 Gen_MarkGlobalEnumVars(decl)
+                Gen_MarkClassMethodVars(decl)
             }
             i = Add(i, 1)
         }
@@ -355,6 +356,30 @@ Function.Gen_ClassHasGlobalEnum {
     }
 }
 
+Function.Gen_MarkClassMethodVars {
+    Input: node: Address
+    Body: {
+        body = ArrayGet(node, 5)
+        IfCondition EqualTo(body, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        n = Array.Size(body)
+        i = 0
+        WhileLoop LessThan(i, n) {
+            item = Array.Get(body, i)
+            it = AST_Type(item)
+            IfCondition EqualTo(it, Node.METHOD_DEF) ThenBlock: {
+                Gen_MarkBodyAssignVars(ArrayGet(item, 6))
+            }
+            IfCondition EqualTo(it, Node.FUNCTION) ThenBlock: {
+                Gen_MarkBodyAssignVars(ArrayGet(item, 5))
+            }
+            i = Add(i, 1)
+        }
+        ReturnValue(0)
+    }
+}
+
 Function.Gen_MarkGlobalEnumVars {
     Input: node: Address
     Body: {
@@ -424,6 +449,43 @@ Function.Gen_MarkImportModuleVars {
     }
 }
 
+Function.Gen_MarkStarImport {
+    Input: module_name: Address
+    Body: {
+        cmp = StringCompare(module_name, "token")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_MarkModuleVar("tok_name")
+            Gen_MarkDictVar("tok_name")
+            Gen_MarkModuleVar("OP")
+            Gen_MarkModuleVar("NAME")
+            Gen_MarkModuleVar("NUMBER")
+            Gen_MarkModuleVar("STRING")
+            Gen_MarkModuleVar("NEWLINE")
+            Gen_MarkModuleVar("INDENT")
+            Gen_MarkModuleVar("DEDENT")
+            Gen_MarkModuleVar("ENDMARKER")
+            Gen_MarkModuleVar("COMMENT")
+            Gen_MarkModuleVar("NL")
+            Gen_MarkModuleVar("ENCODING")
+            Gen_MarkModuleVar("ERRORTOKEN")
+            Gen_MarkModuleVar("N_TOKENS")
+            Gen_MarkModuleVar("NT_OFFSET")
+            Gen_MarkModuleVar("AWAIT")
+            Gen_MarkModuleVar("ASYNC")
+            Gen_MarkModuleVar("TYPE_COMMENT")
+            Gen_MarkModuleVar("TYPE_IGNORE")
+            Gen_MarkModuleVar("EXACT_TOKEN_TYPES")
+        }
+        cmp = StringCompare(module_name, "_socket")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_MarkModuleVar("AddressFamily")
+            Gen_MarkModuleVar("SocketKind")
+            Gen_MarkModuleVar("has_ipv6")
+        }
+        ReturnValue(0)
+    }
+}
+
 Function.Gen_MarkFromImportVars {
     Input: node: Address
     Body: {
@@ -436,7 +498,9 @@ Function.Gen_MarkFromImportVars {
         WhileLoop LessThan(i, n) {
             sym = Array.Get(symbols, i)
             cmp = StringCompare(sym, "*")
-            IfCondition NotEqual(cmp, 0) ThenBlock: {
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                Gen_MarkStarImport(ArrayGet(node, 3))
+            } ElseBlock: {
                 Gen_MarkModuleVar(sym)
                 Gen_MarkImportStub(sym)
             }
