@@ -207,19 +207,25 @@ Function.AIMacro.ObjectType {
     }
 }
 
-// In-place list.sort stub — compile coverage (mutates via TypedSorted replace)
+// In-place list.sort() — 1-arg (codegen emits ListSort(lst) with no key/reverse).
 Function.AIMacro.ListSort {
     Input: lst: Address
-    Input: key: Address
-    Input: reverse: Address
     Output: Address
     Body: {
-        IfCondition EqualTo(key, 0) ThenBlock: {
-            sorted = AIMacro.TypedSorted(lst)
-            ReturnValue(sorted)
+        IfCondition EqualTo(lst, 0) ThenBlock: {
+            ReturnValue(0)
         }
-        sorted = AIMacro.TypedSortedKey(lst, key)
-        ReturnValue(sorted)
+        sorted = AIMacro.TypedSorted(lst)
+        WhileLoop GreaterThan(Array.Size(lst), 0) {
+            AIMacro.SmartPop(lst)
+        }
+        n = Array.Size(sorted)
+        i = 0
+        WhileLoop LessThan(i, n) {
+            Array.Push(lst, Array.Get(sorted, i))
+            i = Add(i, 1)
+        }
+        ReturnValue(lst)
     }
 }
 
