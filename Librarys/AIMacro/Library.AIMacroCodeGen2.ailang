@@ -572,6 +572,10 @@ Function.Gen_MarkTryAssignVars {
             WhileLoop LessThan(i, n) {
                 clause = Array.Get(except_clauses, i)
                 // EXCEPT_CLAUSE: [type, line, col, exc_type, body, as_name]
+                as_name = ArrayGet(clause, 5)
+                IfCondition NotEqual(as_name, 0) ThenBlock: {
+                    Gen_MarkModuleVar(as_name)
+                }
                 body = ArrayGet(clause, 4)
                 Gen_MarkBodyAssignVars(body)
                 i = Add(i, 1)
@@ -1629,7 +1633,7 @@ Function.Gen_Try {
                     as_name = ArrayGet(clause, 5)
                     IfCondition NotEqual(as_name, 0) ThenBlock: {
                         Gen_EmitIndent()
-                        Gen_Emit(as_name)
+                        Gen_EmitIdent(as_name)
                         Gen_Emit(" = AIMacro.ExcValue()\n")
                     }
                     Gen_Body(ArrayGet(clause, 4))
@@ -1655,7 +1659,7 @@ Function.Gen_Try {
                         as_name = ArrayGet(clause, 5)
                         IfCondition NotEqual(as_name, 0) ThenBlock: {
                             Gen_EmitIndent()
-                            Gen_Emit(as_name)
+                            Gen_EmitIdent(as_name)
                             Gen_Emit(" = AIMacro.ExcValue()\n")
                         }
                         Gen_Body(ArrayGet(clause, 4))
@@ -1678,7 +1682,7 @@ Function.Gen_Try {
                             as_name = ArrayGet(clause, 5)
                             IfCondition NotEqual(as_name, 0) ThenBlock: {
                                 Gen_EmitIndent()
-                                Gen_Emit(as_name)
+                                Gen_EmitIdent(as_name)
                                 Gen_Emit(" = AIMacro.ExcValue()\n")
                             }
                             Gen_Body(ArrayGet(clause, 4))
