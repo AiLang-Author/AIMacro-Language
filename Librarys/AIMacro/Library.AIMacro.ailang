@@ -1386,6 +1386,25 @@ Function.AIMacro.MakeSet {
     }
 }
 
+Function.AIMacro.SetAdd {
+    Input: s: Address
+    Input: val: Address
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(s, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(Array.IsArray(s), 1) ThenBlock: {
+            IfCondition EqualTo(AIMacro.ListContains(s, val), 1) ThenBlock: {
+                ReturnValue(0)
+            }
+            Array.Push(s, val)
+            ReturnValue(1)
+        }
+        ReturnValue(0)
+    }
+}
+
 Function.AIMacro.CreateListWithElements {
     Input: e0: Address
     Input: e1: Address
