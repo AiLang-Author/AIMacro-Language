@@ -943,6 +943,16 @@ Function.Gen_EmitIdent {
             Gen_EmitNumber(3)
             ReturnValue(0)
         }
+        cmp = StringCompare(name, "AddressFamily")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(2)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "SocketKind")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(1)
+            ReturnValue(0)
+        }
         cmp = StringCompare(name, "AF_INET")
         IfCondition EqualTo(cmp, 0) ThenBlock: {
             Gen_EmitNumber(2)

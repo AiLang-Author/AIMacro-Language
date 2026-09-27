@@ -106,7 +106,7 @@ def desugar_match(src: str) -> str:
                 cond = f"{tmp} is None"
             else:
                 tm = re.match(
-                    r"^([A-Za-z_][A-Za-z0-9_]*)\(([A-Za-z_][A-Za-z0-9_]*)\)$",
+                    r"^([\w.]+)\(([A-Za-z_][A-Za-z0-9_]*)\)$",
                     pat,
                 )
                 if tm:
