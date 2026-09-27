@@ -1717,6 +1717,12 @@ Function.Gen_IsStdlibAttr {
             IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
             ReturnValue(0)
         }
+        cmp = StringCompare(name, "unicodedata")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            cmp = StringCompare(attr, "unidata_version")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+            ReturnValue(0)
+        }
         ReturnValue(0)
     }
 }
@@ -1892,6 +1898,15 @@ Function.Gen_EmitStdlibAttr {
             cmp = StringCompare(attr, "aliases")
             IfCondition EqualTo(cmp, 0) ThenBlock: {
                 Gen_Emit("Hash.Create(16)")
+                ReturnValue(1)
+            }
+        }
+        cmp = StringCompare(name, "unicodedata")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            cmp = StringCompare(attr, "unidata_version")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                // stringprep tables are RFC 3454 / Unicode 3.2.0
+                Gen_Emit("\"3.2.0\"")
                 ReturnValue(1)
             }
         }

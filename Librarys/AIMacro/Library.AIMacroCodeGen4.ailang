@@ -2575,6 +2575,9 @@ Function.Gen_MapMethod {
         cmp = StringCompare(method, "register")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.NoOp") }
 
+        cmp = StringCompare(method, "compile")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.ReCompile") }
+
         // Other list methods
         cmp = StringCompare(method, "clear")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.SmartClear") }
