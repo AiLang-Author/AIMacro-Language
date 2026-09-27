@@ -2465,9 +2465,9 @@ Function.Gen_Return {
                     i = Add(i, 1)
                 }
                 
-                // Flatten chained receiver (binascii.hexlify(s).upper())
-                obj_nt = AST_Type(obj)
-                IfCondition Or(EqualTo(obj_nt, Node.METHOD_CALL), Or(EqualTo(obj_nt, Node.CALL), Or(EqualTo(obj_nt, Node.ATTRIBUTE), Or(EqualTo(obj_nt, Node.INDEX_ACCESS), EqualTo(obj_nt, Node.SLICE_ACCESS))))) ThenBlock: {
+                // Flatten receiver (incl. files(p)/name .open) so setup is
+                // not emitted inside MethodCall(.
+                IfCondition EqualTo(Gen_HasCall(obj), 1) ThenBlock: {
                     obj = Gen_FlattenExpr(obj)
                 }
 
@@ -2766,10 +2766,8 @@ Function.Gen_Assignment {
             }
             
             // =========== OOP METHOD CALL (non-builtin) ===========
-            // Flatten chained receiver (e.g. bltns.bin(...).replace(...)) so
-            // OOPGen setup statements are not emitted inside MethodCall(...).
-            obj_nt = AST_Type(obj)
-            IfCondition Or(EqualTo(obj_nt, Node.METHOD_CALL), Or(EqualTo(obj_nt, Node.CALL), Or(EqualTo(obj_nt, Node.ATTRIBUTE), Or(EqualTo(obj_nt, Node.INDEX_ACCESS), EqualTo(obj_nt, Node.SLICE_ACCESS))))) ThenBlock: {
+            // Flatten receiver (incl. (files(p)/name).open) before MethodCall(
+            IfCondition EqualTo(Gen_HasCall(obj), 1) ThenBlock: {
                 obj = Gen_FlattenExpr(obj)
             }
             IfCondition EqualTo(args, 0) ThenBlock: {
