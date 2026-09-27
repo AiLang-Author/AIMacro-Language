@@ -1,0 +1,6 @@
+try {
+    x = 1
+} except Exception as e {
+    y = e
+}
+print(1)

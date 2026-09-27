@@ -1,0 +1,4 @@
+path = "abc"
+sep = "/"
+path[:0] + sep
+print(1)

@@ -659,6 +659,14 @@ Function.Gen_BinaryOp {
         left = ArrayGet(node, 3)
         op = ArrayGet(node, 4)
         right = ArrayGet(node, 5)
+        // Hoist slice/call operands before opening NumAdd/Concat so
+        // `path[:0] + sep` is not `NumAdd( t1 = ListSlice(...)\n t1, sep)`.
+        IfCondition EqualTo(Gen_HasCall(left), 1) ThenBlock: {
+            left = Gen_FlattenExpr(left)
+        }
+        IfCondition EqualTo(Gen_HasCall(right), 1) ThenBlock: {
+            right = Gen_FlattenExpr(right)
+        }
         
         // Check for string concatenation (+ operator)
         IfCondition EqualTo(op, Token.PLUS) ThenBlock: {
