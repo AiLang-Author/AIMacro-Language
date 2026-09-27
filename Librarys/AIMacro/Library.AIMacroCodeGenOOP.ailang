@@ -1107,9 +1107,8 @@ Function.OOPGen_MethodCall {
             Gen_Emit("0")
             ReturnValue(0)
         }
-        // Flatten chained receiver before emitting MethodCall expr
-        obj_nt = AST_Type(obj)
-        IfCondition Or(EqualTo(obj_nt, Node.METHOD_CALL), Or(EqualTo(obj_nt, Node.CALL), Or(EqualTo(obj_nt, Node.ATTRIBUTE), EqualTo(obj_nt, Node.INDEX_ACCESS)))) ThenBlock: {
+        // Flatten receiver (incl. (files(p)/name).open) before MethodCall(
+        IfCondition EqualTo(Gen_HasCall(obj), 1) ThenBlock: {
             obj = Gen_FlattenExpr(obj)
         }
         

@@ -1,0 +1,8 @@
+def files(p) {
+    return p
+}
+def normalize_path(r) {
+    return r
+}
+x = (files("pkg") / normalize_path("res")).open("rb")
+print(1)
