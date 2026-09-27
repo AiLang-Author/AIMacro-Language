@@ -289,9 +289,7 @@ Function.Gen_Program {
                 i = Add(i, 1)
             }
             Gen.indent = saved_indent
-            IfCondition EqualTo(has_main, 1) ThenBlock: {
-                Gen_EmitLine("    main()")
-            }
+            // Do not auto-call main(); if __name__ == "__main__" in toplevel decides.
             Gen_EmitLine("    ProcessExit(0)")
             Gen_EmitLine("}")
             Gen_Emit("\n")

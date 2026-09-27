@@ -714,10 +714,11 @@ Function.Gen_EmitIdent {
             Gen_Emit(name)
             ReturnValue(0)
         }
-        // Python __name__ guard — compile as literal "__main__"
+        // Library compile: not a script. if __name__ == "__main__" stays false
+        // so CLI mains (getopt/argparse) do not run at module init.
         cmp = StringCompare(name, "__name__")
         IfCondition EqualTo(cmp, 0) ThenBlock: {
-            Gen_Emit("\"__main__\"")
+            Gen_Emit("\"<aimacro>\"")
             ReturnValue(0)
         }
         // Module __doc__ — emit empty string stub (module docstring already emitted as expr)
