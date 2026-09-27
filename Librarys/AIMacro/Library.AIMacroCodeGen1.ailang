@@ -948,6 +948,26 @@ Function.Gen_EmitIdent {
             Gen_EmitNumber(2)
             ReturnValue(0)
         }
+        cmp = StringCompare(name, "IPPROTO_IPV6")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(41)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "IPPROTO_TCP")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(6)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "IPPROTO_UDP")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(17)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "IPV6_V6ONLY")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(27)
+            ReturnValue(0)
+        }
         cmp = StringCompare(name, "SocketKind")
         IfCondition EqualTo(cmp, 0) ThenBlock: {
             Gen_EmitNumber(1)

@@ -2474,6 +2474,9 @@ Function.Gen_MapMethod {
         // List methods - use smart versions that handle both XArray and TArray
         cmp = StringCompare(method, "append")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.SmartPush") }
+
+        cmp = StringCompare(method, "add")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.SetAdd") }
         
          cmp = StringCompare(method, "pop")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.SmartPop") }
