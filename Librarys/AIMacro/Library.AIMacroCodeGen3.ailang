@@ -840,11 +840,17 @@ Function.Gen_FlattenExpr {
             temp = Gen_TempName()
             Gen_EmitIndent()
             Gen_Emit(temp)
-            Gen_Emit(" = OOP.ObjectGet(")
-            Gen_Expr(flat_obj)
-            Gen_Emit(", \"")
-            Gen_Emit(attr)
-            Gen_Emit("\")\n")
+            cmp_contains = StringCompare(attr, "__contains__")
+            cmp_copy = StringCompare(attr, "copy")
+            IfCondition Or(EqualTo(cmp_contains, 0), EqualTo(cmp_copy, 0)) ThenBlock: {
+                Gen_Emit(" = 0\n")
+            } ElseBlock: {
+                Gen_Emit(" = OOP.ObjectGet(")
+                Gen_Expr(flat_obj)
+                Gen_Emit(", \"")
+                Gen_Emit(attr)
+                Gen_Emit("\")\n")
+            }
             ReturnValue(Gen_MakeIdent(temp))
         }
         // =========== END OOP ATTRIBUTE ===========
