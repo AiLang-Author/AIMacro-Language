@@ -4305,6 +4305,17 @@ Function.AIMacro.NumNeg {
     }
 }
 
+Function.AIMacro.NumAbs {
+    Input: a: Address
+    Output: Address
+    Body: {
+        IfCondition EqualTo(AIMacro.SmartBool(AIMacro.NumLt(a, AIMacro.IntZero())), 1) ThenBlock: {
+            ReturnValue(AIMacro.NumNeg(a))
+        }
+        ReturnValue(a)
+    }
+}
+
 Function.AIMacro.NumPos {
     Input: a: Address
     Output: Address

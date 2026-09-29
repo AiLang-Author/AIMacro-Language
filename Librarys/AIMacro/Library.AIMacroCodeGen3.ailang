@@ -2083,19 +2083,21 @@ Function.Gen_FlattenIndirectCall {
             }
         }
         temp = Gen_TempName()
-        Gen_EmitIndent()
-        Gen_Emit(temp)
         nargs = 0
         IfCondition NotEqual(args, 0) ThenBlock: {
             nargs = Array.Size(args)
         }
         IfCondition EqualTo(nargs, 0) ThenBlock: {
+            Gen_EmitIndent()
+            Gen_Emit(temp)
             Gen_Emit(" = AIMacro.SmartCall(")
             Gen_Expr(flat_callee)
             Gen_Emit(")\n")
             ReturnValue(Gen_MakeIdent(temp))
         }
         IfCondition EqualTo(nargs, 1) ThenBlock: {
+            Gen_EmitIndent()
+            Gen_Emit(temp)
             Gen_Emit(" = AIMacro.SmartCall1(")
             Gen_Expr(flat_callee)
             Gen_Emit(", ")
@@ -2103,14 +2105,28 @@ Function.Gen_FlattenIndirectCall {
             Gen_Emit(")\n")
             ReturnValue(Gen_MakeIdent(temp))
         }
-        Gen_Emit(" = CallIndirect(")
-        Gen_Expr(flat_callee)
+        av = StringConcat(temp, "_a")
+        Gen_EmitIndent()
+        Gen_Emit(av)
+        Gen_Emit(" = AIMacro.ArrayNew(")
+        Gen_EmitNumber(nargs)
+        Gen_Emit(")\n")
         i = 0
         WhileLoop LessThan(i, nargs) {
+            Gen_EmitIndent()
+            Gen_Emit("Array.Push(")
+            Gen_Emit(av)
             Gen_Emit(", ")
             Gen_Expr(Array.Get(args, i))
+            Gen_Emit(")\n")
             i = Add(i, 1)
         }
+        Gen_EmitIndent()
+        Gen_Emit(temp)
+        Gen_Emit(" = AIMacro.SmartCallN(")
+        Gen_Expr(flat_callee)
+        Gen_Emit(", ")
+        Gen_Emit(av)
         Gen_Emit(")\n")
         ReturnValue(Gen_MakeIdent(temp))
     }

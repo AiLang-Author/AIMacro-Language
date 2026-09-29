@@ -3106,7 +3106,7 @@
       "stage": "run",
       "rc": -11,
       "err": "",
-      "out": "  ListTest.test_basic\n",
+      "out": "  ListTest.test_basic\n  ListTest.test_keyword_args\nFAIL: assertRaises\n  ListTest.test_keywords_in_subclass\nFAIL: assertEqual\nFAIL: assertRaises\n",
       "tags": [],
       "key": "test_list.py",
       "updated": "2026-09-29"
@@ -3422,7 +3422,7 @@
       "stage": "run",
       "rc": -11,
       "err": "",
-      "out": ".test_setitem\nERROR: Method not found: setitem\nFAIL: assertIsNone\nFAIL: assertRaises\n  OperatorTestCase.test_sub\nERROR: Method not found: sub\nFAIL: assertEqual\n  OperatorTestCase.test_truth\n  OperatorTestCase.test_bitwise_xor\nERROR: Method not found: xor\nFAIL: assertEqual\n  OperatorTestCase.test_is\n",
+      "out": "nd: pow\nFAIL: assertEqual\n  OperatorTestCase.test_rshift\nFAIL: assertRaises\n  OperatorTestCase.test_contains\nFAIL: assertRaises\n  OperatorTestCase.test_setitem\nFAIL: assertRaises\n  OperatorTestCase.test_sub\n  OperatorTestCase.test_truth\n  OperatorTestCase.test_bitwise_xor\n  OperatorTestCase.test_is\n",
       "tags": [],
       "key": "test_operator.py",
       "updated": "2026-09-29"
@@ -4386,7 +4386,7 @@
       "stage": "run",
       "rc": -11,
       "err": "",
-      "out": "\nFAIL: assertEqual\n  TestTemplate.test_regular_templates_with_upper_case\nERROR: Method not found: substitute\nFAIL: assertEqual\n  TestTemplate.test_regular_templates_with_non_letters\nERROR: Method not found: substitute\nFAIL: assertEqual\n  TestTemplate.test_escapes\nERROR: Method not found: substitute\n",
+      "out": "es\n  TestTemplate.test_regular_templates\nFAIL: assertEqual\n  TestTemplate.test_regular_templates_with_braces\nFAIL: assertEqual\n  TestTemplate.test_regular_templates_with_upper_case\nFAIL: assertEqual\n  TestTemplate.test_regular_templates_with_non_letters\nFAIL: assertEqual\n  TestTemplate.test_escapes\n",
       "tags": [],
       "key": "test_string.py",
       "updated": "2026-09-29"

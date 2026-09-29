@@ -1066,6 +1066,11 @@ Function.AIMacro.UnittestAssertIs {
         IfCondition EqualTo(a, b) ThenBlock: {
             ReturnValue(1)
         }
+        IfCondition And(EqualTo(AIMacro.LooksLikeString(a), 1), EqualTo(AIMacro.LooksLikeString(b), 1)) ThenBlock: {
+            IfCondition EqualTo(StringCompare(a, b), 0) ThenBlock: {
+                ReturnValue(1)
+            }
+        }
         IfCondition And(EqualTo(Types.IsBool(a), 1), EqualTo(Types.IsBool(b), 1)) ThenBlock: {
             IfCondition EqualTo(AIMacro.BoolVal(a), AIMacro.BoolVal(b)) ThenBlock: {
                 ReturnValue(1)
@@ -1950,6 +1955,40 @@ Function.AIMacro.MethodShim {
         IfCondition EqualTo(StringCompare(method_name, "not_"), 0) ThenBlock: {
             ReturnValue(AIMacro.NotVal(a0))
         }
+        IfCondition EqualTo(n, 0) ThenBlock: {
+            IfCondition Or(EqualTo(StringCompare(method_name, "lt"), 0), EqualTo(StringCompare(method_name, "le"), 0)) ThenBlock: {
+                AIMacro.RaiseKind(5, "operator")
+                ReturnValue(0)
+            }
+            IfCondition Or(EqualTo(StringCompare(method_name, "eq"), 0), EqualTo(StringCompare(method_name, "ne"), 0)) ThenBlock: {
+                AIMacro.RaiseKind(5, "operator")
+                ReturnValue(0)
+            }
+            IfCondition Or(EqualTo(StringCompare(method_name, "gt"), 0), EqualTo(StringCompare(method_name, "ge"), 0)) ThenBlock: {
+                AIMacro.RaiseKind(5, "operator")
+                ReturnValue(0)
+            }
+            IfCondition Or(EqualTo(StringCompare(method_name, "add"), 0), EqualTo(StringCompare(method_name, "sub"), 0)) ThenBlock: {
+                AIMacro.RaiseKind(5, "operator")
+                ReturnValue(0)
+            }
+            IfCondition Or(EqualTo(StringCompare(method_name, "mul"), 0), EqualTo(StringCompare(method_name, "xor"), 0)) ThenBlock: {
+                AIMacro.RaiseKind(5, "operator")
+                ReturnValue(0)
+            }
+            IfCondition Or(EqualTo(StringCompare(method_name, "rshift"), 0), EqualTo(StringCompare(method_name, "lshift"), 0)) ThenBlock: {
+                AIMacro.RaiseKind(5, "operator")
+                ReturnValue(0)
+            }
+            IfCondition Or(EqualTo(StringCompare(method_name, "contains"), 0), EqualTo(StringCompare(method_name, "setitem"), 0)) ThenBlock: {
+                AIMacro.RaiseKind(5, "operator")
+                ReturnValue(0)
+            }
+            IfCondition Or(EqualTo(StringCompare(method_name, "abs"), 0), EqualTo(StringCompare(method_name, "concat"), 0)) ThenBlock: {
+                AIMacro.RaiseKind(5, "operator")
+                ReturnValue(0)
+            }
+        }
         IfCondition EqualTo(StringCompare(method_name, "contains"), 0) ThenBlock: {
             ReturnValue(AIMacro.Contains(a0, a1))
         }
@@ -1969,6 +2008,42 @@ Function.AIMacro.MethodShim {
         IfCondition EqualTo(StringCompare(method_name, "xor"), 0) ThenBlock: {
             ReturnValue(AIMacro.NumBitXor(a0, a1))
         }
+        IfCondition EqualTo(StringCompare(method_name, "rshift"), 0) ThenBlock: {
+            ReturnValue(AIMacro.NumBitShr(a0, a1))
+        }
+        IfCondition EqualTo(StringCompare(method_name, "lshift"), 0) ThenBlock: {
+            ReturnValue(AIMacro.NumBitShl(a0, a1))
+        }
+        IfCondition EqualTo(StringCompare(method_name, "floordiv"), 0) ThenBlock: {
+            ReturnValue(AIMacro.FloorDiv(a0, a1))
+        }
+        IfCondition EqualTo(StringCompare(method_name, "eq"), 0) ThenBlock: {
+            ReturnValue(AIMacro.NumEq(a0, a1))
+        }
+        IfCondition EqualTo(StringCompare(method_name, "ne"), 0) ThenBlock: {
+            ReturnValue(AIMacro.NumNe(a0, a1))
+        }
+        IfCondition EqualTo(StringCompare(method_name, "le"), 0) ThenBlock: {
+            ReturnValue(AIMacro.NumLe(a0, a1))
+        }
+        IfCondition EqualTo(StringCompare(method_name, "ge"), 0) ThenBlock: {
+            ReturnValue(AIMacro.NumGe(a0, a1))
+        }
+        IfCondition EqualTo(StringCompare(method_name, "gt"), 0) ThenBlock: {
+            ReturnValue(AIMacro.NumGt(a0, a1))
+        }
+        IfCondition EqualTo(StringCompare(method_name, "and_"), 0) ThenBlock: {
+            ReturnValue(AIMacro.NumBitAnd(a0, a1))
+        }
+        IfCondition EqualTo(StringCompare(method_name, "or_"), 0) ThenBlock: {
+            ReturnValue(AIMacro.NumBitOr(a0, a1))
+        }
+        IfCondition EqualTo(StringCompare(method_name, "concat"), 0) ThenBlock: {
+            ReturnValue(AIMacro.NumAdd(a0, a1))
+        }
+        IfCondition EqualTo(StringCompare(method_name, "abs"), 0) ThenBlock: {
+            ReturnValue(AIMacro.NumAbs(a0))
+        }
         IfCondition EqualTo(StringCompare(method_name, "setitem"), 0) ThenBlock: {
             a2 = 0
             IfCondition GreaterThan(n, 2) ThenBlock: {
@@ -1981,6 +2056,9 @@ Function.AIMacro.MethodShim {
                 Hash.Set(a0, AIMacro.Str(a1), a2)
             }
             ReturnValue(Types.GetNone())
+        }
+        IfCondition EqualTo(StringCompare(method_name, "substitute"), 0) ThenBlock: {
+            ReturnValue(AIMacro.TemplateSub(obj, a0))
         }
         IfCondition EqualTo(StringCompare(method_name, "lt"), 0) ThenBlock: {
             ReturnValue(AIMacro.NumLt(a0, a1))
@@ -2169,6 +2247,169 @@ Function.AIMacro.SmartCall1 {
             carg = AIMacro.IntZero()
         }
         ReturnValue(CallIndirect(fn, carg))
+    }
+}
+
+Function.AIMacro.SmartCallN {
+    Input: fn: Address
+    Input: args: Address
+    Output: Address
+    Body: {
+        IfCondition EqualTo(fn, 0) ThenBlock: {
+            ReturnValue(AIMacro.ListFrom(args))
+        }
+        IfCondition EqualTo(args, 0) ThenBlock: {
+            args = AIMacro.EmptyList()
+        }
+        IfCondition EqualTo(OOP.ClassExists(fn), 1) ThenBlock: {
+            ReturnValue(OOP.ObjectNewInit(fn, args))
+        }
+        IfCondition EqualTo(AIMacro.LooksLikeString(fn), 1) ThenBlock: {
+            OOP.ClassDefine(fn, 0)
+            ReturnValue(OOP.ObjectNewInit(fn, args))
+        }
+        n = Array.Size(args)
+        IfCondition EqualTo(n, 0) ThenBlock: {
+            ReturnValue(CallIndirect(fn))
+        }
+        a0 = Array.Get(args, 0)
+        IfCondition EqualTo(a0, 0) ThenBlock: {
+            a0 = AIMacro.IntZero()
+        }
+        IfCondition EqualTo(n, 1) ThenBlock: {
+            ReturnValue(CallIndirect(fn, a0))
+        }
+        a1 = Array.Get(args, 1)
+        IfCondition EqualTo(a1, 0) ThenBlock: {
+            a1 = AIMacro.IntZero()
+        }
+        IfCondition EqualTo(n, 2) ThenBlock: {
+            ReturnValue(CallIndirect(fn, a0, a1))
+        }
+        a2 = Array.Get(args, 2)
+        IfCondition EqualTo(a2, 0) ThenBlock: {
+            a2 = AIMacro.IntZero()
+        }
+        ReturnValue(CallIndirect(fn, a0, a1, a2))
+    }
+}
+
+Function.AIMacro.PyType {
+    Input: obj: Address
+    Output: Address
+    Body: {
+        IfCondition EqualTo(Hash.IsHash(obj), 1) ThenBlock: {
+            cls = Hash.Get(obj, "__class__")
+            IfCondition NotEqual(cls, 0) ThenBlock: {
+                ReturnValue(cls)
+            }
+            ReturnValue("dict")
+        }
+        IfCondition EqualTo(Array.IsArray(obj), 1) ThenBlock: {
+            ReturnValue("list")
+        }
+        IfCondition EqualTo(Types.IsBool(obj), 1) ThenBlock: {
+            ReturnValue("bool")
+        }
+        IfCondition EqualTo(AIMacro.LooksLikeString(obj), 1) ThenBlock: {
+            ReturnValue("str")
+        }
+        ReturnValue("int")
+    }
+}
+
+Function.AIMacro.StringWhitespace {
+    Output: Address
+    Body: {
+        s = Allocate(7)
+        SetByte(s, 0, 32)
+        SetByte(s, 1, 9)
+        SetByte(s, 2, 10)
+        SetByte(s, 3, 13)
+        SetByte(s, 4, 11)
+        SetByte(s, 5, 12)
+        SetByte(s, 6, 0)
+        ReturnValue(s)
+    }
+}
+
+Function.AIMacro.TemplateSub {
+    Input: obj: Address
+    Input: mapping: Address
+    Output: Address
+    Body: {
+        tmpl = AIMacro.ObjectGet(obj, "template")
+        IfCondition EqualTo(tmpl, 0) ThenBlock: {
+            tmpl = obj
+        }
+        IfCondition EqualTo(AIMacro.LooksLikeString(tmpl), 0) ThenBlock: {
+            ReturnValue(tmpl)
+        }
+        IfCondition EqualTo(Hash.IsHash(mapping), 0) ThenBlock: {
+            mapping = Hash.Create(4)
+        }
+        n = StringLength(tmpl)
+        out = Allocate(Add(Multiply(n, 8), 1))
+        oi = 0
+        i = 0
+        WhileLoop LessThan(i, n) {
+            ch = GetByte(tmpl, i)
+            IfCondition EqualTo(ch, 36) ThenBlock: {
+                nx = GetByte(tmpl, Add(i, 1))
+                IfCondition EqualTo(nx, 36) ThenBlock: {
+                    SetByte(out, oi, 36)
+                    oi = Add(oi, 1)
+                    i = Add(i, 2)
+                } ElseBlock: {
+                    i = Add(i, 1)
+                    key = Allocate(64)
+                    ki = 0
+                    WhileLoop LessThan(i, n) {
+                        ch = GetByte(tmpl, i)
+                        ok = 0
+                        IfCondition And(GreaterEqual(ch, 65), LessEqual(ch, 90)) ThenBlock: {
+                            ok = 1
+                        }
+                        IfCondition And(GreaterEqual(ch, 97), LessEqual(ch, 122)) ThenBlock: {
+                            ok = 1
+                        }
+                        IfCondition And(GreaterEqual(ch, 48), LessEqual(ch, 57)) ThenBlock: {
+                            ok = 1
+                        }
+                        IfCondition EqualTo(ch, 95) ThenBlock: {
+                            ok = 1
+                        }
+                        IfCondition EqualTo(ok, 0) ThenBlock: {
+                            BreakLoop
+                        }
+                        SetByte(key, ki, ch)
+                        ki = Add(ki, 1)
+                        i = Add(i, 1)
+                    }
+                    SetByte(key, ki, 0)
+                    val = Hash.Get(mapping, key)
+                    IfCondition EqualTo(val, 0) ThenBlock: {
+                        val = AIMacro.Str(val)
+                    }
+                    IfCondition EqualTo(AIMacro.LooksLikeString(val), 0) ThenBlock: {
+                        val = AIMacro.Str(val)
+                    }
+                    vi = 0
+                    vn = StringLength(val)
+                    WhileLoop LessThan(vi, vn) {
+                        SetByte(out, oi, GetByte(val, vi))
+                        oi = Add(oi, 1)
+                        vi = Add(vi, 1)
+                    }
+                }
+            } ElseBlock: {
+                SetByte(out, oi, ch)
+                i = Add(i, 1)
+                oi = Add(oi, 1)
+            }
+        }
+        SetByte(out, oi, 0)
+        ReturnValue(out)
     }
 }
 

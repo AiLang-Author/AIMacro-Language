@@ -2241,7 +2241,7 @@ Function.Gen_EmitStdlibAttr {
             }
             cmp = StringCompare(attr, "whitespace")
             IfCondition EqualTo(cmp, 0) ThenBlock: {
-                Gen_Emit("\" \\t\\n\\r\\v\\f\"")
+                Gen_Emit("AIMacro.StringWhitespace()")
                 ReturnValue(1)
             }
             cmp = StringCompare(attr, "printable")
