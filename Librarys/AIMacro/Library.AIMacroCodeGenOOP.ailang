@@ -1265,6 +1265,20 @@ Function.OOPGen_MethodCall {
             Gen_Emit(")")
             ReturnValue(0)
         }
+        cmp_il = StringCompare(method, "islower")
+        IfCondition EqualTo(cmp_il, 0) ThenBlock: {
+            Gen_Emit("String.IsLower(")
+            OOPGen_Expr(obj)
+            Gen_Emit(")")
+            ReturnValue(0)
+        }
+        cmp_iu = StringCompare(method, "isupper")
+        IfCondition EqualTo(cmp_iu, 0) ThenBlock: {
+            Gen_Emit("String.IsUpper(")
+            OOPGen_Expr(obj)
+            Gen_Emit(")")
+            ReturnValue(0)
+        }
         cmp_st = StringCompare(method, "strip")
         IfCondition EqualTo(cmp_st, 0) ThenBlock: {
             Gen_Emit("AIMacro.Strip(")

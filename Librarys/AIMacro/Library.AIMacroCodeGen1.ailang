@@ -1376,6 +1376,9 @@ Function.Gen_HasCall {
             IfCondition EqualTo(op, Token.OR) ThenBlock: {
                 ReturnValue(1)
             }
+            IfCondition EqualTo(op, Token.POWER) ThenBlock: {
+                ReturnValue(1)
+            }
             
             // For other operators, check children recursively
             left = ArrayGet(node, 3)
@@ -1389,8 +1392,7 @@ Function.Gen_HasCall {
         }
         
         IfCondition EqualTo(t, Node.UNARY_OP) ThenBlock: {
-            operand = ArrayGet(node, 4)
-            ReturnValue(Gen_HasCall(operand))
+            ReturnValue(1)
         }
         
         IfCondition EqualTo(t, Node.INDEX_ACCESS) ThenBlock: {

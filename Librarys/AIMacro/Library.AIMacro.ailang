@@ -3295,9 +3295,8 @@ Function.AIMacro.IntOrBox {
     Input: r: Integer
     Output: Address
     Body: {
-        IfCondition LessThan(r, 0) ThenBlock: {
-            ReturnValue(AIMacro.BigIntFromInt(r))
-        }
+        // Small negatives stay unboxed. PTR_MIN/2^47 guards already refuse
+        // signed negatives as heap, and boxing -2 made NumPow smash the caller.
         IfCondition GreaterEqual(r, TypeMagic.HEAP_START) ThenBlock: {
             ReturnValue(AIMacro.BigIntFromInt(r))
         }
@@ -3823,32 +3822,24 @@ Function.AIMacro.NumPow {
     Input: b: Address
     Output: Address
     Body: {
-        a = AIMacro.BoolVal(a)
-        b = AIMacro.BoolVal(b)
-        IfCondition And(GreaterEqual(a, TypeMagic.PTR_MIN), LessThan(a, 140737488355328)) ThenBlock: {
+        // Zero extra locals. Nested BoolVal/pool loops smashed the caller so
+        // EqualTo(result, 16) passed and PrintNumber(result) SIGSEGV'd.
+        IfCondition And(GreaterEqual(a, TypeMagic.HEAP_START), LessThan(a, 140737488355328)) ThenBlock: {
             IfCondition EqualTo(Dereference(a), TypeMagic.BIGINT) ThenBlock: {
-                PowSt2.ds = Dereference(Add(a, 16))
-                PowSt2.sg = Dereference(Add(a, 8))
-                PowSt2.mag = 0
-                PowSt2.pi = 0
-                PowSt2.pn = StringLength(PowSt2.ds)
-                PowSt2.v = 1
-                WhileLoop LessThan(PowSt2.pi, PowSt2.pn) {
-                    PowSt2.mag = Add(Multiply(PowSt2.mag, 10), Subtract(GetByte(PowSt2.ds, PowSt2.pi), 48))
-                    PowSt2.pi = Add(PowSt2.pi, 1)
-                }
-                PowSt2.pi = 0
-                WhileLoop LessThan(PowSt2.pi, b) {
-                    PowSt2.v = Multiply(PowSt2.v, PowSt2.mag)
-                    PowSt2.pi = Add(PowSt2.pi, 1)
-                }
-                IfCondition And(EqualTo(PowSt2.sg, 1), EqualTo(Modulo(b, 2), 1)) ThenBlock: {
-                    PowSt2.v = Subtract(0, PowSt2.v)
-                }
-                ReturnValue(PowSt2.v)
+                ReturnValue(AIMacro.PowSmallBig(a, b))
             }
+            ReturnValue(AIMacro.NumPowRest(a, b))
         }
-        ReturnValue(AIMacro.NumPowRest(a, b))
+        IfCondition And(GreaterEqual(b, TypeMagic.HEAP_START), LessThan(b, 140737488355328)) ThenBlock: {
+            ReturnValue(AIMacro.NumPowRest(a, b))
+        }
+        IfCondition LessThan(b, 0) ThenBlock: {
+            ReturnValue(AIMacro.NumPowRest(a, b))
+        }
+        IfCondition Or(GreaterEqual(b, 18), And(GreaterEqual(a, 10), GreaterEqual(b, 10))) ThenBlock: {
+            ReturnValue(AIMacro.NumPowRest(a, b))
+        }
+        ReturnValue(AIMacro.IntOrBox(Math.Power(a, b)))
     }
 }
 
@@ -4004,22 +3995,18 @@ Function.AIMacro.NumNeg {
     Input: a: Address
     Output: Address
     Body: {
-        a = AIMacro.BoolVal(a)
-        IfCondition EqualTo(Types.IsComplex(a), 1) ThenBlock: {
-            ReturnValue(AIMacro.ComplexBox(Float_Sub(0, Dereference(Add(a, 8))), Float_Sub(0, Dereference(Add(a, 16)))))
-        }
-        IfCondition EqualTo(Types.IsBigInt(a), 1) ThenBlock: {
-            sign = Dereference(Add(a, 8))
-            ns = 0
-            IfCondition EqualTo(sign, 0) ThenBlock: {
-                ns = 1
+        IfCondition And(GreaterEqual(a, TypeMagic.HEAP_START), LessThan(a, 140737488355328)) ThenBlock: {
+            IfCondition EqualTo(Dereference(a), TypeMagic.COMPLEX) ThenBlock: {
+                ReturnValue(AIMacro.ComplexBox(Float_Sub(0, Dereference(Add(a, 8))), Float_Sub(0, Dereference(Add(a, 16)))))
             }
-            ReturnValue(AIMacro.BigIntBox(ns, Dereference(Add(a, 16))))
+            IfCondition EqualTo(Dereference(a), TypeMagic.BIGINT) ThenBlock: {
+                ReturnValue(AIMacro.BigIntBox(Subtract(1, Dereference(Add(a, 8))), Dereference(Add(a, 16))))
+            }
+            IfCondition EqualTo(Dereference(a), TypeMagic.FLOAT) ThenBlock: {
+                ReturnValue(AIMacro.FloatBox(Float_Sub(0, AIMacro.FloatBits(a))))
+            }
         }
-        IfCondition EqualTo(Types.IsFloat(a), 1) ThenBlock: {
-            ReturnValue(AIMacro.FloatBox(Float_Sub(0, AIMacro.FloatBits(a))))
-        }
-        ReturnValue(AIMacro.IntOrBox(Subtract(0, a)))
+        ReturnValue(Subtract(0, a))
     }
 }
 

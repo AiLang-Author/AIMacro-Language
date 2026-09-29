@@ -242,6 +242,25 @@ def discover_lib(stdlib: Path) -> list[Path]:
     return sorted(files)
 
 
+TEST_EXCLUDE_DIRS = {
+    "crashers",
+    "leakers",
+    "dtracedata",
+    "encoded_modules",
+    "tokenizedata",
+    "typinganndata",
+    "ziptestdata",
+    "libregrtest",
+    "support",
+    "data",
+    "audiodata",
+    "imghdrdata",
+    "sndhdrdata",
+    "xmltestdata",
+    "tracedmodules",
+}
+
+
 def discover_test(stdlib: Path) -> list[Path]:
     test_dir = stdlib / "test"
     if not test_dir.is_dir():
@@ -250,7 +269,17 @@ def discover_test(stdlib: Path) -> list[Path]:
     for p in test_dir.rglob("*.py"):
         if "__pycache__" in p.parts:
             continue
-        files.append(p)
+        rel = p.relative_to(test_dir)
+        if any(part in TEST_EXCLUDE_DIRS for part in rel.parts[:-1]):
+            continue
+        if p.name.startswith("test_"):
+            files.append(p)
+        elif (
+            p.name == "__init__.py"
+            and p.parent != test_dir
+            and p.parent.name.startswith("test_")
+        ):
+            files.append(p)
     return sorted(files)
 
 

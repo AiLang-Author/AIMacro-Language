@@ -1832,6 +1832,12 @@ Function.Gen_MapBuiltin {
         cmp = StringCompare(name, "complex")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.Complex") }
 
+        cmp = StringCompare(name, "islower")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("String.IsLower") }
+
+        cmp = StringCompare(name, "isupper")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("String.IsUpper") }
+
         cmp = StringCompare(name, "callable")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.Callable") }
 
@@ -2656,6 +2662,12 @@ Function.Gen_MapMethod {
         
         cmp = StringCompare(method, "endswith")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("String.EndsWith") }
+
+        cmp = StringCompare(method, "islower")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("String.IsLower") }
+
+        cmp = StringCompare(method, "isupper")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("String.IsUpper") }
         
         cmp = StringCompare(method, "count")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.SmartCount") }

@@ -884,6 +884,60 @@ Function.String.IsAlpha {
     }
 }
 
+Function.String.IsLower {
+    Input: str: Address
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(str, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        len = StringLength(str)
+        IfCondition EqualTo(len, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        saw = 0
+        i = 0
+        WhileLoop LessThan(i, len) {
+            c = GetByte(str, i)
+            IfCondition And(GreaterEqual(c, 65), LessEqual(c, 90)) ThenBlock: {
+                ReturnValue(0)
+            }
+            IfCondition And(GreaterEqual(c, 97), LessEqual(c, 122)) ThenBlock: {
+                saw = 1
+            }
+            i = Add(i, 1)
+        }
+        ReturnValue(saw)
+    }
+}
+
+Function.String.IsUpper {
+    Input: str: Address
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(str, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        len = StringLength(str)
+        IfCondition EqualTo(len, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        saw = 0
+        i = 0
+        WhileLoop LessThan(i, len) {
+            c = GetByte(str, i)
+            IfCondition And(GreaterEqual(c, 97), LessEqual(c, 122)) ThenBlock: {
+                ReturnValue(0)
+            }
+            IfCondition And(GreaterEqual(c, 65), LessEqual(c, 90)) ThenBlock: {
+                saw = 1
+            }
+            i = Add(i, 1)
+        }
+        ReturnValue(saw)
+    }
+}
+
 Function.String.IsAlnum {
     Input: str: Address
     Output: Integer

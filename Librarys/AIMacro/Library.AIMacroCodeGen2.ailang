@@ -2830,6 +2830,10 @@ Function.Gen_Assignment {
             IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
             cmp = StringCompare(method, "startswith")
             IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+            cmp = StringCompare(method, "islower")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+            cmp = StringCompare(method, "isupper")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
             cmp = StringCompare(method, "strip")
             IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
             cmp = StringCompare(method, "count")
@@ -2906,6 +2910,10 @@ Function.Gen_Assignment {
                 cmp = StringCompare(method, "startswith")
                 IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
                 cmp = StringCompare(method, "endswith")
+                IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+                cmp = StringCompare(method, "islower")
+                IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+                cmp = StringCompare(method, "isupper")
                 IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
                 cmp = StringCompare(method, "format")
                 IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
