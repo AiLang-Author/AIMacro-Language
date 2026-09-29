@@ -1267,16 +1267,37 @@ Function.OOPGen_MethodCall {
         }
         cmp_il = StringCompare(method, "islower")
         IfCondition EqualTo(cmp_il, 0) ThenBlock: {
-            Gen_Emit("String.IsLower(")
+            Gen_Emit("AIMacro.Bool(String.IsLower(")
             OOPGen_Expr(obj)
-            Gen_Emit(")")
+            Gen_Emit("))")
             ReturnValue(0)
         }
         cmp_iu = StringCompare(method, "isupper")
         IfCondition EqualTo(cmp_iu, 0) ThenBlock: {
-            Gen_Emit("String.IsUpper(")
+            Gen_Emit("AIMacro.Bool(String.IsUpper(")
             OOPGen_Expr(obj)
-            Gen_Emit(")")
+            Gen_Emit("))")
+            ReturnValue(0)
+        }
+        cmp_idc = StringCompare(method, "isdecimal")
+        IfCondition EqualTo(cmp_idc, 0) ThenBlock: {
+            Gen_Emit("AIMacro.Bool(String.IsDecimal(")
+            OOPGen_Expr(obj)
+            Gen_Emit("))")
+            ReturnValue(0)
+        }
+        cmp_inm = StringCompare(method, "isnumeric")
+        IfCondition EqualTo(cmp_inm, 0) ThenBlock: {
+            Gen_Emit("AIMacro.Bool(String.IsNumeric(")
+            OOPGen_Expr(obj)
+            Gen_Emit("))")
+            ReturnValue(0)
+        }
+        cmp_itl = StringCompare(method, "istitle")
+        IfCondition EqualTo(cmp_itl, 0) ThenBlock: {
+            Gen_Emit("AIMacro.Bool(String.IsTitle(")
+            OOPGen_Expr(obj)
+            Gen_Emit("))")
             ReturnValue(0)
         }
         cmp_st = StringCompare(method, "strip")

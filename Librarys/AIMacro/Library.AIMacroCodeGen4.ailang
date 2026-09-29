@@ -1838,6 +1838,15 @@ Function.Gen_MapBuiltin {
         cmp = StringCompare(name, "isupper")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("String.IsUpper") }
 
+        cmp = StringCompare(name, "isdecimal")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("String.IsDecimal") }
+
+        cmp = StringCompare(name, "isnumeric")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("String.IsNumeric") }
+
+        cmp = StringCompare(name, "istitle")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("String.IsTitle") }
+
         cmp = StringCompare(name, "callable")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.Callable") }
 
@@ -2588,7 +2597,32 @@ Function.Gen_MethodCallExpr {
 
         // Normal method dispatch for non-ambiguous methods
         func = Gen_MapMethod(method)
-        
+        is_pred = 0
+        cmp = StringCompare(method, "islower")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { is_pred = 1 }
+        cmp = StringCompare(method, "isupper")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { is_pred = 1 }
+        cmp = StringCompare(method, "isdecimal")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { is_pred = 1 }
+        cmp = StringCompare(method, "isnumeric")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { is_pred = 1 }
+        cmp = StringCompare(method, "istitle")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { is_pred = 1 }
+        cmp = StringCompare(method, "isspace")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { is_pred = 1 }
+        cmp = StringCompare(method, "isdigit")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { is_pred = 1 }
+        cmp = StringCompare(method, "isalpha")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { is_pred = 1 }
+        cmp = StringCompare(method, "isalnum")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { is_pred = 1 }
+        cmp = StringCompare(method, "startswith")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { is_pred = 1 }
+        cmp = StringCompare(method, "endswith")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { is_pred = 1 }
+        IfCondition EqualTo(is_pred, 1) ThenBlock: {
+            Gen_Emit("AIMacro.Bool(")
+        }
         Gen_Emit(func)
         Gen_Emit("(")
         Gen_Expr(obj)
@@ -2603,6 +2637,9 @@ Function.Gen_MethodCallExpr {
         }
         
         Gen_Emit(")")
+        IfCondition EqualTo(is_pred, 1) ThenBlock: {
+            Gen_Emit(")")
+        }
     }
 }
 
@@ -2668,6 +2705,15 @@ Function.Gen_MapMethod {
 
         cmp = StringCompare(method, "isupper")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("String.IsUpper") }
+
+        cmp = StringCompare(method, "isdecimal")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("String.IsDecimal") }
+
+        cmp = StringCompare(method, "isnumeric")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("String.IsNumeric") }
+
+        cmp = StringCompare(method, "istitle")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("String.IsTitle") }
         
         cmp = StringCompare(method, "count")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.SmartCount") }

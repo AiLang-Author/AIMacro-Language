@@ -1266,6 +1266,12 @@ Function.Gen_FlattenExpr {
             IfCondition EqualTo(cmp, 0) ThenBlock: { is_known = 1 }
             cmp = StringCompare(method, "isupper")
             IfCondition EqualTo(cmp, 0) ThenBlock: { is_known = 1 }
+            cmp = StringCompare(method, "isdecimal")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { is_known = 1 }
+            cmp = StringCompare(method, "isnumeric")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { is_known = 1 }
+            cmp = StringCompare(method, "istitle")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { is_known = 1 }
             cmp = StringCompare(method, "strip")
             IfCondition EqualTo(cmp, 0) ThenBlock: { is_known = 1 }
             cmp = StringCompare(method, "count")

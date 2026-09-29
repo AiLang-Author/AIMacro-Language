@@ -938,6 +938,63 @@ Function.String.IsUpper {
     }
 }
 
+Function.String.IsDecimal {
+    Input: str: Address
+    Output: Integer
+    Body: {
+        ReturnValue(String.IsDigit(str))
+    }
+}
+
+Function.String.IsNumeric {
+    Input: str: Address
+    Output: Integer
+    Body: {
+        ReturnValue(String.IsDigit(str))
+    }
+}
+
+Function.String.IsTitle {
+    Input: str: Address
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(str, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        len = StringLength(str)
+        IfCondition EqualTo(len, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        saw = 0
+        prev_cased = 0
+        i = 0
+        WhileLoop LessThan(i, len) {
+            c = GetByte(str, i)
+            is_upper = And(GreaterEqual(c, 65), LessEqual(c, 90))
+            is_lower = And(GreaterEqual(c, 97), LessEqual(c, 122))
+            IfCondition EqualTo(is_upper, 1) ThenBlock: {
+                IfCondition EqualTo(prev_cased, 1) ThenBlock: {
+                    ReturnValue(0)
+                }
+                saw = 1
+                prev_cased = 1
+            } ElseBlock: {
+                IfCondition EqualTo(is_lower, 1) ThenBlock: {
+                    IfCondition EqualTo(prev_cased, 0) ThenBlock: {
+                        ReturnValue(0)
+                    }
+                    saw = 1
+                    prev_cased = 1
+                } ElseBlock: {
+                    prev_cased = 0
+                }
+            }
+            i = Add(i, 1)
+        }
+        ReturnValue(saw)
+    }
+}
+
 Function.String.IsAlnum {
     Input: str: Address
     Output: Integer
