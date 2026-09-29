@@ -3552,7 +3552,7 @@ Function.Parse_Addition {
 Function.Parse_Multiplication {
     Output: Address
     Body: {
-        left = Parse_Power()
+        left = Parse_Unary()
         
         WhileLoop EqualTo(1, 1) {
             t = Parse_Type()
@@ -3572,7 +3572,7 @@ Function.Parse_Multiplication {
             col = Parse_Col()
             Parse_Advance()
             
-            right = Parse_Power()
+            right = Parse_Unary()
             
             node = AST_Create(Node.BINARY_OP, 3)
             ArraySet(node, 1, line)
@@ -3591,7 +3591,9 @@ Function.Parse_Multiplication {
 Function.Parse_Power {
     Output: Address
     Body: {
-        left = Parse_Unary()
+        // Python: power = primary ["**" u_expr]; u_expr includes unary, so
+        // -2 ** 4 is -(2 ** 4) and 2 ** -1 is 2 ** (-1).
+        left = Parse_Primary()
         
         is_pow = Parse_Match(Token.POWER)
         IfCondition EqualTo(is_pow, 1) ThenBlock: {
@@ -3599,8 +3601,7 @@ Function.Parse_Power {
             col = Parse_Col()
             Parse_Advance()
             
-            // Right associative
-            right = Parse_Power()
+            right = Parse_Unary()
             
             node = AST_Create(Node.BINARY_OP, 3)
             ArraySet(node, 1, line)
@@ -3674,7 +3675,7 @@ Function.Parse_Unary {
             ReturnValue(node)
         }
         
-        result = Parse_Primary()
+        result = Parse_Power()
         ReturnValue(result)
     }
 }

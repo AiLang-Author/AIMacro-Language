@@ -289,6 +289,21 @@ Function.Gen_Program {
                 i = Add(i, 1)
             }
             Gen.indent = saved_indent
+            ntc = 0
+            IfCondition NotEqual(OOPGen.test_classes, 0) ThenBlock: {
+                ntc = Array.Size(OOPGen.test_classes)
+            }
+            ti = 0
+            WhileLoop LessThan(ti, ntc) {
+                tn = Array.Get(OOPGen.test_classes, ti)
+                Gen_Emit("    AIMacro.UnittestRunClass(\"")
+                Gen_Emit(tn)
+                Gen_Emit("\")\n")
+                ti = Add(ti, 1)
+            }
+            IfCondition GreaterThan(ntc, 0) ThenBlock: {
+                Gen_EmitLine("    AIMacro.UnittestDone()")
+            }
             // Do not auto-call main(); if __name__ == "__main__" in toplevel decides.
             Gen_EmitLine("    ProcessExit(0)")
             Gen_EmitLine("}")

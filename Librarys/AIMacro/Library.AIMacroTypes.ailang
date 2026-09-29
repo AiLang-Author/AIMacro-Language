@@ -36,6 +36,8 @@ FixedPool.TypeMagic {
     "PTR_MIN": Initialize=4000000000
     "FLOAT": Initialize=1414483014
     "BOOL": Initialize=1112490828
+    "COMPLEX": Initialize=1330664263
+    "BIGINT": Initialize=2976759809
 }
 
 // =============================================================================
@@ -66,6 +68,12 @@ Function.Types.IsString {
             ReturnValue(0)
         }
         IfCondition EqualTo(Types.IsFloat(value), 1) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(Types.IsComplex(value), 1) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(Types.IsBigInt(value), 1) ThenBlock: {
             ReturnValue(0)
         }
         IfCondition EqualTo(value, 0) ThenBlock: {
@@ -115,8 +123,47 @@ Function.Types.IsFloat {
         IfCondition LessThan(value, TypeMagic.PTR_MIN) ThenBlock: {
             ReturnValue(0)
         }
+        IfCondition GreaterEqual(value, 140737488355328) ThenBlock: {
+            ReturnValue(0)
+        }
         mag = Dereference(value)
         IfCondition EqualTo(mag, TypeMagic.FLOAT) ThenBlock: {
+            ReturnValue(1)
+        }
+        ReturnValue(0)
+    }
+}
+
+Function.Types.IsComplex {
+    Input: value: Address
+    Output: Integer
+    Body: {
+        IfCondition LessThan(value, TypeMagic.PTR_MIN) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition GreaterEqual(value, 140737488355328) ThenBlock: {
+            ReturnValue(0)
+        }
+        mag = Dereference(value)
+        IfCondition EqualTo(mag, TypeMagic.COMPLEX) ThenBlock: {
+            ReturnValue(1)
+        }
+        ReturnValue(0)
+    }
+}
+
+Function.Types.IsBigInt {
+    Input: value: Address
+    Output: Integer
+    Body: {
+        IfCondition LessThan(value, TypeMagic.PTR_MIN) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition GreaterEqual(value, 140737488355328) ThenBlock: {
+            ReturnValue(0)
+        }
+        mag = Dereference(value)
+        IfCondition EqualTo(mag, TypeMagic.BIGINT) ThenBlock: {
             ReturnValue(1)
         }
         ReturnValue(0)

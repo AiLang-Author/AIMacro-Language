@@ -25,9 +25,13 @@ Copyright (c) 2026 Sean Collins, 2 Paws Machine and Engineering. SCSL.
 from __future__ import annotations
 
 import argparse
+import fcntl
 import json
 import os
 import re
+import resource
+import signal
+import subprocess
 import sys
 import sysconfig
 import tempfile
@@ -35,6 +39,12 @@ import time
 from collections import Counter
 from datetime import date
 from pathlib import Path
+
+# One ailang.x at a time. 3 GiB AS / 60s CPU per child so a compile cannot
+# swap-thrash the box (previous 568-file run hard-locked at swap_reclaim).
+RSS_AS_BYTES = 4 * 1024 * 1024 * 1024
+CPU_SEC = 60
+LOCK_PATH = Path("/tmp/aimacro-runner.lock")
 
 ROOT = Path(__file__).resolve().parents[1]
 AIMACRO = ROOT / "aimacro.x"
@@ -68,6 +78,13 @@ SKIP_RULES: list[tuple[str, re.Pattern[str]]] = [
 ]
 
 
+def _limit_child() -> None:
+    # start_new_session already setsid(); a second setsid() raises and aborts spawn.
+    resource.setrlimit(resource.RLIMIT_AS, (RSS_AS_BYTES, RSS_AS_BYTES))
+    resource.setrlimit(resource.RLIMIT_CPU, (CPU_SEC, CPU_SEC + 5))
+    resource.setrlimit(resource.RLIMIT_CORE, (0, 0))
+
+
 def run_cmd(
     cmd: list[str],
     timeout: float,
@@ -75,19 +92,31 @@ def run_cmd(
     stdin_text: str | None = None,
 ) -> tuple[int, str, str]:
     try:
-        import subprocess
-
-        p = subprocess.run(
+        p = subprocess.Popen(
             cmd,
             cwd=cwd or ROOT,
-            capture_output=True,
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
             text=True,
-            timeout=timeout,
-            input=stdin_text,
+            start_new_session=True,
+            preexec_fn=_limit_child,
         )
-        return p.returncode, p.stdout, p.stderr
+    except OSError as e:
+        return 127, "", str(e)
+    try:
+        out, err = p.communicate(stdin_text, timeout=timeout)
+        return p.returncode if p.returncode is not None else 137, out, err
     except subprocess.TimeoutExpired:
-        return 124, "", "timeout"
+        try:
+            os.killpg(p.pid, signal.SIGKILL)
+        except (ProcessLookupError, PermissionError):
+            p.kill()
+        try:
+            out, err = p.communicate(timeout=2)
+        except Exception:
+            out, err = "", "timeout"
+        return 124, out or "", (err or "") + "timeout"
 
 
 def stdin_for(src: Path) -> str | None:
@@ -277,8 +306,8 @@ def run_suite(
     limit: int,
     compare_stdout: bool,
 ) -> dict:
-    if limit and limit > 0:
-        files = files[:limit]
+    if limit is not None:
+        files = files[: max(0, limit)]
     results: list[dict] = []
     t0 = time.time()
     n = len(files)
@@ -351,10 +380,26 @@ def run_suite(
                 "stage": fail_stage or "aimacro",
                 "rc": rc,
                 "err": (am_err or "")[-500:],
+                "out": (am_out or "")[-300:],
                 "tags": tags,
             }
             results.append(rec)
-            print(f"FAIL {rel} {rec['stage']} rc={rc}")
+            print(f"FAIL {rel} {rec['stage']} rc={rc}", flush=True)
+            continue
+        ran_m = re.search(r"unittest: ran (\d+) tests", am_out or "")
+        ran_n = int(ran_m.group(1)) if ran_m else 0
+        if stage == "run" and ran_n == 0:
+            rec = {
+                "file": rel,
+                "status": "fail",
+                "stage": "run",
+                "rc": 0,
+                "err": "no tests ran",
+                "out": (am_out or "")[-300:],
+                "tags": tags,
+            }
+            results.append(rec)
+            print(f"FAIL {rel} run no tests", flush=True)
             continue
         if compare_stdout and stage == "run":
             if am_out == py_out:
@@ -458,7 +503,7 @@ def format_scorecard(payload: dict) -> str:
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n", 1)[0])
     ap.add_argument("--verbose", action="store_true")
-    ap.add_argument("--timeout", type=float, default=8.0)
+    ap.add_argument("--timeout", type=float, default=90.0)
     ap.add_argument("--output-json", type=Path)
     ap.add_argument("--output-md", type=Path)
     ap.add_argument(
@@ -469,20 +514,33 @@ def main() -> int:
     ap.add_argument(
         "--corpus",
         choices=["curated", "lib", "test", "all"],
-        help="curated (default), CPython Lib, Lib/test, or all three",
+        default="test",
+        help="CPython Lib/test (default), stdlib lib, curated gold, or all",
     )
     ap.add_argument(
         "--stage",
         choices=["run", "compile", "transpile"],
         help="Override per-corpus default stage",
     )
-    ap.add_argument("--limit", type=int, default=0, help="Cap files per suite (smoke)")
+    ap.add_argument(
+        "--limit",
+        type=int,
+        default=None,
+        help="Cap files per suite. Omit for all. 0 means zero files.",
+    )
     ap.add_argument(
         "--skip-unsupported",
         action="store_true",
         help="Skip files tagged unittest/async/yield/decorator/match/c-api",
     )
     args = ap.parse_args()
+
+    lock_f = open(LOCK_PATH, "w")
+    try:
+        fcntl.flock(lock_f.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except BlockingIOError:
+        print("error: another aimacro runner holds /tmp/aimacro-runner.lock", file=sys.stderr)
+        return 3
 
     if not AIMACRO.is_file() or not AILANG.is_file():
         print("error: need ./aimacro.x and ./ailang.x", file=sys.stderr)
@@ -533,7 +591,7 @@ def main() -> int:
         )
     if args.corpus in ("test", "all"):
         suites_spec.append(
-            ("test", discover_test(stdlib), args.stage or "transpile", False, stdlib)
+            ("test", discover_test(stdlib), args.stage or "run", False, stdlib)
         )
 
     payload = {

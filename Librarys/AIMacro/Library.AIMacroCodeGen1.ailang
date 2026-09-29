@@ -1563,6 +1563,40 @@ Function.Gen_IsShimModule {
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
         cmp = StringCompare(name, "platform")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+        cmp = StringCompare(name, "unittest")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+        cmp = StringCompare(name, "test")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+        IfCondition EqualTo(Gen_NameStartsWith(name, "unittest"), 1) ThenBlock: {
+            ReturnValue(1)
+        }
+        IfCondition EqualTo(Gen_NameStartsWith(name, "test."), 1) ThenBlock: {
+            ReturnValue(1)
+        }
+        ReturnValue(0)
+    }
+}
+
+Function.Gen_NameStartsWith {
+    Input: name: Address
+    Input: prefix: Address
+    Output: Integer
+    Body: {
+        IfCondition Or(EqualTo(name, 0), EqualTo(prefix, 0)) ThenBlock: {
+            ReturnValue(0)
+        }
+        i = 0
+        WhileLoop EqualTo(1, 1) {
+            pb = GetByte(prefix, i)
+            IfCondition EqualTo(pb, 0) ThenBlock: {
+                ReturnValue(1)
+            }
+            sb = GetByte(name, i)
+            IfCondition NotEqual(sb, pb) ThenBlock: {
+                ReturnValue(0)
+            }
+            i = Add(i, 1)
+        }
         ReturnValue(0)
     }
 }

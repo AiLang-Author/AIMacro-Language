@@ -1691,6 +1691,12 @@ Function.Gen_MapBuiltin {
     Body: {
         cmp = StringCompare(name, "len")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.SmartLen") }
+
+        cmp = StringCompare(name, "eval")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.Eval") }
+
+        cmp = StringCompare(name, "pow")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.NumPow") }
         
         cmp = StringCompare(name, "str")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.Str") }

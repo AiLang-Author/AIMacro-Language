@@ -25,7 +25,8 @@ FixedPool.OOPGen {
     "method_impl_code": Initialize=0    
     "emitted_methods": Initialize=0
     "temp_counter": Initialize=0        
-    "has_classes": Initialize=0         
+    "has_classes": Initialize=0
+    "test_classes": Initialize=0
 }
 
 
@@ -64,6 +65,7 @@ Function.OOPGen_Init {
         OOPGen.class_init_code = Array.Create(128)
         OOPGen.method_impl_code = Array.Create(256)
         OOPGen.emitted_methods = Array.Create(256)
+        OOPGen.test_classes = Array.Create(32)
         OOPGen.temp_counter = 0
         OOPGen.has_classes = 0
         OOPGen.initialized = 1
@@ -98,6 +100,9 @@ Function.OOPGen_Reset {
             OOPGen.temp_counter = 0
             IfCondition NotEqual(OOPGen.emitted_methods, 0) ThenBlock: {
                 Array.Clear(OOPGen.emitted_methods)
+            }
+            IfCondition NotEqual(OOPGen.test_classes, 0) ThenBlock: {
+                Array.Clear(OOPGen.test_classes)
             }
         }
     }
@@ -1475,6 +1480,36 @@ Function.OOPGen_IsInstance {
 // CLASS REGISTRATION CODE GENERATION
 // =============================================================================
 
+Function.OOPGen_LooksLikeTestClass {
+    Input: name: Address
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(name, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        n = 0
+        WhileLoop NotEqual(GetByte(name, n), 0) {
+            n = Add(n, 1)
+        }
+        IfCondition GreaterEqual(n, 8) ThenBlock: {
+            IfCondition And(EqualTo(GetByte(name, Subtract(n, 8)), 84), And(EqualTo(GetByte(name, Subtract(n, 7)), 101), And(EqualTo(GetByte(name, Subtract(n, 6)), 115), And(EqualTo(GetByte(name, Subtract(n, 5)), 116), And(EqualTo(GetByte(name, Subtract(n, 4)), 67), And(EqualTo(GetByte(name, Subtract(n, 3)), 97), And(EqualTo(GetByte(name, Subtract(n, 2)), 115), EqualTo(GetByte(name, Subtract(n, 1)), 101)))))))) ThenBlock: {
+                ReturnValue(1)
+            }
+        }
+        IfCondition GreaterEqual(n, 5) ThenBlock: {
+            IfCondition And(EqualTo(GetByte(name, Subtract(n, 5)), 84), And(EqualTo(GetByte(name, Subtract(n, 4)), 101), And(EqualTo(GetByte(name, Subtract(n, 3)), 115), And(EqualTo(GetByte(name, Subtract(n, 2)), 116), EqualTo(GetByte(name, Subtract(n, 1)), 115))))) ThenBlock: {
+                ReturnValue(1)
+            }
+        }
+        IfCondition GreaterEqual(n, 4) ThenBlock: {
+            IfCondition And(EqualTo(GetByte(name, Subtract(n, 4)), 84), And(EqualTo(GetByte(name, Subtract(n, 3)), 101), And(EqualTo(GetByte(name, Subtract(n, 2)), 115), EqualTo(GetByte(name, Subtract(n, 1)), 116)))) ThenBlock: {
+                ReturnValue(1)
+            }
+        }
+        ReturnValue(0)
+    }
+}
+
 Function.OOPGen_EmitClassRegistration {
     Input: class_name: Address
     Input: parent: Address
@@ -1485,13 +1520,24 @@ Function.OOPGen_EmitClassRegistration {
         reg = StringConcat("    OOP.ClassDefine(\"", class_name)
         reg = StringConcat(reg, "\", ")
         use_parent = parent
+        is_test = 0
+        IfCondition EqualTo(OOPGen_LooksLikeTestClass(class_name), 1) ThenBlock: {
+            is_test = 1
+        }
         IfCondition NotEqual(parent, 0) ThenBlock: {
+            cmp_tc = StringCompare(parent, "TestCase")
+            IfCondition EqualTo(cmp_tc, 0) ThenBlock: {
+                is_test = 1
+            }
             cmp_ex = StringCompare(parent, "Exception")
             cmp_be = StringCompare(parent, "BaseException")
             cmp_ob = StringCompare(parent, "object")
             IfCondition Or(EqualTo(cmp_ex, 0), Or(EqualTo(cmp_be, 0), EqualTo(cmp_ob, 0))) ThenBlock: {
                 use_parent = 0
             }
+        }
+        IfCondition EqualTo(is_test, 1) ThenBlock: {
+            use_parent = "TestCase"
         }
         IfCondition EqualTo(use_parent, 0) ThenBlock: {
             reg = StringConcat(reg, "0")
@@ -1502,6 +1548,9 @@ Function.OOPGen_EmitClassRegistration {
         }
         reg = StringConcat(reg, ")\n")
         Array.Push(OOPGen.class_init_code, reg)
+        IfCondition EqualTo(is_test, 1) ThenBlock: {
+            Array.Push(OOPGen.test_classes, class_name)
+        }
         
         // Handle additional bases as mixins
         num_bases = Array.Size(bases)
@@ -1677,6 +1726,7 @@ Function.OOPGen_EmitClassInitSubroutine {
         Gen_Emit("Function.__OOP_ClassInit {\n")
         Gen_Emit("    Output: Integer\n")
         Gen_Emit("    Body: {\n")
+        Gen_Emit("        AIMacro.UnittestBoot()\n")
         
         num_lines = Array.Size(OOPGen.class_init_code)
         i = 0
