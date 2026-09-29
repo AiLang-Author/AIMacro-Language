@@ -1282,6 +1282,17 @@ Function.OOPGen_MethodCall {
             Gen_Emit(")")
             ReturnValue(0)
         }
+        cmp_un = StringCompare(method, "union")
+        IfCondition EqualTo(cmp_un, 0) ThenBlock: {
+            Gen_Emit("AIMacro.SetUnion(")
+            OOPGen_Expr(obj)
+            Gen_Emit(", ")
+            IfCondition And(NotEqual(args, 0), GreaterThan(Array.Size(args), 0)) ThenBlock: {
+                OOPGen_Expr(Array.Get(args, 0))
+            } ElseBlock: { Gen_Emit("0") }
+            Gen_Emit(")")
+            ReturnValue(0)
+        }
         cmp_sa = StringCompare(method, "__setattr__")
         IfCondition EqualTo(cmp_sa, 0) ThenBlock: {
             nsa = 0

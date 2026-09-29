@@ -697,6 +697,12 @@ Function.Gen_Import {
                     Gen_Emit("PyMod.")
                     Gen_Emit(module_name)
                     Gen_Emit(" = Types.GetNone()\n")
+                    IfCondition EqualTo(GetByte(module_name, 0), 95) ThenBlock: {
+                        Gen_EmitIndent()
+                        Gen_Emit("AIMacro.RaiseKind(20, \"No module named ")
+                        Gen_Emit(module_name)
+                        Gen_Emit("\")\n")
+                    }
                     i = Add(i, 1)
                     ContinueLoop
                 }
@@ -723,6 +729,12 @@ Function.Gen_Import {
             Gen_Emit("PyMod.")
             Gen_Emit(module_name)
             Gen_Emit(" = Types.GetNone()\n")
+            IfCondition EqualTo(GetByte(module_name, 0), 95) ThenBlock: {
+                Gen_EmitIndent()
+                Gen_Emit("AIMacro.RaiseKind(20, \"No module named ")
+                Gen_Emit(module_name)
+                Gen_Emit("\")\n")
+            }
             ReturnValue(0)
         }
         IfCondition EqualTo(Gen_IsShimModule(module_name), 1) ThenBlock: {
@@ -760,6 +772,12 @@ Function.Gen_FromImport {
                     }
                     i = Add(i, 1)
                 }
+            }
+            IfCondition And(NotEqual(module_name, 0), EqualTo(GetByte(module_name, 0), 95)) ThenBlock: {
+                Gen_EmitIndent()
+                Gen_Emit("AIMacro.RaiseKind(20, \"No module named ")
+                Gen_Emit(module_name)
+                Gen_Emit("\")\n")
             }
             ReturnValue(0)
         }
@@ -2800,6 +2818,8 @@ Function.Gen_Assignment {
             cmp = StringCompare(method, "strip")
             IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
             cmp = StringCompare(method, "count")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+            cmp = StringCompare(method, "union")
             IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
             cmp = StringCompare(method, "__setattr__")
             IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }

@@ -3291,11 +3291,66 @@ Function.AIMacro.IntOrBox {
     }
 }
 
+Function.AIMacro.ArrayConcat {
+    Input: a: Address
+    Input: b: Address
+    Output: Address
+    Body: {
+        na = 0
+        nb = 0
+        IfCondition EqualTo(Array.IsArray(a), 1) ThenBlock: {
+            na = Array.Size(a)
+        }
+        IfCondition EqualTo(Array.IsArray(b), 1) ThenBlock: {
+            nb = Array.Size(b)
+        }
+        out = Array.Create(Add(na, nb))
+        i = 0
+        WhileLoop LessThan(i, na) {
+            Array.Push(out, Array.Get(a, i))
+            i = Add(i, 1)
+        }
+        i = 0
+        WhileLoop LessThan(i, nb) {
+            Array.Push(out, Array.Get(b, i))
+            i = Add(i, 1)
+        }
+        ReturnValue(out)
+    }
+}
+
+Function.AIMacro.SetUnion {
+    Input: a: Address
+    Input: b: Address
+    Output: Address
+    Body: {
+        out = AIMacro.ArrayConcat(a, 0)
+        IfCondition EqualTo(Array.IsArray(b), 1) ThenBlock: {
+            n = Array.Size(b)
+            i = 0
+            WhileLoop LessThan(i, n) {
+                v = Array.Get(b, i)
+                IfCondition EqualTo(AIMacro.ListContains(out, v), 0) ThenBlock: {
+                    Array.Push(out, v)
+                }
+                i = Add(i, 1)
+            }
+        }
+        ReturnValue(out)
+    }
+}
+
 Function.AIMacro.NumAdd {
     Input: a: Address
     Input: b: Address
     Output: Address
     Body: {
+        IfCondition Or(EqualTo(Array.IsArray(a), 1), EqualTo(Array.IsArray(b), 1)) ThenBlock: {
+            ReturnValue(AIMacro.ArrayConcat(a, b))
+        }
+        IfCondition Or(EqualTo(AIMacro.LooksLikeString(a), 1), EqualTo(AIMacro.LooksLikeString(b), 1)) ThenBlock: {
+            ReturnValue(String.Concat(a, b))
+        }
         a = AIMacro.BoolVal(a)
         b = AIMacro.BoolVal(b)
         IfCondition Or(EqualTo(Types.IsFloat(a), 1), EqualTo(Types.IsFloat(b), 1)) ThenBlock: {

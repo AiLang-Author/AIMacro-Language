@@ -2607,6 +2607,9 @@ Function.Gen_MapMethod {
 
         cmp = StringCompare(method, "add")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.SetAdd") }
+
+        cmp = StringCompare(method, "union")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.SetUnion") }
         
          cmp = StringCompare(method, "pop")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.SmartPop") }

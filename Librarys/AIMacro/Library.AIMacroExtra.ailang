@@ -172,13 +172,28 @@ Function.AIMacro.ObjectGet {
             ReturnValue(0)
         }
         data = Hash.Get(obj, "__data__")
-        IfCondition EqualTo(data, 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(Hash.IsHash(data), 0) ThenBlock: {
-            ReturnValue(0)
+        IfCondition Or(EqualTo(data, 0), EqualTo(Hash.IsHash(data), 0)) ThenBlock: {
+            ReturnValue(Hash.Get(obj, field))
         }
         ReturnValue(Hash.Get(data, field))
+    }
+}
+
+// sys.hash_info — 32-bit values matching emitted sys.maxsize.
+Function.AIMacro.SysHashInfo {
+    Output: Address
+    Body: {
+        h = Hash.Create(16)
+        Hash.Set(h, "width", 32)
+        Hash.Set(h, "modulus", 2147483647)
+        Hash.Set(h, "inf", 314159)
+        Hash.Set(h, "nan", 0)
+        Hash.Set(h, "imag", 1000003)
+        Hash.Set(h, "algorithm", "siphash24")
+        Hash.Set(h, "hash_bits", 32)
+        Hash.Set(h, "seed_bits", 64)
+        Hash.Set(h, "cutoff", 0)
+        ReturnValue(h)
     }
 }
 

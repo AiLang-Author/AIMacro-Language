@@ -1266,6 +1266,8 @@ Function.Gen_FlattenExpr {
             IfCondition EqualTo(cmp, 0) ThenBlock: { is_known = 1 }
             cmp = StringCompare(method, "count")
             IfCondition EqualTo(cmp, 0) ThenBlock: { is_known = 1 }
+            cmp = StringCompare(method, "union")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { is_known = 1 }
             cmp = StringCompare(method, "__setattr__")
             IfCondition EqualTo(cmp, 0) ThenBlock: { is_known = 1 }
             // OOP MethodCall emits setup statements; do not prefix "temp = "

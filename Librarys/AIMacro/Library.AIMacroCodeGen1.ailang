@@ -1710,10 +1710,16 @@ Function.Gen_StdlibModKind {
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(4) }
         cmp = StringCompare(name, "math")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(5) }
+        cmp = StringCompare(name, "_math")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(5) }
         cmp = StringCompare(name, "aliases")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(6) }
         cmp = StringCompare(name, "unicodedata")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(7) }
+        cmp = StringCompare(name, "string")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(8) }
+        cmp = StringCompare(name, "_string")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(8) }
         ReturnValue(0)
     }
 }
@@ -1748,6 +1754,8 @@ Function.Gen_IsStdlibAttr {
             IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
             cmp = StringCompare(attr, "maxsize")
             IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+            cmp = StringCompare(attr, "hash_info")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
             ReturnValue(0)
         }
         IfCondition EqualTo(kind, 5) ThenBlock: {
@@ -1780,6 +1788,27 @@ Function.Gen_IsStdlibAttr {
         }
         IfCondition EqualTo(kind, 7) ThenBlock: {
             cmp = StringCompare(attr, "unidata_version")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(kind, 8) ThenBlock: {
+            cmp = StringCompare(attr, "ascii_letters")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+            cmp = StringCompare(attr, "ascii_lowercase")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+            cmp = StringCompare(attr, "ascii_uppercase")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+            cmp = StringCompare(attr, "digits")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+            cmp = StringCompare(attr, "hexdigits")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+            cmp = StringCompare(attr, "octdigits")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+            cmp = StringCompare(attr, "punctuation")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+            cmp = StringCompare(attr, "whitespace")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+            cmp = StringCompare(attr, "printable")
             IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
             ReturnValue(0)
         }
@@ -1968,6 +1997,11 @@ Function.Gen_EmitStdlibAttr {
                 Gen_EmitNumber(2147483647)
                 ReturnValue(1)
             }
+            cmp = StringCompare(attr, "hash_info")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                Gen_Emit("AIMacro.SysHashInfo()")
+                ReturnValue(1)
+            }
         }
         IfCondition EqualTo(kind, 5) ThenBlock: {
             cmp = StringCompare(attr, "pi")
@@ -2092,6 +2126,53 @@ Function.Gen_EmitStdlibAttr {
             cmp = StringCompare(attr, "linesep")
             IfCondition EqualTo(cmp, 0) ThenBlock: {
                 Gen_Emit("\"\\n\"")
+                ReturnValue(1)
+            }
+        }
+        IfCondition EqualTo(kind, 8) ThenBlock: {
+            cmp = StringCompare(attr, "ascii_lowercase")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                Gen_Emit("\"abcdefghijklmnopqrstuvwxyz\"")
+                ReturnValue(1)
+            }
+            cmp = StringCompare(attr, "ascii_uppercase")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                Gen_Emit("\"ABCDEFGHIJKLMNOPQRSTUVWXYZ\"")
+                ReturnValue(1)
+            }
+            cmp = StringCompare(attr, "ascii_letters")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                Gen_Emit("\"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ\"")
+                ReturnValue(1)
+            }
+            cmp = StringCompare(attr, "digits")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                Gen_Emit("\"0123456789\"")
+                ReturnValue(1)
+            }
+            cmp = StringCompare(attr, "hexdigits")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                Gen_Emit("\"0123456789abcdefABCDEF\"")
+                ReturnValue(1)
+            }
+            cmp = StringCompare(attr, "octdigits")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                Gen_Emit("\"01234567\"")
+                ReturnValue(1)
+            }
+            cmp = StringCompare(attr, "punctuation")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                Gen_Emit("\"!\\\"#$%&'()*+,-./:;<=>?@[\\\\]^_`{|}~\"")
+                ReturnValue(1)
+            }
+            cmp = StringCompare(attr, "whitespace")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                Gen_Emit("\" \\t\\n\\r\\v\\f\"")
+                ReturnValue(1)
+            }
+            cmp = StringCompare(attr, "printable")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                Gen_Emit("\"0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!\\\"#$%&'()*+,-./:;<=>?@[\\\\]^_`{|}~ \\t\\n\\r\\v\\f\"")
                 ReturnValue(1)
             }
         }
