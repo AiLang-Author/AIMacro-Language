@@ -627,6 +627,8 @@ Function.OOPGen_MethodImpl {
         params = AST_GetField(method_node, "params")
         body = AST_GetField(method_node, "body")
         return_type = AST_GetField(method_node, "return_type")
+        Gen.temp_counter = 0
+        OOPGen.temp_counter = 0
         
         OOPGen.current_method = method_name
         IfCondition NotEqual(Gen.enclosing_locals, 0) ThenBlock: {
@@ -842,6 +844,8 @@ Function.OOPGen_MethodBody {
         num_stmts = Array.Size(body)
         i = 0
         WhileLoop LessThan(i, num_stmts) {
+            Gen.temp_counter = 0
+            OOPGen.temp_counter = 0
             stmt = Array.Get(body, i)
             OOPGen_Statement(stmt)
             i = Add(i, 1)

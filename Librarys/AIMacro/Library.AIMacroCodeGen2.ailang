@@ -1062,6 +1062,7 @@ Function.Gen_Function {
         
         // RESET STATE FOR NEW FUNCTION
         Gen.temp_counter = 0
+        OOPGen.temp_counter = 0
         Array.Clear(Gen.param_names)
         Array.Clear(Gen.string_vars)
         Array.Clear(Gen.list_vars)
@@ -1156,6 +1157,7 @@ Function.Gen_PackedFunction {
 
         // RESET STATE FOR NEW FUNCTION
         Gen.temp_counter = 0
+        OOPGen.temp_counter = 0
         Array.Clear(Gen.param_names)
         Array.Clear(Gen.string_vars)
         Array.Clear(Gen.list_vars)
@@ -1238,6 +1240,10 @@ Function.Gen_Body {
         n = Array.Size(stmts)
         i = 0
         WhileLoop LessThan(i, n) {
+            // Reuse t0.. and __oop_args_0.. per statement so a long TestCase
+            // method does not emit 256+ locals (AILANG frame overflow SIGSEGV).
+            Gen.temp_counter = 0
+            OOPGen.temp_counter = 0
             stmt = Array.Get(stmts, i)
             IfCondition GreaterThan(Gen.try_depth, 0) ThenBlock: {
                 Gen_EmitIndent()

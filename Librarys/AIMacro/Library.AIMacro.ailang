@@ -3686,6 +3686,15 @@ Function.AIMacro.NumBitOr {
     Input: b: Address
     Output: Address
     Body: {
+        IfCondition And(GreaterEqual(a, TypeMagic.HEAP_START), LessThan(a, 140737488355328)) ThenBlock: {
+            IfCondition EqualTo(Dereference(a), TypeMagic.BOOL) ThenBlock: {
+                IfCondition And(GreaterEqual(b, TypeMagic.HEAP_START), LessThan(b, 140737488355328)) ThenBlock: {
+                    IfCondition EqualTo(Dereference(b), TypeMagic.BOOL) ThenBlock: {
+                        ReturnValue(AIMacro.Bool(BitwiseOr(Dereference(Add(a, 8)), Dereference(Add(b, 8)))))
+                    }
+                }
+            }
+        }
         a = AIMacro.BoolVal(a)
         b = AIMacro.BoolVal(b)
         ReturnValue(BitwiseOr(a, b))
@@ -3697,6 +3706,15 @@ Function.AIMacro.NumBitXor {
     Input: b: Address
     Output: Address
     Body: {
+        IfCondition And(GreaterEqual(a, TypeMagic.HEAP_START), LessThan(a, 140737488355328)) ThenBlock: {
+            IfCondition EqualTo(Dereference(a), TypeMagic.BOOL) ThenBlock: {
+                IfCondition And(GreaterEqual(b, TypeMagic.HEAP_START), LessThan(b, 140737488355328)) ThenBlock: {
+                    IfCondition EqualTo(Dereference(b), TypeMagic.BOOL) ThenBlock: {
+                        ReturnValue(AIMacro.Bool(BitwiseXor(Dereference(Add(a, 8)), Dereference(Add(b, 8)))))
+                    }
+                }
+            }
+        }
         a = AIMacro.BoolVal(a)
         b = AIMacro.BoolVal(b)
         ReturnValue(BitwiseXor(a, b))
@@ -3708,6 +3726,15 @@ Function.AIMacro.NumBitAnd {
     Input: b: Address
     Output: Address
     Body: {
+        IfCondition And(GreaterEqual(a, TypeMagic.HEAP_START), LessThan(a, 140737488355328)) ThenBlock: {
+            IfCondition EqualTo(Dereference(a), TypeMagic.BOOL) ThenBlock: {
+                IfCondition And(GreaterEqual(b, TypeMagic.HEAP_START), LessThan(b, 140737488355328)) ThenBlock: {
+                    IfCondition EqualTo(Dereference(b), TypeMagic.BOOL) ThenBlock: {
+                        ReturnValue(AIMacro.Bool(BitwiseAnd(Dereference(Add(a, 8)), Dereference(Add(b, 8)))))
+                    }
+                }
+            }
+        }
         a = AIMacro.BoolVal(a)
         b = AIMacro.BoolVal(b)
         ReturnValue(BitwiseAnd(a, b))
@@ -3825,13 +3852,21 @@ Function.AIMacro.NumPow {
         // Zero extra locals. Nested BoolVal/pool loops smashed the caller so
         // EqualTo(result, 16) passed and PrintNumber(result) SIGSEGV'd.
         IfCondition And(GreaterEqual(a, TypeMagic.HEAP_START), LessThan(a, 140737488355328)) ThenBlock: {
-            IfCondition EqualTo(Dereference(a), TypeMagic.BIGINT) ThenBlock: {
-                ReturnValue(AIMacro.PowSmallBig(a, b))
+            IfCondition EqualTo(Dereference(a), TypeMagic.BOOL) ThenBlock: {
+                a = Dereference(Add(a, 8))
+            } ElseBlock: {
+                IfCondition EqualTo(Dereference(a), TypeMagic.BIGINT) ThenBlock: {
+                    ReturnValue(AIMacro.PowSmallBig(a, b))
+                }
+                ReturnValue(AIMacro.NumPowRest(a, b))
             }
-            ReturnValue(AIMacro.NumPowRest(a, b))
         }
         IfCondition And(GreaterEqual(b, TypeMagic.HEAP_START), LessThan(b, 140737488355328)) ThenBlock: {
-            ReturnValue(AIMacro.NumPowRest(a, b))
+            IfCondition EqualTo(Dereference(b), TypeMagic.BOOL) ThenBlock: {
+                b = Dereference(Add(b, 8))
+            } ElseBlock: {
+                ReturnValue(AIMacro.NumPowRest(a, b))
+            }
         }
         IfCondition LessThan(b, 0) ThenBlock: {
             ReturnValue(AIMacro.NumPowRest(a, b))
@@ -3996,6 +4031,9 @@ Function.AIMacro.NumNeg {
     Output: Address
     Body: {
         IfCondition And(GreaterEqual(a, TypeMagic.HEAP_START), LessThan(a, 140737488355328)) ThenBlock: {
+            IfCondition EqualTo(Dereference(a), TypeMagic.BOOL) ThenBlock: {
+                ReturnValue(Subtract(0, Dereference(Add(a, 8))))
+            }
             IfCondition EqualTo(Dereference(a), TypeMagic.COMPLEX) ThenBlock: {
                 ReturnValue(AIMacro.ComplexBox(Float_Sub(0, Dereference(Add(a, 8))), Float_Sub(0, Dereference(Add(a, 16)))))
             }
