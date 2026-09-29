@@ -24,7 +24,8 @@ python3 tools/aimacro_cpython_runner.py \
 ```
 
 `./AIMacro/scripts/run_conformance.sh` is the same command. One `ailang.x` at
-a time, `RLIMIT_AS` 4 GiB, `RLIMIT_CPU` 60 s, wall timeout 90 s.
+a time, `RLIMIT_AS` 4 GiB, 2 s CPU and 2 s wall per child. Longer than that
+is a stall or a perf hole.
 
 See [CONFORMANCE.md](CONFORMANCE.md).
 

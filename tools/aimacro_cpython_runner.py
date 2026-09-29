@@ -5,7 +5,7 @@ aimacro_cpython_runner.py — CPython 3.11 Lib/test conformance grind.
 The score is CPython Lib/test (regrtest shape, 568 files on 3.11): transpile,
 compile, run TestCase.test* methods. ran-0 is FAIL. Skip tags are not a pass.
 
-Pipeline per file (one ailang.x at a time, RLIMIT_AS 4GiB, RLIMIT_CPU 60s):
+Pipeline per file (one ailang.x at a time, RLIMIT_AS 4GiB, 2s CPU / 2s wall):
   1. py2aim.py     indent Python → AIMacro `{ }`
   2. ./aimacro.x   .aim → .ailang
   3. ./ailang.x    compile
@@ -36,10 +36,12 @@ from collections import Counter
 from datetime import date
 from pathlib import Path
 
-# One ailang.x at a time. 4 GiB AS / 60s CPU per child so a compile cannot
-# swap-thrash the box (previous 568-file run hard-locked at swap_reclaim).
+# One ailang.x at a time. 4 GiB AS. 2s CPU / 2s wall per child: the compiler
+# does 3 MB in ~0.67s and ELFs start in ~5ms. Longer than that is a stall
+# or a perf hole, not a wait we should sit on.
 RSS_AS_BYTES = 4 * 1024 * 1024 * 1024
-CPU_SEC = 60
+CPU_SEC = 2
+DEFAULT_TIMEOUT = 2.0
 LOCK_PATH = Path("/tmp/aimacro-runner.lock")
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -52,7 +54,7 @@ PYTHON = sys.executable
 def _limit_child() -> None:
     # start_new_session already setsid(); a second setsid() raises and aborts spawn.
     resource.setrlimit(resource.RLIMIT_AS, (RSS_AS_BYTES, RSS_AS_BYTES))
-    resource.setrlimit(resource.RLIMIT_CPU, (CPU_SEC, CPU_SEC + 5))
+    resource.setrlimit(resource.RLIMIT_CPU, (CPU_SEC, CPU_SEC))
     resource.setrlimit(resource.RLIMIT_CORE, (0, 0))
 
 
@@ -84,7 +86,7 @@ def run_cmd(
         except (ProcessLookupError, PermissionError):
             p.kill()
         try:
-            out, err = p.communicate(timeout=2)
+            out, err = p.communicate(timeout=0.2)
         except Exception:
             out, err = "", "timeout"
         return 124, out or "", (err or "") + "timeout"
@@ -113,10 +115,12 @@ def feature_tags(src_text: str) -> list[str]:
     return []
 
 
-def py2aim_text(src_text: str, dest: Path) -> tuple[int, str]:
+def py2aim_text(
+    src_text: str, dest: Path, timeout: float = DEFAULT_TIMEOUT
+) -> tuple[int, str]:
     rc, out, err = run_cmd(
         [PYTHON, str(PY2AIM), "--stdin"],
-        15,
+        timeout,
         stdin_text=src_text,
     )
     if rc != 0:
@@ -125,8 +129,8 @@ def py2aim_text(src_text: str, dest: Path) -> tuple[int, str]:
     return 0, ""
 
 
-def py2aim(src: Path, dest: Path) -> tuple[int, str]:
-    rc, out, err = run_cmd([PYTHON, str(PY2AIM), str(src), str(dest)], 10)
+def py2aim(src: Path, dest: Path, timeout: float = DEFAULT_TIMEOUT) -> tuple[int, str]:
+    rc, out, err = run_cmd([PYTHON, str(PY2AIM), str(src), str(dest)], timeout)
     return rc, err or out
 
 
@@ -282,7 +286,7 @@ def run_suite(
         tags = feature_tags(text)
         stem = unique_stem(src, name_root)
         aim = work / (stem + ".aim")
-        rc, err = py2aim_text(text, aim)
+        rc, err = py2aim_text(text, aim, timeout)
         if rc != 0:
             rec = {
                 "file": rel,
@@ -395,7 +399,13 @@ def format_scorecard(payload: dict) -> str:
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n", 1)[0])
     ap.add_argument("--verbose", action="store_true")
-    ap.add_argument("--timeout", type=float, default=90.0)
+    ap.add_argument(
+        "--timeout",
+        type=float,
+        default=DEFAULT_TIMEOUT,
+        help="Wall seconds per child (py2aim, aimacro, ailang, ELF). Default 2. "
+        "A hit is a stall or a perf hole.",
+    )
     ap.add_argument("--output-json", type=Path)
     ap.add_argument("--output-md", type=Path)
     ap.add_argument(
