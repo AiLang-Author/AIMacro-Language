@@ -3393,6 +3393,21 @@ Function.AIMacro.NumBitShl {
     Body: {
         a = AIMacro.BoolVal(a)
         b = AIMacro.BoolVal(b)
+        // x86 masks shift count to 6 bits (1<<128 == 1). Python 1<<k for k>=64
+        // is a long; box 2^k so 0 <= n < 1<<128 holds for every 64-bit n.
+        IfCondition GreaterEqual(b, 64) ThenBlock: {
+            IfCondition EqualTo(a, 0) ThenBlock: {
+                ReturnValue(0)
+            }
+            bits = Float_FromInt(a)
+            two = Float_FromInt(2)
+            i = 0
+            WhileLoop LessThan(i, b) {
+                bits = Float_Mul(bits, two)
+                i = Add(i, 1)
+            }
+            ReturnValue(AIMacro.FloatBox(bits))
+        }
         ReturnValue(ShiftLeft(a, b))
     }
 }

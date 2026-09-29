@@ -1032,6 +1032,9 @@ Function.Gen_Function {
         Array.Clear(Gen.param_names)
         Array.Clear(Gen.string_vars)
         Array.Clear(Gen.list_vars)
+        IfCondition NotEqual(Gen.enclosing_locals, 0) ThenBlock: {
+            Array.Clear(Gen.enclosing_locals)
+        }
         // Keep module-level dict marks (copy.py _copy_dispatch.get inside Functions)
         kept = Array.Create(16)
         dsz = Array.Size(Gen.dict_vars)
@@ -1124,6 +1127,9 @@ Function.Gen_PackedFunction {
         Array.Clear(Gen.string_vars)
         Array.Clear(Gen.list_vars)
         Array.Clear(Gen.dict_vars)
+        IfCondition NotEqual(Gen.enclosing_locals, 0) ThenBlock: {
+            Array.Clear(Gen.enclosing_locals)
+        }
 
         // Register param names for body generation
         j = 0
@@ -2683,6 +2689,13 @@ Function.Gen_Assignment {
         IfCondition EqualTo(value_type, Node.LAMBDA) ThenBlock: {
             Gen_MarkCallableVar(target_name)
         }
+        IfCondition EqualTo(value_type, Node.IDENT) ThenBlock: {
+            vname = ArrayGet(value, 3)
+            mapped_b = Gen_MapBuiltin(vname)
+            IfCondition NotEqual(StringCompare(mapped_b, vname), 0) ThenBlock: {
+                Gen_MarkCallableVar(target_name)
+            }
+        }
         // getattr may return a callable (copy.replace: func = getattr(cls, "__replace__", None))
         IfCondition EqualTo(value_type, Node.CALL) ThenBlock: {
             call_name = ArrayGet(value, 3)
@@ -2783,6 +2796,12 @@ Function.Gen_Assignment {
             cmp = StringCompare(method, "replace")
             IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
             cmp = StringCompare(method, "startswith")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+            cmp = StringCompare(method, "strip")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+            cmp = StringCompare(method, "count")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+            cmp = StringCompare(method, "__setattr__")
             IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
             
             // List methods - only if object is known list
