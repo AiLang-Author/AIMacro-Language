@@ -1066,6 +1066,30 @@ Function.String.Concat {
     Input: str2: Address
     Output: Address
     Body: {
+        // Codegen can emit Concat for False+False / True+True when a temp
+        // was marked string. Unbox bools and small ints so PEP 285 works
+        // and StringLength is never called on 0/1.
+        n1ok = 0
+        v1 = str1
+        IfCondition EqualTo(Types.IsBool(str1), 1) ThenBlock: {
+            v1 = Dereference(Add(str1, 8))
+            n1ok = 1
+        }
+        IfCondition And(EqualTo(n1ok, 0), LessThan(str1, 4000000)) ThenBlock: {
+            n1ok = 1
+        }
+        n2ok = 0
+        v2 = str2
+        IfCondition EqualTo(Types.IsBool(str2), 1) ThenBlock: {
+            v2 = Dereference(Add(str2, 8))
+            n2ok = 1
+        }
+        IfCondition And(EqualTo(n2ok, 0), LessThan(str2, 4000000)) ThenBlock: {
+            n2ok = 1
+        }
+        IfCondition And(EqualTo(n1ok, 1), EqualTo(n2ok, 1)) ThenBlock: {
+            ReturnValue(Add(v1, v2))
+        }
         // Handle nulls
         IfCondition EqualTo(str1, 0) ThenBlock: {
             IfCondition EqualTo(str2, 0) ThenBlock: {

@@ -1567,6 +1567,8 @@ Function.Gen_IsShimModule {
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
         cmp = StringCompare(name, "unittest")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+        cmp = StringCompare(name, "__future__")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
         cmp = StringCompare(name, "test")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
         IfCondition EqualTo(Gen_NameStartsWith(name, "unittest"), 1) ThenBlock: {
@@ -1885,6 +1887,8 @@ Function.Gen_IsStdlibAttr {
             IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
             cmp = StringCompare(attr, "linesep")
             IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+            cmp = StringCompare(attr, "startfile")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
             ReturnValue(0)
         }
         ReturnValue(0)
@@ -2162,6 +2166,11 @@ Function.Gen_EmitStdlibAttr {
             cmp = StringCompare(attr, "linesep")
             IfCondition EqualTo(cmp, 0) ThenBlock: {
                 Gen_Emit("\"\\n\"")
+                ReturnValue(1)
+            }
+            cmp = StringCompare(attr, "startfile")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                Gen_Emit("AddressOf(AIMacro.StartFile)")
                 ReturnValue(1)
             }
         }

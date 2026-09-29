@@ -797,7 +797,7 @@ Function.Gen_BinaryOp {
                         Gen_Expr(left)
                         Gen_Emit("))")
                     } ElseBlock: {
-                        Gen_Emit("AIMacro.Bool(DictGen_SmartContains(")
+                        Gen_Emit("AIMacro.Bool(AIMacro.Contains(")
                         Gen_Expr(right)
                         Gen_Emit(", ")
                         Gen_Expr(left)
@@ -980,9 +980,15 @@ Function.Gen_CallExpr {
                 Gen_Emit(")")
                 ReturnValue(0)
             }
+            n = Array.Size(args)
+            IfCondition EqualTo(n, 0) ThenBlock: {
+                Gen_Emit("AIMacro.SmartCall(")
+                Gen_EmitIdent(name)
+                Gen_Emit(")")
+                ReturnValue(0)
+            }
             Gen_Emit("CallIndirect(")
             Gen_EmitIdent(name)
-            n = Array.Size(args)
             i = 0
             WhileLoop LessThan(i, n) {
                 Gen_Emit(", ")
@@ -992,6 +998,22 @@ Function.Gen_CallExpr {
                 }
                 Gen_Expr(arg)
                 i = Add(i, 1)
+            }
+            Gen_Emit(")")
+            ReturnValue(0)
+        }
+
+        cmp_apo = StringCompare(name, "assert_python_ok")
+        IfCondition EqualTo(cmp_apo, 0) ThenBlock: {
+            Gen_Emit("AIMacro.AssertPythonOk(")
+            IfCondition And(NotEqual(args, 0), GreaterThan(Array.Size(args), 0)) ThenBlock: {
+                a_apo = Array.Get(args, 0)
+                IfCondition EqualTo(Gen_HasCall(a_apo), 1) ThenBlock: {
+                    a_apo = Gen_FlattenExpr(a_apo)
+                }
+                Gen_Expr(a_apo)
+            } ElseBlock: {
+                Gen_Emit("0")
             }
             Gen_Emit(")")
             ReturnValue(0)
@@ -1501,19 +1523,25 @@ Function.Gen_CallExpr {
             // Unbound callee: CallIndirect(0, ...) is illegal AILang
             // (literal 0 + args → Expected ')' ). Stub whole call as None.
             IfCondition Or(EqualTo(Gen_IsParam(name), 1), EqualTo(Gen_IsCallableVar(name), 1)) ThenBlock: {
-                Gen_Emit("CallIndirect(")
-                Gen_EmitIdent(name)
-                i = 0
-                WhileLoop LessThan(i, n) {
-                    Gen_Emit(", ")
-                    arg = Array.Get(args, i)
-                    IfCondition EqualTo(Gen_HasCall(arg), 1) ThenBlock: {
-                        arg = Gen_FlattenExpr(arg)
+                IfCondition EqualTo(n, 0) ThenBlock: {
+                    Gen_Emit("AIMacro.SmartCall(")
+                    Gen_EmitIdent(name)
+                    Gen_Emit(")")
+                } ElseBlock: {
+                    Gen_Emit("CallIndirect(")
+                    Gen_EmitIdent(name)
+                    i = 0
+                    WhileLoop LessThan(i, n) {
+                        Gen_Emit(", ")
+                        arg = Array.Get(args, i)
+                        IfCondition EqualTo(Gen_HasCall(arg), 1) ThenBlock: {
+                            arg = Gen_FlattenExpr(arg)
+                        }
+                        Gen_Expr(arg)
+                        i = Add(i, 1)
                     }
-                    Gen_Expr(arg)
-                    i = Add(i, 1)
+                    Gen_Emit(")")
                 }
-                Gen_Emit(")")
             } ElseBlock: {
                 Gen_Emit("Types.GetNone()")
             }
@@ -1633,6 +1661,40 @@ Function.Gen_PrintCall {
         n = Array.Size(args)
         sep = Gen_FindKw(args, "sep")
         end = Gen_FindKw(args, "end")
+        filekw = Gen_FindKw(args, "file")
+        IfCondition NotEqual(filekw, 0) ThenBlock: {
+            IfCondition EqualTo(Gen_HasCall(filekw), 1) ThenBlock: {
+                filekw = Gen_FlattenExpr(filekw)
+            }
+            i = 0
+            WhileLoop LessThan(i, n) {
+                arg = Array.Get(args, i)
+                IfCondition NotEqual(AST_Type(arg), Node.KW_ARG) ThenBlock: {
+                    IfCondition EqualTo(Gen_HasCall(arg), 1) ThenBlock: {
+                        arg = Gen_FlattenExpr(arg)
+                    }
+                    Gen_Emit("AIMacro.PrintTo(")
+                    Gen_Expr(filekw)
+                    Gen_Emit(", ")
+                    Gen_Expr(arg)
+                    Gen_Emit(")\n")
+                    Gen_EmitIndent()
+                }
+                i = Add(i, 1)
+            }
+            IfCondition EqualTo(end, 0) ThenBlock: {
+                Gen_Emit("AIMacro.PrintTo(")
+                Gen_Expr(filekw)
+                Gen_Emit(", \"\\n\")")
+            } ElseBlock: {
+                Gen_Emit("AIMacro.PrintTo(")
+                Gen_Expr(filekw)
+                Gen_Emit(", ")
+                Gen_Expr(end)
+                Gen_Emit(")")
+            }
+            ReturnValue(0)
+        }
         n_pos = 0
         i = 0
         WhileLoop LessThan(i, n) {
@@ -1874,7 +1936,65 @@ Function.Gen_MapBuiltin {
         cmp = StringCompare(name, "object")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.ObjectType") }
 
+        cmp = StringCompare(name, "exec")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.Exec") }
+
+        cmp = StringCompare(name, "compile")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.PyCompile") }
+
+        cmp = StringCompare(name, "assert_python_ok")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.AssertPythonOk") }
+
         ReturnValue(name)
+    }
+}
+
+Function.Gen_IsDropRecvMethod {
+    Input: method: Address
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(method, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        cmp = StringCompare(method, "iskeyword")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+        cmp = StringCompare(method, "issoftkeyword")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+        cmp = StringCompare(method, "captured_output")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+        cmp = StringCompare(method, "getvalue")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+        cmp = StringCompare(method, "assert_python_ok")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+        ReturnValue(0)
+    }
+}
+
+Function.Gen_EmitDropRecvMethod {
+    Input: method: Address
+    Input: args: Address
+    Body: {
+        fn = "AIMacro.KeywordIsKeyword"
+        cmp = StringCompare(method, "issoftkeyword")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { fn = "AIMacro.KeywordIsSoftKeyword" }
+        cmp = StringCompare(method, "captured_output")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { fn = "AIMacro.CapturedOutput" }
+        cmp = StringCompare(method, "getvalue")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { fn = "AIMacro.IoGetValue" }
+        cmp = StringCompare(method, "assert_python_ok")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { fn = "AIMacro.AssertPythonOk" }
+        Gen_Emit(fn)
+        Gen_Emit("(")
+        IfCondition And(NotEqual(args, 0), GreaterThan(Array.Size(args), 0)) ThenBlock: {
+            a0 = Array.Get(args, 0)
+            IfCondition EqualTo(Gen_HasCall(a0), 1) ThenBlock: {
+                a0 = Gen_FlattenExpr(a0)
+            }
+            Gen_Expr(a0)
+        } ElseBlock: {
+            Gen_Emit("0")
+        }
+        Gen_Emit(")")
     }
 }
 
@@ -2194,6 +2314,10 @@ Function.Gen_MethodCallExpr {
         obj = ArrayGet(node, 3)
         method = ArrayGet(node, 4)
         args = ArrayGet(node, 5)
+        IfCondition EqualTo(Gen_IsDropRecvMethod(method), 1) ThenBlock: {
+            Gen_EmitDropRecvMethod(method, args)
+            ReturnValue(0)
+        }
         
         IfCondition EqualTo(Gen_EmitStdlibMethod(obj, method, args), 1) ThenBlock: {
             ReturnValue(0)
@@ -2759,6 +2883,18 @@ Function.Gen_MapMethod {
 
         cmp = StringCompare(method, "compile")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.ReCompile") }
+
+        cmp = StringCompare(method, "iskeyword")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.KeywordIsKeyword") }
+
+        cmp = StringCompare(method, "issoftkeyword")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.KeywordIsSoftKeyword") }
+
+        cmp = StringCompare(method, "captured_output")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.CapturedOutput") }
+
+        cmp = StringCompare(method, "getvalue")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.IoGetValue") }
 
         // Other list methods
         cmp = StringCompare(method, "clear")

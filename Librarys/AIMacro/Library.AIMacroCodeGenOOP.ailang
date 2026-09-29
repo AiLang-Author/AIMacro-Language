@@ -1241,6 +1241,46 @@ Function.OOPGen_MethodCall {
             Gen_Emit(")")
             ReturnValue(0)
         }
+        cmp_iskw = StringCompare(method, "iskeyword")
+        IfCondition EqualTo(cmp_iskw, 0) ThenBlock: {
+            Gen_Emit("AIMacro.KeywordIsKeyword(")
+            IfCondition And(NotEqual(args, 0), GreaterThan(Array.Size(args), 0)) ThenBlock: {
+                OOPGen_Expr(Array.Get(args, 0))
+            } ElseBlock: {
+                Gen_Emit("0")
+            }
+            Gen_Emit(")")
+            ReturnValue(0)
+        }
+        cmp_isskw = StringCompare(method, "issoftkeyword")
+        IfCondition EqualTo(cmp_isskw, 0) ThenBlock: {
+            Gen_Emit("AIMacro.KeywordIsSoftKeyword(")
+            IfCondition And(NotEqual(args, 0), GreaterThan(Array.Size(args), 0)) ThenBlock: {
+                OOPGen_Expr(Array.Get(args, 0))
+            } ElseBlock: {
+                Gen_Emit("0")
+            }
+            Gen_Emit(")")
+            ReturnValue(0)
+        }
+        cmp_cap = StringCompare(method, "captured_output")
+        IfCondition EqualTo(cmp_cap, 0) ThenBlock: {
+            Gen_Emit("AIMacro.CapturedOutput(")
+            IfCondition And(NotEqual(args, 0), GreaterThan(Array.Size(args), 0)) ThenBlock: {
+                OOPGen_Expr(Array.Get(args, 0))
+            } ElseBlock: {
+                Gen_Emit("0")
+            }
+            Gen_Emit(")")
+            ReturnValue(0)
+        }
+        cmp_gv = StringCompare(method, "getvalue")
+        IfCondition EqualTo(cmp_gv, 0) ThenBlock: {
+            Gen_Emit("AIMacro.IoGetValue(")
+            OOPGen_Expr(obj)
+            Gen_Emit(")")
+            ReturnValue(0)
+        }
         cmp_rep = StringCompare(method, "replace")
         IfCondition EqualTo(cmp_rep, 0) ThenBlock: {
             n_rep = 0

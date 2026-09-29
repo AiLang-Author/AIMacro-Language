@@ -1280,6 +1280,14 @@ Function.Gen_FlattenExpr {
             IfCondition EqualTo(cmp, 0) ThenBlock: { is_known = 1 }
             cmp = StringCompare(method, "__setattr__")
             IfCondition EqualTo(cmp, 0) ThenBlock: { is_known = 1 }
+            IfCondition EqualTo(Gen_IsDropRecvMethod(method), 1) ThenBlock: {
+                Gen_EmitIndent()
+                Gen_Emit(temp)
+                Gen_Emit(" = ")
+                Gen_EmitDropRecvMethod(method, args)
+                Gen_Emit("\n")
+                ReturnValue(Gen_MakeIdent(temp))
+            }
             // OOP MethodCall emits setup statements; do not prefix "temp = "
             IfCondition EqualTo(is_known, 0) ThenBlock: {
                 IfCondition EqualTo(args, 0) ThenBlock: {
@@ -1573,12 +1581,13 @@ Function.Gen_FlattenExpr {
                 ReturnValue(Gen_ShortCircuit(op, left, right))
             }
             
+            // Classify PLUS on the original nodes. Flattened temps can
+            // inherit a stale string mark (t0/t1 reuse) and mis-emit Concat
+            // for False+False.
+            left_is_str = Gen_InvolvesString(left)
+            right_is_str = Gen_InvolvesString(right)
             flat_left = Gen_FlattenExpr(left)
             flat_right = Gen_FlattenExpr(right)
-            
-            // Check if this is a string concat
-            left_is_str = Gen_InvolvesString(flat_left)
-            right_is_str = Gen_InvolvesString(flat_right)
             is_string_op = Or(EqualTo(left_is_str, 1), EqualTo(right_is_str, 1))
             
             IfCondition And(EqualTo(op, Token.PLUS), EqualTo(is_string_op, 1)) ThenBlock: {
@@ -2077,16 +2086,23 @@ Function.Gen_FlattenIndirectCall {
         temp = Gen_TempName()
         Gen_EmitIndent()
         Gen_Emit(temp)
+        nargs = 0
+        IfCondition NotEqual(args, 0) ThenBlock: {
+            nargs = Array.Size(args)
+        }
+        IfCondition EqualTo(nargs, 0) ThenBlock: {
+            Gen_Emit(" = AIMacro.SmartCall(")
+            Gen_Expr(flat_callee)
+            Gen_Emit(")\n")
+            ReturnValue(Gen_MakeIdent(temp))
+        }
         Gen_Emit(" = CallIndirect(")
         Gen_Expr(flat_callee)
-        IfCondition NotEqual(args, 0) ThenBlock: {
-            n = Array.Size(args)
-            i = 0
-            WhileLoop LessThan(i, n) {
-                Gen_Emit(", ")
-                Gen_Expr(Array.Get(args, i))
-                i = Add(i, 1)
-            }
+        i = 0
+        WhileLoop LessThan(i, nargs) {
+            Gen_Emit(", ")
+            Gen_Expr(Array.Get(args, i))
+            i = Add(i, 1)
         }
         Gen_Emit(")\n")
         ReturnValue(Gen_MakeIdent(temp))

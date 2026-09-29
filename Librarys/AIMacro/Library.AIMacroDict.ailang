@@ -273,10 +273,15 @@ Function.DictGen_SmartGet {
             ReturnValue(Hash.Get(container, key))
         }
         
-        // Check if it's a TArray (list)
         is_array = Array.IsArray(container)
         IfCondition EqualTo(is_array, 1) ThenBlock: {
-            ReturnValue(Array.Get(container, key))
+            idx = AIMacro.BoolVal(key)
+            n = Array.Size(container)
+            IfCondition Or(LessThan(idx, 0), GreaterEqual(idx, n)) ThenBlock: {
+                AIMacro.RaiseKind(17, "index out of range")
+                ReturnValue(0)
+            }
+            ReturnValue(Array.Get(container, idx))
         }
         // String/int/other — do not Array.Get (SIGSEGV on enum FlagBoundary unpack)
         ReturnValue(0)

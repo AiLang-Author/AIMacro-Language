@@ -573,7 +573,7 @@
       "stage": "run",
       "rc": -11,
       "err": "",
-      "out": "  BoolTest.test_subclass\nFAIL: assertRaises\n  BoolTest.test_repr\nFAIL: assertIs\nFAIL: assertIs\n  BoolTest.test_str\n  BoolTest.test_int\n  BoolTest.test_float\nFAIL: assertEqual\n  BoolTest.test_complex\nFAIL: assertEqual\n  BoolTest.test_math\nFAIL: assertEqual\n",
+      "out": "  BoolTest.test_subclass\n  BoolTest.test_repr\n  BoolTest.test_str\n  BoolTest.test_int\n  BoolTest.test_float\n  BoolTest.test_complex\n  BoolTest.test_math\n",
       "tags": [],
       "key": "test_bool.py",
       "updated": "2026-09-29"
@@ -1059,7 +1059,7 @@
       "stage": "run",
       "rc": -11,
       "err": "",
-      "out": "  TestContains.test_common_tests\nFAIL: assertIn\nFAIL: assertIn\n",
+      "out": "  TestContains.test_common_tests\n  TestContains.test_builtin_sequence_types\n",
       "tags": [],
       "key": "test_contains.py",
       "updated": "2026-09-29"
@@ -1957,12 +1957,9 @@
     },
     "test_future_stmt/test_future_multiple_features.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_future_stmt/test_future_multiple_features.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": 1,
-      "err": "",
-      "out": "  TestMultipleFeatures.test_unicode_literals\n  TestMultipleFeatures.test_print_function\nfoo\nFAIL: assertEqual\nunittest: ran 2 tests, 1 failed\n",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_future_stmt/test_future_multiple_features.py",
       "updated": "2026-09-29"
     },
@@ -3038,12 +3035,9 @@
     },
     "test_keyword.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_keyword.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": 1,
-      "err": "",
-      "out": "are_keywords\nFAIL: assertIn\nFAIL: assertIn\n  Test_iskeyword.test_match_and_case_are_soft_keywords\nFAIL: assertIn\nFAIL: assertIn\nFAIL: assertIn\n  Test_iskeyword.test_keywords_are_sorted\nFAIL: assertEqual\n  Test_iskeyword.test_softkeywords_are_sorted\nFAIL: assertEqual\nunittest: ran 11 tests, 8 failed\n",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_keyword.py",
       "updated": "2026-09-29"
     },
@@ -4350,12 +4344,9 @@
     },
     "test_startfile.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_startfile.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": 1,
-      "err": "",
-      "out": "  TestCase.test_nonexisting\nFAIL: assertRaises\n  TestCase.test_empty\n  TestCase.test_python\nunittest: ran 3 tests, 1 failed\n",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_startfile.py",
       "updated": "2026-09-29"
     },
@@ -4886,12 +4877,9 @@
     },
     "test_tools/test_reindent.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_tools/test_reindent.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": 1,
-      "err": "",
-      "out": "  ReindentTests.test_noargs\n  ReindentTests.test_help\nFAIL: assertEqual\n  ReindentTests.test_reindent_file_with_bad_encoding\nFAIL: assertEqual\nunittest: ran 3 tests, 2 failed\n",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_tools/test_reindent.py",
       "updated": "2026-09-29"
     },
@@ -5262,12 +5250,9 @@
     },
     "test_utf8source.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_utf8source.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": 1,
-      "err": "",
-      "out": "  PEP3120Test.test_pep3120\nFAIL: assertEqual\n  PEP3120Test.test_badsyntax\n  BuiltinCompileTests.test_latin1\nFAIL: assertEqual\nunittest: ran 3 tests, 2 failed\n",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_utf8source.py",
       "updated": "2026-09-29"
     },

@@ -1013,6 +1013,14 @@ Function.Gen_Node {
         
         // METHOD_CALL as statement - flatten arguments first
         IfCondition EqualTo(t, Node.METHOD_CALL) ThenBlock: {
+            method = ArrayGet(node, 4)
+            args = ArrayGet(node, 5)
+            IfCondition EqualTo(Gen_IsDropRecvMethod(method), 1) ThenBlock: {
+                Gen_EmitIndent()
+                Gen_EmitDropRecvMethod(method, args)
+                Gen_Emit("\n")
+                ReturnValue(0)
+            }
             Gen_FlattenMethodArgs(node)
             Gen_EmitIndent()
             Gen_MethodCallExpr(node)
@@ -1869,6 +1877,10 @@ Function.Gen_With {
         Gen_Emit(" = ")
         Gen_Expr(expr)
         Gen_Emit("\n")
+        Gen_EmitIndent()
+        Gen_Emit("AIMacro.WithEnter(")
+        Gen_Emit(ctx)
+        Gen_Emit(")\n")
         IfCondition NotEqual(as_name, 0) ThenBlock: {
             Gen_EmitIndent()
             Gen_Emit(as_name)
@@ -1880,7 +1892,7 @@ Function.Gen_With {
         Gen_Body(body)
         Gen.try_depth = Subtract(Gen.try_depth, 1)
         Gen_EmitIndent()
-        Gen_Emit("AIMacro.FileClose(")
+        Gen_Emit("AIMacro.WithExit(")
         Gen_Emit(ctx)
         Gen_Emit(")\n")
     }
@@ -2575,6 +2587,19 @@ Function.Gen_Return {
             obj = AST_GetField(value, "object")
             method = AST_GetField(value, "method")
             args = AST_GetField(value, "args")
+            IfCondition EqualTo(Gen_IsDropRecvMethod(method), 1) ThenBlock: {
+                result_var = Gen_TempName()
+                Gen_EmitIndent()
+                Gen_Emit(result_var)
+                Gen_Emit(" = ")
+                Gen_EmitDropRecvMethod(method, args)
+                Gen_Emit("\n")
+                Gen_EmitIndent()
+                Gen_Emit("ReturnValue(")
+                Gen_Emit(result_var)
+                Gen_Emit(")\n")
+                ReturnValue(0)
+            }
             
             // Check if object is a known builtin type
             obj_type = AST_Type(obj)
@@ -2792,6 +2817,14 @@ Function.Gen_Assignment {
             obj = AST_GetField(value, "object")
             method = AST_GetField(value, "method")
             args = AST_GetField(value, "args")
+            IfCondition EqualTo(Gen_IsDropRecvMethod(method), 1) ThenBlock: {
+                Gen_EmitIndent()
+                Gen_EmitIdentLhs(target)
+                Gen_Emit(" = ")
+                Gen_EmitDropRecvMethod(method, args)
+                Gen_Emit("\n")
+                ReturnValue(0)
+            }
             
             // First check if object is a known container type
             obj_type = AST_Type(obj)

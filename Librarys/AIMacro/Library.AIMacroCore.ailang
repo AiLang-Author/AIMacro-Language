@@ -441,18 +441,55 @@ Function.Lex_ReadString {
                         esc = Lex_Char()
                         IfCondition EqualTo(esc, 110) ThenBlock: {
                             buf_pos = Lex_BufPut(10, buf_pos)
+                            Lex_Advance()
                         } ElseBlock: {
                             IfCondition EqualTo(esc, 116) ThenBlock: {
                                 buf_pos = Lex_BufPut(9, buf_pos)
+                                Lex_Advance()
                             } ElseBlock: {
                                 IfCondition EqualTo(esc, 114) ThenBlock: {
                                     buf_pos = Lex_BufPut(13, buf_pos)
+                                    Lex_Advance()
                                 } ElseBlock: {
-                                    buf_pos = Lex_BufPut(esc, buf_pos)
+                                    IfCondition EqualTo(esc, 120) ThenBlock: {
+                                        Lex_Advance()
+                                        hx1 = Lex_Char()
+                                        Lex_Advance()
+                                        hx2 = Lex_Char()
+                                        hv1 = 0
+                                        hv2 = 0
+                                        IfCondition And(GreaterEqual(hx1, 48), LessEqual(hx1, 57)) ThenBlock: {
+                                            hv1 = Subtract(hx1, 48)
+                                        } ElseBlock: {
+                                            IfCondition And(GreaterEqual(hx1, 65), LessEqual(hx1, 70)) ThenBlock: {
+                                                hv1 = Add(Subtract(hx1, 65), 10)
+                                            } ElseBlock: {
+                                                IfCondition And(GreaterEqual(hx1, 97), LessEqual(hx1, 102)) ThenBlock: {
+                                                    hv1 = Add(Subtract(hx1, 97), 10)
+                                                }
+                                            }
+                                        }
+                                        IfCondition And(GreaterEqual(hx2, 48), LessEqual(hx2, 57)) ThenBlock: {
+                                            hv2 = Subtract(hx2, 48)
+                                        } ElseBlock: {
+                                            IfCondition And(GreaterEqual(hx2, 65), LessEqual(hx2, 70)) ThenBlock: {
+                                                hv2 = Add(Subtract(hx2, 65), 10)
+                                            } ElseBlock: {
+                                                IfCondition And(GreaterEqual(hx2, 97), LessEqual(hx2, 102)) ThenBlock: {
+                                                    hv2 = Add(Subtract(hx2, 97), 10)
+                                                }
+                                            }
+                                        }
+                                        buf_pos = Lex_BufPut(Add(Multiply(hv1, 16), hv2), buf_pos)
+                                        Lex_Advance()
+                                    } ElseBlock: {
+                                        buf_pos = Lex_BufPut(92, buf_pos)
+                                        buf_pos = Lex_BufPut(esc, buf_pos)
+                                        Lex_Advance()
+                                    }
                                 }
                             }
                         }
-                        Lex_Advance()
                     } ElseBlock: {
                         buf_pos = Lex_BufPut(ch, buf_pos)
                         Lex_Advance()

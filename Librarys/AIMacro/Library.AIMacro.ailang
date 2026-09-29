@@ -3156,6 +3156,7 @@ Function.AIMacro.ToFloatBits {
         IfCondition EqualTo(AIMacro.IsNone(value), 1) ThenBlock: {
             ReturnValue(0)
         }
+        value = AIMacro.BoolVal(value)
         ReturnValue(Float_FromInt(value))
     }
 }
@@ -3170,6 +3171,7 @@ Function.AIMacro.Float {
         IfCondition EqualTo(Types.IsString(value), 1) ThenBlock: {
             ReturnValue(AIMacro.FloatParse(value))
         }
+        value = AIMacro.BoolVal(value)
         ReturnValue(AIMacro.FloatBox(Float_FromInt(value)))
     }
 }
@@ -4074,9 +4076,7 @@ Function.AIMacro.NumPos {
     Input: a: Address
     Output: Address
     Body: {
-        // unary + : identity for ints/floats; objects may define __pos__
-        a = AIMacro.BoolVal(a)
-        ReturnValue(a)
+        ReturnValue(AIMacro.BoolVal(a))
     }
 }
 
@@ -4085,8 +4085,10 @@ Function.AIMacro.NumEq {
     Input: b: Address
     Output: Address
     Body: {
-        a = AIMacro.BoolVal(a)
-        b = AIMacro.BoolVal(b)
+        av = AIMacro.BoolVal(a)
+        bv = AIMacro.BoolVal(b)
+        a = av
+        b = bv
         IfCondition Or(EqualTo(Types.IsBigInt(a), 1), EqualTo(Types.IsBigInt(b), 1)) ThenBlock: {
             IfCondition EqualTo(Types.IsBigInt(a), 0) ThenBlock: {
                 a = AIMacro.BigIntFromInt(a)
