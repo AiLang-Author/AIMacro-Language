@@ -3889,7 +3889,13 @@ Function.AIMacro.NumPow {
             IfCondition EqualTo(Dereference(b), TypeMagic.BOOL) ThenBlock: {
                 b = Dereference(Add(b, 8))
             } ElseBlock: {
-                ReturnValue(AIMacro.NumPowRest(a, b))
+                IfCondition Or(EqualTo(Dereference(b), TypeMagic.FLOAT), EqualTo(Dereference(b), TypeMagic.COMPLEX)) ThenBlock: {
+                    ReturnValue(AIMacro.NumPowRest(a, b))
+                }
+                IfCondition EqualTo(Dereference(b), TypeMagic.BIGINT) ThenBlock: {
+                    ReturnValue(AIMacro.NumPowRest(a, b))
+                }
+                b = 0
             }
         }
         IfCondition LessThan(b, 0) ThenBlock: {
