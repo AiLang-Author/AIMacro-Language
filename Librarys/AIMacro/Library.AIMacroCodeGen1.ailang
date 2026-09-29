@@ -41,6 +41,7 @@ FixedPool.Gen {
     "module_vars": Initialize=0, CanChange=True
     "import_stubs": Initialize=0, CanChange=True
     "enclosing_params": Initialize=0, CanChange=True
+    "enclosing_locals": Initialize=0, CanChange=True
     "deferred_freevars": Initialize=0, CanChange=True
     "nest_bind_names": Initialize=0, CanChange=True
     "nest_bind_funcs": Initialize=0, CanChange=True
@@ -80,6 +81,7 @@ Function.Gen_Init {
         Gen.module_vars = Array.Create(64)
         Gen.import_stubs = Array.Create(32)
         Gen.enclosing_params = Array.Create(32)
+        Gen.enclosing_locals = Array.Create(32)
         Gen.deferred_freevars = Array.Create(64)
         Gen.nest_bind_names = Array.Create(64)
         Gen.nest_bind_funcs = Array.Create(64)
@@ -130,6 +132,9 @@ Function.Gen_Free {
         }
         IfCondition NotEqual(Gen.packed_funcs, 0) ThenBlock: {
             Array.Destroy(Gen.packed_funcs)
+        }
+        IfCondition NotEqual(Gen.enclosing_locals, 0) ThenBlock: {
+            Array.Destroy(Gen.enclosing_locals)
         }
     }
 }
@@ -665,6 +670,17 @@ Function.Gen_IsParam {
     }
 }
 
+Function.Gen_IsEnclosingParam {
+    Input: name: Address
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(Gen.enclosing_params, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        ReturnValue(Gen_NameInArray(name, Gen.enclosing_params))
+    }
+}
+
 
 // LHS of assignment / unpack: PyMod + param prefix only — never value stubs
 // (NEXT/PREV/KEY/RESULT/match/case must remain writable names).
@@ -711,6 +727,11 @@ Function.Gen_EmitIdent {
         is_param = Gen_IsParam(name)
         IfCondition EqualTo(is_param, 1) ThenBlock: {
             Gen_Emit("p_")
+            Gen_Emit(name)
+            ReturnValue(0)
+        }
+        // Packed __init__ unpacks hex/bytes/int as locals; they shadow PyMod/builtins
+        IfCondition EqualTo(Gen_IsEnclosingParam(name), 1) ThenBlock: {
             Gen_Emit(name)
             ReturnValue(0)
         }
@@ -2046,6 +2067,24 @@ Function.Gen_SnapshotFreevars {
             }
             i = Add(i, 1)
         }
+        IfCondition NotEqual(Gen.enclosing_locals, 0) ThenBlock: {
+            n = Array.Size(Gen.enclosing_locals)
+            i = 0
+            WhileLoop LessThan(i, n) {
+                name = Array.Get(Gen.enclosing_locals, i)
+                skip = Gen_NameInArray(name, nest_params)
+                IfCondition EqualTo(skip, 0) ThenBlock: {
+                    used = Gen_NameInArray(name, refs)
+                    IfCondition EqualTo(used, 1) ThenBlock: {
+                        dup = Gen_NameInArray(name, fv)
+                        IfCondition EqualTo(dup, 0) ThenBlock: {
+                            Array.Push(fv, name)
+                        }
+                    }
+                }
+                i = Add(i, 1)
+            }
+        }
         Array.Destroy(refs)
         ReturnValue(fv)
     }
@@ -2098,21 +2137,35 @@ Function.Gen_SnapshotFreevarsAll {
                 i = Add(i, 1)
             }
         }
-        IfCondition EqualTo(Gen.enclosing_params, 0) ThenBlock: {
-            ReturnValue(fv)
-        }
-        n = Array.Size(Gen.enclosing_params)
-        i = 0
-        WhileLoop LessThan(i, n) {
-            name = Array.Get(Gen.enclosing_params, i)
-            skip = Gen_NameInArray(name, nest_params)
-            IfCondition EqualTo(skip, 0) ThenBlock: {
-                dup = Gen_NameInArray(name, fv)
-                IfCondition EqualTo(dup, 0) ThenBlock: {
-                    Array.Push(fv, name)
+        IfCondition NotEqual(Gen.enclosing_params, 0) ThenBlock: {
+            n = Array.Size(Gen.enclosing_params)
+            i = 0
+            WhileLoop LessThan(i, n) {
+                name = Array.Get(Gen.enclosing_params, i)
+                skip = Gen_NameInArray(name, nest_params)
+                IfCondition EqualTo(skip, 0) ThenBlock: {
+                    dup = Gen_NameInArray(name, fv)
+                    IfCondition EqualTo(dup, 0) ThenBlock: {
+                        Array.Push(fv, name)
+                    }
                 }
+                i = Add(i, 1)
             }
-            i = Add(i, 1)
+        }
+        IfCondition NotEqual(Gen.enclosing_locals, 0) ThenBlock: {
+            n = Array.Size(Gen.enclosing_locals)
+            i = 0
+            WhileLoop LessThan(i, n) {
+                name = Array.Get(Gen.enclosing_locals, i)
+                skip = Gen_NameInArray(name, nest_params)
+                IfCondition EqualTo(skip, 0) ThenBlock: {
+                    dup = Gen_NameInArray(name, fv)
+                    IfCondition EqualTo(dup, 0) ThenBlock: {
+                        Array.Push(fv, name)
+                    }
+                }
+                i = Add(i, 1)
+            }
         }
         ReturnValue(fv)
     }
@@ -2177,6 +2230,8 @@ Function.Gen_MarkEnclosingLocal {
         IfCondition EqualTo(name, 0) ThenBlock: {
             ReturnValue(0)
         }
+        // Assigned locals are freevars for nested defs; they must not join
+        // enclosing_params (packed/method Inputs emit as bare names).
         IfCondition EqualTo(Gen.enclosing_params, 0) ThenBlock: {
             ReturnValue(0)
         }
@@ -2184,9 +2239,12 @@ Function.Gen_MarkEnclosingLocal {
         IfCondition EqualTo(esz, 0) ThenBlock: {
             ReturnValue(0)
         }
-        dup = Gen_NameInArray(name, Gen.enclosing_params)
+        IfCondition EqualTo(Gen.enclosing_locals, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        dup = Gen_NameInArray(name, Gen.enclosing_locals)
         IfCondition EqualTo(dup, 0) ThenBlock: {
-            Array.Push(Gen.enclosing_params, name)
+            Array.Push(Gen.enclosing_locals, name)
         }
     }
 }

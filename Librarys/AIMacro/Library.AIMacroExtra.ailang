@@ -4,6 +4,7 @@
 
 LibraryImport.Array
 LibraryImport.Hash
+LibraryImport.OOP
 LibraryImport.AIMacro.AIMacroTypes
 LibraryImport.AIMacro.AIMacro
 
@@ -157,6 +158,188 @@ Function.AIMacro.UnameSysname {
     }
 }
 
+// OOP.ObjectGet/Set on None (AddressOf(GetNone)) or a function pointer
+// Hash.Get's 0 then Hash.Get/Set(0) Dereference(NULL).
+Function.AIMacro.ObjectGet {
+    Input: obj: Address
+    Input: field: Address
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(obj, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(Hash.IsHash(obj), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        data = Hash.Get(obj, "__data__")
+        IfCondition EqualTo(data, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(Hash.IsHash(data), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        ReturnValue(Hash.Get(data, field))
+    }
+}
+
+Function.AIMacro.ObjectSet {
+    Input: obj: Address
+    Input: field: Address
+    Input: value: Integer
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(obj, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(Hash.IsHash(obj), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        data = Hash.Get(obj, "__data__")
+        IfCondition EqualTo(data, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(Hash.IsHash(data), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        Hash.Set(data, field, value)
+        ReturnValue(1)
+    }
+}
+
+// Packed __init__ (UUID has 8 params) expects one p__args array including self.
+// OOP.ObjectNewInit CallIndirects unpacked (self, arg0, ...) and SIGSEGV's Hash.Get on int keys.
+Function.AIMacro.ObjectNewInitPacked {
+    Input: class_name: Address
+    Input: init_args: Address
+    Output: Address
+    Body: {
+        obj = OOP.ObjectNew(class_name)
+        IfCondition EqualTo(obj, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(OOP.MethodExists(obj, "__init__"), 0) ThenBlock: {
+            ReturnValue(obj)
+        }
+        n = 0
+        IfCondition NotEqual(init_args, 0) ThenBlock: {
+            n = Array.Size(init_args)
+        }
+        pack = Array.Create(Add(n, 1))
+        Array.Push(pack, obj)
+        i = 0
+        WhileLoop LessThan(i, n) {
+            Array.Push(pack, Array.Get(init_args, i))
+            i = Add(i, 1)
+        }
+        cls = Hash.Get(obj, "__class__")
+        func = OOP._MethodLookupWithInheritance(cls, "__init__")
+        IfCondition NotEqual(func, 0) ThenBlock: {
+            CallIndirect(func, pack)
+        }
+        ReturnValue(obj)
+    }
+}
+
+// Packed methods unpack p__args by index; missing slots are Python defaults (None).
+Function.AIMacro.PackedGet {
+    Input: args: Address
+    Input: index: Integer
+    Input: default: Address
+    Output: Address
+    Body: {
+        IfCondition EqualTo(args, 0) ThenBlock: {
+            ReturnValue(default)
+        }
+        IfCondition EqualTo(Array.IsArray(args), 0) ThenBlock: {
+            ReturnValue(default)
+        }
+        n = Array.Size(args)
+        IfCondition GreaterEqual(index, n) ThenBlock: {
+            ReturnValue(default)
+        }
+        IfCondition LessThan(index, 0) ThenBlock: {
+            ReturnValue(default)
+        }
+        ReturnValue(Array.Get(args, index))
+    }
+}
+
+Function.AIMacro.SmartCount {
+    Input: obj: Address
+    Input: item: Address
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(obj, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(Array.IsArray(obj), 1) ThenBlock: {
+            ReturnValue(AIMacro.ListCount(obj, item))
+        }
+        IfCondition EqualTo(Hash.IsHash(obj), 1) ThenBlock: {
+            ReturnValue(0)
+        }
+        ReturnValue(String.Count(obj, item))
+    }
+}
+
+Function.AIMacro.Strip {
+    Input: str: Address
+    Input: chars: Address
+    Output: Address
+    Body: {
+        IfCondition EqualTo(str, 0) ThenBlock: {
+            ReturnValue("")
+        }
+        IfCondition Or(EqualTo(chars, 0), EqualTo(StringLength(chars), 0)) ThenBlock: {
+            ReturnValue(String.Strip(str))
+        }
+        n = StringLength(str)
+        start = 0
+        WhileLoop LessThan(start, n) {
+            c = GetByte(str, start)
+            found = 0
+            j = 0
+            clen = StringLength(chars)
+            WhileLoop LessThan(j, clen) {
+                IfCondition EqualTo(GetByte(chars, j), c) ThenBlock: {
+                    found = 1
+                }
+                j = Add(j, 1)
+            }
+            IfCondition EqualTo(found, 0) ThenBlock: {
+                BreakLoop
+            }
+            start = Add(start, 1)
+        }
+        end = n
+        WhileLoop GreaterThan(end, start) {
+            c = GetByte(str, Subtract(end, 1))
+            found = 0
+            j = 0
+            clen = StringLength(chars)
+            WhileLoop LessThan(j, clen) {
+                IfCondition EqualTo(GetByte(chars, j), c) ThenBlock: {
+                    found = 1
+                }
+                j = Add(j, 1)
+            }
+            IfCondition EqualTo(found, 0) ThenBlock: {
+                BreakLoop
+            }
+            end = Subtract(end, 1)
+        }
+        slen = Subtract(end, start)
+        out = Allocate(Add(slen, 1))
+        k = 0
+        WhileLoop LessThan(k, slen) {
+            SetByte(out, k, GetByte(str, Add(start, k)))
+            k = Add(k, 1)
+        }
+        SetByte(out, slen, 0)
+        ReturnValue(out)
+    }
+}
+
 Function.AIMacro.NoOp {
     Input: a: Address
     Output: Address
@@ -263,15 +446,59 @@ Function.AIMacro.HasAttr {
     }
 }
 
-// setattr(obj, name, value) — compile conformance for copy.py.
-// Stub: no-op return None.
+// setattr(obj, name, value) and object.__setattr__(obj, name, value)
 Function.AIMacro.SetAttr {
     Input: obj: Address
     Input: name: Address
     Input: value: Address
     Output: Address
     Body: {
+        AIMacro.ObjectSet(obj, name, value)
         ReturnValue(Types.GetNone())
+    }
+}
+
+// int(x, base) — UUID int_(hex, 16) and builtin int with radix.
+Function.AIMacro.IntBase {
+    Input: value: Address
+    Input: base: Integer
+    Output: Integer
+    Body: {
+        IfCondition Or(EqualTo(base, 0), EqualTo(base, 10)) ThenBlock: {
+            ReturnValue(AIMacro.Int(value))
+        }
+        IfCondition EqualTo(value, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        n = StringLength(value)
+        // 32 hex digits is 128 bits; keep a non-negative boxed float so
+        // 0 <= int < 1<<128 (also boxed) holds on 64-bit.
+        accf = Float_FromInt(0)
+        bf = Float_FromInt(base)
+        i = 0
+        WhileLoop LessThan(i, n) {
+            c = GetByte(value, i)
+            d = Subtract(0, 1)
+            IfCondition And(GreaterEqual(c, 48), LessThan(c, 58)) ThenBlock: {
+                d = Subtract(c, 48)
+            }
+            IfCondition And(GreaterEqual(c, 65), LessThan(c, 91)) ThenBlock: {
+                d = Add(Subtract(c, 65), 10)
+            }
+            IfCondition And(GreaterEqual(c, 97), LessThan(c, 123)) ThenBlock: {
+                d = Add(Subtract(c, 97), 10)
+            }
+            IfCondition And(GreaterEqual(d, 0), LessThan(d, base)) ThenBlock: {
+                accf = Float_Mul(accf, bf)
+                df = Float_FromInt(d)
+                accf = Float_Add(accf, df)
+            }
+            i = Add(i, 1)
+        }
+        IfCondition GreaterThan(n, 15) ThenBlock: {
+            ReturnValue(AIMacro.FloatBox(accf))
+        }
+        ReturnValue(Float_ToInt(accf))
     }
 }
 

@@ -197,7 +197,7 @@ Function.OOPGen_FlattenExpr {
             IfCondition Or(EqualTo(cmp_contains, 0), Or(EqualTo(cmp_copy, 0), Or(EqualTo(cmp_code, 0), Or(EqualTo(cmp_dict, 0), Or(EqualTo(cmp_app, 0), Or(EqualTo(cmp_join, 0), Or(EqualTo(cmp_init, 0), Or(EqualTo(cmp_str, 0), Or(EqualTo(cmp_clo, 0), Or(EqualTo(cmp_glo, 0), Or(EqualTo(cmp_tb, 0), EqualTo(cmp_fr, 0)))))))))))) ThenBlock: {
                 Gen_Emit(" = 0\n")
             } ElseBlock: {
-                Gen_Emit(" = OOP.ObjectGet(")
+                Gen_Emit(" = AIMacro.ObjectGet(")
                 OOPGen_Expr(obj)
                 Gen_Emit(", \"")
                 Gen_Emit(attr)
@@ -624,6 +624,9 @@ Function.OOPGen_MethodImpl {
         return_type = AST_GetField(method_node, "return_type")
         
         OOPGen.current_method = method_name
+        IfCondition NotEqual(Gen.enclosing_locals, 0) ThenBlock: {
+            Array.Clear(Gen.enclosing_locals)
+        }
         
         // Build function name: ClassName_methodName
         func_name = StringConcat(class_name, "_")
@@ -677,9 +680,9 @@ Function.OOPGen_MethodImpl {
                 param_name = ArrayGet(param, 0)
                 Gen_EmitIndent()
                 Gen_Emit(param_name)
-                Gen_Emit(" = DictGen_SmartGet(p__args, ")
+                Gen_Emit(" = AIMacro.PackedGet(p__args, ")
                 Gen_EmitNumber(i)
-                Gen_Emit(")\n")
+                Gen_Emit(", Types.GetNone())\n")
                 i = Add(i, 1)
             }
             enc_names = Array.Create(8)
@@ -952,7 +955,7 @@ Function.OOPGen_AttrAssign {
         }
         
         Gen_EmitIndent()
-        Gen_Emit("OOP.ObjectSet(")
+        Gen_Emit("AIMacro.ObjectSet(")
         OOPGen_Expr(obj)
         Gen_Emit(", \"")
         Gen_Emit(attr)
@@ -1131,7 +1134,7 @@ Function.OOPGen_AttrAccess {
         IfCondition Or(EqualTo(cmp_contains, 0), Or(EqualTo(cmp_copy, 0), Or(EqualTo(cmp_code, 0), Or(EqualTo(cmp_dict, 0), Or(EqualTo(cmp_app, 0), Or(EqualTo(cmp_join, 0), Or(EqualTo(cmp_init, 0), Or(EqualTo(cmp_str, 0), Or(EqualTo(cmp_clo, 0), Or(EqualTo(cmp_glo, 0), Or(EqualTo(cmp_tb, 0), EqualTo(cmp_fr, 0)))))))))))) ThenBlock: {
             Gen_Emit("0")
         } ElseBlock: {
-            Gen_Emit("OOP.ObjectGet(")
+            Gen_Emit("AIMacro.ObjectGet(")
             OOPGen_Expr(obj)
             Gen_Emit(", \"")
             Gen_Emit(attr)
@@ -1254,6 +1257,59 @@ Function.OOPGen_MethodCall {
             IfCondition And(NotEqual(args, 0), GreaterThan(Array.Size(args), 0)) ThenBlock: {
                 OOPGen_Expr(Array.Get(args, 0))
             } ElseBlock: { Gen_Emit("\"\"") }
+            Gen_Emit(")")
+            ReturnValue(0)
+        }
+        cmp_st = StringCompare(method, "strip")
+        IfCondition EqualTo(cmp_st, 0) ThenBlock: {
+            Gen_Emit("AIMacro.Strip(")
+            OOPGen_Expr(obj)
+            Gen_Emit(", ")
+            IfCondition And(NotEqual(args, 0), GreaterThan(Array.Size(args), 0)) ThenBlock: {
+                OOPGen_Expr(Array.Get(args, 0))
+            } ElseBlock: { Gen_Emit("0") }
+            Gen_Emit(")")
+            ReturnValue(0)
+        }
+        cmp_ct = StringCompare(method, "count")
+        IfCondition EqualTo(cmp_ct, 0) ThenBlock: {
+            Gen_Emit("AIMacro.SmartCount(")
+            OOPGen_Expr(obj)
+            Gen_Emit(", ")
+            IfCondition And(NotEqual(args, 0), GreaterThan(Array.Size(args), 0)) ThenBlock: {
+                OOPGen_Expr(Array.Get(args, 0))
+            } ElseBlock: { Gen_Emit("Types.GetNone()") }
+            Gen_Emit(")")
+            ReturnValue(0)
+        }
+        cmp_sa = StringCompare(method, "__setattr__")
+        IfCondition EqualTo(cmp_sa, 0) ThenBlock: {
+            nsa = 0
+            IfCondition NotEqual(args, 0) ThenBlock: {
+                nsa = Array.Size(args)
+            }
+            Gen_Emit("AIMacro.ObjectSet(")
+            IfCondition GreaterThan(nsa, 2) ThenBlock: {
+                OOPGen_Expr(Array.Get(args, 0))
+                Gen_Emit(", ")
+                OOPGen_Expr(Array.Get(args, 1))
+                Gen_Emit(", ")
+                OOPGen_Expr(Array.Get(args, 2))
+            } ElseBlock: {
+                OOPGen_Expr(obj)
+                Gen_Emit(", ")
+                IfCondition GreaterThan(nsa, 0) ThenBlock: {
+                    OOPGen_Expr(Array.Get(args, 0))
+                } ElseBlock: {
+                    Gen_Emit("\"\"")
+                }
+                Gen_Emit(", ")
+                IfCondition GreaterThan(nsa, 1) ThenBlock: {
+                    OOPGen_Expr(Array.Get(args, 1))
+                } ElseBlock: {
+                    Gen_Emit("0")
+                }
+            }
             Gen_Emit(")")
             ReturnValue(0)
         }
@@ -1540,10 +1596,15 @@ Function.OOPGen_InstanceCreation {
             i = Add(i, 1)
         }
         
-        // Create instance
+        // Create instance. Packed __init__ (UUID, >6 params) needs p__args array.
+        init_fn = StringConcat(class_name, "___init__")
         Gen_EmitIndent()
         Gen_Emit(instance_var)
-        Gen_Emit(" = OOP.ObjectNewInit(\"")
+        IfCondition EqualTo(Gen_IsPackedFunc(init_fn), 1) ThenBlock: {
+            Gen_Emit(" = AIMacro.ObjectNewInitPacked(\"")
+        } ElseBlock: {
+            Gen_Emit(" = OOP.ObjectNewInit(\"")
+        }
         Gen_Emit(class_name)
         Gen_Emit("\", ")
         Gen_Emit(args_var)

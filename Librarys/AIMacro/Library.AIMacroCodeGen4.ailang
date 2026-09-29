@@ -87,6 +87,11 @@ Function.Gen_Expr {
         
         IfCondition EqualTo(t, Node.IDENT) ThenBlock: {
             name = ArrayGet(node, 3)
+            // UUID.__init__(hex, bytes, int, ...) — params shadow builtins
+            IfCondition Or(EqualTo(Gen_IsParam(name), 1), EqualTo(Gen_IsEnclosingParam(name), 1)) ThenBlock: {
+                Gen_EmitIdent(name)
+                ReturnValue(0)
+            }
             // Builtin used as a value: AddressOf(AIMacro.X) (heapq map(iter, xs))
             mapped = Gen_MapBuiltin(name)
             mcmp = StringCompare(mapped, name)
@@ -907,6 +912,32 @@ Function.Gen_CallExpr {
     Body: {
         name = ArrayGet(node, 3)
         args = ArrayGet(node, 4)
+
+        // int(x, base) / uuid int_(hex, 16) — AIMacro.Int is 1-arg
+        n_intb = 0
+        IfCondition NotEqual(args, 0) ThenBlock: {
+            n_intb = Array.Size(args)
+        }
+        IfCondition GreaterThan(n_intb, 1) ThenBlock: {
+            cmp_ib = StringCompare(name, "int")
+            cmp_ib2 = StringCompare(name, "int_")
+            IfCondition Or(EqualTo(cmp_ib, 0), EqualTo(cmp_ib2, 0)) ThenBlock: {
+                Gen_Emit("AIMacro.IntBase(")
+                a0b = Array.Get(args, 0)
+                IfCondition EqualTo(Gen_HasCall(a0b), 1) ThenBlock: {
+                    a0b = Gen_FlattenExpr(a0b)
+                }
+                Gen_Expr(a0b)
+                Gen_Emit(", ")
+                a1b = Array.Get(args, 1)
+                IfCondition EqualTo(Gen_HasCall(a1b), 1) ThenBlock: {
+                    a1b = Gen_FlattenExpr(a1b)
+                }
+                Gen_Expr(a1b)
+                Gen_Emit(")")
+                ReturnValue(0)
+            }
+        }
 
         // Param/local holding a callable (e.g. key=fn) → CallIndirect
         IfCondition Or(EqualTo(Gen_IsCallableVar(name), 1), EqualTo(Gen_IsParam(name), 1)) ThenBlock: {
@@ -2273,7 +2304,8 @@ Function.Gen_MethodCallExpr {
             IfCondition EqualTo(is_list, 1) ThenBlock: {
                 Gen_Emit("AIMacro.ListCount(")
             } ElseBlock: {
-                Gen_Emit("String.Count(")
+                // Flattened list temps are IDENT, not LIST_LIT, so dispatch at runtime
+                Gen_Emit("AIMacro.SmartCount(")
             }
             Gen_Expr(obj)
             
@@ -2377,6 +2409,61 @@ Function.Gen_MethodCallExpr {
         IfCondition EqualTo(cmp, 0) ThenBlock: {
             Gen_Emit("AIMacro.FileClose(")
             Gen_Expr(obj)
+            Gen_Emit(")")
+            ReturnValue(0)
+        }
+        cmp = StringCompare(method, "strip")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            nstrip = 0
+            IfCondition NotEqual(args, 0) ThenBlock: { nstrip = Array.Size(args) }
+            Gen_Emit("AIMacro.Strip(")
+            Gen_Expr(obj)
+            Gen_Emit(", ")
+            IfCondition GreaterThan(nstrip, 0) ThenBlock: {
+                Gen_Expr(Array.Get(args, 0))
+            } ElseBlock: { Gen_Emit("0") }
+            Gen_Emit(")")
+            ReturnValue(0)
+        }
+        cmp = StringCompare(method, "count")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_Emit("AIMacro.SmartCount(")
+            Gen_Expr(obj)
+            Gen_Emit(", ")
+            IfCondition And(NotEqual(args, 0), GreaterThan(Array.Size(args), 0)) ThenBlock: {
+                Gen_Expr(Array.Get(args, 0))
+            } ElseBlock: { Gen_Emit("Types.GetNone()") }
+            Gen_Emit(")")
+            ReturnValue(0)
+        }
+        cmp = StringCompare(method, "__setattr__")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            nsa = 0
+            IfCondition NotEqual(args, 0) ThenBlock: {
+                nsa = Array.Size(args)
+            }
+            Gen_Emit("AIMacro.ObjectSet(")
+            IfCondition GreaterThan(nsa, 2) ThenBlock: {
+                Gen_Expr(Array.Get(args, 0))
+                Gen_Emit(", ")
+                Gen_Expr(Array.Get(args, 1))
+                Gen_Emit(", ")
+                Gen_Expr(Array.Get(args, 2))
+            } ElseBlock: {
+                Gen_Expr(obj)
+                Gen_Emit(", ")
+                IfCondition GreaterThan(nsa, 0) ThenBlock: {
+                    Gen_Expr(Array.Get(args, 0))
+                } ElseBlock: {
+                    Gen_Emit("\"\"")
+                }
+                Gen_Emit(", ")
+                IfCondition GreaterThan(nsa, 1) ThenBlock: {
+                    Gen_Expr(Array.Get(args, 1))
+                } ElseBlock: {
+                    Gen_Emit("0")
+                }
+            }
             Gen_Emit(")")
             ReturnValue(0)
         }
@@ -2542,7 +2629,7 @@ Function.Gen_MapMethod {
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("String.EndsWith") }
         
         cmp = StringCompare(method, "count")
-        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("String.Count") }
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.SmartCount") }
 
         cmp = StringCompare(method, "encode")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.Encode") }
