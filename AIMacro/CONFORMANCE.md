@@ -1,21 +1,26 @@
 # AIMacro CPython conformance scorecard
 
-**Bar (2026-09-24):** every CPython stdlib `.py` in the corpus must transpile
-and compile. On the grind box that is **585** files (Python 3.11.6
-`/home/bob/tools/oss-cad-suite/lib/python3.11`). Skip tags are triage, not a
-pass. Next scored gate after 585/585 transpile is `--stage compile`.
+**Bar:** CPython 3.11 `Lib/test` regrtest. On this box that is **568** files
+(`test_*.py` plus `test_*/__init__.py` under
+`/home/bob/tools/oss-cad-suite/lib/python3.11/test`). Pass is ELF exit 0 after
+TestCase.test* methods run. ran-0 is FAIL.
 
-## Current (this box, py3.11 / 585, tip `a1eb820`)
+## Current
 
-| Suite | Stage | Total | Pass | Fail | In-scope | Seconds |
-|-------|-------|------:|-----:|-----:|---------:|--------:|
-| `curated` | run vs python3 | 25 | **25** | 0 | 25/25 | ~13 |
-| `lib` | transpile | 585 | **520** | 65 | 370/395 | ~103 |
-| `lib` | compile | 585 | *not scored* | — | — | — |
+Last full 568-file run before this rewrite: **19 OK / 549 fail** in 1297 s
+(compile 173, SIGSEGV 148, run rc=1 105, no tests 68, transpile 32, compile
+SIGSEGV 10, SIGFPE 7, timeout 3, SIGXCPU 3). `test_unary` is among the OKs.
 
-Compile probe 2026-09-24 (26 transpile-ok non-encoding modules: `colorsys`, `keyword`, `heapq`, `enum`, `pathlib`, `zipfile`, …): **0/26**. Split: **20 SIGSEGV** (`ailang.x` rc=-11, often after `Expected ')' after arguments` in the generated `.ailang`) and **6 rc=1** (`Variable not found: ONE_THIRD`, `Unknown function: frozenset`, …). Transpile-ok does **not** mean the `.ailang` compiles. Full `--stage compile` corpus is the next scored gate. The runner now keeps `ailang.x` stdout on compile fail (it used to look empty).
+Re-run:
 
-Historical 3.13/531 numbers below are Grokbot-VM snapshots, not this box.
+```bash
+python3 tools/aimacro_cpython_runner.py --verbose \
+    --output-json results/aimacro_regrtest.json \
+    --output-md AIMacro/CONFORMANCE.md
+```
+
+Historical 585-file stdlib crash-gate and curated gold-stdout numbers below
+are archive. They are not the score.
 
 Generated **2026-09-19**. Remeasured on the VM with **Python 3.13.5** stdlib `/usr/lib/python3.13` (531 `.py` files after excludes). Prior Waves 1–16 scorecard used Python 3.11.6 / 585 files.
 

@@ -29,7 +29,7 @@ There is no `aimacro.ailang` at repo root; use `aimacro_cli.ailang`.
 | [OBJECTIVES.md](OBJECTIVES.md) | Phases, milestones, acceptance criteria |
 | [TEST_MATRIX.md](TEST_MATRIX.md) | All `.aim` tests by tier and status |
 | [STATUS.md](STATUS.md) | Living scorecard (transpile / compile / run) |
-| [PYTHON_TESTS.md](PYTHON_TESTS.md) | CPython/test262-style harness (`py2aim`, curated runner) |
+| [PYTHON_TESTS.md](PYTHON_TESTS.md) | CPython Lib/test regrtest harness (`py2aim` + runner) |
 | [AUDIT_2026-09-18.md](AUDIT_2026-09-18.md) | Post-Wave-6 reaudit + deep CPython-lite results |
 
 ## Quick commands

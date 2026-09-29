@@ -1,62 +1,32 @@
 # AIMacro vs CPython tests (test262 analog)
 
 JS has `test262` + `tools/test262_runner.py` + `JS-tests/test262_harness.ailang`.
-AIMacro’s counterpart is the same *shape* as test262: preprocess → execute →
-compare → JSON. `Lib/` stdlib `.py` files must **all transpile and compile**
-(585 on 3.11). `Lib/test` remains a syntax probe, not a unittest runner.
+AIMacro’s counterpart is CPython 3.11 `Lib/test` regrtest: preprocess → AOT
+compile → run TestCase methods → JSON. On this box that is **568** files.
+Pass is ELF exit 0 after those methods run. ran-0 is FAIL.
 
 ## Pieces
 
 | JS (test262) | AIMacro |
 |--------------|---------|
-| test262 checkout | optional CPython tree (`--cpython`) |
+| test262 checkout | CPython stdlib (`--cpython`, default this python) |
 | throw/async preprocessor | `tools/py2aim.py` (indent → `{ }`) |
 | `test262_harness.x` | `./aimacro.x` + `./ailang.x` |
 | `tools/test262_runner.py` | `tools/aimacro_cpython_runner.py` |
-| curated midgate paths | `tests/python/curated/*.py` |
 
-## Convert indent Python to AIMacro
-
-```bash
-python3 tools/py2aim.py tests/python/curated/if_while.py /tmp/if_while.aim
-./aimacro.x /tmp/if_while.aim /tmp/if_while.ailang
-./ailang.x /tmp/if_while.ailang /tmp/if_while
-/tmp/if_while
-```
-
-## Run the lite suite (compare stdout to CPython)
+## Run the grind
 
 ```bash
 python3 tools/aimacro_cpython_runner.py --verbose
-python3 tools/aimacro_cpython_runner.py --output-json results/aimacro_cpython.json
-```
-
-`--corpus lib --stage transpile` then `--stage compile` is the mountain:
-every stdlib `.py` (585 on 3.11) must clear both. `--corpus all` still adds
-curated stdout vs python3 and `Lib/test` as a syntax probe (not a unittest
-runner). See [CONFORMANCE.md](CONFORMANCE.md).
-
-```bash
-./AIMacro/scripts/run_conformance.sh
-```
-
-## Deep run (2026-09-18)
-
-**25/25** curated files pass stdout vs CPython after Wave 16 (`print_range_list.py`). See [AUDIT_2026-09-18.md](AUDIT_2026-09-18.md).
-
-Mountain (CPython Lib + Lib/test) is a separate scorecard, not a unittest run:
-
-```bash
-./AIMacro/scripts/run_conformance.sh
-# or:
-python3 tools/aimacro_cpython_runner.py --corpus all \
-    --output-json results/aimacro_conformance.json \
+python3 tools/aimacro_cpython_runner.py \
+    --output-json results/aimacro_regrtest.json \
     --output-md AIMacro/CONFORMANCE.md
 ```
 
-```bash
-python3 tools/aimacro_cpython_runner.py --verbose --output-json results/aimacro_cpython_deep.json
-```
+`./AIMacro/scripts/run_conformance.sh` is the same command. One `ailang.x` at
+a time, `RLIMIT_AS` 4 GiB, `RLIMIT_CPU` 60 s, wall timeout 90 s.
+
+See [CONFORMANCE.md](CONFORMANCE.md).
 
 ## Wave 16
 
