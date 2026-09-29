@@ -218,9 +218,7 @@ Function.Gen_Expr {
         IfCondition EqualTo(t, Node.LIST_LIT) ThenBlock: {
             elems = ArrayGet(node, 3)
             n = Array.Size(elems)
-            Gen_Emit("Array.Create(")
-            Gen_EmitNumber(n)
-            Gen_Emit(")")
+            Gen_EmitArrayCreate(n)
             ReturnValue(0)
         }
         
@@ -1044,7 +1042,7 @@ Function.Gen_CallExpr {
         // object() → unique sentinel (empty array pointer)
         cmp = StringCompare(name, "object")
         IfCondition EqualTo(cmp, 0) ThenBlock: {
-            Gen_Emit("Array.Create(0)")
+            Gen_Emit("AIMacro.EmptyList()")
             ReturnValue(0)
         }
         
@@ -1193,7 +1191,7 @@ Function.Gen_CallExpr {
         IfCondition EqualTo(cmp, 0) ThenBlock: {
             a0 = Gen_NthPosArg(args, 0)
             IfCondition EqualTo(a0, 0) ThenBlock: {
-                Gen_Emit("Array.Create(0)")
+                Gen_Emit("AIMacro.EmptyList()")
             } ElseBlock: {
                 IfCondition EqualTo(Gen_HasCall(a0), 1) ThenBlock: {
                     a0 = Gen_FlattenExpr(a0)

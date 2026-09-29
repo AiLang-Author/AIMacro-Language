@@ -19,6 +19,34 @@ LibraryImport.AIMacro.AIMacroTypes
 // TYPED LIST CREATION - Use for user-visible lists that might be type-checked
 // Creates TArray (with magic number) instead of XArray
 // =============================================================================
+Function.AIMacro.EmptyList {
+    Output: Address
+    Body: {
+        ReturnValue(Array.Create(1))
+    }
+}
+
+Function.AIMacro.ArrayNew {
+    Input: cap: Integer
+    Output: Address
+    Body: {
+        IfCondition Or(LessThan(cap, 1), GreaterEqual(cap, TypeMagic.HEAP_START)) ThenBlock: {
+            cap = 1
+        }
+        IfCondition GreaterThan(cap, 65536) ThenBlock: {
+            cap = 65536
+        }
+        ReturnValue(Array.Create(cap))
+    }
+}
+
+Function.AIMacro.SysMaxsize {
+    Output: Address
+    Body: {
+        ReturnValue(AIMacro.BigIntFromDigits("9223372036854775807", 0))
+    }
+}
+
 Function.AIMacro.TypedListCreate {
     Input: capacity: Integer
     Output: Address
@@ -1478,14 +1506,14 @@ Function.AIMacro.FrozenSet {
     Output: Address
     Body: {
         IfCondition EqualTo(iterable, 0) ThenBlock: {
-            ReturnValue(Array.Create(0))
+            ReturnValue(AIMacro.EmptyList())
         }
         IfCondition EqualTo(AIMacro.IsNone(iterable), 1) ThenBlock: {
-            ReturnValue(Array.Create(0))
+            ReturnValue(AIMacro.EmptyList())
         }
         IfCondition EqualTo(Array.IsArray(iterable), 1) ThenBlock: {
             n = Array.Size(iterable)
-            out = Array.Create(n)
+            out = AIMacro.ArrayNew(n)
             i = 0
             WhileLoop LessThan(i, n) {
                 Array.Push(out, Array.Get(iterable, i))
@@ -1493,7 +1521,7 @@ Function.AIMacro.FrozenSet {
             }
             ReturnValue(out)
         }
-        ReturnValue(Array.Create(0))
+        ReturnValue(AIMacro.EmptyList())
     }
 }
 
@@ -1965,13 +1993,13 @@ Function.AIMacro.Tuple {
     Output: Address
     Body: {
         IfCondition Or(EqualTo(elements, 0), EqualTo(AIMacro.IsNone(elements), 1)) ThenBlock: {
-            ReturnValue(Array.Create(0))
+            ReturnValue(AIMacro.EmptyList())
         }
         IfCondition EqualTo(Array.IsArray(elements), 0) ThenBlock: {
             ReturnValue(AIMacro.ListFrom(elements))
         }
         len = Array.Size(elements)
-        tuple = Array.Create(len)
+        tuple = AIMacro.ArrayNew(len)
         i = 0
         WhileLoop LessThan(i, len) {
             Array.Push(tuple, Array.Get(elements, i))
@@ -2241,10 +2269,10 @@ Function.AIMacro.ListFrom {
     Output: Address
     Body: {
         IfCondition Or(EqualTo(iterable, 0), EqualTo(AIMacro.IsNone(iterable), 1)) ThenBlock: {
-            ReturnValue(Array.Create(0))
+            ReturnValue(AIMacro.EmptyList())
         }
         n = AIMacro.IterLen(iterable)
-        out = Array.Create(n)
+        out = AIMacro.ArrayNew(n)
         i = 0
         WhileLoop LessThan(i, n) {
             Array.Push(out, AIMacro.IterGet(iterable, i))

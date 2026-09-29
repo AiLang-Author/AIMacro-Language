@@ -1080,18 +1080,18 @@ Function.Gen_FlattenExpr {
                 Gen_Emit(loop_suffix)
                 Gen_Emit(")\n")
                 Gen_EmitIndent()
-                Gen_Emit(var_name)
+                Gen_EmitIdentLhs(var_name)
                 Gen_Emit(" = DictGen_SmartGet(__pair")
                 Gen_Emit(loop_suffix)
                 Gen_Emit(", 0)\n")
                 Gen_EmitIndent()
-                Gen_Emit(var2)
+                Gen_EmitIdentLhs(var2)
                 Gen_Emit(" = DictGen_SmartGet(__pair")
                 Gen_Emit(loop_suffix)
                 Gen_Emit(", 1)\n")
             } ElseBlock: {
                 Gen_EmitIndent()
-                Gen_Emit(var_name)
+                Gen_EmitIdentLhs(var_name)
                 Gen_Emit(" = AIMacro.IterGet(iter")
                 Gen_Emit(loop_suffix)
                 Gen_Emit(", iteri")
@@ -1854,12 +1854,12 @@ Function.Gen_CreateListLiteral {
         // Create temp for the list - USE TArray for user lists
         temp = Gen_TempName()
         
-        // Emit: temp = Array.Create(n)
+        // Emit: temp = Array.Create(n) — EmptyList when n==0 (leftover-0)
         Gen_EmitIndent()
         Gen_Emit(temp)
-        Gen_Emit(" = Array.Create(")
-        Gen_EmitNumber(n)
-        Gen_Emit(")\n")
+        Gen_Emit(" = ")
+        Gen_EmitArrayCreate(n)
+        Gen_Emit("\n")
         
         // Emit pushes / extends for each element
         i = 0

@@ -554,12 +554,17 @@ Function.OOPGen_ClassDef {
                             fval = Gen_FlattenExpr(fval)
                         }
                         Gen_EmitIndent()
+                        Gen_Emit(fname)
+                        Gen_Emit(" = ")
+                        Gen_Expr(fval)
+                        Gen_Emit("\n")
+                        Gen_EmitIndent()
                         Gen_Emit("AIMacro.ClassAttrSet(\"")
                         Gen_Emit(class_name)
                         Gen_Emit("\", \"")
                         Gen_Emit(fname)
                         Gen_Emit("\", ")
-                        Gen_Expr(fval)
+                        Gen_Emit(fname)
                         Gen_Emit(")\n")
                     }
                 }

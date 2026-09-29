@@ -1940,9 +1940,9 @@ Function.Gen_ForEnumerate {
             Gen_EmitIndent()
             Gen_Emit("iter")
             Gen_Emit(loop_suffix)
-            Gen_Emit(" = Array.Create(")
-            Gen_EmitNumber(n)
-            Gen_Emit(")\n")
+            Gen_Emit(" = ")
+            Gen_EmitArrayCreate(n)
+            Gen_Emit("\n")
             
             i = 0
             WhileLoop LessThan(i, n) {

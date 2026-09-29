@@ -1261,6 +1261,19 @@ Function.Gen_EmitNumber {
     }
 }
 
+Function.Gen_EmitArrayCreate {
+    Input: n: Integer
+    Body: {
+        IfCondition LessThan(n, 1) ThenBlock: {
+            Gen_Emit("AIMacro.EmptyList()")
+        } ElseBlock: {
+            Gen_Emit("Array.Create(")
+            Gen_EmitNumber(n)
+            Gen_Emit(")")
+        }
+    }
+}
+
 // =============================================================================
 // GET OPERATOR NAME
 // =============================================================================
@@ -2050,7 +2063,7 @@ Function.Gen_EmitStdlibAttr {
             }
             cmp = StringCompare(attr, "maxsize")
             IfCondition EqualTo(cmp, 0) ThenBlock: {
-                Gen_EmitNumber(2147483647)
+                Gen_Emit("AIMacro.SysMaxsize()")
                 ReturnValue(1)
             }
             cmp = StringCompare(attr, "hash_info")

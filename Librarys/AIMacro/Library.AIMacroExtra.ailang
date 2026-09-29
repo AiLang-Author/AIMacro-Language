@@ -1603,7 +1603,7 @@ Function.AIMacro.UnittestRunClass {
             m = Array.Get(methods, i)
             IfCondition EqualTo(AIMacro.UnittestIsTestName(m), 1) ThenBlock: {
                 obj = OOP.ObjectNew(class_name)
-                empty = Array.Create(0)
+                empty = AIMacro.EmptyList()
                 IfCondition EqualTo(OOP.MethodExists(obj, "setUp"), 1) ThenBlock: {
                     OOP.MethodCall(obj, "setUp", empty)
                 }
@@ -1952,6 +1952,35 @@ Function.AIMacro.MethodShim {
         }
         IfCondition EqualTo(StringCompare(method_name, "contains"), 0) ThenBlock: {
             ReturnValue(AIMacro.Contains(a0, a1))
+        }
+        IfCondition EqualTo(StringCompare(method_name, "extend"), 0) ThenBlock: {
+            AIMacro.ListExtend(obj, a0)
+            ReturnValue(obj)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "sub"), 0) ThenBlock: {
+            ReturnValue(AIMacro.NumSub(a0, a1))
+        }
+        IfCondition EqualTo(StringCompare(method_name, "add"), 0) ThenBlock: {
+            ReturnValue(AIMacro.NumAdd(a0, a1))
+        }
+        IfCondition EqualTo(StringCompare(method_name, "mul"), 0) ThenBlock: {
+            ReturnValue(AIMacro.NumMul(a0, a1))
+        }
+        IfCondition EqualTo(StringCompare(method_name, "xor"), 0) ThenBlock: {
+            ReturnValue(AIMacro.NumBitXor(a0, a1))
+        }
+        IfCondition EqualTo(StringCompare(method_name, "setitem"), 0) ThenBlock: {
+            a2 = 0
+            IfCondition GreaterThan(n, 2) ThenBlock: {
+                a2 = Array.Get(args, 2)
+            }
+            IfCondition EqualTo(Array.IsArray(a0), 1) ThenBlock: {
+                Array.Set(a0, AIMacro.BoolVal(a1), a2)
+            }
+            IfCondition EqualTo(Hash.IsHash(a0), 1) ThenBlock: {
+                Hash.Set(a0, AIMacro.Str(a1), a2)
+            }
+            ReturnValue(Types.GetNone())
         }
         IfCondition EqualTo(StringCompare(method_name, "lt"), 0) ThenBlock: {
             ReturnValue(AIMacro.NumLt(a0, a1))

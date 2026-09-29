@@ -550,12 +550,13 @@
     "test_binop.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_binop.py",
       "status": "fail",
-      "stage": "run",
-      "rc": -11,
-      "err": "",
-      "out": "  RatTestCase.test_gcd\nFAIL: assertEqual\n  RatTestCase.test_constructor\nFAIL: assertEqual\n",
+      "stage": "compile",
+      "rc": 1,
+      "err": "LLINDIRECT] 6 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\nERROR: Variable not found: _get_num\nCompilation Failed: \n[AST] Freeing 49226 node child-lists...\n[AST] Freed 20711 child-lists (node slots stay in pool)",
+      "out": "",
       "tags": [],
-      "key": "test_binop.py"
+      "key": "test_binop.py",
+      "updated": "2026-09-29"
     },
     "test_bisect.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_bisect.py",
@@ -1003,12 +1004,13 @@
     "test_compare.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_compare.py",
       "status": "fail",
-      "stage": "run",
-      "rc": -11,
-      "err": "",
-      "out": "und: Empty\nERROR: Method not found: Empty\nERROR: Method not found: Empty\n  ComparisonSimpleTest.test_ne_defaults_to_not_eq\nERROR: Method not found: Cmp\nERROR: Method not found: Cmp\nERROR: Method not found: Cmp\nFAIL: assertIs\nFAIL: assertIs\nFAIL: assertIs\n  ComparisonSimpleTest.test_ne_high_priority\n",
+      "stage": "compile",
+      "rc": 1,
+      "err": "LLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 2 arguments\nERROR: Variable not found: CompNone\nCompilation Failed: \n[AST] Freeing 48676 node child-lists...\n[AST] Freed 20475 child-lists (node slots stay in pool)",
+      "out": "",
       "tags": [],
-      "key": "test_compare.py"
+      "key": "test_compare.py",
+      "updated": "2026-09-29"
     },
     "test_compile.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_compile.py",
@@ -1625,9 +1627,10 @@
       "stage": "run",
       "rc": -11,
       "err": "",
-      "out": "d: enum\nERROR: Method not found: enum\nERROR: Method not found: enum\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\n  EnumerateTestCase.test_tuple_reuse\n  EnumerateTestCase.test_enumerate_result_gc\nERROR: Method not found: enum\nFAIL: assertTrue\n  TestReversed.test_simple\n",
+      "out": "",
       "tags": [],
-      "key": "test_enumerate.py"
+      "key": "test_enumerate.py",
+      "updated": "2026-09-29"
     },
     "test_eof.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_eof.py",
@@ -1996,11 +1999,12 @@
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_generator_stop.py",
       "status": "fail",
       "stage": "run",
-      "rc": -11,
+      "rc": 1,
       "err": "",
-      "out": "  TestPEP479.test_stopiteration_wrapping\n",
+      "out": "  TestPEP479.test_stopiteration_wrapping\nFAIL: assertRaises\n  TestPEP479.test_stopiteration_wrapping_context\nERROR: \nunittest: ran 2 tests, 2 failed\n",
       "tags": [],
-      "key": "test_generator_stop.py"
+      "key": "test_generator_stop.py",
+      "updated": "2026-09-29"
     },
     "test_generators.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_generators.py",
@@ -2736,12 +2740,13 @@
     "test_index.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_index.py",
       "status": "fail",
-      "stage": "run",
-      "rc": -11,
-      "err": "",
-      "out": "se.test_basic\nFAIL: assertEqual\n  BaseTestCase.test_slice\n  BaseTestCase.test_wrappers\nFAIL: assertEqual\n  BaseTestCase.test_subclasses\nFAIL: assertEqual\n  BaseTestCase.test_error\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\n  BaseTestCase.test_int_subclass_with_index\n",
+      "stage": "compile",
+      "rc": 1,
+      "err": "ALLINDIRECT] 6 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\nERROR: Variable not found: __mul__\nCompilation Failed: \n[AST] Freeing 46904 node child-lists...\n[AST] Freed 19857 child-lists (node slots stay in pool)",
+      "out": "",
       "tags": [],
-      "key": "test_index.py"
+      "key": "test_index.py",
+      "updated": "2026-09-29"
     },
     "test_inspect.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_inspect.py",
@@ -3099,11 +3104,12 @@
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_list.py",
       "status": "fail",
       "stage": "run",
-      "rc": 124,
-      "err": "timeout",
-      "out": "  ListTest.test_basic\nFAIL: assertEqual\n",
+      "rc": -11,
+      "err": "",
+      "out": "  ListTest.test_basic\n",
       "tags": [],
-      "key": "test_list.py"
+      "key": "test_list.py",
+      "updated": "2026-09-29"
     },
     "test_listcomps.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_listcomps.py",
@@ -3407,7 +3413,8 @@
       "err": "",
       "out": "Exception: \n",
       "tags": [],
-      "key": "test_openpty.py"
+      "key": "test_openpty.py",
+      "updated": "2026-09-29"
     },
     "test_operator.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_operator.py",
@@ -3415,9 +3422,10 @@
       "stage": "run",
       "rc": -11,
       "err": "",
-      "out": "  OperatorTestCase.test___all__\nERROR: Method not found: assertSetEqual\n  OperatorTestCase.test_lt\nFAIL: assertRaises\nFAIL: assertRaises\n  OperatorTestCase.test_le\nFAIL: assertRaises\nFAIL: assertRaises\n  OperatorTestCase.test_eq\nFAIL: assertRaises\n",
+      "out": ".test_setitem\nERROR: Method not found: setitem\nFAIL: assertIsNone\nFAIL: assertRaises\n  OperatorTestCase.test_sub\nERROR: Method not found: sub\nFAIL: assertEqual\n  OperatorTestCase.test_truth\n  OperatorTestCase.test_bitwise_xor\nERROR: Method not found: xor\nFAIL: assertEqual\n  OperatorTestCase.test_is\n",
       "tags": [],
-      "key": "test_operator.py"
+      "key": "test_operator.py",
+      "updated": "2026-09-29"
     },
     "test_optparse.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_optparse.py",
@@ -4378,9 +4386,10 @@
       "stage": "run",
       "rc": -11,
       "err": "",
-      "out": "  ModuleTest.test_attrs\nFAIL: assertEqual\n  ModuleTest.test_capwords\nFAIL: assertEqual\n  ModuleTest.test_basic_formatter\nFAIL: assertEqual\nFAIL: assertRaises\nFAIL: assertRaises\n  ModuleTest.test_format_keyword_arguments\nFAIL: assertEqual\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\n",
+      "out": "\nFAIL: assertEqual\n  TestTemplate.test_regular_templates_with_upper_case\nERROR: Method not found: substitute\nFAIL: assertEqual\n  TestTemplate.test_regular_templates_with_non_letters\nERROR: Method not found: substitute\nFAIL: assertEqual\n  TestTemplate.test_escapes\nERROR: Method not found: substitute\n",
       "tags": [],
-      "key": "test_string.py"
+      "key": "test_string.py",
+      "updated": "2026-09-29"
     },
     "test_string_literals.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_string_literals.py",
@@ -4808,9 +4817,10 @@
       "stage": "run",
       "rc": 1,
       "err": "",
-      "out": "  Gprof2htmlTests.test_gprof\nFAIL: assertTrue\nunittest: ran 1 tests, 1 failed\n",
+      "out": "  Gprof2htmlTests.test_gprof\nERROR: Method not found: object\nERROR: Method not found: TemporaryDirectory\nERROR: Method not found: main\nFAIL: assertTrue\nunittest: ran 1 tests, 1 failed\n",
       "tags": [],
-      "key": "test_tools/test_gprof2html.py"
+      "key": "test_tools/test_gprof2html.py",
+      "updated": "2026-09-29"
     },
     "test_tools/test_i18n.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_tools/test_i18n.py",
