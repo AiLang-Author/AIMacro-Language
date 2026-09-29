@@ -1682,6 +1682,42 @@ Function.Gen_IsStdlibMethod {
     }
 }
 
+// import os as _os / import sys as _sys — same stdlib attrs as os/sys
+Function.Gen_StdlibModKind {
+    Input: name: Address
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(name, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "sys")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+        cmp = StringCompare(name, "_sys")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+        cmp = StringCompare(name, "os")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(2) }
+        cmp = StringCompare(name, "_os")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(2) }
+        cmp = StringCompare(name, "posix")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(2) }
+        cmp = StringCompare(name, "types")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(3) }
+        cmp = StringCompare(name, "_types")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(3) }
+        cmp = StringCompare(name, "weakref")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(4) }
+        cmp = StringCompare(name, "_weakref")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(4) }
+        cmp = StringCompare(name, "math")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(5) }
+        cmp = StringCompare(name, "aliases")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(6) }
+        cmp = StringCompare(name, "unicodedata")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(7) }
+        ReturnValue(0)
+    }
+}
+
 Function.Gen_IsStdlibAttr {
     Input: obj: Address
     Input: attr: Address
@@ -1694,8 +1730,8 @@ Function.Gen_IsStdlibAttr {
             ReturnValue(0)
         }
         name = ArrayGet(obj, 3)
-        cmp = StringCompare(name, "sys")
-        IfCondition EqualTo(cmp, 0) ThenBlock: {
+        kind = Gen_StdlibModKind(name)
+        IfCondition EqualTo(kind, 1) ThenBlock: {
             cmp = StringCompare(attr, "argv")
             IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
             cmp = StringCompare(attr, "stdin")
@@ -1714,14 +1750,12 @@ Function.Gen_IsStdlibAttr {
             IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
             ReturnValue(0)
         }
-        cmp = StringCompare(name, "math")
-        IfCondition EqualTo(cmp, 0) ThenBlock: {
+        IfCondition EqualTo(kind, 5) ThenBlock: {
             cmp = StringCompare(attr, "pi")
             IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
             ReturnValue(0)
         }
-        cmp = StringCompare(name, "types")
-        IfCondition EqualTo(cmp, 0) ThenBlock: {
+        IfCondition EqualTo(kind, 3) ThenBlock: {
             cmp = StringCompare(attr, "BuiltinFunctionType")
             IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
             cmp = StringCompare(attr, "FunctionType")
@@ -1734,27 +1768,57 @@ Function.Gen_IsStdlibAttr {
             IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
             ReturnValue(0)
         }
-        cmp = StringCompare(name, "weakref")
-        IfCondition EqualTo(cmp, 0) ThenBlock: {
+        IfCondition EqualTo(kind, 4) ThenBlock: {
             cmp = StringCompare(attr, "ref")
             IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
             ReturnValue(0)
         }
-        cmp = StringCompare(name, "aliases")
-        IfCondition EqualTo(cmp, 0) ThenBlock: {
+        IfCondition EqualTo(kind, 6) ThenBlock: {
             cmp = StringCompare(attr, "aliases")
             IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
             ReturnValue(0)
         }
-        cmp = StringCompare(name, "unicodedata")
-        IfCondition EqualTo(cmp, 0) ThenBlock: {
+        IfCondition EqualTo(kind, 7) ThenBlock: {
             cmp = StringCompare(attr, "unidata_version")
             IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
             ReturnValue(0)
         }
-        cmp = StringCompare(name, "os")
-        IfCondition EqualTo(cmp, 0) ThenBlock: {
+        IfCondition EqualTo(kind, 2) ThenBlock: {
             cmp = StringCompare(attr, "name")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+            cmp = StringCompare(attr, "O_RDONLY")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+            cmp = StringCompare(attr, "O_WRONLY")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+            cmp = StringCompare(attr, "O_RDWR")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+            cmp = StringCompare(attr, "O_CREAT")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+            cmp = StringCompare(attr, "O_EXCL")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+            cmp = StringCompare(attr, "O_NOFOLLOW")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+            cmp = StringCompare(attr, "O_TRUNC")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+            cmp = StringCompare(attr, "O_APPEND")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+            cmp = StringCompare(attr, "O_CLOEXEC")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+            cmp = StringCompare(attr, "O_DIRECTORY")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+            cmp = StringCompare(attr, "O_TMPFILE")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+            cmp = StringCompare(attr, "O_NONBLOCK")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+            cmp = StringCompare(attr, "TMP_MAX")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+            cmp = StringCompare(attr, "curdir")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+            cmp = StringCompare(attr, "sep")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+            cmp = StringCompare(attr, "pathsep")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+            cmp = StringCompare(attr, "linesep")
             IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
             ReturnValue(0)
         }
@@ -1862,8 +1926,8 @@ Function.Gen_EmitStdlibAttr {
             ReturnValue(0)
         }
         name = ArrayGet(obj, 3)
-        cmp = StringCompare(name, "sys")
-        IfCondition EqualTo(cmp, 0) ThenBlock: {
+        kind = Gen_StdlibModKind(name)
+        IfCondition EqualTo(kind, 1) ThenBlock: {
             cmp = StringCompare(attr, "argv")
             IfCondition EqualTo(cmp, 0) ThenBlock: {
                 Gen_Emit("AIMacro.Argv()")
@@ -1905,52 +1969,129 @@ Function.Gen_EmitStdlibAttr {
                 ReturnValue(1)
             }
         }
-        cmp = StringCompare(name, "math")
-        IfCondition EqualTo(cmp, 0) ThenBlock: {
+        IfCondition EqualTo(kind, 5) ThenBlock: {
             cmp = StringCompare(attr, "pi")
             IfCondition EqualTo(cmp, 0) ThenBlock: {
                 Gen_Emit("AIMacro.Math.Pi()")
                 ReturnValue(1)
             }
         }
-        cmp = StringCompare(name, "types")
-        IfCondition EqualTo(cmp, 0) ThenBlock: {
+        IfCondition EqualTo(kind, 3) ThenBlock: {
             Gen_Emit("\"")
             Gen_Emit(attr)
             Gen_Emit("\"")
             ReturnValue(1)
         }
-        cmp = StringCompare(name, "weakref")
-        IfCondition EqualTo(cmp, 0) ThenBlock: {
+        IfCondition EqualTo(kind, 4) ThenBlock: {
             cmp = StringCompare(attr, "ref")
             IfCondition EqualTo(cmp, 0) ThenBlock: {
                 Gen_Emit("\"weakref.ref\"")
                 ReturnValue(1)
             }
         }
-        cmp = StringCompare(name, "aliases")
-        IfCondition EqualTo(cmp, 0) ThenBlock: {
+        IfCondition EqualTo(kind, 6) ThenBlock: {
             cmp = StringCompare(attr, "aliases")
             IfCondition EqualTo(cmp, 0) ThenBlock: {
                 Gen_Emit("Hash.Create(16)")
                 ReturnValue(1)
             }
         }
-        cmp = StringCompare(name, "unicodedata")
-        IfCondition EqualTo(cmp, 0) ThenBlock: {
+        IfCondition EqualTo(kind, 7) ThenBlock: {
             cmp = StringCompare(attr, "unidata_version")
             IfCondition EqualTo(cmp, 0) ThenBlock: {
-                // stringprep tables are RFC 3454 / Unicode 3.2.0
                 Gen_Emit("\"3.2.0\"")
                 ReturnValue(1)
             }
         }
-        cmp = StringCompare(name, "os")
-        IfCondition EqualTo(cmp, 0) ThenBlock: {
+        IfCondition EqualTo(kind, 2) ThenBlock: {
             cmp = StringCompare(attr, "name")
             IfCondition EqualTo(cmp, 0) ThenBlock: {
-                // Linux syscall table → POSIX Python os.name
                 Gen_Emit("\"posix\"")
+                ReturnValue(1)
+            }
+            cmp = StringCompare(attr, "O_RDONLY")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                Gen_EmitNumber(0)
+                ReturnValue(1)
+            }
+            cmp = StringCompare(attr, "O_WRONLY")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                Gen_EmitNumber(1)
+                ReturnValue(1)
+            }
+            cmp = StringCompare(attr, "O_RDWR")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                Gen_EmitNumber(2)
+                ReturnValue(1)
+            }
+            cmp = StringCompare(attr, "O_CREAT")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                Gen_EmitNumber(64)
+                ReturnValue(1)
+            }
+            cmp = StringCompare(attr, "O_EXCL")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                Gen_EmitNumber(128)
+                ReturnValue(1)
+            }
+            cmp = StringCompare(attr, "O_NOFOLLOW")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                Gen_EmitNumber(131072)
+                ReturnValue(1)
+            }
+            cmp = StringCompare(attr, "O_TRUNC")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                Gen_EmitNumber(512)
+                ReturnValue(1)
+            }
+            cmp = StringCompare(attr, "O_APPEND")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                Gen_EmitNumber(1024)
+                ReturnValue(1)
+            }
+            cmp = StringCompare(attr, "O_CLOEXEC")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                Gen_EmitNumber(1048576)
+                ReturnValue(1)
+            }
+            cmp = StringCompare(attr, "O_DIRECTORY")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                Gen_EmitNumber(65536)
+                ReturnValue(1)
+            }
+            cmp = StringCompare(attr, "O_TMPFILE")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                Gen_EmitNumber(4259840)
+                ReturnValue(1)
+            }
+            cmp = StringCompare(attr, "O_NONBLOCK")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                Gen_EmitNumber(2048)
+                ReturnValue(1)
+            }
+            cmp = StringCompare(attr, "TMP_MAX")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                Gen_EmitNumber(238328)
+                ReturnValue(1)
+            }
+            cmp = StringCompare(attr, "curdir")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                Gen_Emit("\".\"")
+                ReturnValue(1)
+            }
+            cmp = StringCompare(attr, "sep")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                Gen_Emit("\"/\"")
+                ReturnValue(1)
+            }
+            cmp = StringCompare(attr, "pathsep")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                Gen_Emit("\":\"")
+                ReturnValue(1)
+            }
+            cmp = StringCompare(attr, "linesep")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                Gen_Emit("\"\\n\"")
                 ReturnValue(1)
             }
         }

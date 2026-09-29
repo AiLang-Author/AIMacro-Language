@@ -913,6 +913,26 @@ Function.Gen_CallExpr {
         name = ArrayGet(node, 3)
         args = ArrayGet(node, 4)
 
+        // hasattr(os, "O_NOFOLLOW") on Linux — fold known stdlib attrs
+        cmp_ha = StringCompare(name, "hasattr")
+        IfCondition EqualTo(cmp_ha, 0) ThenBlock: {
+            n_ha = 0
+            IfCondition NotEqual(args, 0) ThenBlock: {
+                n_ha = Array.Size(args)
+            }
+            IfCondition GreaterThan(n_ha, 1) ThenBlock: {
+                hobj = Array.Get(args, 0)
+                hattr = Array.Get(args, 1)
+                IfCondition EqualTo(AST_Type(hattr), Node.STR_LIT) ThenBlock: {
+                    hattr_s = ArrayGet(hattr, 3)
+                    IfCondition EqualTo(Gen_IsStdlibAttr(hobj, hattr_s), 1) ThenBlock: {
+                        Gen_Emit("AIMacro.TrueVal()")
+                        ReturnValue(0)
+                    }
+                }
+            }
+        }
+
         // int(x, base) / uuid int_(hex, 16) — AIMacro.Int is 1-arg
         n_intb = 0
         IfCondition NotEqual(args, 0) ThenBlock: {
