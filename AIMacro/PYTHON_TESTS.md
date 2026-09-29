@@ -16,15 +16,20 @@ Pass is ELF exit 0 after those methods run. ran-0 is FAIL.
 
 ## Run the grind
 
+`results/grind_db.json` is the living database. Passing files are dropped from
+the default grind. Fix a batch of 10, then the next 10. When remaining is
+empty, `--full` rechecks all 568.
+
 ```bash
+python3 tools/aimacro_cpython_runner.py --only @results/batch10.txt --verbose
 python3 tools/aimacro_cpython_runner.py --verbose
-python3 tools/aimacro_cpython_runner.py \
+python3 tools/aimacro_cpython_runner.py --full \
     --output-json results/aimacro_regrtest.json \
     --output-md AIMacro/CONFORMANCE.md
 ```
 
-`./AIMacro/scripts/run_conformance.sh` is the same command. One `ailang.x` at
-a time, `RLIMIT_AS` 4 GiB, 2 s CPU and 2 s wall per child. Longer than that
+`./AIMacro/scripts/run_conformance.sh` is the remaining grind. One `ailang.x`
+at a time, `RLIMIT_AS` 4 GiB, 2 s CPU and 2 s wall per child. Longer than that
 is a stall or a perf hole.
 
 See [CONFORMANCE.md](CONFORMANCE.md).

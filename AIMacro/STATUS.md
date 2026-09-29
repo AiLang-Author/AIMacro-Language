@@ -6,10 +6,12 @@
 
 | Gate | Result |
 |------|--------|
-| CPython `Lib/test` regrtest | **19/568** last full run (549 fail); this is the score |
+| CPython `Lib/test` regrtest | **19/568** (16 from full run + 3 from batch 10) |
 | Hash | **922** |
 
-Pass is TestCase methods actually run. ran-0 is FAIL.
+Pass is TestCase methods actually run. ran-0 is FAIL. Passing files are
+removed from the grind (`results/pass.txt`). Current batch is
+`results/batch10.txt`. `--full` when remaining is empty.
 
 ## Notes
 

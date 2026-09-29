@@ -1,0 +1,10 @@
+test_future_stmt/test_future_multiple_imports.py
+test_future_stmt/test_future_multiple_features.py
+test_errno.py
+test_keyword.py
+test_bool.py
+test_contains.py
+test_utf8source.py
+test_tools/test_reindent.py
+test_longexp.py
+test_startfile.py

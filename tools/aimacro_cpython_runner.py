@@ -5,6 +5,10 @@ aimacro_cpython_runner.py — CPython 3.11 Lib/test conformance grind.
 The score is CPython Lib/test (regrtest shape, 568 files on 3.11): transpile,
 compile, run TestCase.test* methods. ran-0 is FAIL. Skip tags are not a pass.
 
+results/grind_db.json is the living database. Passing files are dropped from the
+grind until --full. Work a batch with --only @results/batch10.txt. When remaining
+is empty, rerun --full.
+
 Pipeline per file (one ailang.x at a time, RLIMIT_AS 4GiB, 2s CPU / 2s wall):
   1. py2aim.py     indent Python → AIMacro `{ }`
   2. ./aimacro.x   .aim → .ailang
@@ -49,6 +53,8 @@ AIMACRO = ROOT / "aimacro.x"
 AILANG = ROOT / "ailang.x"
 PY2AIM = ROOT / "tools" / "py2aim.py"
 PYTHON = sys.executable
+DB_PATH = ROOT / "results" / "grind_db.json"
+BATCH_PATH = ROOT / "results" / "batch10.txt"
 
 
 def _limit_child() -> None:
@@ -90,6 +96,61 @@ def run_cmd(
         except Exception:
             out, err = "", "timeout"
         return 124, out or "", (err or "") + "timeout"
+
+
+def file_key(src: Path, stdlib: Path) -> str:
+    test_dir = (stdlib / "test").resolve()
+    try:
+        return str(src.resolve().relative_to(test_dir))
+    except ValueError:
+        return src.name
+
+
+def load_db() -> dict:
+    if DB_PATH.is_file():
+        return json.loads(DB_PATH.read_text(encoding="utf-8"))
+    return {"version": 1, "files": {}}
+
+
+def save_db(db: dict) -> None:
+    DB_PATH.parent.mkdir(parents=True, exist_ok=True)
+    tmp = DB_PATH.with_suffix(".json.tmp")
+    tmp.write_text(json.dumps(db, indent=2) + "\n", encoding="utf-8")
+    tmp.replace(DB_PATH)
+    passes = sorted(k for k, v in db["files"].items() if v.get("status") == "pass")
+    (ROOT / "results" / "pass.txt").write_text(
+        "".join(p + "\n" for p in passes), encoding="utf-8"
+    )
+
+
+def seed_db_from_json(db: dict, src: Path, stdlib: Path) -> int:
+    if not src.is_file():
+        return 0
+    payload = json.loads(src.read_text(encoding="utf-8"))
+    results = ((payload.get("suites") or {}).get("test") or {}).get("results") or []
+    n = 0
+    for r in results:
+        fp = r.get("file") or ""
+        key = file_key(Path(fp), stdlib) if fp else ""
+        if not key:
+            continue
+        rec = dict(r)
+        rec["key"] = key
+        db["files"][key] = rec
+        n += 1
+    return n
+
+
+def passing_keys(db: dict) -> set[str]:
+    return {k for k, v in db.get("files", {}).items() if v.get("status") == "pass"}
+
+
+def record_result(db: dict, rec: dict, key: str) -> None:
+    rec = dict(rec)
+    rec["key"] = key
+    rec["updated"] = date.today().isoformat()
+    db.setdefault("files", {})[key] = rec
+    save_db(db)
 
 
 def stdin_for(src: Path) -> str | None:
@@ -265,6 +326,8 @@ def run_suite(
     verbose: bool,
     name_root: Path,
     limit: int | None,
+    db: dict | None = None,
+    stdlib: Path | None = None,
 ) -> dict:
     if limit is not None:
         files = files[: max(0, limit)]
@@ -276,10 +339,18 @@ def run_suite(
             rel = str(src.relative_to(ROOT) if src.is_relative_to(ROOT) else src)
         except AttributeError:
             rel = str(src)
+        key = file_key(src, stdlib) if stdlib is not None else Path(rel).name
+
+        def store(rec: dict) -> dict:
+            results.append(rec)
+            if db is not None:
+                record_result(db, rec, key)
+            return rec
+
         text, why = read_source(src)
         if text is None:
             rec = {"file": rel, "status": "skip", "reason": why, "tags": []}
-            results.append(rec)
+            store(rec)
             if verbose:
                 print(f"SKIP {rel} ({why})")
             continue
@@ -295,7 +366,7 @@ def run_suite(
                 "err": (err or "")[-500:],
                 "tags": tags,
             }
-            results.append(rec)
+            store(rec)
             print(f"FAIL {rel} py2aim")
             continue
         rc, am_out, am_err, fail_stage = run_aimacro_stage(
@@ -317,7 +388,7 @@ def run_suite(
                 "out": (am_out or "")[-300:],
                 "tags": tags,
             }
-            results.append(rec)
+            store(rec)
             print(f"FAIL {rel} {rec['stage']} rc={rc}", flush=True)
             continue
         ran_m = re.search(r"unittest: ran (\d+) tests", am_out or "")
@@ -332,11 +403,11 @@ def run_suite(
                 "out": (am_out or "")[-300:],
                 "tags": tags,
             }
-            results.append(rec)
+            store(rec)
             print(f"FAIL {rel} run no tests", flush=True)
             continue
         rec = {"file": rel, "status": "pass", "tags": tags, "stage_ok": stage}
-        results.append(rec)
+        store(rec)
         if verbose:
             print(f"OK   {rel}")
         if not verbose and (i % 25 == 0 or i == n):
@@ -425,6 +496,22 @@ def main() -> int:
         default=None,
         help="Cap files. Omit for all. 0 means zero files.",
     )
+    ap.add_argument(
+        "--full",
+        action="store_true",
+        help="Rerun every Lib/test file, including ones that already pass.",
+    )
+    ap.add_argument(
+        "--batch",
+        type=int,
+        default=None,
+        help="Run this many remaining (non-pass) files.",
+    )
+    ap.add_argument(
+        "--only",
+        nargs="+",
+        help="Run these Lib/test relative paths (or @file with one path per line).",
+    )
     args = ap.parse_args()
 
     lock_f = open(LOCK_PATH, "w")
@@ -444,6 +531,45 @@ def main() -> int:
         print(f"error: no Lib/test files under {stdlib}", file=sys.stderr)
         return 2
 
+    db = load_db()
+    if not db.get("files"):
+        nseed = seed_db_from_json(db, ROOT / "results" / "aimacro_regrtest.json", stdlib)
+        if nseed:
+            save_db(db)
+            print(f"seeded grind_db.json from aimacro_regrtest.json ({nseed} files)")
+
+    only: list[str] = []
+    if args.only:
+        for item in args.only:
+            if item.startswith("@"):
+                p = Path(item[1:])
+                only.extend(
+                    ln.strip()
+                    for ln in p.read_text(encoding="utf-8").splitlines()
+                    if ln.strip() and not ln.strip().startswith("#")
+                )
+            else:
+                only.append(item)
+    if only:
+        wanted = set(only)
+        files = [
+            f
+            for f in files
+            if file_key(f, stdlib) in wanted or f.name in wanted
+        ]
+        missing = wanted - {file_key(f, stdlib) for f in files} - {f.name for f in files}
+        if missing:
+            print("error: --only not in Lib/test:", ", ".join(sorted(missing)), file=sys.stderr)
+            return 2
+    elif not args.full:
+        done = passing_keys(db)
+        before = len(files)
+        files = [f for f in files if file_key(f, stdlib) not in done]
+        print(f"skipping {before - len(files)} passing files; remaining {len(files)}")
+
+    if args.batch is not None:
+        files = files[: max(0, args.batch)]
+
     payload = {
         "generated": date.today().isoformat(),
         "python": sys.version.split()[0],
@@ -462,6 +588,8 @@ def main() -> int:
             args.verbose,
             stdlib,
             args.limit,
+            db=db,
+            stdlib=stdlib,
         )
         summary["stage"] = stage
         slim = dict(summary)

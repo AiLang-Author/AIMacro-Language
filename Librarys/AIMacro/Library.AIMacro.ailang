@@ -714,6 +714,28 @@ Function.AIMacro.IsInstance {
     Input: type_id: Integer
     Output: Address
     Body: {
+        // assertIsInstance(x, str) passes AddressOf(AIMacro.Str), not TypeID.STR.
+        IfCondition EqualTo(type_id, AddressOf(AIMacro.Str)) ThenBlock: {
+            ReturnValue(AIMacro.Bool(Types.IsString(value)))
+        }
+        IfCondition EqualTo(type_id, AddressOf(AIMacro.Int)) ThenBlock: {
+            ReturnValue(AIMacro.Bool(Types.IsInt(value)))
+        }
+        IfCondition EqualTo(type_id, AddressOf(AIMacro.Float)) ThenBlock: {
+            ReturnValue(AIMacro.Bool(Types.IsFloat(value)))
+        }
+        IfCondition EqualTo(type_id, AddressOf(AIMacro.Bool)) ThenBlock: {
+            ReturnValue(AIMacro.Bool(Types.IsBool(value)))
+        }
+        IfCondition EqualTo(type_id, AddressOf(AIMacro.List)) ThenBlock: {
+            ReturnValue(AIMacro.Bool(Types.IsList(value)))
+        }
+        IfCondition EqualTo(type_id, AddressOf(AIMacro.Tuple)) ThenBlock: {
+            ReturnValue(AIMacro.Bool(Types.IsList(value)))
+        }
+        IfCondition EqualTo(type_id, AddressOf(AIMacro.Dict)) ThenBlock: {
+            ReturnValue(AIMacro.Bool(Types.IsDict(value)))
+        }
         ReturnValue(AIMacro.Bool(Types.IsInstance(value, type_id)))
     }
 }
