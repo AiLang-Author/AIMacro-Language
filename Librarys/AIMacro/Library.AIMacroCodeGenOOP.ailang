@@ -1229,6 +1229,34 @@ Function.OOPGen_MethodCall {
             Gen_Emit(")")
             ReturnValue(0)
         }
+        cmp_rep = StringCompare(method, "replace")
+        IfCondition EqualTo(cmp_rep, 0) ThenBlock: {
+            n_rep = 0
+            IfCondition NotEqual(args, 0) ThenBlock: { n_rep = Array.Size(args) }
+            Gen_Emit("String.Replace(")
+            OOPGen_Expr(obj)
+            Gen_Emit(", ")
+            IfCondition GreaterThan(n_rep, 0) ThenBlock: {
+                OOPGen_Expr(Array.Get(args, 0))
+            } ElseBlock: { Gen_Emit("\"\"") }
+            Gen_Emit(", ")
+            IfCondition GreaterThan(n_rep, 1) ThenBlock: {
+                OOPGen_Expr(Array.Get(args, 1))
+            } ElseBlock: { Gen_Emit("\"\"") }
+            Gen_Emit(")")
+            ReturnValue(0)
+        }
+        cmp_sw = StringCompare(method, "startswith")
+        IfCondition EqualTo(cmp_sw, 0) ThenBlock: {
+            Gen_Emit("String.StartsWith(")
+            OOPGen_Expr(obj)
+            Gen_Emit(", ")
+            IfCondition And(NotEqual(args, 0), GreaterThan(Array.Size(args), 0)) ThenBlock: {
+                OOPGen_Expr(Array.Get(args, 0))
+            } ElseBlock: { Gen_Emit("\"\"") }
+            Gen_Emit(")")
+            ReturnValue(0)
+        }
         cmp_go = StringCompare(method, "getopt")
         IfCondition EqualTo(cmp_go, 0) ThenBlock: {
             Gen_Emit("AIMacro.GetOpt(")

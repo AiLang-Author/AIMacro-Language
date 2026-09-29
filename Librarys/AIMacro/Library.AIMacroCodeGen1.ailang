@@ -1540,6 +1540,8 @@ Function.Gen_IsShimModule {
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
         cmp = StringCompare(name, "io")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+        cmp = StringCompare(name, "platform")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
         ReturnValue(0)
     }
 }
@@ -1649,6 +1651,12 @@ Function.Gen_IsStdlibMethod {
             IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
             ReturnValue(0)
         }
+        cmp = StringCompare(name, "platform")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            cmp = StringCompare(method, "system")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+            ReturnValue(0)
+        }
         ReturnValue(0)
     }
 }
@@ -1720,6 +1728,12 @@ Function.Gen_IsStdlibAttr {
         cmp = StringCompare(name, "unicodedata")
         IfCondition EqualTo(cmp, 0) ThenBlock: {
             cmp = StringCompare(attr, "unidata_version")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "os")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            cmp = StringCompare(attr, "name")
             IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
             ReturnValue(0)
         }
@@ -1907,6 +1921,15 @@ Function.Gen_EmitStdlibAttr {
             IfCondition EqualTo(cmp, 0) ThenBlock: {
                 // stringprep tables are RFC 3454 / Unicode 3.2.0
                 Gen_Emit("\"3.2.0\"")
+                ReturnValue(1)
+            }
+        }
+        cmp = StringCompare(name, "os")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            cmp = StringCompare(attr, "name")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                // Linux syscall table → POSIX Python os.name
+                Gen_Emit("\"posix\"")
                 ReturnValue(1)
             }
         }

@@ -2101,6 +2101,14 @@ Function.Gen_EmitStdlibMethod {
                 ReturnValue(1)
             }
         }
+        cmp = StringCompare(name, "platform")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            cmp = StringCompare(method, "system")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                Gen_Emit("AIMacro.UnameSysname()")
+                ReturnValue(1)
+            }
+        }
         ReturnValue(0)
     }
 }
