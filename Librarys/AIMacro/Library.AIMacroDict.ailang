@@ -12,6 +12,20 @@ LibraryImport.Array
 LibraryImport.AIMacro.AIMacroTypes
 LibraryImport.AIMacro.AIMacro
 
+// Hash.Contains/Get/Set treat keys as C strings. Integer 1 is StringLength(1) SIGSEGV.
+Function.DictGen_HashKey {
+    Input: key: Address
+    Output: Address
+    Body: {
+        IfCondition EqualTo(AIMacro.LooksLikeString(key), 1) ThenBlock: {
+            IfCondition EqualTo(Types.IsBigInt(key), 0) ThenBlock: {
+                ReturnValue(key)
+            }
+        }
+        ReturnValue(NumberToString(AIMacro.UnboxIntZero(key)))
+    }
+}
+
 // =============================================================================
 // GET WITH DEFAULT
 // Python: d.get(key, default)
@@ -24,9 +38,10 @@ Function.DictGen_GetWithDefault {
     Output: Integer
     Body: {
         // Check if key exists
-        exists = Hash.Contains(dict, key)
+        k = DictGen_HashKey(key)
+        exists = Hash.Contains(dict, k)
         IfCondition EqualTo(exists, 1) ThenBlock: {
-            ReturnValue(Hash.Get(dict, key))
+            ReturnValue(Hash.Get(dict, k))
         }
         ReturnValue(default_val)
     }
@@ -42,10 +57,9 @@ Function.DictGen_Pop {
     Input: key: Address
     Output: Integer
     Body: {
-        // Get value first
-        value = Hash.Get(dict, key)
-        // Delete the key
-        Hash.Delete(dict, key)
+        k = DictGen_HashKey(key)
+        value = Hash.Get(dict, k)
+        Hash.Delete(dict, k)
         ReturnValue(value)
     }
 }
@@ -60,10 +74,11 @@ Function.DictGen_PopDefault {
     Input: default_val: Integer
     Output: Integer
     Body: {
-        exists = Hash.Contains(dict, key)
+        k = DictGen_HashKey(key)
+        exists = Hash.Contains(dict, k)
         IfCondition EqualTo(exists, 1) ThenBlock: {
-            value = Hash.Get(dict, key)
-            Hash.Delete(dict, key)
+            value = Hash.Get(dict, k)
+            Hash.Delete(dict, k)
             ReturnValue(value)
         }
         ReturnValue(default_val)
@@ -82,11 +97,12 @@ Function.DictGen_SetDefault {
     Input: default_val: Integer
     Output: Integer
     Body: {
-        exists = Hash.Contains(dict, key)
+        k = DictGen_HashKey(key)
+        exists = Hash.Contains(dict, k)
         IfCondition EqualTo(exists, 1) ThenBlock: {
-            ReturnValue(Hash.Get(dict, key))
+            ReturnValue(Hash.Get(dict, k))
         }
-        Hash.Set(dict, key, default_val)
+        Hash.Set(dict, k, default_val)
         ReturnValue(default_val)
     }
 }
@@ -198,7 +214,7 @@ Function.DictGen_SmartLen {
         // Check if it's a THash
         is_hash = Hash.IsHash(container)
         IfCondition EqualTo(is_hash, 1) ThenBlock: {
-            ReturnValue(Hash.Size(container))
+            ReturnValue(AIMacro.SmartLen(container))
         }
         
         // Check if it's a TArray
@@ -221,24 +237,7 @@ Function.DictGen_SmartContains {
     Input: item: Address
     Output: Integer
     Body: {
-        IfCondition EqualTo(container, 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition GreaterEqual(container, TypeMagic.PTR_MIN) ThenBlock: {
-            is_hash = Hash.IsHash(container)
-            IfCondition EqualTo(is_hash, 1) ThenBlock: {
-                ReturnValue(Hash.Contains(container, item))
-            }
-            is_array = Array.IsArray(container)
-            IfCondition EqualTo(is_array, 1) ThenBlock: {
-                ReturnValue(AIMacro.ListContains(container, item))
-            }
-        }
-        found = StringIndexOf(container, item, 0)
-        IfCondition GreaterEqual(found, 0) ThenBlock: {
-            ReturnValue(1)
-        }
-        ReturnValue(0)
+        ReturnValue(AIMacro.Contains(container, item))
     }
 }
 
@@ -270,7 +269,7 @@ Function.DictGen_SmartGet {
         // Check if it's a THash (dict)
         is_hash = Hash.IsHash(container)
         IfCondition EqualTo(is_hash, 1) ThenBlock: {
-            ReturnValue(Hash.Get(container, key))
+            ReturnValue(Hash.Get(container, DictGen_HashKey(key)))
         }
         
         is_array = Array.IsArray(container)
@@ -304,7 +303,7 @@ Function.DictGen_SmartSet {
         // Check if it's a THash (dict)
         is_hash = Hash.IsHash(container)
         IfCondition EqualTo(is_hash, 1) ThenBlock: {
-            Hash.Set(container, key, value)
+            Hash.Set(container, DictGen_HashKey(key), value)
             ReturnValue(0)
         }
         

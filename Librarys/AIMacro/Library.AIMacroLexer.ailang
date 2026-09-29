@@ -351,11 +351,53 @@ Function.Lexer_ReadString {
                                         lrs_buf_pos = Add(lrs_buf_pos, 1)
                                         Lexer_Advance()
                                     } ElseBlock: {
-                                        SetByte(Lexer.buffer_ptr, lrs_buf_pos, 92)
-                                        lrs_buf_pos = Add(lrs_buf_pos, 1)
-                                        SetByte(Lexer.buffer_ptr, lrs_buf_pos, lrs_esc)
-                                        lrs_buf_pos = Add(lrs_buf_pos, 1)
-                                        Lexer_Advance()
+                                        IfCondition EqualTo(lrs_esc, 117) ThenBlock: {
+                                            Lexer_Advance()
+                                            cp = 0
+                                            hi = 0
+                                            WhileLoop LessThan(hi, 4) {
+                                                hx = Lexer_CurrentChar()
+                                                hv = 0
+                                                IfCondition And(GreaterEqual(hx, 48), LessEqual(hx, 57)) ThenBlock: {
+                                                    hv = Subtract(hx, 48)
+                                                } ElseBlock: {
+                                                    IfCondition And(GreaterEqual(hx, 65), LessEqual(hx, 70)) ThenBlock: {
+                                                        hv = Add(Subtract(hx, 65), 10)
+                                                    } ElseBlock: {
+                                                        IfCondition And(GreaterEqual(hx, 97), LessEqual(hx, 102)) ThenBlock: {
+                                                            hv = Add(Subtract(hx, 97), 10)
+                                                        }
+                                                    }
+                                                }
+                                                cp = Add(Multiply(cp, 16), hv)
+                                                Lexer_Advance()
+                                                hi = Add(hi, 1)
+                                            }
+                                            IfCondition LessThan(cp, 128) ThenBlock: {
+                                                SetByte(Lexer.buffer_ptr, lrs_buf_pos, cp)
+                                                lrs_buf_pos = Add(lrs_buf_pos, 1)
+                                            } ElseBlock: {
+                                                IfCondition LessThan(cp, 2048) ThenBlock: {
+                                                    SetByte(Lexer.buffer_ptr, lrs_buf_pos, Add(192, Divide(cp, 64)))
+                                                    lrs_buf_pos = Add(lrs_buf_pos, 1)
+                                                    SetByte(Lexer.buffer_ptr, lrs_buf_pos, Add(128, Modulo(cp, 64)))
+                                                    lrs_buf_pos = Add(lrs_buf_pos, 1)
+                                                } ElseBlock: {
+                                                    SetByte(Lexer.buffer_ptr, lrs_buf_pos, Add(224, Divide(cp, 4096)))
+                                                    lrs_buf_pos = Add(lrs_buf_pos, 1)
+                                                    SetByte(Lexer.buffer_ptr, lrs_buf_pos, Add(128, Modulo(Divide(cp, 64), 64)))
+                                                    lrs_buf_pos = Add(lrs_buf_pos, 1)
+                                                    SetByte(Lexer.buffer_ptr, lrs_buf_pos, Add(128, Modulo(cp, 64)))
+                                                    lrs_buf_pos = Add(lrs_buf_pos, 1)
+                                                }
+                                            }
+                                        } ElseBlock: {
+                                            SetByte(Lexer.buffer_ptr, lrs_buf_pos, 92)
+                                            lrs_buf_pos = Add(lrs_buf_pos, 1)
+                                            SetByte(Lexer.buffer_ptr, lrs_buf_pos, lrs_esc)
+                                            lrs_buf_pos = Add(lrs_buf_pos, 1)
+                                            Lexer_Advance()
+                                        }
                                     }
                                 }
                             }

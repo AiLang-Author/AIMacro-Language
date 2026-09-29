@@ -27,6 +27,8 @@ FixedPool.OOPGen {
     "temp_counter": Initialize=0        
     "has_classes": Initialize=0
     "test_classes": Initialize=0
+    "class_renames_from": Initialize=0
+    "class_renames_to": Initialize=0
 }
 
 
@@ -66,6 +68,8 @@ Function.OOPGen_Init {
         OOPGen.method_impl_code = Array.Create(256)
         OOPGen.emitted_methods = Array.Create(256)
         OOPGen.test_classes = Array.Create(32)
+        OOPGen.class_renames_from = Array.Create(32)
+        OOPGen.class_renames_to = Array.Create(32)
         OOPGen.temp_counter = 0
         OOPGen.has_classes = 0
         OOPGen.initialized = 1
@@ -103,6 +107,12 @@ Function.OOPGen_Reset {
             }
             IfCondition NotEqual(OOPGen.test_classes, 0) ThenBlock: {
                 Array.Clear(OOPGen.test_classes)
+            }
+            IfCondition NotEqual(OOPGen.class_renames_from, 0) ThenBlock: {
+                Array.Clear(OOPGen.class_renames_from)
+            }
+            IfCondition NotEqual(OOPGen.class_renames_to, 0) ThenBlock: {
+                Array.Clear(OOPGen.class_renames_to)
             }
         }
     }
@@ -218,7 +228,7 @@ Function.OOPGen_FlattenExpr {
             ReturnValue(Gen_MakeIdent(temp))
         }
         
-        // METHOD_CALL: obj.method(args) -> temp = OOP.MethodCall(...)
+        // METHOD_CALL: obj.method(args) -> temp = AIMacro.MethodCall(...)
         is_mcall = EqualTo(node_type, Node.METHOD_CALL)
         IfCondition EqualTo(node_type, 11) ThenBlock: {
             is_mcall = 1
@@ -271,7 +281,7 @@ Function.OOPGen_FlattenExpr {
             temp = Gen_TempName()
             Gen_EmitIndent()
             Gen_Emit(temp)
-            Gen_Emit(" = OOP.MethodCall(")
+            Gen_Emit(" = AIMacro.MethodCall(")
             OOPGen_Expr(obj)
             Gen_Emit(", \"")
             Gen_Emit(method)
@@ -513,7 +523,62 @@ Function.OOPGen_ClassDef {
             i = Add(i, 1)
         }
         
+        attr_fn = StringConcat(class_name, "___classattrs")
+        has_attr = 0
+        i = 0
+        WhileLoop LessThan(i, num_items) {
+            item = Array.Get(body, i)
+            IfCondition EqualTo(AST_Type(item), Node.ASSIGNMENT) ThenBlock: {
+                has_attr = 1
+            }
+            i = Add(i, 1)
+        }
+        IfCondition EqualTo(has_attr, 1) ThenBlock: {
+            Gen_Emit("Function.")
+            Gen_Emit(attr_fn)
+            Gen_Emit(" {\n")
+            Gen_Emit("    Output: Integer\n")
+            Gen_Emit("    Body: {\n")
+            old_indent = Gen.indent
+            Gen.indent = 2
+            saved_tc = Gen.temp_counter
+            Gen.temp_counter = 0
+            i = 0
+            WhileLoop LessThan(i, num_items) {
+                item = Array.Get(body, i)
+                IfCondition EqualTo(AST_Type(item), Node.ASSIGNMENT) ThenBlock: {
+                    fname = AST_GetField(item, "name")
+                    fval = AST_GetField(item, "value")
+                    IfCondition NotEqual(fname, 0) ThenBlock: {
+                        IfCondition EqualTo(Gen_HasCall(fval), 1) ThenBlock: {
+                            fval = Gen_FlattenExpr(fval)
+                        }
+                        Gen_EmitIndent()
+                        Gen_Emit("AIMacro.ClassAttrSet(\"")
+                        Gen_Emit(class_name)
+                        Gen_Emit("\", \"")
+                        Gen_Emit(fname)
+                        Gen_Emit("\", ")
+                        Gen_Expr(fval)
+                        Gen_Emit(")\n")
+                    }
+                }
+                i = Add(i, 1)
+            }
+            Gen_EmitIndent()
+            Gen_Emit("ReturnValue(1)\n")
+            Gen.indent = old_indent
+            Gen.temp_counter = saved_tc
+            Gen_Emit("    }\n")
+            Gen_Emit("}\n\n")
+        }
+        
         OOPGen_EmitClassRegistration(class_name, parent, bases, body)
+        IfCondition EqualTo(has_attr, 1) ThenBlock: {
+            attr_call = StringConcat("    ", attr_fn)
+            attr_call = StringConcat(attr_call, "()\n")
+            Array.Push(OOPGen.class_init_code, attr_call)
+        }
         
         class_info = Array.Create(3)
         Array.Push(class_info, class_name)
@@ -629,6 +694,7 @@ Function.OOPGen_MethodImpl {
         return_type = AST_GetField(method_node, "return_type")
         Gen.temp_counter = 0
         OOPGen.temp_counter = 0
+        Gen.loop_depth = 0
         
         OOPGen.current_method = method_name
         IfCondition NotEqual(Gen.enclosing_locals, 0) ThenBlock: {
@@ -1153,7 +1219,7 @@ Function.OOPGen_AttrAccess {
 }
 
 // =============================================================================
-// METHOD CALL: obj.method(args) -> OOP.MethodCall(obj, "method", args_array)
+// METHOD CALL: obj.method(args) -> AIMacro.MethodCall(obj, "method", args_array)
 // =============================================================================
 
 Function.OOPGen_MethodCall {
@@ -1456,7 +1522,7 @@ Function.OOPGen_MethodCall {
         
         // Emit the method call
         Gen_EmitIndent()
-        Gen_Emit("OOP.MethodCall(")
+        Gen_Emit("AIMacro.MethodCall(")
         OOPGen_Expr(obj)
         Gen_Emit(", \"")
         Gen_Emit(method)
@@ -1600,6 +1666,19 @@ Function.OOPGen_EmitClassRegistration {
         reg = StringConcat(reg, "\", ")
         use_parent = parent
         is_test = 0
+        IfCondition And(NotEqual(parent, 0), NotEqual(OOPGen.class_renames_from, 0)) ThenBlock: {
+            nsz = Array.Size(OOPGen.class_renames_from)
+            ni = 0
+            WhileLoop LessThan(ni, nsz) {
+                bn = Array.Get(OOPGen.class_renames_from, ni)
+                cmpn = StringCompare(parent, bn)
+                IfCondition EqualTo(cmpn, 0) ThenBlock: {
+                    use_parent = Array.Get(OOPGen.class_renames_to, ni)
+                    parent = use_parent
+                }
+                ni = Add(ni, 1)
+            }
+        }
         IfCondition EqualTo(OOPGen_LooksLikeTestClass(class_name), 1) ThenBlock: {
             is_test = 1
         }
@@ -1611,7 +1690,12 @@ Function.OOPGen_EmitClassRegistration {
             cmp_ex = StringCompare(parent, "Exception")
             cmp_be = StringCompare(parent, "BaseException")
             cmp_ob = StringCompare(parent, "object")
-            IfCondition Or(EqualTo(cmp_ex, 0), Or(EqualTo(cmp_be, 0), EqualTo(cmp_ob, 0))) ThenBlock: {
+            cmp_int = StringCompare(parent, "int")
+            cmp_bool = StringCompare(parent, "bool")
+            cmp_str = StringCompare(parent, "str")
+            cmp_lst = StringCompare(parent, "list")
+            cmp_dct = StringCompare(parent, "dict")
+            IfCondition Or(EqualTo(cmp_ex, 0), Or(EqualTo(cmp_be, 0), Or(EqualTo(cmp_ob, 0), Or(EqualTo(cmp_int, 0), Or(EqualTo(cmp_bool, 0), Or(EqualTo(cmp_str, 0), Or(EqualTo(cmp_lst, 0), EqualTo(cmp_dct, 0)))))))) ThenBlock: {
                 use_parent = 0
             }
         }

@@ -9,6 +9,7 @@ LibraryImport.Array
 LibraryImport.Hash
 LibraryImport.JSON
 LibraryImport.Plex
+LibraryImport.OOP
 LibraryImport.FixedPointTrig
 LibraryImport.AIMacro.AIMacroString
 LibraryImport.AIMacro.AIMacroTypes
@@ -78,20 +79,34 @@ Function.AIMacro.SmartLen {
     Output: Integer
     Body: {
         IfCondition EqualTo(container, 0) ThenBlock: {
-            ReturnValue(0)
+            ReturnValue(AIMacro.IntZero())
         }
         IfCondition EqualTo(AIMacro.IsNone(container), 1) ThenBlock: {
-            ReturnValue(0)
+            ReturnValue(AIMacro.IntZero())
         }
-        IfCondition GreaterEqual(container, TypeMagic.PTR_MIN) ThenBlock: {
-            is_hash = Hash.IsHash(container)
-            IfCondition EqualTo(is_hash, 1) ThenBlock: {
-                ReturnValue(Hash.Size(container))
+        IfCondition And(GreaterEqual(container, TypeMagic.PTR_MIN), EqualTo(Hash.IsHash(container), 1)) ThenBlock: {
+            IfCondition And(EqualTo(Hash.Contains(container, "__class__"), 1), EqualTo(OOP.MethodExists(container, "__len__"), 1)) ThenBlock: {
+                largs = Array.Create(0)
+                n = OOP.MethodCall(container, "__len__", largs)
+                IfCondition EqualTo(AIMacro.LooksLikeString(n), 1) ThenBlock: {
+                    AIMacro.RaiseKind(5, "__len__ should return >= 0")
+                    ReturnValue(AIMacro.IntZero())
+                }
+                n = AIMacro.UnboxIntZero(n)
+                IfCondition LessThan(n, 0) ThenBlock: {
+                    AIMacro.RaiseKind(2, "__len__ should return >= 0")
+                    ReturnValue(AIMacro.IntZero())
+                }
+                IfCondition GreaterEqual(n, TypeMagic.HEAP_START) ThenBlock: {
+                    AIMacro.RaiseKind(2, "__len__ should return >= 0")
+                    ReturnValue(AIMacro.IntZero())
+                }
+                ReturnValue(n)
             }
-            is_tarray = Array.IsArray(container)
-            IfCondition EqualTo(is_tarray, 1) ThenBlock: {
-                ReturnValue(Array.Size(container))
-            }
+            ReturnValue(Hash.Size(container))
+        }
+        IfCondition EqualTo(Array.IsArray(container), 1) ThenBlock: {
+            ReturnValue(Array.Size(container))
         }
         ReturnValue(StringLength(container))
     }
@@ -797,10 +812,16 @@ Function.AIMacro.LooksLikeString {
     Input: value: Address
     Output: Integer
     Body: {
-        IfCondition Or(EqualTo(value, 0), LessThan(value, 4000000)) ThenBlock: {
+        // 0x440000: ELF code is 0x400000–data. Function pointers are not C strings.
+        IfCondition Or(EqualTo(value, 0), LessThan(value, 4456448)) ThenBlock: {
             ReturnValue(0)
         }
-        IfCondition And(GreaterEqual(value, 500000000), LessThan(value, TypeMagic.PTR_MIN)) ThenBlock: {
+        // 2^32 and other unboxed ints sit above ELF data and below mmap heap (2^40).
+        IfCondition And(GreaterEqual(value, 500000000), LessThan(value, 1099511627776)) ThenBlock: {
+            ReturnValue(0)
+        }
+        firstb = GetByte(value, 0)
+        IfCondition EqualTo(firstb, 85) ThenBlock: {
             ReturnValue(0)
         }
         IfCondition GreaterEqual(value, TypeMagic.PTR_MIN) ThenBlock: {
@@ -901,7 +922,23 @@ Function.AIMacro.BoolVal {
         IfCondition EqualTo(Types.IsBool(value), 1) ThenBlock: {
             ReturnValue(Dereference(Add(value, 8)))
         }
-        ReturnValue(value)
+        ReturnValue(AIMacro.UnboxIntZero(value))
+    }
+}
+
+Function.AIMacro.UnboxIntZero {
+    Input: v: Address
+    Output: Address
+    Body: {
+        IfCondition EqualTo(Types.IsBigInt(v), 1) ThenBlock: {
+            IfCondition EqualTo(Dereference(Add(v, 8)), 0) ThenBlock: {
+                digs = Dereference(Add(v, 16))
+                IfCondition EqualTo(StringCompare(digs, "0"), 0) ThenBlock: {
+                    ReturnValue(0)
+                }
+            }
+        }
+        ReturnValue(v)
     }
 }
 
@@ -1090,14 +1127,25 @@ Function.AIMacro.Int {
     Output: Integer
     Body: {
         IfCondition EqualTo(Types.IsBool(value), 1) ThenBlock: {
-            ReturnValue(AIMacro.BoolVal(value))
+            IfCondition EqualTo(AIMacro.BoolVal(value), 0) ThenBlock: {
+                ReturnValue(AIMacro.IntZero())
+            }
+            ReturnValue(1)
         }
         IfCondition EqualTo(Types.IsFloat(value), 1) ThenBlock: {
-            ReturnValue(Float_ToInt(AIMacro.FloatBits(value)))
+            fi = Float_ToInt(AIMacro.FloatBits(value))
+            IfCondition EqualTo(fi, 0) ThenBlock: {
+                ReturnValue(AIMacro.IntZero())
+            }
+            ReturnValue(fi)
         }
         is_str = Types.IsString(value)
         IfCondition EqualTo(is_str, 1) ThenBlock: {
             ReturnValue(StringToNumber(value))
+        }
+        value = AIMacro.UnboxIntZero(value)
+        IfCondition EqualTo(value, 0) ThenBlock: {
+            ReturnValue(AIMacro.IntZero())
         }
         ReturnValue(value)
     }
@@ -1107,6 +1155,49 @@ Function.AIMacro.Bool {
     Input: value: Address
     Output: Address
     Body: {
+        IfCondition EqualTo(value, 0) ThenBlock: {
+            ReturnValue(AIMacro.FalseVal())
+        }
+        IfCondition And(GreaterEqual(value, TypeMagic.PTR_MIN), EqualTo(Hash.IsHash(value), 1)) ThenBlock: {
+            cls = Hash.Get(value, "__class__")
+            IfCondition NotEqual(cls, 0) ThenBlock: {
+                bslot = AIMacro.ClassAttrGet(cls, "__bool__")
+                IfCondition EqualTo(AIMacro.IsNone(bslot), 1) ThenBlock: {
+                    AIMacro.RaiseKind(5, "__bool__ is None")
+                    ReturnValue(AIMacro.FalseVal())
+                }
+            }
+            IfCondition EqualTo(OOP.MethodExists(value, "__bool__"), 1) ThenBlock: {
+                bargs = Array.Create(0)
+                r = OOP.MethodCall(value, "__bool__", bargs)
+                IfCondition EqualTo(Types.IsBool(r), 1) ThenBlock: {
+                    ReturnValue(r)
+                }
+                AIMacro.RaiseKind(5, "__bool__ should return bool")
+                ReturnValue(AIMacro.FalseVal())
+            }
+            IfCondition EqualTo(OOP.MethodExists(value, "__len__"), 1) ThenBlock: {
+                largs = Array.Create(0)
+                n = OOP.MethodCall(value, "__len__", largs)
+                IfCondition EqualTo(AIMacro.LooksLikeString(n), 1) ThenBlock: {
+                    AIMacro.RaiseKind(5, "__len__ should return >= 0")
+                    ReturnValue(AIMacro.FalseVal())
+                }
+                n = AIMacro.UnboxIntZero(n)
+                IfCondition LessThan(n, 0) ThenBlock: {
+                    AIMacro.RaiseKind(2, "__len__ should return >= 0")
+                    ReturnValue(AIMacro.FalseVal())
+                }
+                IfCondition GreaterEqual(n, TypeMagic.HEAP_START) ThenBlock: {
+                    AIMacro.RaiseKind(2, "__len__ should return >= 0")
+                    ReturnValue(AIMacro.FalseVal())
+                }
+                IfCondition EqualTo(n, 0) ThenBlock: {
+                    ReturnValue(AIMacro.FalseVal())
+                }
+                ReturnValue(AIMacro.TrueVal())
+            }
+        }
         IfCondition EqualTo(AIMacro.SmartBool(value), 1) ThenBlock: {
             ReturnValue(AIMacro.TrueVal())
         }
@@ -1873,17 +1964,19 @@ Function.AIMacro.Tuple {
     Input: elements: Address
     Output: Address
     Body: {
-        // Create immutable array-like structure
+        IfCondition Or(EqualTo(elements, 0), EqualTo(AIMacro.IsNone(elements), 1)) ThenBlock: {
+            ReturnValue(Array.Create(0))
+        }
+        IfCondition EqualTo(Array.IsArray(elements), 0) ThenBlock: {
+            ReturnValue(AIMacro.ListFrom(elements))
+        }
         len = Array.Size(elements)
-        tuple = ArrayCreate(len)
-        
+        tuple = Array.Create(len)
         i = 0
         WhileLoop LessThan(i, len) {
-            item = Array.Get(elements, i)
-            ArraySet(tuple, i, item)
+            Array.Push(tuple, Array.Get(elements, i))
             i = Add(i, 1)
         }
-        
         ReturnValue(tuple)
     }
 }
@@ -2328,6 +2421,11 @@ Function.AIMacro.SmartBool {
         IfCondition EqualTo(Types.IsBool(value), 1) ThenBlock: {
             ReturnValue(AIMacro.BoolVal(value))
         }
+        IfCondition And(GreaterEqual(value, TypeMagic.PTR_MIN), EqualTo(Hash.IsHash(value), 1)) ThenBlock: {
+            IfCondition Or(EqualTo(OOP.MethodExists(value, "__bool__"), 1), EqualTo(OOP.MethodExists(value, "__len__"), 1)) ThenBlock: {
+                ReturnValue(AIMacro.BoolVal(AIMacro.Bool(value)))
+            }
+        }
         IfCondition EqualTo(Types.IsFloat(value), 1) ThenBlock: {
             mag = BitwiseAnd(AIMacro.FloatBits(value), 0x7FFFFFFFFFFFFFFF)
             IfCondition EqualTo(mag, 0) ThenBlock: {
@@ -2335,8 +2433,12 @@ Function.AIMacro.SmartBool {
             }
             ReturnValue(1)
         }
+        value = AIMacro.UnboxIntZero(value)
         IfCondition EqualTo(value, 0) ThenBlock: {
             ReturnValue(0)
+        }
+        IfCondition EqualTo(Types.IsBigInt(value), 1) ThenBlock: {
+            ReturnValue(1)
         }
         IfCondition GreaterEqual(value, TypeMagic.PTR_MIN) ThenBlock: {
             is_arr = Array.IsArray(value)
@@ -2393,7 +2495,17 @@ Function.AIMacro.IterLen {
     Input: container: Address
     Output: Integer
     Body: {
-        ReturnValue(AIMacro.SmartLen(container))
+        n = AIMacro.UnboxIntZero(AIMacro.SmartLen(container))
+        IfCondition LessThan(n, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition GreaterEqual(n, TypeMagic.HEAP_START) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition GreaterThan(n, 65536) ThenBlock: {
+            ReturnValue(65536)
+        }
+        ReturnValue(n)
     }
 }
 
@@ -3714,14 +3826,21 @@ Function.AIMacro.NumBitOr {
             IfCondition EqualTo(Dereference(a), TypeMagic.BOOL) ThenBlock: {
                 IfCondition And(GreaterEqual(b, TypeMagic.HEAP_START), LessThan(b, 140737488355328)) ThenBlock: {
                     IfCondition EqualTo(Dereference(b), TypeMagic.BOOL) ThenBlock: {
-                        ReturnValue(AIMacro.Bool(BitwiseOr(Dereference(Add(a, 8)), Dereference(Add(b, 8)))))
+                        IfCondition EqualTo(BitwiseOr(Dereference(Add(a, 8)), Dereference(Add(b, 8))), 0) ThenBlock: {
+                            ReturnValue(AIMacro.FalseVal())
+                        }
+                        ReturnValue(AIMacro.TrueVal())
                     }
                 }
             }
         }
         a = AIMacro.BoolVal(a)
         b = AIMacro.BoolVal(b)
-        ReturnValue(BitwiseOr(a, b))
+        r = BitwiseOr(a, b)
+        IfCondition EqualTo(r, 0) ThenBlock: {
+            ReturnValue(AIMacro.IntZero())
+        }
+        ReturnValue(r)
     }
 }
 
@@ -3734,14 +3853,21 @@ Function.AIMacro.NumBitXor {
             IfCondition EqualTo(Dereference(a), TypeMagic.BOOL) ThenBlock: {
                 IfCondition And(GreaterEqual(b, TypeMagic.HEAP_START), LessThan(b, 140737488355328)) ThenBlock: {
                     IfCondition EqualTo(Dereference(b), TypeMagic.BOOL) ThenBlock: {
-                        ReturnValue(AIMacro.Bool(BitwiseXor(Dereference(Add(a, 8)), Dereference(Add(b, 8)))))
+                        IfCondition EqualTo(BitwiseXor(Dereference(Add(a, 8)), Dereference(Add(b, 8))), 0) ThenBlock: {
+                            ReturnValue(AIMacro.FalseVal())
+                        }
+                        ReturnValue(AIMacro.TrueVal())
                     }
                 }
             }
         }
         a = AIMacro.BoolVal(a)
         b = AIMacro.BoolVal(b)
-        ReturnValue(BitwiseXor(a, b))
+        r = BitwiseXor(a, b)
+        IfCondition EqualTo(r, 0) ThenBlock: {
+            ReturnValue(AIMacro.IntZero())
+        }
+        ReturnValue(r)
     }
 }
 
@@ -3754,14 +3880,21 @@ Function.AIMacro.NumBitAnd {
             IfCondition EqualTo(Dereference(a), TypeMagic.BOOL) ThenBlock: {
                 IfCondition And(GreaterEqual(b, TypeMagic.HEAP_START), LessThan(b, 140737488355328)) ThenBlock: {
                     IfCondition EqualTo(Dereference(b), TypeMagic.BOOL) ThenBlock: {
-                        ReturnValue(AIMacro.Bool(BitwiseAnd(Dereference(Add(a, 8)), Dereference(Add(b, 8)))))
+                        IfCondition EqualTo(BitwiseAnd(Dereference(Add(a, 8)), Dereference(Add(b, 8))), 0) ThenBlock: {
+                            ReturnValue(AIMacro.FalseVal())
+                        }
+                        ReturnValue(AIMacro.TrueVal())
                     }
                 }
             }
         }
         a = AIMacro.BoolVal(a)
         b = AIMacro.BoolVal(b)
-        ReturnValue(BitwiseAnd(a, b))
+        r = BitwiseAnd(a, b)
+        IfCondition EqualTo(r, 0) ThenBlock: {
+            ReturnValue(AIMacro.IntZero())
+        }
+        ReturnValue(r)
     }
 }
 
@@ -3811,7 +3944,11 @@ Function.AIMacro.NumBitShl {
             }
             ReturnValue(AIMacro.FloatBox(bits))
         }
-        ReturnValue(ShiftLeft(a, b))
+        r = ShiftLeft(a, b)
+        IfCondition EqualTo(r, 0) ThenBlock: {
+            ReturnValue(AIMacro.IntZero())
+        }
+        ReturnValue(AIMacro.IntOrBox(r))
     }
 }
 
@@ -3875,6 +4012,8 @@ Function.AIMacro.NumPow {
     Body: {
         // Zero extra locals. Nested BoolVal/pool loops smashed the caller so
         // EqualTo(result, 16) passed and PrintNumber(result) SIGSEGV'd.
+        a = AIMacro.UnboxIntZero(AIMacro.BoolVal(a))
+        b = AIMacro.UnboxIntZero(AIMacro.BoolVal(b))
         IfCondition And(GreaterEqual(a, TypeMagic.HEAP_START), LessThan(a, 140737488355328)) ThenBlock: {
             IfCondition EqualTo(Dereference(a), TypeMagic.BOOL) ThenBlock: {
                 a = Dereference(Add(a, 8))
@@ -3984,11 +4123,66 @@ Function.AIMacro.FloorDiv {
     }
 }
 
+Function.AIMacro.HexStr {
+    Input: n: Integer
+    Output: Address
+    Body: {
+        n = AIMacro.UnboxIntZero(n)
+        IfCondition EqualTo(n, 0) ThenBlock: {
+            ReturnValue("0")
+        }
+        IfCondition LessThan(n, 0) ThenBlock: {
+            n = Subtract(0, n)
+        }
+        out = ""
+        WhileLoop GreaterThan(n, 0) {
+            d = Modulo(n, 16)
+            n = Divide(n, 16)
+            ch = Add(48, d)
+            IfCondition GreaterThan(d, 9) ThenBlock: {
+                ch = Add(87, d)
+            }
+            out = String.Concat(AIMacro.Chr(ch), out)
+        }
+        ReturnValue(out)
+    }
+}
+
+Function.AIMacro.PercentFormat {
+    Input: fmt: Address
+    Input: val: Address
+    Output: Address
+    Body: {
+        IfCondition EqualTo(StringCompare(fmt, "%d"), 0) ThenBlock: {
+            ReturnValue(NumberToString(AIMacro.UnboxIntZero(AIMacro.Int(val))))
+        }
+        IfCondition EqualTo(StringCompare(fmt, "%i"), 0) ThenBlock: {
+            ReturnValue(NumberToString(AIMacro.UnboxIntZero(AIMacro.Int(val))))
+        }
+        IfCondition EqualTo(StringCompare(fmt, "%u"), 0) ThenBlock: {
+            ReturnValue(NumberToString(AIMacro.UnboxIntZero(AIMacro.Int(val))))
+        }
+        IfCondition EqualTo(StringCompare(fmt, "%x"), 0) ThenBlock: {
+            ReturnValue(AIMacro.HexStr(AIMacro.UnboxIntZero(AIMacro.Int(val))))
+        }
+        IfCondition EqualTo(StringCompare(fmt, "%X"), 0) ThenBlock: {
+            ReturnValue(AIMacro.HexStr(AIMacro.UnboxIntZero(AIMacro.Int(val))))
+        }
+        IfCondition EqualTo(StringCompare(fmt, "%s"), 0) ThenBlock: {
+            ReturnValue(AIMacro.Str(val))
+        }
+        ReturnValue(fmt)
+    }
+}
+
 Function.AIMacro.NumMod {
     Input: a: Address
     Input: b: Address
     Output: Integer
     Body: {
+        IfCondition EqualTo(AIMacro.LooksLikeString(a), 1) ThenBlock: {
+            ReturnValue(AIMacro.PercentFormat(a, b))
+        }
         a = AIMacro.BoolVal(a)
         b = AIMacro.BoolVal(b)
         ia = a
@@ -3998,6 +4192,11 @@ Function.AIMacro.NumMod {
         }
         IfCondition EqualTo(Types.IsFloat(b), 1) ThenBlock: {
             ib = Float_ToInt(AIMacro.FloatBits(b))
+        }
+        ib = AIMacro.UnboxIntZero(ib)
+        IfCondition EqualTo(ib, 0) ThenBlock: {
+            AIMacro.RaiseKind(5, "modulo by zero")
+            ReturnValue(0)
         }
         ReturnValue(Modulo(ia, ib))
     }
@@ -4091,8 +4290,8 @@ Function.AIMacro.NumEq {
     Input: b: Address
     Output: Address
     Body: {
-        av = AIMacro.BoolVal(a)
-        bv = AIMacro.BoolVal(b)
+        av = AIMacro.UnboxIntZero(AIMacro.BoolVal(a))
+        bv = AIMacro.UnboxIntZero(AIMacro.BoolVal(b))
         a = av
         b = bv
         IfCondition Or(EqualTo(Types.IsBigInt(a), 1), EqualTo(Types.IsBigInt(b), 1)) ThenBlock: {
@@ -4105,7 +4304,10 @@ Function.AIMacro.NumEq {
             IfCondition NotEqual(Dereference(Add(a, 8)), Dereference(Add(b, 8))) ThenBlock: {
                 ReturnValue(AIMacro.FalseVal())
             }
-            ReturnValue(AIMacro.Bool(EqualTo(StringCompare(Dereference(Add(a, 16)), Dereference(Add(b, 16))), 0)))
+            IfCondition EqualTo(StringCompare(Dereference(Add(a, 16)), Dereference(Add(b, 16))), 0) ThenBlock: {
+                ReturnValue(AIMacro.TrueVal())
+            }
+            ReturnValue(AIMacro.FalseVal())
         }
         IfCondition Or(EqualTo(Types.IsComplex(a), 1), EqualTo(Types.IsComplex(b), 1)) ThenBlock: {
             ra = 0
@@ -4124,12 +4326,62 @@ Function.AIMacro.NumEq {
             } ElseBlock: {
                 rb = AIMacro.ToFloatBits(b)
             }
-            ReturnValue(AIMacro.Bool(And(EqualTo(Float_Eq(ra, rb), 1), EqualTo(Float_Eq(ia, ib), 1))))
+            IfCondition And(EqualTo(Float_Eq(ra, rb), 1), EqualTo(Float_Eq(ia, ib), 1)) ThenBlock: {
+                ReturnValue(AIMacro.TrueVal())
+            }
+            ReturnValue(AIMacro.FalseVal())
         }
         IfCondition Or(EqualTo(Types.IsFloat(a), 1), EqualTo(Types.IsFloat(b), 1)) ThenBlock: {
-            ReturnValue(AIMacro.Bool(Float_Eq(AIMacro.ToFloatBits(a), AIMacro.ToFloatBits(b))))
+            IfCondition EqualTo(Float_Eq(AIMacro.ToFloatBits(a), AIMacro.ToFloatBits(b)), 1) ThenBlock: {
+                ReturnValue(AIMacro.TrueVal())
+            }
+            ReturnValue(AIMacro.FalseVal())
         }
-        ReturnValue(AIMacro.Bool(EqualTo(a, b)))
+        IfCondition And(EqualTo(Array.IsArray(a), 1), EqualTo(Array.IsArray(b), 1)) ThenBlock: {
+            na = Array.Size(a)
+            nb = Array.Size(b)
+            IfCondition NotEqual(na, nb) ThenBlock: {
+                ReturnValue(AIMacro.FalseVal())
+            }
+            ia = 0
+            WhileLoop LessThan(ia, na) {
+                ea = Array.Get(a, ia)
+                eb = Array.Get(b, ia)
+                IfCondition NotEqual(ea, eb) ThenBlock: {
+                    IfCondition EqualTo(AIMacro.SmartBool(AIMacro.NumEq(ea, eb)), 0) ThenBlock: {
+                        ReturnValue(AIMacro.FalseVal())
+                    }
+                }
+                ia = Add(ia, 1)
+            }
+            ReturnValue(AIMacro.TrueVal())
+        }
+        IfCondition And(EqualTo(Hash.IsHash(a), 1), EqualTo(Hash.IsHash(b), 1)) ThenBlock: {
+            IfCondition Or(NotEqual(Hash.Get(a, "__class__"), 0), NotEqual(Hash.Get(b, "__class__"), 0)) ThenBlock: {
+                IfCondition EqualTo(a, b) ThenBlock: {
+                    ReturnValue(AIMacro.TrueVal())
+                }
+                ReturnValue(AIMacro.FalseVal())
+            }
+            IfCondition NotEqual(Hash.Size(a), Hash.Size(b)) ThenBlock: {
+                ReturnValue(AIMacro.FalseVal())
+            }
+            ka = Hash.Keys(a)
+            nka = Array.Size(ka)
+            ik = 0
+            WhileLoop LessThan(ik, nka) {
+                k = Array.Get(ka, ik)
+                IfCondition EqualTo(Hash.Contains(b, k), 0) ThenBlock: {
+                    ReturnValue(AIMacro.FalseVal())
+                }
+                ik = Add(ik, 1)
+            }
+            ReturnValue(AIMacro.TrueVal())
+        }
+        IfCondition EqualTo(a, b) ThenBlock: {
+            ReturnValue(AIMacro.TrueVal())
+        }
+        ReturnValue(AIMacro.FalseVal())
     }
 }
 
@@ -4153,9 +4405,15 @@ Function.AIMacro.NumLt {
         a = AIMacro.BoolVal(a)
         b = AIMacro.BoolVal(b)
         IfCondition Or(EqualTo(Types.IsFloat(a), 1), EqualTo(Types.IsFloat(b), 1)) ThenBlock: {
-            ReturnValue(AIMacro.Bool(Float_Lt(AIMacro.ToFloatBits(a), AIMacro.ToFloatBits(b))))
+            IfCondition EqualTo(Float_Lt(AIMacro.ToFloatBits(a), AIMacro.ToFloatBits(b)), 1) ThenBlock: {
+                ReturnValue(AIMacro.TrueVal())
+            }
+            ReturnValue(AIMacro.FalseVal())
         }
-        ReturnValue(AIMacro.Bool(LessThan(a, b)))
+        IfCondition LessThan(a, b) ThenBlock: {
+            ReturnValue(AIMacro.TrueVal())
+        }
+        ReturnValue(AIMacro.FalseVal())
     }
 }
 
@@ -4167,9 +4425,15 @@ Function.AIMacro.NumLe {
         a = AIMacro.BoolVal(a)
         b = AIMacro.BoolVal(b)
         IfCondition Or(EqualTo(Types.IsFloat(a), 1), EqualTo(Types.IsFloat(b), 1)) ThenBlock: {
-            ReturnValue(AIMacro.Bool(Float_Le(AIMacro.ToFloatBits(a), AIMacro.ToFloatBits(b))))
+            IfCondition EqualTo(Float_Le(AIMacro.ToFloatBits(a), AIMacro.ToFloatBits(b)), 1) ThenBlock: {
+                ReturnValue(AIMacro.TrueVal())
+            }
+            ReturnValue(AIMacro.FalseVal())
         }
-        ReturnValue(AIMacro.Bool(LessEqual(a, b)))
+        IfCondition LessEqual(a, b) ThenBlock: {
+            ReturnValue(AIMacro.TrueVal())
+        }
+        ReturnValue(AIMacro.FalseVal())
     }
 }
 
@@ -4181,9 +4445,15 @@ Function.AIMacro.NumGt {
         a = AIMacro.BoolVal(a)
         b = AIMacro.BoolVal(b)
         IfCondition Or(EqualTo(Types.IsFloat(a), 1), EqualTo(Types.IsFloat(b), 1)) ThenBlock: {
-            ReturnValue(AIMacro.Bool(Float_Gt(AIMacro.ToFloatBits(a), AIMacro.ToFloatBits(b))))
+            IfCondition EqualTo(Float_Gt(AIMacro.ToFloatBits(a), AIMacro.ToFloatBits(b)), 1) ThenBlock: {
+                ReturnValue(AIMacro.TrueVal())
+            }
+            ReturnValue(AIMacro.FalseVal())
         }
-        ReturnValue(AIMacro.Bool(GreaterThan(a, b)))
+        IfCondition GreaterThan(a, b) ThenBlock: {
+            ReturnValue(AIMacro.TrueVal())
+        }
+        ReturnValue(AIMacro.FalseVal())
     }
 }
 
@@ -4195,9 +4465,15 @@ Function.AIMacro.NumGe {
         a = AIMacro.BoolVal(a)
         b = AIMacro.BoolVal(b)
         IfCondition Or(EqualTo(Types.IsFloat(a), 1), EqualTo(Types.IsFloat(b), 1)) ThenBlock: {
-            ReturnValue(AIMacro.Bool(Float_Ge(AIMacro.ToFloatBits(a), AIMacro.ToFloatBits(b))))
+            IfCondition EqualTo(Float_Ge(AIMacro.ToFloatBits(a), AIMacro.ToFloatBits(b)), 1) ThenBlock: {
+                ReturnValue(AIMacro.TrueVal())
+            }
+            ReturnValue(AIMacro.FalseVal())
         }
-        ReturnValue(AIMacro.Bool(GreaterEqual(a, b)))
+        IfCondition GreaterEqual(a, b) ThenBlock: {
+            ReturnValue(AIMacro.TrueVal())
+        }
+        ReturnValue(AIMacro.FalseVal())
     }
 }
 

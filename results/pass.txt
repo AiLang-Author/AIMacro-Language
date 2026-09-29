@@ -1,4 +1,6 @@
+test_bool.py
 test_cmd.py
+test_contains.py
 test_cppext/__init__.py
 test_crashers.py
 test_eintr.py

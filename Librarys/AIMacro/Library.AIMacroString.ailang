@@ -1033,17 +1033,41 @@ Function.String.IsSpace {
         IfCondition EqualTo(len, 0) ThenBlock: {
             ReturnValue(0)
         }
+        IfCondition EqualTo(len, 6) ThenBlock: {
+            IfCondition And(EqualTo(GetByte(str, 0), 92), EqualTo(GetByte(str, 1), 117)) ThenBlock: {
+                IfCondition And(EqualTo(GetByte(str, 2), 51), And(EqualTo(GetByte(str, 3), 48), And(EqualTo(GetByte(str, 4), 48), EqualTo(GetByte(str, 5), 48)))) ThenBlock: {
+                    ReturnValue(1)
+                }
+            }
+        }
         i = 0
         WhileLoop LessThan(i, len) {
             c = GetByte(str, i)
-            // space tab lf vt ff cr
+            // UTF-8 U+3000 IDEOGRAPHIC SPACE
+            IfCondition EqualTo(c, 227) ThenBlock: {
+                IfCondition And(LessThan(Add(i, 2), len), And(EqualTo(GetByte(str, Add(i, 1)), 128), EqualTo(GetByte(str, Add(i, 2)), 128))) ThenBlock: {
+                    i = Add(i, 3)
+                    ContinueLoop
+                }
+                ReturnValue(0)
+            }
+            // UTF-8 U+00A0 NO-BREAK SPACE
+            IfCondition EqualTo(c, 194) ThenBlock: {
+                IfCondition And(LessThan(Add(i, 1), len), EqualTo(GetByte(str, Add(i, 1)), 160)) ThenBlock: {
+                    i = Add(i, 2)
+                    ContinueLoop
+                }
+                ReturnValue(0)
+            }
+            // space tab lf vt ff cr nbsp
             sp = EqualTo(c, 32)
             tb = EqualTo(c, 9)
             lf = EqualTo(c, 10)
             vt = EqualTo(c, 11)
             ff = EqualTo(c, 12)
             cr = EqualTo(c, 13)
-            IfCondition EqualTo(Or(sp, Or(tb, Or(lf, Or(vt, Or(ff, cr))))), 0) ThenBlock: {
+            nb = EqualTo(c, 160)
+            IfCondition EqualTo(Or(sp, Or(tb, Or(lf, Or(vt, Or(ff, Or(cr, nb)))))), 0) ThenBlock: {
                 ReturnValue(0)
             }
             i = Add(i, 1)

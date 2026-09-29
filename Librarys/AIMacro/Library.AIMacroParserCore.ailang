@@ -2925,6 +2925,24 @@ Function.Parse_AssignOrExpr {
                 
                 ReturnValue(node)
             }
+            IfCondition EqualTo(expr_type, Node.ATTRIBUTE) ThenBlock: {
+                obj = ArrayGet(expr, 3)
+                attr_name = ArrayGet(expr, 4)
+                bin = AST_Create(Node.BINARY_OP, 3)
+                ArraySet(bin, 1, line)
+                ArraySet(bin, 2, col)
+                ArraySet(bin, 3, expr)
+                ArraySet(bin, 4, aug_op)
+                ArraySet(bin, 5, value)
+                node = ArrayCreate(6)
+                ArraySet(node, 0, Node.ATTR_ASSIGN)
+                ArraySet(node, 1, line)
+                ArraySet(node, 2, col)
+                ArraySet(node, 3, obj)
+                ArraySet(node, 4, attr_name)
+                ArraySet(node, 5, bin)
+                ReturnValue(node)
+            }
         }
         
         // Just an expression statement

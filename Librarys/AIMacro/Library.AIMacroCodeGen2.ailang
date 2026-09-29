@@ -844,6 +844,13 @@ Function.Gen_Node {
                 // AST name field — ClassDef uses AST_GetField("name"); also ArraySet slot if needed
                 ArraySet(node, 3, uname)
                 Array.Push(Gen.deferred_classes, node)
+                OOPGen_Init()
+                IfCondition EqualTo(OOPGen.class_renames_from, 0) ThenBlock: {
+                    OOPGen.class_renames_from = Array.Create(32)
+                    OOPGen.class_renames_to = Array.Create(32)
+                }
+                Array.Push(OOPGen.class_renames_from, orig)
+                Array.Push(OOPGen.class_renames_to, uname)
                 Gen_EmitIndent()
                 Gen_Emit(orig)
                 Gen_Emit(" = \"")
@@ -1071,6 +1078,7 @@ Function.Gen_Function {
         // RESET STATE FOR NEW FUNCTION
         Gen.temp_counter = 0
         OOPGen.temp_counter = 0
+        Gen.loop_depth = 0
         Array.Clear(Gen.param_names)
         Array.Clear(Gen.string_vars)
         Array.Clear(Gen.list_vars)
@@ -1166,6 +1174,7 @@ Function.Gen_PackedFunction {
         // RESET STATE FOR NEW FUNCTION
         Gen.temp_counter = 0
         OOPGen.temp_counter = 0
+        Gen.loop_depth = 0
         Array.Clear(Gen.param_names)
         Array.Clear(Gen.string_vars)
         Array.Clear(Gen.list_vars)
@@ -1539,9 +1548,7 @@ Function.Gen_TupleFor {
         }
         
         // Generic tuple iteration - iterate and unpack pairs
-        loop_id = Gen.temp_counter
-        Gen.temp_counter = Add(Gen.temp_counter, 1)
-        loop_suffix = NumberToString(loop_id)
+        loop_suffix = Gen_LoopEnter()
         
         // Flatten iterable if needed
         iter_has_call = Gen_HasCall(iterable)
@@ -1620,6 +1627,7 @@ Function.Gen_TupleFor {
         Gen_EmitIndent()
         Gen_Emit("}\n")
         
+        Gen_LoopLeave()
         Gen_LoopElseExit(else_body, saved_flag)
     }
 }
@@ -1796,10 +1804,18 @@ Function.Gen_Try {
                     exc_type = ArrayGet(clause, 3)
                     IfCondition NotEqual(exc_type, 0) ThenBlock: {
                         k = Gen_MapExcKind(exc_type)
-                        Gen_EmitIndent()
-                        Gen_Emit("Case ")
-                        Gen_EmitNumber(k)
-                        Gen_Emit(": {\n")
+                        IfCondition EqualTo(AST_Type(exc_type), Node.IDENT) ThenBlock: {
+                            k = Gen_MapExcKind(ArrayGet(exc_type, 3))
+                        }
+                        IfCondition Or(EqualTo(k, 1), EqualTo(k, 13)) ThenBlock: {
+                            Gen_EmitIndent()
+                            Gen_Emit("Default: {\n")
+                        } ElseBlock: {
+                            Gen_EmitIndent()
+                            Gen_Emit("Case ")
+                            Gen_EmitNumber(k)
+                            Gen_Emit(": {\n")
+                        }
                         Gen.indent = Add(Gen.indent, 1)
                         as_name = ArrayGet(clause, 5)
                         IfCondition NotEqual(as_name, 0) ThenBlock: {
@@ -1912,9 +1928,7 @@ Function.Gen_ForEnumerate {
         args = ArrayGet(enum_call, 4)
         list_arg = Array.Get(args, 0)
         
-        loop_id = Gen.temp_counter
-        Gen.temp_counter = Add(Gen.temp_counter, 1)
-        loop_suffix = NumberToString(loop_id)
+        loop_suffix = Gen_LoopEnter()
         
         // Check if list_arg is a list literal - needs special handling
         list_type = AST_Type(list_arg)
@@ -2011,6 +2025,7 @@ Function.Gen_ForEnumerate {
         Gen_EmitIndent()
         Gen_Emit("}\n")
         
+        Gen_LoopLeave()
     }
 }
 
@@ -2029,9 +2044,7 @@ Function.Gen_ForZip {
         list1_arg = Array.Get(args, 0)
         list2_arg = Array.Get(args, 1)
         
-        loop_id = Gen.temp_counter
-        Gen.temp_counter = Add(Gen.temp_counter, 1)
-        loop_suffix = NumberToString(loop_id)
+        loop_suffix = Gen_LoopEnter()
         
         // Handle list1 - check if literal
         list1_type = AST_Type(list1_arg)
@@ -2191,6 +2204,7 @@ Function.Gen_ForZip {
         Gen_EmitIndent()
         Gen_Emit("}\n")
         
+        Gen_LoopLeave()
     }
 }
 
@@ -2328,10 +2342,8 @@ Function.Gen_For {
         // Generic for-each over a list/iterable
         // Transform: for x in items:  ->  i=0; while i<len: x=items[i]; ...; i+=1
         
-        // Get unique suffix for loop variables
-        loop_id = Gen.temp_counter
-        Gen.temp_counter = Add(Gen.temp_counter, 1)
-        loop_suffix = NumberToString(loop_id)
+        // Nesting-depth suffix: Gen_Body resets temp_counter per statement
+        loop_suffix = Gen_LoopEnter()
         
         // Flatten iterable if it has calls
         iter_has_call = Gen_HasCall(iterable)
@@ -2396,7 +2408,7 @@ Function.Gen_For {
         Gen_EmitIndent()
         Gen_Emit("}\n")
         
-        // Free suffix string
+        Gen_LoopLeave()
         Gen_LoopElseExit(else_body, saved_flag)
     }
 }
@@ -2425,10 +2437,7 @@ Function.Gen_ForRange {
             }
         }
 
-        // Get unique suffix for this loop's internal variables
-        loop_id = Gen.temp_counter
-        Gen.temp_counter = Add(Gen.temp_counter, 1)
-        loop_suffix = NumberToString(loop_id)
+        loop_suffix = Gen_LoopEnter()
         
         // Determine start, stop, step values
         // range(n)       -> start=0, stop=n, step=1
@@ -2537,7 +2546,7 @@ Function.Gen_ForRange {
         Gen_EmitIndent()
         Gen_Emit("}\n")
         
-        // Free the suffix string
+        Gen_LoopLeave()
     }
 }
 
@@ -2655,7 +2664,7 @@ Function.Gen_Return {
                 result_var = Gen_TempName()
                 Gen_EmitIndent()
                 Gen_Emit(result_var)
-                Gen_Emit(" = OOP.MethodCall(")
+                Gen_Emit(" = AIMacro.MethodCall(")
                 Gen_Expr(obj)
                 Gen_Emit(", \"")
                 Gen_Emit(method)
@@ -3055,7 +3064,7 @@ Function.Gen_Assignment {
             
             Gen_EmitIndent()
             Gen_EmitIdentLhs(target)
-            Gen_Emit(" = OOP.MethodCall(")
+            Gen_Emit(" = AIMacro.MethodCall(")
             Gen_Expr(obj)
             Gen_Emit(", \"")
             Gen_Emit(method)

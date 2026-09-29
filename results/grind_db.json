@@ -569,12 +569,9 @@
     },
     "test_bool.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_bool.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": -11,
-      "err": "",
-      "out": "  BoolTest.test_subclass\n  BoolTest.test_repr\n  BoolTest.test_str\n  BoolTest.test_int\n  BoolTest.test_float\n  BoolTest.test_complex\n  BoolTest.test_math\n",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_bool.py",
       "updated": "2026-09-29"
     },
@@ -1055,12 +1052,9 @@
     },
     "test_contains.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_contains.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": -11,
-      "err": "",
-      "out": "  TestContains.test_common_tests\n  TestContains.test_builtin_sequence_types\n",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_contains.py",
       "updated": "2026-09-29"
     },

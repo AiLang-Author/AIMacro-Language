@@ -404,9 +404,7 @@ Function.DictGen_ForKeys {
         //               <body>
         //               i = i + 1
         
-        loop_id = Gen.temp_counter
-        Gen.temp_counter = Add(Gen.temp_counter, 1)
-        loop_suffix = NumberToString(loop_id)
+        loop_suffix = Gen_LoopEnter()
         
         // keys = Hash.Keys(dict)
         Gen_EmitIndent()
@@ -464,6 +462,7 @@ Function.DictGen_ForKeys {
         Gen_EmitIndent()
         Gen_Emit("}\n")
         
+        Gen_LoopLeave()
     }
 }
 
@@ -483,9 +482,7 @@ Function.DictGen_ForItems {
         //               <body>
         //               i = i + 1
         
-        loop_id = Gen.temp_counter
-        Gen.temp_counter = Add(Gen.temp_counter, 1)
-        loop_suffix = NumberToString(loop_id)
+        loop_suffix = Gen_LoopEnter()
         
         // items = Hash.Items(dict)
         Gen_EmitIndent()
@@ -558,6 +555,7 @@ Function.DictGen_ForItems {
         Gen_EmitIndent()
         Gen_Emit("}\n")
         
+        Gen_LoopLeave()
     }
 }
 

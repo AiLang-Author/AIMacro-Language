@@ -1042,9 +1042,7 @@ Function.Gen_FlattenExpr {
             Gen_EmitIndent()
             Gen_Emit(temp)
             Gen_Emit(" = Array.Create(8)\n")
-            loop_id = Gen.temp_counter
-            Gen.temp_counter = Add(Gen.temp_counter, 1)
-            loop_suffix = NumberToString(loop_id)
+            loop_suffix = Gen_LoopEnter()
             iter_has_call = Gen_HasCall(iterable)
             IfCondition EqualTo(iter_has_call, 1) ThenBlock: {
                 iterable = Gen_FlattenExpr(iterable)
@@ -1135,6 +1133,7 @@ Function.Gen_FlattenExpr {
             Gen.indent = Subtract(Gen.indent, 1)
             Gen_EmitIndent()
             Gen_Emit("}\n")
+            Gen_LoopLeave()
             ReturnValue(Gen_MakeIdent(temp))
         }
         
@@ -1314,7 +1313,7 @@ Function.Gen_FlattenExpr {
                 }
                 Gen_EmitIndent()
                 Gen_Emit(temp)
-                Gen_Emit(" = OOP.MethodCall(")
+                Gen_Emit(" = AIMacro.MethodCall(")
                 Gen_Expr(flat_obj)
                 Gen_Emit(", \"")
                 Gen_Emit(method)
@@ -2093,6 +2092,14 @@ Function.Gen_FlattenIndirectCall {
         IfCondition EqualTo(nargs, 0) ThenBlock: {
             Gen_Emit(" = AIMacro.SmartCall(")
             Gen_Expr(flat_callee)
+            Gen_Emit(")\n")
+            ReturnValue(Gen_MakeIdent(temp))
+        }
+        IfCondition EqualTo(nargs, 1) ThenBlock: {
+            Gen_Emit(" = AIMacro.SmartCall1(")
+            Gen_Expr(flat_callee)
+            Gen_Emit(", ")
+            Gen_Expr(Array.Get(args, 0))
             Gen_Emit(")\n")
             ReturnValue(Gen_MakeIdent(temp))
         }

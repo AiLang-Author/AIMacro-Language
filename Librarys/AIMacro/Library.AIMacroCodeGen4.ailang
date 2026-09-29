@@ -30,7 +30,11 @@ Function.Gen_Expr {
         
         IfCondition EqualTo(t, Node.NUM_LIT) ThenBlock: {
             val = ArrayGet(node, 3)
-            Gen_EmitNumber(val)
+            IfCondition EqualTo(val, 0) ThenBlock: {
+                Gen_Emit("AIMacro.IntZero()")
+            } ElseBlock: {
+                Gen_EmitNumber(val)
+            }
             ReturnValue(0)
         }
 
@@ -959,8 +963,8 @@ Function.Gen_CallExpr {
             }
         }
 
-        // Param/local holding a callable (e.g. key=fn) → CallIndirect
-        IfCondition Or(EqualTo(Gen_IsCallableVar(name), 1), EqualTo(Gen_IsParam(name), 1)) ThenBlock: {
+        // Param/local/module var holding a callable (constructor(values)) → CallIndirect
+        IfCondition Or(EqualTo(Gen_IsCallableVar(name), 1), Or(EqualTo(Gen_IsParam(name), 1), EqualTo(Gen_IsModuleVar(name), 1))) ThenBlock: {
             // Bound list.append → AIMacro.SmartPush(self, args...)
             bound_self = Gen_GetBoundAppendSelf(name)
             IfCondition NotEqual(bound_self, 0) ThenBlock: {
@@ -984,6 +988,18 @@ Function.Gen_CallExpr {
             IfCondition EqualTo(n, 0) ThenBlock: {
                 Gen_Emit("AIMacro.SmartCall(")
                 Gen_EmitIdent(name)
+                Gen_Emit(")")
+                ReturnValue(0)
+            }
+            IfCondition EqualTo(n, 1) ThenBlock: {
+                Gen_Emit("AIMacro.SmartCall1(")
+                Gen_EmitIdent(name)
+                Gen_Emit(", ")
+                arg = Array.Get(args, 0)
+                IfCondition EqualTo(Gen_HasCall(arg), 1) ThenBlock: {
+                    arg = Gen_FlattenExpr(arg)
+                }
+                Gen_Expr(arg)
                 Gen_Emit(")")
                 ReturnValue(0)
             }
@@ -1305,7 +1321,7 @@ Function.Gen_CallExpr {
                 }
                 
                 IfCondition EqualTo(is_dict_arg, 1) ThenBlock: {
-                    Gen_Emit("Hash.Size(")
+                    Gen_Emit("AIMacro.SmartLen(")
                     Gen_Expr(arg0)
                     Gen_Emit(")")
                     ReturnValue(0)
@@ -1319,7 +1335,7 @@ Function.Gen_CallExpr {
                 }
                 
                 // Unknown type - use runtime dispatch
-                Gen_Emit("DictGen_SmartLen(")
+                Gen_Emit("AIMacro.SmartLen(")
                 Gen_Expr(arg0)
                 Gen_Emit(")")
                 ReturnValue(0)
@@ -1456,6 +1472,20 @@ Function.Gen_CallExpr {
             }
             i = Add(i, 1)
         }
+        IfCondition EqualTo(has_kw, 1) ThenBlock: {
+            kwcmp = StringCompare(name, "bool")
+            IfCondition EqualTo(kwcmp, 0) ThenBlock: {
+                Gen_Emit("AIMacro.KwArgError()")
+                ReturnValue(0)
+            }
+        }
+        IfCondition EqualTo(n, 0) ThenBlock: {
+            n0cmp = StringCompare(name, "bool")
+            IfCondition EqualTo(n0cmp, 0) ThenBlock: {
+                Gen_Emit("AIMacro.FalseVal()")
+                ReturnValue(0)
+            }
+        }
         params = Gen_LookupParams(name)
         IfCondition And(EqualTo(has_kw, 1), NotEqual(params, 0)) ThenBlock: {
             nparams = Array.Size(params)
@@ -1522,25 +1552,37 @@ Function.Gen_CallExpr {
         IfCondition And(EqualTo(mcmp_ci, 0), EqualTo(Gen_IsKnownFunc(name), 0)) ThenBlock: {
             // Unbound callee: CallIndirect(0, ...) is illegal AILang
             // (literal 0 + args → Expected ')' ). Stub whole call as None.
-            IfCondition Or(EqualTo(Gen_IsParam(name), 1), EqualTo(Gen_IsCallableVar(name), 1)) ThenBlock: {
+            IfCondition Or(EqualTo(Gen_IsParam(name), 1), Or(EqualTo(Gen_IsCallableVar(name), 1), EqualTo(Gen_IsModuleVar(name), 1))) ThenBlock: {
                 IfCondition EqualTo(n, 0) ThenBlock: {
                     Gen_Emit("AIMacro.SmartCall(")
                     Gen_EmitIdent(name)
                     Gen_Emit(")")
                 } ElseBlock: {
-                    Gen_Emit("CallIndirect(")
-                    Gen_EmitIdent(name)
-                    i = 0
-                    WhileLoop LessThan(i, n) {
+                    IfCondition EqualTo(n, 1) ThenBlock: {
+                        Gen_Emit("AIMacro.SmartCall1(")
+                        Gen_EmitIdent(name)
                         Gen_Emit(", ")
-                        arg = Array.Get(args, i)
+                        arg = Array.Get(args, 0)
                         IfCondition EqualTo(Gen_HasCall(arg), 1) ThenBlock: {
                             arg = Gen_FlattenExpr(arg)
                         }
                         Gen_Expr(arg)
-                        i = Add(i, 1)
+                        Gen_Emit(")")
+                    } ElseBlock: {
+                        Gen_Emit("CallIndirect(")
+                        Gen_EmitIdent(name)
+                        i = 0
+                        WhileLoop LessThan(i, n) {
+                            Gen_Emit(", ")
+                            arg = Array.Get(args, i)
+                            IfCondition EqualTo(Gen_HasCall(arg), 1) ThenBlock: {
+                                arg = Gen_FlattenExpr(arg)
+                            }
+                            Gen_Expr(arg)
+                            i = Add(i, 1)
+                        }
+                        Gen_Emit(")")
                     }
-                    Gen_Emit(")")
                 }
             } ElseBlock: {
                 Gen_Emit("Types.GetNone()")
@@ -1871,7 +1913,7 @@ Function.Gen_MapBuiltin {
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.SetAttr") }
 
         cmp = StringCompare(name, "list")
-        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.List") }
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.ListFrom") }
 
         cmp = StringCompare(name, "dict")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.Dict") }

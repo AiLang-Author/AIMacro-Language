@@ -624,6 +624,22 @@ Function.Gen_MarkDictVar {
 }
 
 
+Function.Gen_LoopEnter {
+    Output: Address
+    Body: {
+        Gen.loop_depth = Add(Gen.loop_depth, 1)
+        ReturnValue(NumberToString(Gen.loop_depth))
+    }
+}
+
+Function.Gen_LoopLeave {
+    Body: {
+        IfCondition GreaterThan(Gen.loop_depth, 0) ThenBlock: {
+            Gen.loop_depth = Subtract(Gen.loop_depth, 1)
+        }
+    }
+}
+
 Function.Gen_TempName {
     Output: Address
     Body: {
