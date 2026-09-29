@@ -1258,6 +1258,10 @@ Function.Gen_FlattenExpr {
             IfCondition Or(EqualTo(cmp_go, 0), Or(EqualTo(cmp_mt, 0), Or(EqualTo(cmp_mid, 0), Or(EqualTo(cmp_upd, 0), Or(EqualTo(cmp_fs, 0), Or(EqualTo(cmp_reg, 0), EqualTo(cmp_comp, 0))))))) ThenBlock: {
                 is_known = 1
             }
+            cmp = StringCompare(method, "replace")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { is_known = 1 }
+            cmp = StringCompare(method, "startswith")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { is_known = 1 }
             // OOP MethodCall emits setup statements; do not prefix "temp = "
             IfCondition EqualTo(is_known, 0) ThenBlock: {
                 IfCondition EqualTo(args, 0) ThenBlock: {

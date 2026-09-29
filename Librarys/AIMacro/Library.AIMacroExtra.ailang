@@ -130,6 +130,33 @@ Function.AIMacro.ReCompile {
     }
 }
 
+// platform.system() — Linux uname(2) sysname (syscall 63, utsname.sysname at offset 0)
+Function.AIMacro.UnameSysname {
+    Output: Address
+    Body: {
+        buf = Allocate(512)
+        rc = SystemCall(63, buf)
+        IfCondition LessThan(rc, 0) ThenBlock: {
+            ReturnValue("")
+        }
+        n = 0
+        WhileLoop LessThan(n, 64) {
+            IfCondition EqualTo(GetByte(buf, n), 0) ThenBlock: {
+                BreakLoop
+            }
+            n = Add(n, 1)
+        }
+        out = Allocate(Add(n, 1))
+        i = 0
+        WhileLoop LessThan(i, n) {
+            SetByte(out, i, GetByte(buf, i))
+            i = Add(i, 1)
+        }
+        SetByte(out, n, 0)
+        ReturnValue(out)
+    }
+}
+
 Function.AIMacro.NoOp {
     Input: a: Address
     Output: Address
