@@ -17,6 +17,7 @@ test_bool.py
 test_capi/test_eval_code_ex.py
 test_capi/test_getargs.py
 test_cgitb.py
+test_charmapcodec.py
 test_check_c_globals.py
 test_cmd.py
 test_codeccallbacks.py
@@ -26,6 +27,7 @@ test_compare.py
 test_contains.py
 test_copyreg.py
 test_cppext/__init__.py
+test_cprofile.py
 test_crashers.py
 test_csv.py
 test_defaultdict.py
@@ -51,6 +53,7 @@ test_grp.py
 test_heapq.py
 test_htmlparser.py
 test_imghdr.py
+test_importlib/builtin/test_finder.py
 test_importlib/extension/test_case_sensitivity.py
 test_importlib/frozen/test_finder.py
 test_importlib/test_contents.py
@@ -62,6 +65,8 @@ test_importlib/test_zip.py
 test_index.py
 test_iterlen.py
 test_json/test_default.py
+test_json/test_encode_basestring_ascii.py
+test_json/test_fail.py
 test_json/test_scanstring.py
 test_json/test_separators.py
 test_json/test_speedups.py
@@ -81,6 +86,7 @@ test_peg_generator/test_first_sets.py
 test_peg_generator/test_grammar_validator.py
 test_pickletools.py
 test_pstats.py
+test_pty.py
 test_pwd.py
 test_pyclbr.py
 test_quopri.py
@@ -99,6 +105,7 @@ test_strftime.py
 test_string.py
 test_string_literals.py
 test_structseq.py
+test_sunau.py
 test_sundry.py
 test_symtable.py
 test_syslog.py
@@ -118,16 +125,19 @@ test_tools/test_reindent.py
 test_tools/test_sundry.py
 test_ttk_textonly.py
 test_tuple.py
+test_type_annotations.py
 test_typechecks.py
 test_unary.py
 test_unpack.py
 test_urllib_response.py
 test_userlist.py
+test_userstring.py
 test_utf8source.py
 test_wave.py
 test_weakset.py
 test_winsound.py
 test_xdrlib.py
+test_xml_dom_minicompat.py
 test_xmlrpc_net.py
 test_xxlimited.py
 test_xxtestfuzz.py

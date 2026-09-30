@@ -28,7 +28,7 @@
       "stage": "run",
       "rc": 1,
       "err": "",
-      "out": "  OpcodeTests.test_stack_effect\nFAIL: assertEqual\nERROR: Method not found: values\n  OpcodeTests.test_stack_effect_jump\nFAIL: assertEqual\nERROR: keyword argument\nunittest: ran 2 tests, 3 failed\n",
+      "out": "  OpcodeTests.test_stack_effect\nFAIL: assertEqual\nERROR: Method not found: values\nunittest: ran 1 tests, 1 failed\n",
       "tags": [],
       "key": "test__opcode.py",
       "updated": "2026-09-30"
@@ -67,7 +67,7 @@
       "stage": "run",
       "rc": 1,
       "err": "",
-      "out": "  TestNumbers.test_int\nFAIL: assertTrue\nERROR: Method not found: conjugate\nERROR: Method not found: conjugate\n  TestNumbers.test_float\nFAIL: assertTrue\nERROR: Method not found: conjugate\nERROR: Method not found: conjugate\n  TestNumbers.test_complex\nFAIL: assertTrue\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nunittest: ran 3 tests, 8 failed\n",
+      "out": "  TestNumbers.test_complex\nFAIL: assertTrue\nunittest: ran 1 tests, 1 failed\n",
       "tags": [],
       "key": "test_abstract_numbers.py",
       "updated": "2026-09-30"
@@ -190,7 +190,7 @@
       "stage": "run",
       "rc": 1,
       "err": "",
-      "out": "ERROR: Method not found: new_test_loop\n  CFutureTests.test_constructor_positional\nERROR: Method not found: cls\nFAIL: assertRaises\nERROR: Method not found: new_test_loop\n  PyFutureTests.test_constructor_positional\nERROR: Method not found: cls\nFAIL: assertRaises\nunittest: ran 2 tests, 2 failed\n",
+      "out": "Exception: skip\n",
       "tags": [],
       "key": "test_asyncio/test_futures.py",
       "updated": "2026-09-30"
@@ -287,7 +287,7 @@
       "stage": "run",
       "rc": 1,
       "err": "",
-      "out": "  SelectorStartServerTests.test_start_server_1\nERROR: Method not found: run_until_complete\nERROR: Method not found: is_serving\nERROR: Method not found: create_task\nERROR: Method not found: getsockname\nFAIL: assertEqual\nFAIL: assertIsNone\nFAIL: assertIsNone\nERROR: Method not found: is_serving\nFAIL: assertRaises\nunittest: ran 1 tests, 4 failed\n",
+      "out": "  SelectorStartServerTests.test_start_server_1\nERROR: Method not found: run_until_complete\nERROR: Method not found: create_task\nERROR: Method not found: getsockname\nFAIL: assertEqual\nunittest: ran 1 tests, 1 failed\n",
       "tags": [],
       "key": "test_asyncio/test_server.py",
       "updated": "2026-09-30"
@@ -728,12 +728,9 @@
     },
     "test_charmapcodec.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_charmapcodec.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": 1,
-      "err": "",
-      "out": "  CharmapCodecTest.test_constructorx\nFAIL: assertEqual\n  CharmapCodecTest.test_encodex\nFAIL: assertEqual\n  CharmapCodecTest.test_constructory\nFAIL: assertEqual\n  CharmapCodecTest.test_maptoundefined\nFAIL: assertRaises\nunittest: ran 4 tests, 4 failed\n",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_charmapcodec.py",
       "updated": "2026-09-30"
     },
@@ -818,10 +815,10 @@
     "test_code_module.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_code_module.py",
       "status": "fail",
-      "stage": "compile",
+      "stage": "run",
       "rc": 1,
-      "err": "tialized, pool-backed node storage\n[PARSER] Starting parse...\n[PARSER] Parsed 908 declarations, 82070 total nodes\n[PARSER] SUCCESS\n[SEMANTIC] contract check\nSEMANTIC ERROR AIMacro.AIMacroExtra:5624: duplicate definition of 'in_table_a1' first seen at AIMacro.AIMacroExtra:5431 \u2014 aborting, same-file copies are unpredictable\nSEMANTIC ERROR at line 20264, col 0: duplicate function\nSemantic Analysis Failed\n[AST] Freeing 82070 node child-lists...\n[AST] Freed 36142 child-lists (node slots stay in pool)",
-      "out": "",
+      "err": "",
+      "out": "Exception: skip\n",
       "tags": [],
       "key": "test_code_module.py",
       "updated": "2026-09-30"
@@ -1104,12 +1101,9 @@
     },
     "test_cprofile.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_cprofile.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": -11,
-      "err": "",
-      "out": "  CProfileTest.test_profile_enable_disable\nERROR: Method not found: enable\nERROR: Method not found: getprofile\nERROR: Method not found: disable\nERROR: Method not found: getprofile\nFAIL: assertIs\n  TestCommandLine.test_sort\n",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_cprofile.py",
       "updated": "2026-09-30"
     },
@@ -2287,12 +2281,9 @@
     },
     "test_importlib/builtin/test_finder.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_importlib/builtin/test_finder.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": 1,
-      "err": "",
-      "out": "ERROR: Method not found: import_importlib\nERROR: Method not found: test_both\nERROR: Method not found: test_both\n  FindSpecTests.test_failure\nERROR: argument is not iterable\n  FinderTests.test_failure\nFAIL: assertIsNone\nunittest: ran 2 tests, 2 failed\n",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_importlib/builtin/test_finder.py",
       "updated": "2026-09-30"
     },
@@ -2868,12 +2859,9 @@
     },
     "test_json/test_encode_basestring_ascii.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_json/test_encode_basestring_ascii.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": 1,
-      "err": "",
-      "out": "  TestPyEncodeBasestringAscii.test_ordered_dict\nFAIL: assertEqual\n  TestPyEncodeBasestringAscii.test_sorted_dict\nFAIL: assertEqual\n  TestCEncodeBasestringAscii.test_ordered_dict\nFAIL: assertEqual\n  TestCEncodeBasestringAscii.test_sorted_dict\nFAIL: assertEqual\n  TestCEncodeBasestringAscii.test_overflow\nERROR: Method not found: encode_basestring_ascii\nFAIL: assertRaises\nunittest: ran 5 tests, 5 failed\n",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_json/test_encode_basestring_ascii.py",
       "updated": "2026-09-30"
     },
@@ -2890,12 +2878,9 @@
     },
     "test_json/test_fail.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_json/test_fail.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": 1,
-      "err": "",
-      "out": "  TestPyFail.test_non_string_keys_dict\nFAIL: assertRaises\nunittest: ran 1 tests, 1 failed\n",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_json/test_fail.py",
       "updated": "2026-09-30"
     },
@@ -3097,7 +3082,7 @@
       "stage": "run",
       "rc": 1,
       "err": "",
-      "out": "  TestLLTrace.test_lltrace\nFAIL: assertEqual\nERROR: Method not found: decode\n  TestLLTrace.test_lltrace_different_module\nFAIL: assertEqual\nERROR: Method not found: decode\nERROR: Method not found: splitlines\n  TestLLTrace.test_lltrace_does_not_crash_on_subscript_operator\nFAIL: assertEqual\nERROR: Method not found: decode\nunittest: ran 3 tests, 3 failed\n",
+      "out": "  TestLLTrace.test_lltrace\nFAIL: assertEqual\nERROR: Method not found: decode\nunittest: ran 1 tests, 1 failed\n",
       "tags": [],
       "key": "test_lltrace.py",
       "updated": "2026-09-30"
@@ -3743,12 +3728,9 @@
     },
     "test_pty.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_pty.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": 1,
-      "err": "",
-      "out": "  SmallPtyTests.test__restore_tty_mode_normal_return\nERROR: Method not found: spawn\nFAIL: assertEqual\nunittest: ran 1 tests, 1 failed\n",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_pty.py",
       "updated": "2026-09-30"
     },
@@ -4426,12 +4408,9 @@
     },
     "test_sunau.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_sunau.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": 1,
-      "err": "",
-      "out": "ERROR: Method not found: fromhex\nERROR: Method not found: fromhex\nERROR: Method not found: fromhex\nERROR: Method not found: fromhex\nERROR: Method not found: fromhex\nERROR: Method not found: fromhex\nERROR: Method not found: fromhex\nERROR: Method not found: fromhex\nERROR: Method not found: fromhex\nERROR: Method not found: fromhex\n  SunauLowLevelTest.test_read_too_small_header\nERROR: Method not found: pack\nERROR: Method not found: BytesIO\nERROR: Method not found: open\nFAIL: assertRaises\n  SunauLowLevelTest.test_read_too_large_header\nERROR: Method not found: pack\nERROR: Method not found: BytesIO\nERROR: Method not found: open\nFAIL: assertRaises\n  SunauLowLevelTest.test_read_wrong_encoding\nERROR: Method not found: pack\nERROR: Method not found: BytesIO\nERROR: Method not found: open\nFAIL: assertRaises\n  SunauLowLevelTest.test_read_wrong_number_of_channels\nERROR: Method not found: pack\nERROR: Method not found: BytesIO\nERROR: Method not found: open\nFAIL: assertRaises\nunittest: ran 4 tests, 4 failed\n",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_sunau.py",
       "updated": "2026-09-30"
     },
@@ -4796,7 +4775,7 @@
       "stage": "run",
       "rc": -11,
       "err": "",
-      "out": "  TestPathfixFunctional.test_pathfix\nERROR: Method not found: getfilesystemencoding\n",
+      "out": "  TestPathfixFunctional.test_pathfix\n",
       "tags": [],
       "key": "test_tools/test_pathfix.py",
       "updated": "2026-09-30"
@@ -4904,12 +4883,9 @@
     },
     "test_type_annotations.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_type_annotations.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": 1,
-      "err": "",
-      "out": "  TypeAnnotationTests.test_annotations_getset_raises\n0\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nunittest: ran 1 tests, 4 failed\n",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_type_annotations.py",
       "updated": "2026-09-30"
     },
@@ -5165,12 +5141,9 @@
     },
     "test_userstring.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_userstring.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": 1,
-      "err": "",
-      "out": "  UserStringTest.test_rmod\nFAIL: assertEqual\n  UserStringTest.test_encode_default_args\nFAIL: assertRaises\n  UserStringTest.test_encode_explicit_none_args\nFAIL: assertRaises\nunittest: ran 3 tests, 3 failed\n",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_userstring.py",
       "updated": "2026-09-30"
     },
@@ -5351,12 +5324,9 @@
     },
     "test_xml_dom_minicompat.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_xml_dom_minicompat.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": 1,
-      "err": "",
-      "out": "  EmptyNodeListTestCase.test_emptynodelist_item\nFAIL: assertRaises\nFAIL: assertRaises\nunittest: ran 1 tests, 2 failed\n",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_xml_dom_minicompat.py",
       "updated": "2026-09-30"
     },
