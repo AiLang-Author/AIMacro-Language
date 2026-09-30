@@ -6,6 +6,8 @@ test_asyncio/test_waitfor.py
 test_atexit.py
 test_binop.py
 test_bool.py
+test_capi/test_eval_code_ex.py
+test_capi/test_getargs.py
 test_cgitb.py
 test_check_c_globals.py
 test_cmd.py
@@ -18,6 +20,7 @@ test_copyreg.py
 test_cppext/__init__.py
 test_crashers.py
 test_csv.py
+test_defaultdict.py
 test_deque.py
 test_eintr.py
 test_enumerate.py
@@ -41,8 +44,10 @@ test_imghdr.py
 test_importlib/extension/test_case_sensitivity.py
 test_importlib/frozen/test_finder.py
 test_importlib/test_contents.py
+test_importlib/test_files.py
 test_importlib/test_open.py
 test_importlib/test_path.py
+test_importlib/test_read.py
 test_importlib/test_zip.py
 test_index.py
 test_iterlen.py
@@ -57,6 +62,7 @@ test_list.py
 test_longexp.py
 test_mailcap.py
 test_multibytecodec.py
+test_netrc.py
 test_nis.py
 test_opcodes.py
 test_openpty.py
@@ -68,6 +74,7 @@ test_pyclbr.py
 test_resource.py
 test_secrets.py
 test_select.py
+test_signal.py
 test_slice.py
 test_smtpnet.py
 test_sqlite3/test_backup.py
@@ -86,6 +93,7 @@ test_tomllib/test_data.py
 test_tomllib/test_error.py
 test_tools/test_fixcid.py
 test_tools/test_gprof2html.py
+test_tools/test_lll.py
 test_tools/test_pdeps.py
 test_tools/test_reindent.py
 test_tools/test_sundry.py
@@ -94,10 +102,12 @@ test_tuple.py
 test_typechecks.py
 test_unary.py
 test_unpack.py
+test_urllib_response.py
 test_userlist.py
 test_utf8source.py
 test_wave.py
 test_weakset.py
 test_winsound.py
+test_xmlrpc_net.py
 test_xxlimited.py
 test_xxtestfuzz.py

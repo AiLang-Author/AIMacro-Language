@@ -1243,6 +1243,96 @@ Function.Gen_EmitIdent {
             Gen_Emit("AddressOf(spwd)")
             ReturnValue(0)
         }
+        cmp = StringCompare(name, "in_table_a1")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_Emit("AddressOf(in_table_a1)")
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "in_table_b1")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_Emit("AddressOf(in_table_b1)")
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "in_table_c11")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_Emit("AddressOf(in_table_c11)")
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "in_table_c12")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_Emit("AddressOf(in_table_c12)")
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "in_table_c11_c12")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_Emit("AddressOf(in_table_c11_c12)")
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "in_table_c21")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_Emit("AddressOf(in_table_c21)")
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "in_table_c22")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_Emit("AddressOf(in_table_c22)")
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "in_table_c21_c22")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_Emit("AddressOf(in_table_c21_c22)")
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "in_table_c3")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_Emit("AddressOf(in_table_c3)")
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "in_table_c4")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_Emit("AddressOf(in_table_c4)")
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "in_table_c5")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_Emit("AddressOf(in_table_c5)")
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "in_table_c6")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_Emit("AddressOf(in_table_c6)")
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "in_table_c7")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_Emit("AddressOf(in_table_c7)")
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "in_table_c8")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_Emit("AddressOf(in_table_c8)")
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "in_table_d1")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_Emit("AddressOf(in_table_d1)")
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "in_table_d2")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_Emit("AddressOf(in_table_d2)")
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "map_table_b2")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_Emit("AddressOf(map_table_b2)")
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "map_table_b3")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_Emit("AddressOf(map_table_b3)")
+            ReturnValue(0)
+        }
         cmp = StringCompare(name, "NEXT")
         IfCondition EqualTo(cmp, 0) ThenBlock: {
             Gen_EmitNumber(0)

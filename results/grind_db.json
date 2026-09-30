@@ -91,9 +91,9 @@
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_array.py",
       "status": "fail",
       "stage": "run",
-      "rc": -11,
+      "rc": 1,
       "err": "",
-      "out": "ERROR: Method not found: array\n  MiscTest.test_array_is_sequence\nERROR: Method not found: array\nFAIL: assertIsInstance\nERROR: Method not found: array\n  MiscTest.test_bad_constructor\n  MiscTest.test_immutable\nFAIL: assertRaises\n  MiscTest.test_empty\nERROR: Method not found: array\n  ArrayReconstructorTest.test_numbers\nERROR: Method not found: pack\nERROR: Method not found: array\n",
+      "out": "ERROR: Method not found: array\nunittest: ran 0 tests, 0 failed\nunittest: TestCase scheduled but 0 tests ran\n",
       "tags": [],
       "key": "test_array.py",
       "updated": "2026-09-30"
@@ -189,11 +189,12 @@
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_asyncio/test_futures.py",
       "status": "fail",
       "stage": "run",
-      "rc": -11,
+      "rc": 1,
       "err": "",
-      "out": "_loop\n  DuckTests.test_wrap_future\nFAIL: assertIs\nERROR: Method not found: new_test_loop\n  DuckTests.test_ensure_future\nFAIL: assertIs\nERROR: Method not found: new_test_loop\n  BaseFutureTests.test_generic_alias\nFAIL: assertEqual\nERROR: Method not found: new_test_loop\n  BaseFutureTests.test_isfuture\n",
+      "out": "ERROR: Method not found: new_test_loop\n  CFutureTests.test_constructor_positional\nERROR: Method not found: cls\nFAIL: assertRaises\nERROR: Method not found: new_test_loop\n  PyFutureTests.test_constructor_positional\nERROR: Method not found: cls\nFAIL: assertRaises\nunittest: ran 2 tests, 2 failed\n",
       "tags": [],
-      "key": "test_asyncio/test_futures.py"
+      "key": "test_asyncio/test_futures.py",
+      "updated": "2026-09-30"
     },
     "test_asyncio/test_futures2.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_asyncio/test_futures2.py",
@@ -602,21 +603,23 @@
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_bytes.py",
       "status": "fail",
       "stage": "compile",
-      "rc": 1,
-      "err": "] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\nERROR: Variable not found: UnicodeEncodeError\nCompilation Failed: \n[AST] Freeing 74473 node child-lists...\n[AST] Freed 27932 child-lists (node slots stay in pool)",
+      "rc": -11,
+      "err": "ittest\n[IMPORT] Loaded: AIMacro.AIMacroFormat\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT ERROR] Cannot read: array\n[IMPORT ERROR] Cannot read: re\n[IMPORT ERROR] Cannot read: functools\n[IMPORT ERROR] Cannot read: textwrap\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 1079 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 29685, col 32: Unexpected token in statement\n  In:",
       "out": "",
       "tags": [],
-      "key": "test_bytes.py"
+      "key": "test_bytes.py",
+      "updated": "2026-09-30"
     },
     "test_bz2.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_bz2.py",
       "status": "fail",
       "stage": "compile",
-      "rc": 1,
-      "err": "2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[COMPILE] ERROR: Unknown function: tell\nCOMPILE ERROR at line 18394: Unknown function\nCompilation Failed: Unknown function\n[AST] Freeing 52718 node child-lists...\n[AST] Freed 21307 child-lists (node slots stay in pool)",
+      "rc": -11,
+      "err": "IMPORT ERROR] Cannot read: random\n[IMPORT ERROR] Cannot read: shutil\n[IMPORT ERROR] Cannot read: subprocess\n[IMPORT ERROR] Cannot read: threading\n[IMPORT ERROR] Cannot read: _compression\n[IMPORT ERROR] Cannot read: bz2\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 978 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 30265, col 32: Unexpected token in statement\n  In:",
       "out": "",
       "tags": [],
-      "key": "test_bz2.py"
+      "key": "test_bz2.py",
+      "updated": "2026-09-30"
     },
     "test_c_locale_coercion.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_c_locale_coercion.py",
@@ -665,42 +668,37 @@
       "stage": "run",
       "rc": 1,
       "err": "",
-      "out": "ERROR: Method not found: import_module\n  CAPITest.test_decodeutf8\nERROR: Method not found: encode\nFAIL: assertEqual\nERROR: Method not found: encode\nERROR: Method not found: encode\nERROR: Method not found: encode\n  CAPITest.test_decodeutf8stateful\nERROR: Method not found: encode\nFAIL: assertEqual\nERROR: Method not found: encode\nERROR: Method not found: encode\nERROR: Method not found: encode\nunittest: ran 2 tests, 2 failed\n",
+      "out": "  CAPITest.test_decodeutf8\nERROR: Method not found: encode\nFAIL: assertEqual\nERROR: Method not found: encode\nERROR: Method not found: encode\nERROR: Method not found: encode\n  CAPITest.test_decodeutf8stateful\nERROR: Method not found: encode\nFAIL: assertEqual\nERROR: Method not found: encode\nERROR: Method not found: encode\nERROR: Method not found: encode\nunittest: ran 2 tests, 2 failed\n",
       "tags": [],
       "key": "test_capi/test_codecs.py",
       "updated": "2026-09-30"
     },
     "test_capi/test_eval_code_ex.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_capi/test_eval_code_ex.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": 1,
-      "err": "",
-      "out": "ERROR: Method not found: import_module\n  PyEval_EvalCodeExTests.test_simple\nERROR: Method not found: eval_code_ex\nFAIL: assertEqual\n  PyEval_EvalCodeExTests.test_with_args\nERROR: Method not found: eval_code_ex\nFAIL: assertEqual\n  PyEval_EvalCodeExTests.test_with_kwargs\nERROR: Method not found: eval_code_ex\nFAIL: assertEqual\n  PyEval_EvalCodeExTests.test_with_default\nERROR: Method not found: eval_code_ex\nFAIL: assertEqual\n  PyEval_EvalCodeExTests.test_with_kwarg_default\nERROR: Method not found: eval_code_ex\nFAIL: assertEqual\n  PyEval_EvalCodeExTests.test_with_closure\nERROR: Method not found: eval_code_ex\nFAIL: assertEqual\nunittest: ran 6 tests, 6 failed\n",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_capi/test_eval_code_ex.py",
       "updated": "2026-09-30"
     },
     "test_capi/test_getargs.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_capi/test_getargs.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": -11,
-      "err": "",
-      "out": "ERROR: Method not found: import_module\n  Unsigned_TestCase.test_b\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\n  Unsigned_TestCase.test_B\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\n",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_capi/test_getargs.py",
       "updated": "2026-09-30"
     },
     "test_capi/test_misc.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_capi/test_misc.py",
       "status": "fail",
-      "stage": "compile",
+      "stage": "transpile",
       "rc": 1,
-      "err": "NDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 0 arguments\nERROR: Variable not found: SystemError\nCompilation Failed: \n[AST] Freeing 52686 node child-lists...\n[AST] Freed 21133 child-lists (node slots stay in pool)",
+      "err": "transpile: \nParse Error: Unexpected token in expression\n token=52\nParse Error: Expected ')' after super method arguments\nParse Error: expected token 85 got 81\nParse Error: Expected '}' after class body\nParse Error: Expected '}' after class body\nerror: compilation failed",
       "out": "",
       "tags": [],
-      "key": "test_capi/test_misc.py"
+      "key": "test_capi/test_misc.py",
+      "updated": "2026-09-30"
     },
     "test_capi/test_structmembers.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_capi/test_structmembers.py",
@@ -717,11 +715,12 @@
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_capi/test_unicode.py",
       "status": "fail",
       "stage": "compile",
-      "rc": 1,
-      "err": " arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 2 arguments\n[COMPILE] ERROR: Unknown function: rjust\nCOMPILE ERROR at line 16226: Unknown function\nCompilation Failed: Unknown function\n[AST] Freeing 41799 node child-lists...\n[AST] Freed 17575 child-lists (node slots stay in pool)",
+      "rc": -11,
+      "err": "oaded: AIMacro.AIMacroString\n[IMPORT] Loaded: AIMacro.AIMacroOperator\n[IMPORT] Loaded: AIMacro.AIMacroDict\n[IMPORT] Loaded: AIMacro.AIMacroUnittest\n[IMPORT] Loaded: AIMacro.AIMacroFormat\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 886 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 28013, col 32: Unexpected token in statement\n  In:",
       "out": "",
       "tags": [],
-      "key": "test_capi/test_unicode.py"
+      "key": "test_capi/test_unicode.py",
+      "updated": "2026-09-30"
     },
     "test_cgi.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_cgi.py",
@@ -959,12 +958,11 @@
     "test_codecs.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_codecs.py",
       "status": "fail",
-      "stage": "compile",
-      "rc": 1,
-      "err": "] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\nERROR: Variable not found: UnicodeEncodeError\nCompilation Failed: \n[AST] Freeing 81935 node child-lists...\n[AST] Freed 30357 child-lists (node slots stay in pool)",
-      "out": "",
+      "stage": "py2aim",
+      "err": "timeout",
       "tags": [],
-      "key": "test_codecs.py"
+      "key": "test_codecs.py",
+      "updated": "2026-09-30"
     },
     "test_codeop.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_codeop.py",
@@ -1253,13 +1251,11 @@
     },
     "test_defaultdict.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_defaultdict.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": -11,
-      "err": "",
-      "out": "ic\nFAIL: assertEqual\nFAIL: assertIn\nFAIL: assertIn\nFAIL: assertIn\nFAIL: assertIn\nFAIL: assertIn\nFAIL: assertIn\nERROR: Method not found: assertNotIn\nERROR: Method not found: assertNotIn\nFAIL: assertRaises\n  TestDefaultDict.test_missing\nFAIL: assertRaises\n  TestDefaultDict.test_repr\nFAIL: assertEqual\n",
+      "status": "pass",
       "tags": [],
-      "key": "test_defaultdict.py"
+      "stage_ok": "run",
+      "key": "test_defaultdict.py",
+      "updated": "2026-09-30"
     },
     "test_deque.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_deque.py",
@@ -1314,7 +1310,7 @@
       "stage": "run",
       "rc": 1,
       "err": "",
-      "out": "ot found: dict_get_version\nERROR: Method not found: dict_get_version\nERROR: Method not found: dict_get_version\nERROR: add\n  DictVersionTests.test_pop\nERROR: Method not found: dict_get_version\nERROR: Method not found: dict_get_version\nERROR: Method not found: dict_get_version\nERROR: Method not found: dict_get_version\nERROR: add\n  DictVersionTests.test_popitem\nERROR: Method not found: dict_get_version\nERROR: Method not found: dict_get_version\nERROR: Method not found: dict_get_version\nERROR: Method not found: dict_get_version\nERROR: add\n  DictVersionTests.test_update\nERROR: Method not found: dict_get_version\nERROR: Method not found: dict_get_version\nERROR: Method not found: dict_get_version\nERROR: Method not found: dict_get_version\nERROR: Method not found: dict_get_version\nERROR: Method not found: dict_get_version\nERROR: add\n  DictVersionTests.test_clear\nERROR: Method not found: dict_get_version\nERROR: Method not found: dict_get_version\nERROR: Method not found: dict_get_version\nERROR: Method not found: dict_get_version\nERROR: add\n  DictSubtypeVersionTests.test_constructor\nERROR: Method not found: dict_get_version\nERROR: Method not found: dict_get_version\nERROR: Method not found: dict_get_version\nERROR: Method not found: dict_get_version\nERROR: Method not found: dict_get_version\nERROR: add\n  DictSubtypeVersionTests.test_copy\nERROR: Method not found: dict_get_version\nERROR: Method not found: dict_get_version\nERROR: Method not found: dict_get_version\nERROR: Method not found: dict_get_version\nERROR: add\n  DictSubtypeVersionTests.test_setitem\nERROR: Method not found: dict_get_version\nERROR: Method not found: dict_get_version\nERROR: Method not found: dict_get_version\nERROR: Method not found: dict_get_version\nERROR: Method not found: dict_get_version\nERROR: add\n  DictSubtypeVersionTests.test_setitem_same_value\nERROR: Method not found: dict_get_version\nERROR: Method not found: dict_get_version\nERROR: Method not found: dict_get_version\nERROR: Method not found: dict_get_version\nERROR: Method not found: dict_get_version\nERROR: Method not found: dict_get_version\nERROR: Method not found: dict_get_version\nERROR: Method not found: dict_get_version\nERROR: Method not found: dict_get_version\nERROR: add\n  DictSubtypeVersionTests.test_setitem_equal\nERROR: Method not found: dict_get_version\nERROR: Method not found: dict_get_version\nFAIL: assertIs\nERROR: Method not found: dict_get_version\nFAIL: assertIs\nERROR: Method not found: dict_get_version\nFAIL: assertIs\nERROR: Method not found: dict_get_version\nERROR: Method not found: dict_get_version\nFAIL: assertIs\n  DictSubtypeVersionTests.test_setdefault\nERROR: Method not found: dict_get_version\nERROR: Method not found: dict_get_version\nERROR: Method not found: dict_get_version\nERROR: Method not found: dict_get_version\nERROR: add\n  DictSubtypeVersionTests.test_delitem\nERROR: Method not found: dict_get_version\nERROR: Method not found: dict_get_version\nERROR: Method not found: dict_get_version\nERROR: Method not found: dict_get_version\nERROR: add\n  DictSubtypeVersionTests.test_pop\nERROR: Method not found: dict_get_version\nERROR: Method not found: dict_get_version\nERROR: Method not found: dict_get_version\nERROR: Method not found: dict_get_version\nERROR: add\n  DictSubtypeVersionTests.test_popitem\nERROR: Method not found: dict_get_version\nERROR: Method not found: dict_get_version\nERROR: Method not found: dict_get_version\nERROR: Method not found: dict_get_version\nERROR: add\n  DictSubtypeVersionTests.test_update\nERROR: Method not found: dict_get_version\nERROR: Method not found: dict_get_version\nERROR: Method not found: dict_get_version\nERROR: Method not found: dict_get_version\nERROR: Method not found: dict_get_version\nERROR: Method not found: dict_get_version\nERROR: add\n  DictSubtypeVersionTests.test_clear\nERROR: Method not found: dict_get_version\nERROR: Method not found: dict_get_version\nERROR: Method not found: dict_get_version\nERROR: Method not found: dict_get_version\nERROR: add\nunittest: ran 22 tests, 28 failed\n",
+      "out": "  DictVersionTests.test_setitem\nERROR: Method not found: dict_get_version\nERROR: Method not found: dict_get_version\nERROR: Method not found: dict_get_version\nERROR: Method not found: dict_get_version\nERROR: Method not found: dict_get_version\nERROR: add\nunittest: ran 1 tests, 1 failed\n",
       "tags": [],
       "key": "test_dict_version.py",
       "updated": "2026-09-30"
@@ -1387,7 +1383,7 @@
       "stage": "run",
       "rc": 1,
       "err": "",
-      "out": "  Test.test_testmod\nERROR: Method not found: testmod\nFAIL: %d of %d doctests failed\nunittest: ran 1 tests, 1 failed\n",
+      "out": "  Test.test_testmod\nFAIL: %d of %d doctests failed\nunittest: ran 1 tests, 1 failed\n",
       "tags": [],
       "key": "test_doctest2.py",
       "updated": "2026-09-30"
@@ -2406,12 +2402,13 @@
     "test_importlib/import_/test_api.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_importlib/import_/test_api.py",
       "status": "fail",
-      "stage": "run",
-      "rc": -11,
-      "err": "",
-      "out": "  APITest.test_raises_ModuleNotFoundError\n",
+      "stage": "transpile",
+      "rc": 1,
+      "err": "transpile: \nParse Error: Expected '(' after super method name\nParse Error: Expected '}' after class body\nerror: compilation failed",
+      "out": "",
       "tags": [],
-      "key": "test_importlib/import_/test_api.py"
+      "key": "test_importlib/import_/test_api.py",
+      "updated": "2026-09-30"
     },
     "test_importlib/import_/test_caching.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_importlib/import_/test_caching.py",
@@ -2566,12 +2563,9 @@
     },
     "test_importlib/test_files.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_importlib/test_files.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": -11,
-      "err": "",
-      "out": "  OpenDiskTests.test_read_bytes\nERROR: Method not found: files\nERROR: Method not found: joinpath\nERROR: Method not found: read_bytes\n",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_importlib/test_files.py",
       "updated": "2026-09-30"
     },
@@ -2654,12 +2648,9 @@
     },
     "test_importlib/test_read.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_importlib/test_read.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": 1,
-      "err": "",
-      "out": "  ReadDiskTests.test_read_bytes\nERROR: Method not found: files\nERROR: Method not found: joinpath\nERROR: Method not found: read_bytes\nFAIL: assertEqual\n  ReadDiskTests.test_read_text_default_encoding\nERROR: Method not found: files\nERROR: Method not found: joinpath\nERROR: Method not found: read_text\nFAIL: assertEqual\n  ReadDiskTests.test_read_text_given_encoding\nERROR: Method not found: files\nERROR: Method not found: joinpath\nERROR: Method not found: read_text\nFAIL: assertEqual\n  ReadDiskTests.test_read_text_with_errors\nERROR: Method not found: files\nERROR: Method not found: read_text\nFAIL: assertEqual\n  ReadZipTests.test_read_bytes\nERROR: Method not found: files\nERROR: Method not found: joinpath\nERROR: Method not found: read_bytes\nFAIL: assertEqual\n  ReadZipTests.test_read_text_default_encoding\nERROR: Method not found: files\nERROR: Method not found: joinpath\nERROR: Method not found: read_text\nFAIL: assertEqual\n  ReadZipTests.test_read_text_given_encoding\nERROR: Method not found: files\nERROR: Method not found: joinpath\nERROR: Method not found: read_text\nFAIL: assertEqual\n  ReadZipTests.test_read_text_with_errors\nERROR: Method not found: files\nERROR: Method not found: read_text\nFAIL: assertEqual\n  ReadZipTests.test_read_submodule_resource\nERROR: Method not found: files\nERROR: Method not found: joinpath\nERROR: Method not found: read_bytes\nFAIL: assertEqual\n  ReadNamespaceTests.test_read_bytes\nERROR: Method not found: files\nERROR: Method not found: joinpath\nERROR: Method not found: read_bytes\nFAIL: assertEqual\n  ReadNamespaceTests.test_read_text_default_encoding\nERROR: Method not found: files\nERROR: Method not found: joinpath\nERROR: Method not found: read_text\nFAIL: assertEqual\n  ReadNamespaceTests.test_read_text_given_encoding\nERROR: Method not found: files\nERROR: Method not found: joinpath\nERROR: Method not found: read_text\nFAIL: assertEqual\n  ReadNamespaceTests.test_read_text_with_errors\nERROR: Method not found: files\nERROR: Method not found: read_text\nFAIL: assertEqual\nunittest: ran 13 tests, 13 failed\n",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_importlib/test_read.py",
       "updated": "2026-09-30"
     },
@@ -3126,11 +3117,12 @@
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_locale.py",
       "status": "fail",
       "stage": "compile",
-      "rc": 1,
-      "err": " arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[COMPILE] ERROR: Unknown function: rjust\nCOMPILE ERROR at line 16325: Unknown function\nCompilation Failed: Unknown function\n[AST] Freeing 45740 node child-lists...\n[AST] Freed 18817 child-lists (node slots stay in pool)",
+      "rc": -11,
+      "err": "[IMPORT] Loaded: AIMacro.AIMacroDict\n[IMPORT] Loaded: AIMacro.AIMacroUnittest\n[IMPORT] Loaded: AIMacro.AIMacroFormat\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT ERROR] Cannot read: locale\n[IMPORT ERROR] Cannot read: codecs\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 952 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 28170, col 32: Unexpected token in statement\n  In:",
       "out": "",
       "tags": [],
-      "key": "test_locale.py"
+      "key": "test_locale.py",
+      "updated": "2026-09-30"
     },
     "test_logging.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_logging.py",
@@ -3194,7 +3186,8 @@
       "err": "",
       "out": "",
       "tags": [],
-      "key": "test_marshal.py"
+      "key": "test_marshal.py",
+      "updated": "2026-09-30"
     },
     "test_math.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_math.py",
@@ -3328,12 +3321,9 @@
     },
     "test_netrc.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_netrc.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": 1,
-      "err": "",
-      "out": "ERROR: Method not found: netrc\nERROR: Method not found: unlink\nFAIL: assertEqual\n  NetrcTestCase.test_macros\nERROR: Method not found: netrc\nERROR: Method not found: unlink\nFAIL: assertEqual\nERROR: Method not found: rstrip\nERROR: Method not found: unlink\n  NetrcTestCase.test_optional_tokens\nERROR: Method not found: netrc\nERROR: Method not found: unlink\nFAIL: assertEqual\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: unlink\n  NetrcTestCase.test_invalid_tokens\nERROR: Method not found: netrc\nERROR: Method not found: unlink\nFAIL: assertRaises\nERROR: Method not found: unlink\nERROR: Method not found: netrc\nERROR: Method not found: unlink\nFAIL: assertRaises\nERROR: Method not found: unlink\nERROR: Method not found: netrc\nERROR: Method not found: unlink\nFAIL: assertRaises\n  NetrcTestCase.test_token_value_quotes\nERROR: Method not found: netrc\nERROR: Method not found: unlink\nFAIL: assertEqual\nERROR: Method not found: unlink\nERROR: Method not found: unlink\n  NetrcTestCase.test_token_value_escape\nERROR: Method not found: netrc\nERROR: Method not found: unlink\nFAIL: assertEqual\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: unlink\n  NetrcTestCase.test_token_value_whitespace\nERROR: Method not found: netrc\nERROR: Method not found: unlink\nFAIL: assertEqual\nERROR: Method not found: unlink\nERROR: Method not found: unlink\n  NetrcTestCase.test_token_value_non_ascii\nERROR: Method not found: netrc\nERROR: Method not found: unlink\nFAIL: assertEqual\nERROR: Method not found: unlink\nERROR: Method not found: unlink\n  NetrcTestCase.test_token_value_leading_hash\nERROR: Method not found: netrc\nERROR: Method not found: unlink\nFAIL: assertEqual\nERROR: Method not found: unlink\nERROR: Method not found: unlink\n  NetrcTestCase.test_token_value_trailing_hash\nERROR: Method not found: netrc\nERROR: Method not found: unlink\nFAIL: assertEqual\nERROR: Method not found: unlink\nERROR: Method not found: unlink\n  NetrcTestCase.test_token_value_internal_hash\nERROR: Method not found: netrc\nERROR: Method not found: unlink\nFAIL: assertEqual\nERROR: Method not found: unlink\nERROR: Method not found: unlink\n  NetrcTestCase.test_comment_before_machine_line\nERROR: Method not found: netrc\nERROR: Method not found: unlink\nFAIL: assertEqual\n  NetrcTestCase.test_comment_before_machine_line_no_space\nERROR: Method not found: netrc\nERROR: Method not found: unlink\nFAIL: assertEqual\n  NetrcTestCase.test_comment_before_machine_line_hash_only\nERROR: Method not found: netrc\nERROR: Method not found: unlink\nFAIL: assertEqual\n  NetrcTestCase.test_comment_after_machine_line\nERROR: Method not found: netrc\nERROR: Method not found: unlink\nFAIL: assertEqual\nERROR: Method not found: unlink\n  NetrcTestCase.test_comment_after_machine_line_no_space\nERROR: Method not found: netrc\nERROR: Method not found: unlink\nFAIL: assertEqual\nERROR: Method not found: unlink\n  NetrcTestCase.test_comment_after_machine_line_hash_only\nERROR: Method not found: netrc\nERROR: Method not found: unlink\nFAIL: assertEqual\nERROR: Method not found: unlink\n  NetrcTestCase.test_comment_at_end_of_machine_line\nERROR: Method not found: netrc\nERROR: Method not found: unlink\nFAIL: assertEqual\n  NetrcTestCase.test_comment_at_end_of_machine_line_no_space\nERROR: Method not found: netrc\nERROR: Method not found: unlink\nFAIL: assertEqual\n  NetrcTestCase.test_comment_at_end_of_machine_line_pass_has_hash\nERROR: Method not found: netrc\nERROR: Method not found: unlink\nFAIL: assertEqual\n  NetrcTestCase.test_security\nERROR: Method not found: mkdir\nERROR: No such file\nunittest: ran 22 tests, 24 failed\n",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_netrc.py",
       "updated": "2026-09-30"
     },
@@ -3560,12 +3550,13 @@
     "test_pickle.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_pickle.py",
       "status": "fail",
-      "stage": "run",
-      "rc": -11,
-      "err": "",
-      "out": "  PyIdPersPicklerTests.test_pickler_reference_cycle\n",
+      "stage": "transpile",
+      "rc": 1,
+      "err": "transpile: \nParse Error: Unexpected token in expression\n token=52\nParse Error: Expected ')' after super method arguments\nParse Error: expected token 85 got 86\nParse Error: Expected '}' after class body\nParse Error: expected token 85 got 56\nParse Error: Expected '}' after class body\nerror: compilation failed",
+      "out": "",
       "tags": [],
-      "key": "test_pickle.py"
+      "key": "test_pickle.py",
+      "updated": "2026-09-30"
     },
     "test_picklebuffer.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_picklebuffer.py",
@@ -3632,11 +3623,12 @@
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_plistlib.py",
       "status": "fail",
       "stage": "compile",
-      "rc": 1,
-      "err": "] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\nERROR: Variable not found: UnicodeEncodeError\nCompilation Failed: \n[AST] Freeing 49492 node child-lists...\n[AST] Freed 20188 child-lists (node slots stay in pool)",
+      "rc": -11,
+      "err": "IMPORT ERROR] Cannot read: struct\n[IMPORT ERROR] Cannot read: plistlib\n[IMPORT ERROR] Cannot read: datetime\n[IMPORT ERROR] Cannot read: codecs\n[IMPORT ERROR] Cannot read: subprocess\n[IMPORT ERROR] Cannot read: plistlib\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 941 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 30241, col 40: Unexpected token in statement\n  In:",
       "out": "",
       "tags": [],
-      "key": "test_plistlib.py"
+      "key": "test_plistlib.py",
+      "updated": "2026-09-30"
     },
     "test_poll.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_poll.py",
@@ -3766,11 +3758,12 @@
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_pty.py",
       "status": "fail",
       "stage": "run",
-      "rc": -11,
+      "rc": 1,
       "err": "",
-      "out": "  PtyTest.test_openpty\nFAIL: assertTrue\n",
+      "out": "  SmallPtyTests.test__restore_tty_mode_normal_return\nERROR: Method not found: spawn\nFAIL: assertEqual\nunittest: ran 1 tests, 1 failed\n",
       "tags": [],
-      "key": "test_pty.py"
+      "key": "test_pty.py",
+      "updated": "2026-09-30"
     },
     "test_pulldom.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_pulldom.py",
@@ -4051,11 +4044,12 @@
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_set.py",
       "status": "fail",
       "stage": "compile",
-      "rc": 1,
-      "err": "\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\nERROR: Variable not found: hash\nCompilation Failed: \n[AST] Freeing 70067 node child-lists...\n[AST] Freed 27000 child-lists (node slots stay in pool)",
+      "rc": -11,
+      "err": "t\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT ERROR] Cannot read: weakref\n[IMPORT ERROR] Cannot read: random\n[IMPORT ERROR] Cannot read: warnings\n[IMPORT ERROR] Cannot read: itertools\n[IMPORT ERROR] Cannot read: itertools\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 1216 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 31005, col 32: Unexpected token in statement\n  In:",
       "out": "",
       "tags": [],
-      "key": "test_set.py"
+      "key": "test_set.py",
+      "updated": "2026-09-30"
     },
     "test_setcomps.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_setcomps.py",
@@ -4100,13 +4094,11 @@
     },
     "test_signal.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_signal.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": -11,
-      "err": "",
-      "out": "FAIL: assertIn\n  WindowsSignalTests.test_valid_signals\nFAIL: assertIsInstance\nERROR: Method not found: assertGreaterEqual\nFAIL: assertIn\nERROR: Method not found: assertNotIn\nERROR: Method not found: assertNotIn\nERROR: Method not found: assertLess\n  WindowsSignalTests.test_issue9324\nFAIL: assertTrue\n",
+      "status": "pass",
       "tags": [],
-      "key": "test_signal.py"
+      "stage_ok": "run",
+      "key": "test_signal.py",
+      "updated": "2026-09-30"
     },
     "test_site.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_site.py",
@@ -4207,10 +4199,10 @@
     "test_spwd.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_spwd.py",
       "status": "fail",
-      "stage": "run",
-      "rc": 1,
-      "err": "",
-      "out": "ERROR: Method not found: simplefilter\n  TestSpwdRoot.test_getspnam\nERROR: Method not found: getspnam\nFAIL: assertRaises\nunittest: ran 1 tests, 1 failed\n",
+      "stage": "compile",
+      "rc": -11,
+      "err": " symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\n[PARSER] Parsed 898 declarations, 80039 total nodes\n[PARSER] SUCCESS\n[SEMANTIC] contract check\n[POOL] Emitting mmap for R15 (248 slots)\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments",
+      "out": "",
       "tags": [],
       "key": "test_spwd.py",
       "updated": "2026-09-30"
@@ -4511,12 +4503,13 @@
     "test_sys.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_sys.py",
       "status": "fail",
-      "stage": "compile",
+      "stage": "transpile",
       "rc": 1,
-      "err": "guments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 0 arguments\n[COMPILE] ERROR: Unknown function: swapcase\nCOMPILE ERROR at line 18191: Unknown function\nCompilation Failed: Unknown function\n[AST] Freeing 58608 node child-lists...\n[AST] Freed 23056 child-lists (node slots stay in pool)",
+      "err": "transpile: \nParse Error: Expected ')' after 'super('\nParse Error: expected token 81 got 3\nParse Error: expected token 85 got 3\nParse Error: Expected '}' after class body\nerror: compilation failed",
       "out": "",
       "tags": [],
-      "key": "test_sys.py"
+      "key": "test_sys.py",
+      "updated": "2026-09-30"
     },
     "test_sys_setprofile.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_sys_setprofile.py",
@@ -4807,12 +4800,9 @@
     },
     "test_tools/test_lll.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_tools/test_lll.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": 1,
-      "err": "",
-      "out": "  lllTests.test_lll_multiple_dirs\nERROR: Method not found: symlink\nERROR: Method not found: symlink\nERROR: Method not found: captured_stdout\nFAIL: assertEqual\nunittest: ran 1 tests, 1 failed\n",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_tools/test_lll.py",
       "updated": "2026-09-30"
     },
@@ -5155,12 +5145,9 @@
     },
     "test_urllib_response.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_urllib_response.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": 1,
-      "err": "",
-      "out": "ERROR: Method not found: socket\nERROR: Method not found: makefile\n  TestResponse.test_with\nERROR: Method not found: addbase\nFAIL: assertIsInstance\nFAIL: assertRaises\nERROR: Method not found: socket\nERROR: Method not found: makefile\n  TestResponse.test_addclosehook\nERROR: Method not found: addclosehook\nFAIL: assertTrue\nERROR: Method not found: socket\nERROR: Method not found: makefile\n  TestResponse.test_addinfo\nERROR: Method not found: addinfo\nERROR: Method not found: info\nFAIL: assertEqual\nERROR: Method not found: socket\nERROR: Method not found: makefile\n  TestResponse.test_addinfourl\nERROR: Method not found: addinfourl\nERROR: Method not found: info\nFAIL: assertEqual\nERROR: Method not found: geturl\nERROR: Method not found: getcode\nunittest: ran 4 tests, 5 failed\n",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_urllib_response.py",
       "updated": "2026-09-30"
     },
@@ -5397,7 +5384,7 @@
       "stage": "run",
       "rc": 1,
       "err": "",
-      "out": "  EmptyNodeListTestCase.test_emptynodelist_length\nFAIL: assertRaises\nunittest: ran 1 tests, 1 failed\n",
+      "out": "  EmptyNodeListTestCase.test_emptynodelist_item\nFAIL: assertRaises\nFAIL: assertRaises\nunittest: ran 1 tests, 2 failed\n",
       "tags": [],
       "key": "test_xml_dom_minicompat.py",
       "updated": "2026-09-30"
@@ -5414,11 +5401,12 @@
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_xml_etree_c.py",
       "status": "fail",
       "stage": "run",
-      "rc": -11,
+      "rc": 1,
       "err": "",
-      "out": "  MiscTests.test_length_overflow\nFAIL: assertRaises\n  MiscTests.test_del_attribute\n",
+      "out": "Exception: keyword argument\n",
       "tags": [],
-      "key": "test_xml_etree_c.py"
+      "key": "test_xml_etree_c.py",
+      "updated": "2026-09-30"
     },
     "test_xmlrpc.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_xmlrpc.py",
@@ -5432,12 +5420,9 @@
     },
     "test_xmlrpc_net.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_xmlrpc_net.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": 1,
-      "err": "",
-      "out": "ERROR: Method not found: requires\n  PythonBuildersTest.test_python_builders\nERROR: Method not found: ServerProxy\nERROR: Method not found: getAllBuilders\nFAIL: assertIsInstance\nunittest: ran 1 tests, 1 failed\n",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_xmlrpc_net.py",
       "updated": "2026-09-30"
     },

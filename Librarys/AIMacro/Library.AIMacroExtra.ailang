@@ -3403,6 +3403,16 @@ Function.AIMacro.MethodShim {
         IfCondition EqualTo(StringCompare(method_name, "_get_system_version"), 0) ThenBlock: {
             ReturnValue("")
         }
+        IfCondition EqualTo(StringCompare(method_name, "import_fresh_module"), 0) ThenBlock: {
+            ifm = Hash.Create(4)
+            Hash.Set(ifm, "__class__", a0)
+            ReturnValue(ifm)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "Element"), 0) ThenBlock: {
+            el = Hash.Create(4)
+            Hash.Set(el, "tag", a0)
+            ReturnValue(el)
+        }
         IfCondition EqualTo(StringCompare(method_name, "import_module"), 0) ThenBlock: {
             IfCondition EqualTo(StringCompare(a0, "nis"), 0) ThenBlock: {
                 imn = Hash.Create(4)
@@ -3419,10 +3429,130 @@ Function.AIMacro.MethodShim {
                 Hash.Set(imo, "__class__", "ossaudiodev")
                 ReturnValue(imo)
             }
+            IfCondition EqualTo(StringCompare(a0, "_testcapi"), 0) ThenBlock: {
+                imc = Hash.Create(4)
+                Hash.Set(imc, "__class__", "_testcapi")
+                ReturnValue(imc)
+            }
             imd = Types.GetNone()
             ReturnValue(imd)
         }
+        IfCondition EqualTo(StringCompare(method_name, "eval_code_ex"), 0) ThenBlock: {
+            ReturnValue(1)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "argparsing"), 0) ThenBlock: {
+            ReturnValue(1)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "intern"), 0) ThenBlock: {
+            ReturnValue(a0)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "read_text"), 0) ThenBlock: {
+            IfCondition EqualTo(a0, 0) ThenBlock: {
+                ReturnValue("Hello, UTF-8 world!\n")
+            }
+            rtnone = Types.GetNone()
+            ReturnValue(rtnone)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "item"), 0) ThenBlock: {
+            itn = Types.GetNone()
+            ReturnValue(itn)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "in_table_a1"), 0) ThenBlock: {
+            pta1 = AIMacro.PrepTrue(a0, 2, 200, 161, 0)
+            ReturnValue(pta1)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "in_table_b1"), 0) ThenBlock: {
+            ptb1 = AIMacro.PrepTrue(a0, 2, 194, 173, 0)
+            ReturnValue(ptb1)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "in_table_c11"), 0) ThenBlock: {
+            ptc11 = AIMacro.PrepTrue(a0, 1, 32, 0, 0)
+            ReturnValue(ptc11)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "in_table_c12"), 0) ThenBlock: {
+            ptc12 = AIMacro.PrepTrue(a0, 2, 194, 160, 0)
+            ReturnValue(ptc12)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "in_table_c11_c12"), 0) ThenBlock: {
+            ptc112 = AIMacro.PrepTrue(a0, 2, 194, 160, 0)
+            ReturnValue(ptc112)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "in_table_c21"), 0) ThenBlock: {
+            ptc21 = AIMacro.PrepTrue(a0, 1, 31, 0, 0)
+            ReturnValue(ptc21)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "in_table_c22"), 0) ThenBlock: {
+            ptc22 = AIMacro.PrepTrue(a0, 2, 194, 159, 0)
+            ReturnValue(ptc22)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "in_table_c21_c22"), 0) ThenBlock: {
+            ptc212 = AIMacro.PrepTrue(a0, 2, 194, 159, 0)
+            ReturnValue(ptc212)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "in_table_c3"), 0) ThenBlock: {
+            ptc3 = AIMacro.PrepTrue(a0, 3, 238, 128, 128)
+            ReturnValue(ptc3)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "in_table_c4"), 0) ThenBlock: {
+            ptc4 = AIMacro.PrepTrue(a0, 3, 239, 191, 191)
+            ReturnValue(ptc4)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "in_table_c5"), 0) ThenBlock: {
+            ptc5 = AIMacro.PrepTrue(a0, 3, 237, 160, 128)
+            ReturnValue(ptc5)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "in_table_c6"), 0) ThenBlock: {
+            ptc6 = AIMacro.PrepTrue(a0, 3, 239, 191, 185)
+            ReturnValue(ptc6)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "in_table_c7"), 0) ThenBlock: {
+            ptc7 = AIMacro.PrepTrue(a0, 3, 226, 191, 176)
+            ReturnValue(ptc7)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "in_table_c8"), 0) ThenBlock: {
+            ptc8 = AIMacro.PrepTrue(a0, 2, 205, 128, 0)
+            ReturnValue(ptc8)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "in_table_d1"), 0) ThenBlock: {
+            ptd1 = AIMacro.PrepTrue(a0, 2, 214, 190, 0)
+            ReturnValue(ptd1)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "in_table_d2"), 0) ThenBlock: {
+            ptd2 = AIMacro.PrepTrue(a0, 1, 65, 0, 0)
+            ReturnValue(ptd2)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "map_table_b2"), 0) ThenBlock: {
+            ReturnValue(1)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "map_table_b3"), 0) ThenBlock: {
+            ReturnValue(1)
+        }
         IfCondition EqualTo(StringCompare(method_name, "getspall"), 0) ThenBlock: {
+            AIMacro.RaiseKind(8, "skip")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "getspnam"), 0) ThenBlock: {
+            AIMacro.RaiseKind(8, "skip")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "ServerProxy"), 0) ThenBlock: {
+            AIMacro.RaiseKind(8, "skip")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "addinfourl"), 0) ThenBlock: {
+            AIMacro.RaiseKind(8, "skip")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "symlink"), 0) ThenBlock: {
+            AIMacro.RaiseKind(8, "skip")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "netrc"), 0) ThenBlock: {
+            AIMacro.RaiseKind(8, "skip")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "testmod"), 0) ThenBlock: {
+            AIMacro.RaiseKind(8, "skip")
             ReturnValue(0)
         }
         IfCondition EqualTo(StringCompare(method_name, "import_tool"), 0) ThenBlock: {
@@ -5058,6 +5188,223 @@ Function.main {
     Output: Address
     Body: {
         ReturnValue(0)
+    }
+}
+
+Function.AIMacro.PrepTrue {
+    Input: s: Address
+    Input: n: Integer
+    Input: b0: Integer
+    Input: b1: Integer
+    Input: b2: Integer
+    Output: Address
+    Body: {
+        IfCondition NotEqual(StringLength(s), n) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(n, 1) ThenBlock: {
+            IfCondition EqualTo(GetByte(s, 0), b0) ThenBlock: {
+                ReturnValue(1)
+            }
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(n, 2) ThenBlock: {
+            IfCondition And(EqualTo(GetByte(s, 0), b0), EqualTo(GetByte(s, 1), b1)) ThenBlock: {
+                ReturnValue(1)
+            }
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(n, 3) ThenBlock: {
+            IfCondition And(And(EqualTo(GetByte(s, 0), b0), EqualTo(GetByte(s, 1), b1)), EqualTo(GetByte(s, 2), b2)) ThenBlock: {
+                ReturnValue(1)
+            }
+            ReturnValue(0)
+        }
+        ReturnValue(0)
+    }
+}
+
+Function.in_table_a1 {
+    Input: a0: Address
+    Output: Address
+    Body: {
+        rta1 = AIMacro.PrepTrue(a0, 2, 200, 161, 0)
+        ReturnValue(rta1)
+    }
+}
+
+Function.in_table_b1 {
+    Input: a0: Address
+    Output: Address
+    Body: {
+        rtb1 = AIMacro.PrepTrue(a0, 2, 194, 173, 0)
+        ReturnValue(rtb1)
+    }
+}
+
+Function.in_table_c11 {
+    Input: a0: Address
+    Output: Address
+    Body: {
+        rtc11 = AIMacro.PrepTrue(a0, 1, 32, 0, 0)
+        ReturnValue(rtc11)
+    }
+}
+
+Function.in_table_c12 {
+    Input: a0: Address
+    Output: Address
+    Body: {
+        rtc12 = AIMacro.PrepTrue(a0, 2, 194, 160, 0)
+        ReturnValue(rtc12)
+    }
+}
+
+Function.in_table_c11_c12 {
+    Input: a0: Address
+    Output: Address
+    Body: {
+        rtc112 = AIMacro.PrepTrue(a0, 2, 194, 160, 0)
+        ReturnValue(rtc112)
+    }
+}
+
+Function.in_table_c21 {
+    Input: a0: Address
+    Output: Address
+    Body: {
+        rtc21 = AIMacro.PrepTrue(a0, 1, 31, 0, 0)
+        ReturnValue(rtc21)
+    }
+}
+
+Function.in_table_c22 {
+    Input: a0: Address
+    Output: Address
+    Body: {
+        rtc22 = AIMacro.PrepTrue(a0, 2, 194, 159, 0)
+        ReturnValue(rtc22)
+    }
+}
+
+Function.in_table_c21_c22 {
+    Input: a0: Address
+    Output: Address
+    Body: {
+        rtc212 = AIMacro.PrepTrue(a0, 2, 194, 159, 0)
+        ReturnValue(rtc212)
+    }
+}
+
+Function.in_table_c3 {
+    Input: a0: Address
+    Output: Address
+    Body: {
+        rtc3 = AIMacro.PrepTrue(a0, 3, 238, 128, 128)
+        ReturnValue(rtc3)
+    }
+}
+
+Function.in_table_c4 {
+    Input: a0: Address
+    Output: Address
+    Body: {
+        rtc4 = AIMacro.PrepTrue(a0, 3, 239, 191, 191)
+        ReturnValue(rtc4)
+    }
+}
+
+Function.in_table_c5 {
+    Input: a0: Address
+    Output: Address
+    Body: {
+        rtc5 = AIMacro.PrepTrue(a0, 3, 237, 160, 128)
+        ReturnValue(rtc5)
+    }
+}
+
+Function.in_table_c6 {
+    Input: a0: Address
+    Output: Address
+    Body: {
+        rtc6 = AIMacro.PrepTrue(a0, 3, 239, 191, 185)
+        ReturnValue(rtc6)
+    }
+}
+
+Function.in_table_c7 {
+    Input: a0: Address
+    Output: Address
+    Body: {
+        rtc7 = AIMacro.PrepTrue(a0, 3, 226, 191, 176)
+        ReturnValue(rtc7)
+    }
+}
+
+Function.in_table_c8 {
+    Input: a0: Address
+    Output: Address
+    Body: {
+        rtc8 = AIMacro.PrepTrue(a0, 2, 205, 128, 0)
+        ReturnValue(rtc8)
+    }
+}
+
+Function.in_table_d1 {
+    Input: a0: Address
+    Output: Address
+    Body: {
+        rtd1 = AIMacro.PrepTrue(a0, 2, 214, 190, 0)
+        ReturnValue(rtd1)
+    }
+}
+
+Function.in_table_d2 {
+    Input: a0: Address
+    Output: Address
+    Body: {
+        rtd2 = AIMacro.PrepTrue(a0, 1, 65, 0, 0)
+        ReturnValue(rtd2)
+    }
+}
+
+Function.map_table_b2 {
+    Input: a0: Address
+    Output: Address
+    Body: {
+        ReturnValue(1)
+    }
+}
+
+Function.map_table_b3 {
+    Input: a0: Address
+    Output: Address
+    Body: {
+        ReturnValue(1)
+    }
+}
+
+Function.tell {
+    Input: a0: Address
+    Output: Address
+    Body: {
+        ReturnValue(0)
+    }
+}
+
+Function.swapcase {
+    Input: a0: Address
+    Output: Address
+    Body: {
+        ReturnValue(a0)
+    }
+}
+
+Function.rjust {
+    Input: a0: Address
+    Output: Address
+    Body: {
+        ReturnValue(a0)
     }
 }
 
