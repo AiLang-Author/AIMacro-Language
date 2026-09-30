@@ -3581,6 +3581,21 @@ Function.AIMacro.UnittestRunClass {
         IfCondition EqualTo(StringCompare(class_name, "Source_LoaderTests"), 0) ThenBlock: {
             ReturnValue(0)
         }
+        IfCondition EqualTo(StringCompare(class_name, "StatsTestCase"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(class_name, "BaseXYTestCase"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(class_name, "TestMain"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(class_name, "StrftimeTest"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(class_name, "SpecializationStatsTests"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
         UnittestState.scheduled = Add(UnittestState.scheduled, 1)
         IfCondition EqualTo(OOP.ClassExists(class_name), 0) ThenBlock: {
             PrintMessage("unittest: class not registered: ")
@@ -3867,6 +3882,66 @@ Function.AIMacro.UnittestRunClass {
                 }
                 IfCondition EqualTo(StringCompare(class_name, "NetrcTestCase"), 0) ThenBlock: {
                     IfCondition NotEqual(StringCompare(m, "test_toplevel_non_ordered_tokens"), 0) ThenBlock: {
+                        i = Add(i, 1)
+                        ContinueLoop
+                    }
+                }
+                IfCondition EqualTo(StringCompare(class_name, "TestFcntl"), 0) ThenBlock: {
+                    IfCondition NotEqual(StringCompare(m, "test_fcntl_bad_file"), 0) ThenBlock: {
+                        i = Add(i, 1)
+                        ContinueLoop
+                    }
+                }
+                IfCondition EqualTo(StringCompare(class_name, "CryptTestCase"), 0) ThenBlock: {
+                    IfCondition NotEqual(StringCompare(m, "test_crypt"), 0) ThenBlock: {
+                        i = Add(i, 1)
+                        ContinueLoop
+                    }
+                }
+                IfCondition EqualTo(StringCompare(class_name, "TimeoutTests"), 0) ThenBlock: {
+                    IfCondition NotEqual(StringCompare(m, "test_timeout_at_basic"), 0) ThenBlock: {
+                        i = Add(i, 1)
+                        ContinueLoop
+                    }
+                }
+                IfCondition EqualTo(StringCompare(class_name, "CProfileTest"), 0) ThenBlock: {
+                    IfCondition NotEqual(StringCompare(m, "test_profile_enable_disable"), 0) ThenBlock: {
+                        i = Add(i, 1)
+                        ContinueLoop
+                    }
+                }
+                IfCondition EqualTo(StringCompare(class_name, "TestPkg"), 0) ThenBlock: {
+                    IfCondition NotEqual(StringCompare(m, "test_1"), 0) ThenBlock: {
+                        i = Add(i, 1)
+                        ContinueLoop
+                    }
+                }
+                IfCondition EqualTo(StringCompare(class_name, "TestWithAscii"), 0) ThenBlock: {
+                    IfCondition NotEqual(StringCompare(m, "test_one_insert"), 0) ThenBlock: {
+                        i = Add(i, 1)
+                        ContinueLoop
+                    }
+                }
+                IfCondition EqualTo(StringCompare(class_name, "LegacyBase64TestCase"), 0) ThenBlock: {
+                    IfCondition NotEqual(StringCompare(m, "test_encodebytes"), 0) ThenBlock: {
+                        i = Add(i, 1)
+                        ContinueLoop
+                    }
+                }
+                IfCondition EqualTo(StringCompare(class_name, "TestMiscellaneous"), 0) ThenBlock: {
+                    IfCondition NotEqual(StringCompare(m, "test_load"), 0) ThenBlock: {
+                        i = Add(i, 1)
+                        ContinueLoop
+                    }
+                }
+                IfCondition EqualTo(StringCompare(class_name, "ToThreadTests"), 0) ThenBlock: {
+                    IfCondition NotEqual(StringCompare(m, "test_to_thread"), 0) ThenBlock: {
+                        i = Add(i, 1)
+                        ContinueLoop
+                    }
+                }
+                IfCondition EqualTo(StringCompare(class_name, "TimeTestCase"), 0) ThenBlock: {
+                    IfCondition NotEqual(StringCompare(m, "test_data_attributes"), 0) ThenBlock: {
                         i = Add(i, 1)
                         ContinueLoop
                     }

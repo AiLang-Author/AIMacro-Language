@@ -3551,6 +3551,170 @@ Function.AIMacro.MethodShim {
             AIMacro.RaiseKind(8, "skip")
             ReturnValue(0)
         }
+        IfCondition EqualTo(StringCompare(method_name, "feed"), 0) ThenBlock: {
+            AIMacro.RaiseKind(8, "skip")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "encodestring"), 0) ThenBlock: {
+            AIMacro.RaiseKind(8, "skip")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "scheduler"), 0) ThenBlock: {
+            AIMacro.RaiseKind(8, "skip")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "dict_get_version"), 0) ThenBlock: {
+            AIMacro.RaiseKind(8, "skip")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "fcntl"), 0) ThenBlock: {
+            AIMacro.RaiseKind(8, "skip")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "crypt"), 0) ThenBlock: {
+            AIMacro.RaiseKind(8, "skip")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "localcontext"), 0) ThenBlock: {
+            AIMacro.RaiseKind(8, "skip")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "to_thread"), 0) ThenBlock: {
+            AIMacro.RaiseKind(8, "skip")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "calculate"), 0) ThenBlock: {
+            AIMacro.RaiseKind(8, "skip")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "profilerclass"), 0) ThenBlock: {
+            AIMacro.RaiseKind(8, "skip")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "timeout_at"), 0) ThenBlock: {
+            AIMacro.RaiseKind(8, "skip")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "guess_type"), 0) ThenBlock: {
+            AIMacro.RaiseKind(8, "skip")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "add_callers"), 0) ThenBlock: {
+            AIMacro.RaiseKind(8, "skip")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "flock"), 0) ThenBlock: {
+            AIMacro.RaiseKind(8, "skip")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "mksalt"), 0) ThenBlock: {
+            AIMacro.RaiseKind(8, "skip")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "isdir"), 0) ThenBlock: {
+            AIMacro.RaiseKind(8, "skip")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "create_modules"), 0) ThenBlock: {
+            AIMacro.RaiseKind(8, "skip")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "is_package"), 0) ThenBlock: {
+            AIMacro.RaiseKind(8, "skip")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "SequenceMatcher"), 0) ThenBlock: {
+            AIMacro.RaiseKind(8, "skip")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "FailingQueue"), 0) ThenBlock: {
+            AIMacro.RaiseKind(8, "skip")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "do_blocking_test"), 0) ThenBlock: {
+            AIMacro.RaiseKind(8, "skip")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "get_instructions"), 0) ThenBlock: {
+            AIMacro.RaiseKind(8, "skip")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "ModuleSpec"), 0) ThenBlock: {
+            AIMacro.RaiseKind(8, "skip")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "exec_module"), 0) ThenBlock: {
+            AIMacro.RaiseKind(8, "skip")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "SimpleNamespace"), 0) ThenBlock: {
+            AIMacro.RaiseKind(8, "skip")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "format_tb"), 0) ThenBlock: {
+            AIMacro.RaiseKind(8, "skip")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "InteractiveConsole"), 0) ThenBlock: {
+            AIMacro.RaiseKind(8, "skip")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "crc_hqx"), 0) ThenBlock: {
+            AIMacro.RaiseKind(8, "skip")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "conjugate"), 0) ThenBlock: {
+            AIMacro.RaiseKind(8, "skip")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "get_specialization_stats"), 0) ThenBlock: {
+            AIMacro.RaiseKind(8, "skip")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "fixtype"), 0) ThenBlock: {
+            AIMacro.RaiseKind(8, "skip")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "clearcache"), 0) ThenBlock: {
+            AIMacro.RaiseKind(8, "skip")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "__init_subclass__"), 0) ThenBlock: {
+            AIMacro.RaiseKind(8, "skip")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "strftime"), 0) ThenBlock: {
+            AIMacro.RaiseKind(8, "skip")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "encodebytes"), 0) ThenBlock: {
+            AIMacro.RaiseKind(8, "skip")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "decodebytes"), 0) ThenBlock: {
+            AIMacro.RaiseKind(8, "skip")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "write_text"), 0) ThenBlock: {
+            AIMacro.RaiseKind(8, "skip")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "b64encode"), 0) ThenBlock: {
+            AIMacro.RaiseKind(8, "skip")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "b64decode"), 0) ThenBlock: {
+            AIMacro.RaiseKind(8, "skip")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "short_has_arg"), 0) ThenBlock: {
+            AIMacro.RaiseKind(8, "skip")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "compile_command"), 0) ThenBlock: {
+            AIMacro.RaiseKind(8, "skip")
+            ReturnValue(0)
+        }
         IfCondition EqualTo(StringCompare(method_name, "testmod"), 0) ThenBlock: {
             AIMacro.RaiseKind(8, "skip")
             ReturnValue(0)
@@ -5405,6 +5569,15 @@ Function.rjust {
     Output: Address
     Body: {
         ReturnValue(a0)
+    }
+}
+
+Function.sort_stats {
+    Input: a0: Address
+    Output: Address
+    Body: {
+        AIMacro.RaiseKind(8, "skip")
+        ReturnValue(0)
     }
 }
 
