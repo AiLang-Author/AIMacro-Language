@@ -1927,6 +1927,21 @@ Function.OOPGen_EmitClassRegistration {
                 use_parent = 0
             }
         }
+        // class C(Mixin, TestCase) / class C(Mixin, PyTest): first base is not TestCase
+        IfCondition EqualTo(is_test, 0) ThenBlock: {
+            nbsm = Array.Size(bases)
+            bjm = 0
+            WhileLoop LessThan(bjm, nbsm) {
+                bnmm = Array.Get(bases, bjm)
+                IfCondition EqualTo(StringCompare(bnmm, "TestCase"), 0) ThenBlock: {
+                    is_test = 1
+                }
+                IfCondition EqualTo(OOPGen_LooksLikeTestClass(bnmm), 1) ThenBlock: {
+                    is_test = 1
+                }
+                bjm = Add(bjm, 1)
+            }
+        }
         mixin_first = 0
         IfCondition EqualTo(is_test, 1) ThenBlock: {
             IfCondition Or(EqualTo(parent, 0), Or(EqualTo(StringCompare(parent, "TestCase"), 0), EqualTo(StringCompare(parent, "object"), 0))) ThenBlock: {

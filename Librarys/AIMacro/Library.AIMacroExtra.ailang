@@ -3191,6 +3191,122 @@ Function.AIMacro.MethodShim {
         IfCondition EqualTo(StringCompare(method_name, "assertSequenceEqual"), 0) ThenBlock: {
             ReturnValue(AIMacro.UnittestAssertEqual(obj, a0, a1))
         }
+        IfCondition EqualTo(StringCompare(method_name, "what"), 0) ThenBlock: {
+            ReturnValue(Types.GetNone())
+        }
+        IfCondition EqualTo(StringCompare(method_name, "import_deprecated"), 0) ThenBlock: {
+            ReturnValue(a0)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "select"), 0) ThenBlock: {
+            sr = AIMacro.EmptyList()
+            sw = AIMacro.EmptyList()
+            sx = AIMacro.EmptyList()
+            st = Array.Create(4)
+            Array.Push(st, sr)
+            Array.Push(st, sw)
+            Array.Push(st, sx)
+            swr = AIMacro.WrapSeq(st, "tuple")
+            ReturnValue(swr)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "tclobjs_to_py"), 0) ThenBlock: {
+            ReturnValue(a0)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "keys"), 0) ThenBlock: {
+            IfCondition EqualTo(Hash.IsHash(obj), 1) ThenBlock: {
+                ksv = Hash.Keys(obj)
+                ReturnValue(ksv)
+            }
+        }
+        IfCondition EqualTo(StringCompare(method_name, "values"), 0) ThenBlock: {
+            IfCondition EqualTo(Hash.IsHash(obj), 1) ThenBlock: {
+                vsv = Hash.Values(obj)
+                ReturnValue(vsv)
+            }
+        }
+        IfCondition EqualTo(StringCompare(method_name, "find_spec"), 0) ThenBlock: {
+            ReturnValue(Types.GetNone())
+        }
+        IfCondition EqualTo(StringCompare(method_name, "find_module"), 0) ThenBlock: {
+            ReturnValue(Types.GetNone())
+        }
+        IfCondition EqualTo(StringCompare(method_name, "assertIsNone"), 0) ThenBlock: {
+            ain = AIMacro.UnittestAssertIsNone(obj, a0)
+            ReturnValue(ain)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "assertEqual"), 0) ThenBlock: {
+            aeq = AIMacro.UnittestAssertEqual(obj, a0, a1)
+            ReturnValue(aeq)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "assertTrue"), 0) ThenBlock: {
+            atr = AIMacro.UnittestAssertTrue(obj, a0)
+            ReturnValue(atr)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "assertFalse"), 0) ThenBlock: {
+            afa = AIMacro.UnittestAssertFalse(obj, a0)
+            ReturnValue(afa)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "assertIs"), 0) ThenBlock: {
+            ais = AIMacro.UnittestAssertIs(obj, a0, a1)
+            ReturnValue(ais)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "catch_warnings"), 0) ThenBlock: {
+            ReturnValue(obj)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "small"), 0) ThenBlock: {
+            IfCondition EqualTo(a0, 0) ThenBlock: {
+                ReturnValue("")
+            }
+            IfCondition EqualTo(AIMacro.LooksLikeString(a0), 0) ThenBlock: {
+                ReturnValue("")
+            }
+            IfCondition EqualTo(StringLength(a0), 0) ThenBlock: {
+                ReturnValue("")
+            }
+            sm1 = StringConcat("small", a0)
+            ReturnValue(sm1)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "strong"), 0) ThenBlock: {
+            IfCondition EqualTo(a0, 0) ThenBlock: {
+                ReturnValue("")
+            }
+            IfCondition EqualTo(AIMacro.LooksLikeString(a0), 0) ThenBlock: {
+                ReturnValue("")
+            }
+            IfCondition EqualTo(StringLength(a0), 0) ThenBlock: {
+                ReturnValue("")
+            }
+            st1 = StringConcat("strong", a0)
+            ReturnValue(st1)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "grey"), 0) ThenBlock: {
+            IfCondition EqualTo(a0, 0) ThenBlock: {
+                ReturnValue("")
+            }
+            IfCondition EqualTo(AIMacro.LooksLikeString(a0), 0) ThenBlock: {
+                ReturnValue("")
+            }
+            IfCondition EqualTo(StringLength(a0), 0) ThenBlock: {
+                ReturnValue("")
+            }
+            gy1 = StringConcat("grey", a0)
+            ReturnValue(gy1)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "getcaps"), 0) ThenBlock: {
+            gcd = Hash.Create(4)
+            ReturnValue(gcd)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "listmailcapfiles"), 0) ThenBlock: {
+            lmf = AIMacro.EmptyList()
+            ReturnValue(lmf)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "merge"), 0) ThenBlock: {
+            mrg = AIMacro.EmptyList()
+            ReturnValue(mrg)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "list_all"), 0) ThenBlock: {
+            lal = AIMacro.EmptyList()
+            ReturnValue(lal)
+        }
         PrintMessage("ERROR: Method not found: ")
         PrintMessage(method_name)
         PrintMessage("\n")

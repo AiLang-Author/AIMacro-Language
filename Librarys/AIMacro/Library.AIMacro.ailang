@@ -789,7 +789,20 @@ Function.AIMacro.IsInstance {
             ReturnValue(AIMacro.Bool(Types.IsList(value)))
         }
         IfCondition EqualTo(type_id, AddressOf(AIMacro.Dict)) ThenBlock: {
-            ReturnValue(AIMacro.Bool(Types.IsDict(value)))
+            ish_d = Hash.IsHash(value)
+            IfCondition EqualTo(ish_d, 1) ThenBlock: {
+                dcls = Hash.Get(value, "__class__")
+                IfCondition EqualTo(dcls, 0) ThenBlock: {
+                    ReturnValue(AIMacro.TrueVal())
+                }
+                IfCondition EqualTo(AIMacro.LooksLikeString(dcls), 1) ThenBlock: {
+                    IfCondition EqualTo(StringCompare(dcls, "dict"), 0) ThenBlock: {
+                        ReturnValue(AIMacro.TrueVal())
+                    }
+                }
+                ReturnValue(AIMacro.FalseVal())
+            }
+            ReturnValue(AIMacro.FalseVal())
         }
         IfCondition EqualTo(AIMacro.SafeIsHash(value), 1) ThenBlock: {
             cls = Hash.Get(value, "__class__")

@@ -78,9 +78,10 @@
       "stage": "run",
       "rc": -11,
       "err": "",
-      "out": "  AifcMiscTest.test_skipunknown\n  AifcMiscTest.test_close_opened_files_on_error\n",
+      "out": "ERROR: Method not found: fromhex\nERROR: Method not found: fromhex\nERROR: Method not found: fromhex\nERROR: Method not found: fromhex\nERROR: Method not found: fromhex\nERROR: Method not found: fromhex\nERROR: Method not found: fromhex\nERROR: Method not found: fromhex\nERROR: Method not found: fromhex\nERROR: Method not found: fromhex\nERROR: Method not found: fromhex\nERROR: Method not found: fromhex\n  AifcMiscTest.test_skipunknown\nERROR: Method not found: open\n  AifcMiscTest.test_close_opened_files_on_error\nERROR: keyword argument\n  AifcMiscTest.test_params_added\nERROR: Method not found: open\nERROR: Method not found: aiff\nERROR: Method not found: setparams\nERROR: Method not found: open\nERROR: Method not found: getparams\nERROR: Method not found: getnchannels\nERROR: Method not found: getsampwidth\nERROR: Method not found: getframerate\nERROR: Method not found: getnframes\nERROR: Method not found: getcomptype\nERROR: Method not found: getcompname\n  AifcMiscTest.test_write_header_comptype_sampwidth\nERROR: Method not found: BytesIO\nERROR: Method not found: open\nERROR: Method not found: setnchannels\nERROR: Method not found: setframerate\nERROR: Method not found: setcomptype\nERROR: Method not found: getsampwidth\nFAIL: assertEqual\nERROR: Method not found: initfp\nERROR: Method not found: BytesIO\nERROR: Method not found: open\nERROR: Method not found: setnchannels\nERROR: Method not found: setframerate\nERROR: Method not found: setcomptype\nERROR: Method not found: getsampwidth\nERROR: Method not found: initfp\nERROR: Method not found: BytesIO\nERROR: Method not found: open\nERROR: Method not found: setnchannels\nERROR: Method not found: setframerate\nERROR: Method not found: setcomptype\nERROR: Method not found: getsampwidth\nERROR: Method not found: initfp\nERROR: Method not found: BytesIO\nERROR: Method not found: open\nERROR: Method not found: setnchannels\nERROR: Method not found: setframerate\nERROR: Method not found: setcomptype\nERROR: Method not found: getsampwidth\nERROR: Method not found: initfp\nERROR: Method not found: BytesIO\nERROR: Method not found: open\nERROR: Method not found: setnchannels\nERROR: Method not found: setframerate\nERROR: Method not found: setcomptype\nERROR: Method not found: getsampwidth\nERROR: Method not found: initfp\n  AifcMiscTest.test_write_markers_values\nERROR: Method not found: BytesIO\nERROR: Method not found: open\nERROR: Method not found: getmarkers\nFAIL: assertEqual\nERROR: Method not found: setmark\nERROR: Method not found: setmark\nERROR: Method not found: getmark\nERROR: Method not found: getmarkers\nERROR: Method not found: initfp\n  AifcMiscTest.test_read_markers\nERROR: Method not found: open\nERROR: Method not found: aiff\nERROR: Method not found: setparams\nERROR: Method not found: setmark\nERROR: Method not found: setmark\nERROR: Method not found: writeframes\nERROR: Method not found: open\nERROR: Method not found: getmarkers\nFAIL: assertEqual\nERROR: Method not found: getmark\nERROR: Method not found: getmark\n  AIFCLowLevelTest.test_read_written\nERROR: Method not found: BytesIO\nERROR: Method not found: seek\nFAIL: assertEqual\nERROR: Method not found: BytesIO\nERROR: Method not found: seek\nERROR: Method not found: BytesIO\nERROR: Method not found: seek\nERROR: Method not found: BytesIO\nERROR: Method not found: seek\nERROR: Method not found: BytesIO\nERROR: Method not found: seek\nERROR: Method not found: BytesIO\nERROR: Method not found: seek\nERROR: Method not found: BytesIO\nERROR: Method not found: seek\nERROR: Method not found: BytesIO\nERROR: Method not found: seek\nERROR: Method not found: BytesIO\nERROR: Method not found: seek\n",
       "tags": [],
-      "key": "test_aifc.py"
+      "key": "test_aifc.py",
+      "updated": "2026-09-30"
     },
     "test_argparse.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_argparse.py",
@@ -245,9 +246,10 @@
       "stage": "run",
       "rc": 1,
       "err": "",
-      "out": "tIsNone\n  ProtocolsAbsTests.test_datagram_protocol\nFAIL: assertIsNone\nFAIL: assertIsNone\nFAIL: assertIsNone\nFAIL: assertIsNone\n  ProtocolsAbsTests.test_subprocess_protocol\nFAIL: assertIsNone\nFAIL: assertIsNone\nFAIL: assertIsNone\nFAIL: assertIsNone\nFAIL: assertIsNone\nunittest: ran 5 tests, 25 failed\n",
+      "out": "  ProtocolsAbsTests.test_base_protocol\nERROR: Method not found: Mock\nERROR: Method not found: BaseProtocol\nERROR: Method not found: connection_made\nFAIL: assertIsNone\nERROR: Method not found: connection_lost\nFAIL: assertIsNone\nERROR: Method not found: pause_writing\nFAIL: assertIsNone\nERROR: Method not found: resume_writing\nFAIL: assertIsNone\n  ProtocolsAbsTests.test_protocol\nERROR: Method not found: Mock\nERROR: Method not found: Protocol\nERROR: Method not found: connection_made\nFAIL: assertIsNone\nERROR: Method not found: connection_lost\nFAIL: assertIsNone\nERROR: Method not found: data_received\nFAIL: assertIsNone\nERROR: Method not found: eof_received\nFAIL: assertIsNone\nERROR: Method not found: pause_writing\nFAIL: assertIsNone\nERROR: Method not found: resume_writing\nFAIL: assertIsNone\n  ProtocolsAbsTests.test_buffered_protocol\nERROR: Method not found: Mock\nERROR: Method not found: BufferedProtocol\nERROR: Method not found: connection_made\nFAIL: assertIsNone\nERROR: Method not found: connection_lost\nFAIL: assertIsNone\nERROR: Method not found: get_buffer\nFAIL: assertIsNone\nERROR: Method not found: buffer_updated\nFAIL: assertIsNone\nERROR: Method not found: pause_writing\nFAIL: assertIsNone\nERROR: Method not found: resume_writing\nFAIL: assertIsNone\n  ProtocolsAbsTests.test_datagram_protocol\nERROR: Method not found: Mock\nERROR: Method not found: DatagramProtocol\nERROR: Method not found: connection_made\nFAIL: assertIsNone\nERROR: Method not found: connection_lost\nFAIL: assertIsNone\nERROR: Method not found: error_received\nFAIL: assertIsNone\nERROR: Method not found: datagram_received\nFAIL: assertIsNone\n  ProtocolsAbsTests.test_subprocess_protocol\nERROR: Method not found: Mock\nERROR: Method not found: SubprocessProtocol\nERROR: Method not found: connection_made\nFAIL: assertIsNone\nERROR: Method not found: connection_lost\nFAIL: assertIsNone\nERROR: Method not found: pipe_data_received\nFAIL: assertIsNone\nERROR: Method not found: pipe_connection_lost\nFAIL: assertIsNone\nERROR: Method not found: process_exited\nFAIL: assertIsNone\nunittest: ran 5 tests, 25 failed\n",
       "tags": [],
-      "key": "test_asyncio/test_protocols.py"
+      "key": "test_asyncio/test_protocols.py",
+      "updated": "2026-09-30"
     },
     "test_asyncio/test_queues.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_asyncio/test_queues.py",
@@ -733,12 +735,9 @@
     },
     "test_cgitb.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_cgitb.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": 1,
-      "err": "",
-      "out": "  TestCgitb.test_syshook_no_logdir_default_format\nERROR: Method not found: decode\nERROR: keyword argument\n  TestCgitb.test_syshook_no_logdir_text_format\nERROR: Method not found: decode\nERROR: keyword argument\nunittest: ran 2 tests, 2 failed\n",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_cgitb.py",
       "updated": "2026-09-30"
     },
@@ -835,9 +834,10 @@
       "stage": "run",
       "rc": 1,
       "err": "",
-      "out": "veConsole.test_sysexcepthook\nFAIL: assertTrue\n  TestInteractiveConsole.test_banner\nFAIL: assertEqual\n  TestInteractiveConsole.test_exit_msg\nFAIL: assertEqual\n  TestInteractiveConsole.test_cause_tb\nFAIL: assertIn\n  TestInteractiveConsole.test_context_tb\nFAIL: assertIn\nunittest: ran 9 tests, 7 failed\n",
+      "out": "ERROR: Method not found: import_module\nERROR: Method not found: InteractiveConsole\nERROR: Method not found: patch\nERROR: Method not found: enter_context\nERROR: Method not found: patch\nERROR: Method not found: enter_context\nERROR: Method not found: patch\nERROR: Method not found: enter_context\nERROR: Method not found: patch\nERROR: Method not found: enter_context\n  TestInteractiveConsole.test_ps1\nERROR: Method not found: interact\nFAIL: assertEqual\nERROR: Method not found: interact\nERROR: Method not found: InteractiveConsole\nERROR: Method not found: patch\nERROR: Method not found: enter_context\nERROR: Method not found: patch\nERROR: Method not found: enter_context\nERROR: Method not found: patch\nERROR: Method not found: enter_context\nERROR: Method not found: patch\nERROR: Method not found: enter_context\n  TestInteractiveConsole.test_ps2\nERROR: Method not found: interact\nFAIL: assertEqual\nERROR: Method not found: interact\nunittest: ran 2 tests, 2 failed\n",
       "tags": [],
-      "key": "test_code_module.py"
+      "key": "test_code_module.py",
+      "updated": "2026-09-30"
     },
     "test_codeccallbacks.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_codeccallbacks.py",
@@ -973,11 +973,12 @@
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_codeop.py",
       "status": "fail",
       "stage": "run",
-      "rc": -11,
+      "rc": 1,
       "err": "",
-      "out": "  CodeopTests.test_valid\n  CodeopTests.test_incomplete\n  CodeopTests.test_invalid\n  CodeopTests.test_invalid_exec\n  CodeopTests.test_filename\nFAIL: assertNotEqual\n  CodeopTests.test_warning\n",
+      "out": "  CodeopTests.test_valid\nFAIL: assertEqual\n  CodeopTests.test_invalid\nERROR: keyword argument\nunittest: ran 2 tests, 2 failed\n",
       "tags": [],
-      "key": "test_codeop.py"
+      "key": "test_codeop.py",
+      "updated": "2026-09-30"
     },
     "test_collections.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_collections.py",
@@ -1786,12 +1787,13 @@
     "test_finalization.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_finalization.py",
       "status": "fail",
-      "stage": "run",
+      "stage": "transpile",
       "rc": 1,
-      "err": "",
-      "out": "inalizationTest.test_legacy_self_cycle\nERROR: Method not found: assert_del_calls\nERROR: Method not found: assert_tp_del_calls\nERROR: Method not found: assert_survivors\nERROR: Method not found: assert_garbage\nFAIL: assertIsNot\nERROR: Method not found: assert_garbage\nunittest: ran 18 tests, 10 failed\n",
+      "err": "transpile: \nParse Error: Unexpected token in expression\n token=12\nParse Error: expected token 85 got 3\nParse Error: expected token 85 got 3\nParse Error: expected token 85 got 3\nParse Error: Expected '}' after class body\nerror: compilation failed",
+      "out": "",
       "tags": [],
-      "key": "test_finalization.py"
+      "key": "test_finalization.py",
+      "updated": "2026-09-30"
     },
     "test_float.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_float.py",
@@ -1865,9 +1867,10 @@
       "stage": "run",
       "rc": 1,
       "err": "",
-      "out": "  TestFrozen.test_frozen\nERROR: No module named __hello__\n  TestFrozen.test_frozen_submodule_in_unfrozen_package\nFAIL: assertIs\nFAIL: assertIsNot\n  TestFrozen.test_unfrozen_submodule_in_frozen_package\nFAIL: assertIs\nFAIL: assertIsNot\nunittest: ran 3 tests, 5 failed\n",
+      "out": "  TestFrozen.test_frozen\nERROR: Method not found: frozen_modules\nERROR: argument is not iterable\nunittest: ran 1 tests, 1 failed\n",
       "tags": [],
-      "key": "test_frozen.py"
+      "key": "test_frozen.py",
+      "updated": "2026-09-30"
     },
     "test_fstring.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_fstring.py",
@@ -1921,11 +1924,12 @@
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_future_stmt/test_future.py",
       "status": "fail",
       "stage": "run",
-      "rc": -11,
+      "rc": 1,
       "err": "",
-      "out": "  FutureTest.test_future1\nFAIL: assertEqual\n  FutureTest.test_future2\nFAIL: assertEqual\n  FutureTest.test_future_single_import\n  FutureTest.test_future_multiple_imports\n  FutureTest.test_future_multiple_features\n  FutureTest.test_badfuture3\n",
+      "out": "  FutureTest.test_ensure_flags_dont_clash\nERROR: Method not found: values\nERROR: Method not found: values\nFAIL: assertEqual\nunittest: ran 1 tests, 1 failed\n",
       "tags": [],
-      "key": "test_future_stmt/test_future.py"
+      "key": "test_future_stmt/test_future.py",
+      "updated": "2026-09-30"
     },
     "test_future_stmt/test_future_flags.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_future_stmt/test_future_flags.py",
@@ -2105,11 +2109,12 @@
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_graphlib.py",
       "status": "fail",
       "stage": "run",
-      "rc": -11,
+      "rc": 1,
       "err": "",
-      "out": "ort.test_empty\nFAIL: assertEqual\n  TestTopologicalSort.test_cycle\nERROR: Method not found: items\nERROR: Method not found: items\nERROR: Method not found: items\nERROR: Method not found: items\nERROR: Method not found: items\nERROR: Method not found: items\n  TestTopologicalSort.test_calls_before_prepare\n",
+      "out": "  TestTopologicalSort.test_empty\nERROR: Method not found: TopologicalSorter\nERROR: Method not found: prepare\nERROR: Method not found: is_active\nERROR: Method not found: TopologicalSorter\nERROR: Method not found: static_order\nERROR: iter() arg is not iterable\nunittest: ran 1 tests, 1 failed\n",
       "tags": [],
-      "key": "test_graphlib.py"
+      "key": "test_graphlib.py",
+      "updated": "2026-09-30"
     },
     "test_grp.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_grp.py",
@@ -2151,12 +2156,9 @@
     },
     "test_heapq.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_heapq.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": 1,
-      "err": "",
-      "out": "  TestModules.test_py_functions\nFAIL: assertEqual\n  TestModules.test_c_functions\nFAIL: assertEqual\nunittest: ran 2 tests, 2 failed\n",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_heapq.py",
       "updated": "2026-09-30"
     },
@@ -2253,13 +2255,11 @@
     },
     "test_imghdr.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_imghdr.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": -11,
-      "err": "",
-      "out": "  TestImghdr.test_data\nFAIL: assertEqual\n",
+      "status": "pass",
       "tags": [],
-      "key": "test_imghdr.py"
+      "stage_ok": "run",
+      "key": "test_imghdr.py",
+      "updated": "2026-09-30"
     },
     "test_imp.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_imp.py",
@@ -2297,19 +2297,21 @@
       "stage": "run",
       "rc": 1,
       "err": "",
-      "out": "  FindSpecTests.test_module\nFAIL: assertTrue\n  FindSpecTests.test_failure\nFAIL: assertIsNone\n  FinderTests.test_module\nFAIL: assertTrue\n  FinderTests.test_failure\nFAIL: assertIsNone\nunittest: ran 4 tests, 4 failed\n",
+      "out": "ERROR: Method not found: import_importlib\nERROR: Method not found: test_both\nERROR: Method not found: test_both\n  FindSpecTests.test_failure\nERROR: argument is not iterable\n  FinderTests.test_failure\nFAIL: assertIsNone\nunittest: ran 2 tests, 2 failed\n",
       "tags": [],
-      "key": "test_importlib/builtin/test_finder.py"
+      "key": "test_importlib/builtin/test_finder.py",
+      "updated": "2026-09-30"
     },
     "test_importlib/builtin/test_loader.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_importlib/builtin/test_loader.py",
       "status": "fail",
       "stage": "run",
-      "rc": -11,
+      "rc": -9,
       "err": "",
-      "out": "  LoaderTests.test_module\nFAIL: assertIsInstance\nERROR: Method not found: items\nFAIL: assertIn\n  LoaderTests.test_module_reuse\n  LoaderTests.test_unloadable\n",
+      "out": "ERROR: Method not found: import_importlib\nERROR: Method not found: test_both\nERROR: Method not found: test_both\n",
       "tags": [],
-      "key": "test_importlib/builtin/test_loader.py"
+      "key": "test_importlib/builtin/test_loader.py",
+      "updated": "2026-09-30"
     },
     "test_importlib/extension/test_case_sensitivity.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_importlib/extension/test_case_sensitivity.py",
@@ -2322,11 +2324,12 @@
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_importlib/extension/test_finder.py",
       "status": "fail",
       "stage": "run",
-      "rc": 1,
-      "err": "",
-      "out": "Exception: \n",
+      "rc": 124,
+      "err": "timeout",
+      "out": "ERROR: Method not found: import_importlib\nERROR: Method not found: test_both\n",
       "tags": [],
-      "key": "test_importlib/extension/test_finder.py"
+      "key": "test_importlib/extension/test_finder.py",
+      "updated": "2026-09-30"
     },
     "test_importlib/extension/test_loader.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_importlib/extension/test_loader.py",
@@ -2350,13 +2353,11 @@
     },
     "test_importlib/frozen/test_finder.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_importlib/frozen/test_finder.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": -11,
-      "err": "",
-      "out": "  FindSpecTests.test_module\nERROR: Method not found: subTest\nFAIL: assertEqual\nERROR: Method not found: subTest\nERROR: Method not found: subTest\nERROR: Method not found: items\n",
+      "status": "pass",
       "tags": [],
-      "key": "test_importlib/frozen/test_finder.py"
+      "stage_ok": "run",
+      "key": "test_importlib/frozen/test_finder.py",
+      "updated": "2026-09-30"
     },
     "test_importlib/frozen/test_loader.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_importlib/frozen/test_loader.py",
@@ -2364,19 +2365,21 @@
       "stage": "run",
       "rc": -11,
       "err": "",
-      "out": "  ExecModuleTests.test_module\n",
+      "out": "ERROR: Method not found: import_importlib\nERROR: Method not found: test_both\nERROR: Method not found: test_both\nERROR: Method not found: test_both\n  ExecModuleTests.test_package\nERROR: Method not found: frozen_modules\nERROR: Method not found: is_package\nERROR: Method not found: split\nERROR: Method not found: SimpleNamespace\nERROR: Method not found: ModuleSpec\nERROR: Method not found: ModuleType\nERROR: Method not found: uncache\nERROR: Method not found: frozen_modules\nERROR: Method not found: exec_module\nFAIL: assertTrue\nERROR: Method not found: items\n  ExecModuleTests.test_lacking_parent\nERROR: Method not found: uncache\nERROR: Method not found: frozen_modules\nERROR: Method not found: is_package\nERROR: Method not found: split\nERROR: Method not found: SimpleNamespace\nERROR: Method not found: ModuleSpec\nERROR: Method not found: ModuleType\nERROR: Method not found: uncache\nERROR: Method not found: frozen_modules\nERROR: Method not found: exec_module\nFAIL: assertTrue\nERROR: Method not found: items\n  ExecModuleTests.test_module_repr\nERROR: Method not found: frozen_modules\nERROR: Method not found: is_package\nERROR: Method not found: split\nERROR: Method not found: SimpleNamespace\nERROR: Method not found: ModuleSpec\nERROR: Method not found: ModuleType\nERROR: Method not found: uncache\nERROR: Method not found: frozen_modules\nERROR: Method not found: exec_module\nFAIL: assertTrue\n  ExecModuleTests.test_module_repr_indirect\nERROR: Method not found: frozen_modules\nERROR: Method not found: is_package\nERROR: Method not found: split\nERROR: Method not found: SimpleNamespace\nERROR: Method not found: ModuleSpec\nERROR: Method not found: ModuleType\nERROR: Method not found: uncache\nERROR: Method not found: frozen_modules\nERROR: Method not found: exec_module\nFAIL: assertTrue\n  ExecModuleTests.test_unloadable\nERROR: Method not found: frozen_modules\nERROR: Method not found: frozen_modules\nERROR: Method not found: is_package\nERROR: Method not found: split\nERROR: Method not found: SimpleNamespace\nERROR: Method not found: ModuleSpec\nERROR: Method not found: ModuleType\nERROR: Method not found: uncache\nERROR: Method not found: frozen_modules\nERROR: Method not found: exec_module\nFAIL: assertTrue\nFAIL: assertRaises\n",
       "tags": [],
-      "key": "test_importlib/frozen/test_loader.py"
+      "key": "test_importlib/frozen/test_loader.py",
+      "updated": "2026-09-30"
     },
     "test_importlib/import_/test___loader__.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_importlib/import_/test___loader__.py",
       "status": "fail",
       "stage": "run",
-      "rc": 1,
-      "err": "",
-      "out": "___loader__\nERROR: Method not found: __import__\nFAIL: assertEqual\n  LoaderAttributeTests.test___loader___missing\nERROR: Method not found: __import__\nFAIL: assertEqual\n  LoaderAttributeTests.test___loader___is_None\nERROR: Method not found: __import__\nFAIL: assertEqual\nunittest: ran 3 tests, 3 failed\n",
+      "rc": 0,
+      "err": "no tests ran",
+      "out": "ERROR: Method not found: test_both\nERROR: Method not found: test_both\n",
       "tags": [],
-      "key": "test_importlib/import_/test___loader__.py"
+      "key": "test_importlib/import_/test___loader__.py",
+      "updated": "2026-09-30"
     },
     "test_importlib/import_/test___package__.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_importlib/import_/test___package__.py",
@@ -2464,9 +2467,10 @@
       "stage": "run",
       "rc": -11,
       "err": "",
-      "out": "  CaseSensitivityTest.test_sensitive\nERROR: Method not found: caseok_env_changed\n",
+      "out": "ERROR: Method not found: import_importlib\nERROR: Method not found: import_importlib\nERROR: Method not found: test_both\nERROR: Method not found: test_both\n  CaseSensitivityTest.test_sensitive\nERROR: Method not found: EnvironmentVarGuard\nERROR: Method not found: unset\nERROR: Method not found: caseok_env_changed\nERROR: Method not found: lower\nERROR: Method not found: create_modules\n",
       "tags": [],
-      "key": "test_importlib/source/test_case_sensitivity.py"
+      "key": "test_importlib/source/test_case_sensitivity.py",
+      "updated": "2026-09-30"
     },
     "test_importlib/source/test_file_loader.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_importlib/source/test_file_loader.py",
@@ -2482,21 +2486,23 @@
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_importlib/source/test_finder.py",
       "status": "fail",
       "stage": "run",
-      "rc": -11,
+      "rc": -9,
       "err": "",
-      "out": "  FinderTests.test_module\nERROR: Method not found: _find\nFAIL: assertTrue\n  FinderTests.test_package\n",
+      "out": "ERROR: Method not found: import_importlib\nERROR: Method not found: test_both\nERROR: Method not found: test_both\nERROR: Method not found: test_both\n",
       "tags": [],
-      "key": "test_importlib/source/test_finder.py"
+      "key": "test_importlib/source/test_finder.py",
+      "updated": "2026-09-30"
     },
     "test_importlib/source/test_path_hook.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_importlib/source/test_path_hook.py",
       "status": "fail",
       "stage": "run",
-      "rc": -11,
-      "err": "",
-      "out": "  PathHookTest.test_success\n",
+      "rc": 0,
+      "err": "no tests ran",
+      "out": "ERROR: Method not found: import_importlib\nERROR: Method not found: test_both\n",
       "tags": [],
-      "key": "test_importlib/source/test_path_hook.py"
+      "key": "test_importlib/source/test_path_hook.py",
+      "updated": "2026-09-30"
     },
     "test_importlib/source/test_source_encoding.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_importlib/source/test_source_encoding.py",
@@ -2551,9 +2557,10 @@
       "stage": "run",
       "rc": -11,
       "err": "",
-      "out": "  FilesTests.test_read_bytes\n",
+      "out": "  OpenDiskTests.test_read_bytes\nERROR: Method not found: files\nERROR: Method not found: joinpath\nERROR: Method not found: read_bytes\n",
       "tags": [],
-      "key": "test_importlib/test_files.py"
+      "key": "test_importlib/test_files.py",
+      "updated": "2026-09-30"
     },
     "test_importlib/test_lazy.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_importlib/test_lazy.py",
@@ -2611,10 +2618,11 @@
       "status": "fail",
       "stage": "compile",
       "rc": 1,
-      "err": "DIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\nERROR: Variable not found: UnicodeError\nCompilation Failed: \n[AST] Freeing 38186 node child-lists...\n[AST] Freed 16502 child-lists (node slots stay in pool)",
+      "err": "DIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\nERROR: Variable not found: UnicodeError\nCompilation Failed: \n[AST] Freeing 70354 node child-lists...\n[AST] Freed 30734 child-lists (node slots stay in pool)",
       "out": "",
       "tags": [],
-      "key": "test_importlib/test_open.py"
+      "key": "test_importlib/test_open.py",
+      "updated": "2026-09-30"
     },
     "test_importlib/test_path.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_importlib/test_path.py",
@@ -2658,11 +2666,12 @@
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_importlib/test_resource.py",
       "status": "fail",
       "stage": "compile",
-      "rc": 1,
-      "err": "rguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[COMPILE] ERROR: Unknown function: iterdir\nCOMPILE ERROR at line 16504: Unknown function\nCompilation Failed: Unknown function\n[AST] Freeing 40140 node child-lists...\n[AST] Freed 17132 child-lists (node slots stay in pool)",
+      "rc": -11,
+      "err": "st\n[IMPORT] Loaded: AIMacro.AIMacroFormat\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT ERROR] Cannot read: uuid\n[IMPORT ERROR] Cannot read: pathlib\n[IMPORT ERROR] Cannot read: resources\n[IMPORT ERROR] Cannot read: importlib\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 885 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 25707, col 32: Unexpected token in statement\n  In:",
       "out": "",
       "tags": [],
-      "key": "test_importlib/test_resource.py"
+      "key": "test_importlib/test_resource.py",
+      "updated": "2026-09-30"
     },
     "test_importlib/test_spec.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_importlib/test_spec.py",
@@ -2708,11 +2717,12 @@
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_importlib/test_zip.py",
       "status": "fail",
       "stage": "run",
-      "rc": 0,
-      "err": "no tests ran",
-      "out": "",
+      "rc": 1,
+      "err": "",
+      "out": "ERROR: Method not found: _fixture_on_path\n  TestZip.test_zip_version\nFAIL: assertEqual\nERROR: Method not found: _fixture_on_path\n  TestZip.test_zip_version_does_not_match\nFAIL: assertRaises\nERROR: Method not found: _fixture_on_path\n  TestZip.test_zip_entry_points\nERROR: keyword argument\nERROR: Method not found: _fixture_on_path\n  TestZip.test_missing_metadata\nERROR: Method not found: read_text\nFAIL: assertIsNone\nERROR: Method not found: _fixture_on_path\n  TestZip.test_case_insensitive\nFAIL: assertEqual\nERROR: Method not found: _fixture_on_path\n  TestZip.test_files\nERROR: Method not found: _fixture_on_path\n  TestZip.test_one_distribution\nunittest: ran 7 tests, 5 failed\n",
       "tags": [],
-      "key": "test_importlib/test_zip.py"
+      "key": "test_importlib/test_zip.py",
+      "updated": "2026-09-30"
     },
     "test_index.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_index.py",
@@ -2753,12 +2763,13 @@
     "test_interpreters.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_interpreters.py",
       "status": "fail",
-      "stage": "run",
+      "stage": "transpile",
       "rc": 1,
-      "err": "",
-      "out": "y_some\nFAIL: assertEqual\n  GetCurrentTests.test_main\n  GetCurrentTests.test_subinterpreter\nFAIL: assertNotEqual\n  ListAllTests.test_initial\nFAIL: assertEqual\n  ListAllTests.test_after_creating\nFAIL: assertEqual\n  ListAllTests.test_after_destroying\nFAIL: assertEqual\nunittest: ran 10 tests, 10 failed\n",
+      "err": "transpile: \nParse Error: Unexpected token in expression\n token=23\nParse Error: expected token 85 got 3\nerror: compilation failed",
+      "out": "",
       "tags": [],
-      "key": "test_interpreters.py"
+      "key": "test_interpreters.py",
+      "updated": "2026-09-30"
     },
     "test_io.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_io.py",
@@ -2830,9 +2841,10 @@
       "stage": "run",
       "rc": 1,
       "err": "",
-      "out": "  TestPyTest.test_pyjson\nFAIL: assertEqual\n  TestCTest.test_cjson\nFAIL: assertEqual\nunittest: ran 2 tests, 2 failed\n",
+      "out": "  TestPyTest.test_pyjson\nFAIL: assertEqual\nunittest: ran 1 tests, 1 failed\n",
       "tags": [],
-      "key": "test_json/__init__.py"
+      "key": "test_json/__init__.py",
+      "updated": "2026-09-30"
     },
     "test_json/test_decode.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_json/test_decode.py",
@@ -2846,13 +2858,11 @@
     },
     "test_json/test_default.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_json/test_default.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": 0,
-      "err": "no tests ran",
-      "out": "",
+      "status": "pass",
       "tags": [],
-      "key": "test_json/test_default.py"
+      "stage_ok": "run",
+      "key": "test_json/test_default.py",
+      "updated": "2026-09-30"
     },
     "test_json/test_dump.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_json/test_dump.py",
@@ -2908,11 +2918,12 @@
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_json/test_indent.py",
       "status": "fail",
       "stage": "run",
-      "rc": 0,
-      "err": "no tests ran",
-      "out": "",
+      "rc": 1,
+      "err": "",
+      "out": "  TestPyIndent.test_indent0\nFAIL: assertEqual\nERROR: Method not found: dump\nERROR: Method not found: dump\n  TestCIndent.test_indent0\nFAIL: assertEqual\nERROR: Method not found: dump\nERROR: Method not found: dump\nunittest: ran 2 tests, 2 failed\n",
       "tags": [],
-      "key": "test_json/test_indent.py"
+      "key": "test_json/test_indent.py",
+      "updated": "2026-09-30"
     },
     "test_json/test_pass1.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_json/test_pass1.py",
@@ -2986,13 +2997,11 @@
     },
     "test_json/test_tool.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_json/test_tool.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": 1,
-      "err": "",
-      "out": "Tool.test_no_indent\nFAIL: assertEqual\n  TestTool.test_tab\nFAIL: assertEqual\n  TestTool.test_compact\nFAIL: assertEqual\n  TestTool.test_no_ensure_ascii_flag\nERROR: No such file\n  TestTool.test_ensure_ascii_default\nERROR: No such file\n  TestTool.test_broken_pipe_error\nunittest: ran 15 tests, 14 failed\n",
+      "status": "pass",
       "tags": [],
-      "key": "test_json/test_tool.py"
+      "stage_ok": "run",
+      "key": "test_json/test_tool.py",
+      "updated": "2026-09-30"
     },
     "test_json/test_unicode.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_json/test_unicode.py",
@@ -3158,12 +3167,9 @@
     },
     "test_mailcap.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_mailcap.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": 1,
-      "err": "",
-      "out": "ERROR: Method not found: import_deprecated\nERROR: Method not found: findfile\nERROR: Method not found: deepcopy\nERROR: Method not found: values\n  HelperFunctionTest.test_readmailcapfile\nERROR: No such file\n  HelperFunctionTest.test_lookup\nERROR: Method not found: lookup\nFAIL: assertEqual\nERROR: Method not found: lookup\nERROR: Method not found: lookup\n  HelperFunctionTest.test_subst\nERROR: Method not found: subst\nFAIL: assertEqual\nERROR: Method not found: subst\nERROR: Method not found: subst\nERROR: Method not found: subst\nERROR: Method not found: subst\nERROR: Method not found: subst\nERROR: Method not found: subst\n  GetcapsTest.test_mock_getcaps\nERROR: Method not found: EnvironmentVarGuard\nERROR: Method not found: getcaps\nFAIL: assertEqual\n  GetcapsTest.test_system_mailcap\nERROR: Method not found: getcaps\nFAIL: assertIsInstance\nERROR: Method not found: listmailcapfiles\nunittest: ran 5 tests, 5 failed\n",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_mailcap.py",
       "updated": "2026-09-30"
     },
@@ -3311,9 +3317,10 @@
       "stage": "run",
       "rc": 1,
       "err": "",
-      "out": "mment_at_end_of_machine_line\nERROR: No such file\n  NetrcTestCase.test_comment_at_end_of_machine_line_no_space\nERROR: No such file\n  NetrcTestCase.test_comment_at_end_of_machine_line_pass_has_hash\nERROR: No such file\n  NetrcTestCase.test_security\nERROR: No such file\nunittest: ran 22 tests, 26 failed\n",
+      "out": ": Method not found: unlink\nFAIL: assertEqual\nERROR: Method not found: dedent\nERROR: Method not found: unlink\nERROR: Method not found: dedent\nERROR: Method not found: unlink\n  NetrcTestCase.test_token_value_escape\nERROR: Method not found: dedent\nERROR: Method not found: netrc\nERROR: Method not found: unlink\nFAIL: assertEqual\nERROR: Method not found: dedent\nERROR: Method not found: unlink\nERROR: Method not found: dedent\nERROR: Method not found: unlink\nERROR: Method not found: dedent\nERROR: Method not found: unlink\nERROR: Method not found: dedent\nERROR: Method not found: unlink\nERROR: Method not found: dedent\nERROR: Method not found: unlink\n  NetrcTestCase.test_token_value_whitespace\nERROR: Method not found: dedent\nERROR: Method not found: netrc\nERROR: Method not found: unlink\nFAIL: assertEqual\nERROR: Method not found: dedent\nERROR: Method not found: unlink\nERROR: Method not found: dedent\nERROR: Method not found: unlink\n  NetrcTestCase.test_token_value_non_ascii\nERROR: Method not found: dedent\nERROR: Method not found: netrc\nERROR: Method not found: unlink\nFAIL: assertEqual\nERROR: Method not found: dedent\nERROR: Method not found: unlink\nERROR: Method not found: dedent\nERROR: Method not found: unlink\n  NetrcTestCase.test_token_value_leading_hash\nERROR: Method not found: dedent\nERROR: Method not found: netrc\nERROR: Method not found: unlink\nFAIL: assertEqual\nERROR: Method not found: dedent\nERROR: Method not found: unlink\nERROR: Method not found: dedent\nERROR: Method not found: unlink\n  NetrcTestCase.test_token_value_trailing_hash\nERROR: Method not found: dedent\nERROR: Method not found: netrc\nERROR: Method not found: unlink\nFAIL: assertEqual\nERROR: Method not found: dedent\nERROR: Method not found: unlink\nERROR: Method not found: dedent\nERROR: Method not found: unlink\n  NetrcTestCase.test_token_value_internal_hash\nERROR: Method not found: dedent\nERROR: Method not found: netrc\nERROR: Method not found: unlink\nFAIL: assertEqual\nERROR: Method not found: dedent\nERROR: Method not found: unlink\nERROR: Method not found: dedent\nERROR: Method not found: unlink\n  NetrcTestCase.test_comment_before_machine_line\nERROR: Method not found: dedent\nERROR: Method not found: netrc\nERROR: Method not found: unlink\nFAIL: assertEqual\n  NetrcTestCase.test_comment_before_machine_line_no_space\nERROR: Method not found: dedent\nERROR: Method not found: netrc\nERROR: Method not found: unlink\nFAIL: assertEqual\n  NetrcTestCase.test_comment_before_machine_line_hash_only\nERROR: Method not found: dedent\nERROR: Method not found: netrc\nERROR: Method not found: unlink\nFAIL: assertEqual\n  NetrcTestCase.test_comment_after_machine_line\nERROR: Method not found: dedent\nERROR: Method not found: netrc\nERROR: Method not found: unlink\nFAIL: assertEqual\nERROR: Method not found: dedent\nERROR: Method not found: unlink\n  NetrcTestCase.test_comment_after_machine_line_no_space\nERROR: Method not found: dedent\nERROR: Method not found: netrc\nERROR: Method not found: unlink\nFAIL: assertEqual\nERROR: Method not found: dedent\nERROR: Method not found: unlink\n  NetrcTestCase.test_comment_after_machine_line_hash_only\nERROR: Method not found: dedent\nERROR: Method not found: netrc\nERROR: Method not found: unlink\nFAIL: assertEqual\nERROR: Method not found: dedent\nERROR: Method not found: unlink\n  NetrcTestCase.test_comment_at_end_of_machine_line\nERROR: Method not found: dedent\nERROR: Method not found: netrc\nERROR: Method not found: unlink\nFAIL: assertEqual\n  NetrcTestCase.test_comment_at_end_of_machine_line_no_space\nERROR: Method not found: dedent\nERROR: Method not found: netrc\nERROR: Method not found: unlink\nFAIL: assertEqual\n  NetrcTestCase.test_comment_at_end_of_machine_line_pass_has_hash\nERROR: Method not found: dedent\nERROR: Method not found: netrc\nERROR: Method not found: unlink\nFAIL: assertEqual\n  NetrcTestCase.test_security\nERROR: Method not found: mkdir\nERROR: Method not found: EnvironmentVarGuard\nERROR: Method not found: EnvironmentVarGuard\nERROR: No such file\nunittest: ran 22 tests, 24 failed\n",
       "tags": [],
-      "key": "test_netrc.py"
+      "key": "test_netrc.py",
+      "updated": "2026-09-30"
     },
     "test_nis.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_nis.py",
@@ -3756,13 +3763,11 @@
     },
     "test_pwd.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_pwd.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": 1,
-      "err": "",
-      "out": "ertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nERROR: Method not found: keys\nFAIL: assertRaises\nERROR: Method not found: assertNotIn\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nunittest: ran 3 tests, 11 failed\n",
+      "status": "pass",
       "tags": [],
-      "key": "test_pwd.py"
+      "stage_ok": "run",
+      "key": "test_pwd.py",
+      "updated": "2026-09-30"
     },
     "test_py_compile.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_py_compile.py",
@@ -3926,12 +3931,13 @@
     "test_rlcompleter.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_rlcompleter.py",
       "status": "fail",
-      "stage": "run",
+      "stage": "compile",
       "rc": -11,
-      "err": "",
-      "out": "  TestRlcompleter.test_namespace\nFAIL: assertTrue\n",
+      "err": "] Loaded: AIMacro.AIMacroDict\n[IMPORT] Loaded: AIMacro.AIMacroUnittest\n[IMPORT] Loaded: AIMacro.AIMacroFormat\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT ERROR] Cannot read: builtins\n[IMPORT ERROR] Cannot read: rlcompleter\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 868 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 25158, col 32: Unexpected token in statement\n  In:",
+      "out": "",
       "tags": [],
-      "key": "test_rlcompleter.py"
+      "key": "test_rlcompleter.py",
+      "updated": "2026-09-30"
     },
     "test_robotparser.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_robotparser.py",
@@ -4004,12 +4010,9 @@
     },
     "test_select.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_select.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": 1,
-      "err": "",
-      "out": "ERROR: Method not found: requires_working_socket\n  SelectTestCase.test_error_conditions\n  SelectTestCase.test_errno\nERROR: No such file\n  SelectTestCase.test_returned_list_identity\nERROR: Method not found: select\nFAIL: assertIsNot\nFAIL: assertIsNot\nFAIL: assertIsNot\n  SelectTestCase.test_select\nERROR: Method not found: dedent\nERROR: Method not found: Popen\nERROR: Method not found: select\nFAIL: assertEqual\n  SelectTestCase.test_select_mutated\nERROR: Method not found: select\nFAIL: assertEqual\n  SelectTestCase.test_disallow_instantiation\nERROR: Method not found: poll\nERROR: Method not found: check_disallow_instantiation\nunittest: ran 6 tests, 6 failed\n",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_select.py",
       "updated": "2026-09-30"
     },
@@ -4136,7 +4139,7 @@
       "stage": "run",
       "rc": 1,
       "err": "",
-      "out": "ERROR: Method not found: import_deprecated\nunittest: ran 0 tests, 0 failed\nunittest: TestCase scheduled but 0 tests ran\n",
+      "out": "unittest: ran 0 tests, 0 failed\nunittest: TestCase scheduled but 0 tests ran\n",
       "tags": [],
       "key": "test_sndhdr.py",
       "updated": "2026-09-30"
@@ -4895,13 +4898,11 @@
     },
     "test_ttk_textonly.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_ttk_textonly.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": -11,
-      "err": "",
-      "out": "  InternalFunctionsTest.test_format_optdict\nERROR: Method not found: copy\nFAIL: assertEqual\n",
+      "status": "pass",
       "tags": [],
-      "key": "test_ttk_textonly.py"
+      "stage_ok": "run",
+      "key": "test_ttk_textonly.py",
+      "updated": "2026-09-30"
     },
     "test_tuple.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_tuple.py",
@@ -4927,11 +4928,12 @@
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_type_annotations.py",
       "status": "fail",
       "stage": "run",
-      "rc": -11,
+      "rc": 1,
       "err": "",
-      "out": "  TypeAnnotationTests.test_lazy_create_annotations\nFAIL: assertTrue\n  TypeAnnotationTests.test_setting_annotations\nFAIL: assertTrue\n  TypeAnnotationTests.test_annotations_getset_raises\n",
+      "out": "  TypeAnnotationTests.test_lazy_create_annotations\nERROR: argument is not iterable\n  TypeAnnotationTests.test_setting_annotations\nERROR: argument is not iterable\n  TypeAnnotationTests.test_annotations_getset_raises\n0\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\n  TypeAnnotationTests.test_annotations_are_created_correctly\nERROR: argument is not iterable\n  TypeAnnotationTests.test_descriptor_still_works\nFAIL: assertEqual\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\n  TestSetupAnnotations.test_top_level\nERROR: Method not found: dedent\nFAIL: assertEqual\n  TestSetupAnnotations.test_blocks\nERROR: Method not found: dedent\nFAIL: assertEqual\nERROR: Method not found: dedent\nERROR: Method not found: dedent\nERROR: Method not found: dedent\nERROR: Method not found: dedent\n  TestSetupAnnotations.test_try\nERROR: Method not found: dedent\nFAIL: assertEqual\nERROR: Method not found: dedent\nERROR: Method not found: dedent\nERROR: Method not found: dedent\n  TestSetupAnnotations.test_try_star\nERROR: Method not found: dedent\nFAIL: assertEqual\nERROR: Method not found: dedent\nERROR: Method not found: dedent\nERROR: Method not found: dedent\n  TestSetupAnnotations.test_match\nERROR: Method not found: dedent\nFAIL: assertEqual\nunittest: ran 10 tests, 17 failed\n",
       "tags": [],
-      "key": "test_type_annotations.py"
+      "key": "test_type_annotations.py",
+      "updated": "2026-09-30"
     },
     "test_type_cache.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_type_cache.py",
@@ -5374,11 +5376,12 @@
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_xml_dom_minicompat.py",
       "status": "fail",
       "stage": "run",
-      "rc": -11,
+      "rc": 1,
       "err": "",
-      "out": "  EmptyNodeListTestCase.test_emptynodelist_item\nFAIL: assertIsNone\nFAIL: assertIsNone\n",
+      "out": "  EmptyNodeListTestCase.test_emptynodelist_length\nFAIL: assertRaises\nunittest: ran 1 tests, 1 failed\n",
       "tags": [],
-      "key": "test_xml_dom_minicompat.py"
+      "key": "test_xml_dom_minicompat.py",
+      "updated": "2026-09-30"
     },
     "test_xml_etree.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_xml_etree.py",
