@@ -940,6 +940,100 @@ Function.AIMacro.InitSink {
     }
 }
 
+Function.AIMacro.HtmlEscape {
+    Input: s: Address
+    Input: quote: Address
+    Output: Address
+    Body: {
+        IfCondition EqualTo(s, 0) ThenBlock: { ReturnValue(s) }
+        IfCondition EqualTo(AIMacro.LooksLikeString(s), 0) ThenBlock: { ReturnValue(s) }
+        n = StringLength(s)
+        out = Allocate(Add(Multiply(n, 6), 1))
+        oi = 0
+        q = 1
+        IfCondition NotEqual(quote, 0) ThenBlock: {
+            qb = AIMacro.SmartBool(quote)
+            IfCondition EqualTo(qb, 0) ThenBlock: {
+                q = 0
+            }
+        }
+        i = 0
+        WhileLoop LessThan(i, n) {
+            ch = GetByte(s, i)
+            IfCondition EqualTo(ch, 38) ThenBlock: {
+                SetByte(out, oi, 38)
+                oi = Add(oi, 1)
+                SetByte(out, oi, 97)
+                oi = Add(oi, 1)
+                SetByte(out, oi, 109)
+                oi = Add(oi, 1)
+                SetByte(out, oi, 112)
+                oi = Add(oi, 1)
+                SetByte(out, oi, 59)
+                oi = Add(oi, 1)
+            } ElseBlock: {
+                IfCondition EqualTo(ch, 60) ThenBlock: {
+                    SetByte(out, oi, 38)
+                    oi = Add(oi, 1)
+                    SetByte(out, oi, 108)
+                    oi = Add(oi, 1)
+                    SetByte(out, oi, 116)
+                    oi = Add(oi, 1)
+                    SetByte(out, oi, 59)
+                    oi = Add(oi, 1)
+                } ElseBlock: {
+                    IfCondition EqualTo(ch, 62) ThenBlock: {
+                        SetByte(out, oi, 38)
+                        oi = Add(oi, 1)
+                        SetByte(out, oi, 103)
+                        oi = Add(oi, 1)
+                        SetByte(out, oi, 116)
+                        oi = Add(oi, 1)
+                        SetByte(out, oi, 59)
+                        oi = Add(oi, 1)
+                    } ElseBlock: {
+                        IfCondition And(EqualTo(q, 1), EqualTo(ch, 34)) ThenBlock: {
+                            SetByte(out, oi, 38)
+                            oi = Add(oi, 1)
+                            SetByte(out, oi, 113)
+                            oi = Add(oi, 1)
+                            SetByte(out, oi, 117)
+                            oi = Add(oi, 1)
+                            SetByte(out, oi, 111)
+                            oi = Add(oi, 1)
+                            SetByte(out, oi, 116)
+                            oi = Add(oi, 1)
+                            SetByte(out, oi, 59)
+                            oi = Add(oi, 1)
+                        } ElseBlock: {
+                            IfCondition And(EqualTo(q, 1), EqualTo(ch, 39)) ThenBlock: {
+                                SetByte(out, oi, 38)
+                                oi = Add(oi, 1)
+                                SetByte(out, oi, 35)
+                                oi = Add(oi, 1)
+                                SetByte(out, oi, 120)
+                                oi = Add(oi, 1)
+                                SetByte(out, oi, 50)
+                                oi = Add(oi, 1)
+                                SetByte(out, oi, 55)
+                                oi = Add(oi, 1)
+                                SetByte(out, oi, 59)
+                                oi = Add(oi, 1)
+                            } ElseBlock: {
+                                SetByte(out, oi, ch)
+                                oi = Add(oi, 1)
+                            }
+                        }
+                    }
+                }
+            }
+            i = Add(i, 1)
+        }
+        SetByte(out, oi, 0)
+        ReturnValue(out)
+    }
+}
+
 Function.AIMacro.FsPath {
     Input: p: Address
     Output: Address
@@ -3079,6 +3173,23 @@ Function.AIMacro.MethodShim {
         }
         IfCondition EqualTo(OOP.MethodExists(obj, method_name), 1) ThenBlock: {
             ReturnValue(OOP.MethodCall(obj, method_name, args))
+        }
+        IfCondition EqualTo(StringCompare(method_name, "escape"), 0) ThenBlock: {
+            esc = AIMacro.HtmlEscape(a0, a1)
+            ReturnValue(esc)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "unescape"), 0) ThenBlock: {
+            ReturnValue(a0)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "enterContext"), 0) ThenBlock: {
+            ReturnValue(a0)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "skipTest"), 0) ThenBlock: {
+            AIMacro.RaiseKind(8, a0)
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "assertSequenceEqual"), 0) ThenBlock: {
+            ReturnValue(AIMacro.UnittestAssertEqual(obj, a0, a1))
         }
         PrintMessage("ERROR: Method not found: ")
         PrintMessage(method_name)
