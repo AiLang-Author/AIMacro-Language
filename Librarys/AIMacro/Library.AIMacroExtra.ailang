@@ -3394,6 +3394,15 @@ Function.AIMacro.MethodShim {
             nmaps = AIMacro.EmptyList()
             ReturnValue(nmaps)
         }
+        IfCondition EqualTo(StringCompare(method_name, "reindent"), 0) ThenBlock: {
+            ReturnValue(a0)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "mac_ver"), 0) ThenBlock: {
+            ReturnValue("x")
+        }
+        IfCondition EqualTo(StringCompare(method_name, "_get_system_version"), 0) ThenBlock: {
+            ReturnValue("")
+        }
         IfCondition EqualTo(StringCompare(method_name, "import_module"), 0) ThenBlock: {
             IfCondition EqualTo(StringCompare(a0, "nis"), 0) ThenBlock: {
                 imn = Hash.Create(4)

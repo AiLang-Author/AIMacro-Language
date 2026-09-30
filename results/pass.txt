@@ -1,12 +1,15 @@
+test__osx_support.py
 test_aifc.py
 test_asynchat.py
 test_asyncio/test_protocols.py
+test_asyncio/test_waitfor.py
 test_atexit.py
 test_binop.py
 test_bool.py
 test_cgitb.py
 test_check_c_globals.py
 test_cmd.py
+test_codeccallbacks.py
 test_codecencodings_iso2022.py
 test_colorsys.py
 test_compare.py
@@ -15,6 +18,7 @@ test_copyreg.py
 test_cppext/__init__.py
 test_crashers.py
 test_csv.py
+test_deque.py
 test_eintr.py
 test_enumerate.py
 test_eof.py
@@ -47,6 +51,7 @@ test_json/test_scanstring.py
 test_json/test_separators.py
 test_json/test_speedups.py
 test_json/test_tool.py
+test_json/test_unicode.py
 test_keyword.py
 test_list.py
 test_longexp.py
@@ -69,12 +74,16 @@ test_sqlite3/test_backup.py
 test_stable_abi_ctypes.py
 test_startfile.py
 test_string.py
+test_string_literals.py
 test_structseq.py
 test_sundry.py
+test_symtable.py
 test_syslog.py
 test_telnetlib.py
+test_timeit.py
 test_tix.py
 test_tomllib/test_data.py
+test_tomllib/test_error.py
 test_tools/test_fixcid.py
 test_tools/test_gprof2html.py
 test_tools/test_pdeps.py
@@ -88,6 +97,7 @@ test_unpack.py
 test_userlist.py
 test_utf8source.py
 test_wave.py
+test_weakset.py
 test_winsound.py
 test_xxlimited.py
 test_xxtestfuzz.py
