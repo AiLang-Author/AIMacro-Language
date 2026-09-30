@@ -6,7 +6,7 @@
       "status": "fail",
       "stage": "compile",
       "rc": -11,
-      "err": "RT] Loaded: AIMacro.AIMacroOperator\n[IMPORT] Loaded: AIMacro.AIMacroDict\n[IMPORT] Loaded: AIMacro.AIMacroUnittest\n[IMPORT] Loaded: AIMacro.AIMacroFormat\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT ERROR] Cannot read: types\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 910 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 28673, col 36: Unexpected token in statement\n  In:",
+      "err": "RT] Loaded: AIMacro.AIMacroOperator\n[IMPORT] Loaded: AIMacro.AIMacroDict\n[IMPORT] Loaded: AIMacro.AIMacroUnittest\n[IMPORT] Loaded: AIMacro.AIMacroFormat\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT ERROR] Cannot read: types\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 903 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 29033, col 36: Unexpected token in statement\n  In:",
       "out": "",
       "tags": [],
       "key": "test___all__.py",
@@ -20,16 +20,14 @@
       "err": "",
       "out": "",
       "tags": [],
-      "key": "test__locale.py"
+      "key": "test__locale.py",
+      "updated": "2026-09-30"
     },
     "test__opcode.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test__opcode.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": 1,
-      "err": "",
-      "out": "  OpcodeTests.test_stack_effect\nFAIL: assertEqual\nERROR: Method not found: values\nunittest: ran 1 tests, 1 failed\n",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test__opcode.py",
       "updated": "2026-09-30"
     },
@@ -67,7 +65,7 @@
       "stage": "run",
       "rc": 1,
       "err": "",
-      "out": "  TestNumbers.test_complex\nFAIL: assertTrue\nunittest: ran 1 tests, 1 failed\n",
+      "out": "  TestNumbers.test_int\nFAIL: assertEqual\nunittest: ran 1 tests, 1 failed\n",
       "tags": [],
       "key": "test_abstract_numbers.py",
       "updated": "2026-09-30"
@@ -104,7 +102,7 @@
       "status": "fail",
       "stage": "compile",
       "rc": -11,
-      "err": "] Loaded: AIMacro.AIMacroUnittest\n[IMPORT] Loaded: AIMacro.AIMacroFormat\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT ERROR] Cannot read: importlib\n[IMPORT ERROR] Cannot read: importlib\n[IMPORT ERROR] Cannot read: sysconfig\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 919 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 28461, col 32: Unexpected token in statement\n  In:",
+      "err": "] Loaded: AIMacro.AIMacroUnittest\n[IMPORT] Loaded: AIMacro.AIMacroFormat\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT ERROR] Cannot read: importlib\n[IMPORT ERROR] Cannot read: importlib\n[IMPORT ERROR] Cannot read: sysconfig\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 912 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 28821, col 32: Unexpected token in statement\n  In:",
       "out": "",
       "tags": [],
       "key": "test_asdl_parser.py",
@@ -142,9 +140,10 @@
       "stage": "run",
       "rc": 0,
       "err": "no tests ran",
-      "out": "",
+      "out": "ERROR: Method not found: requires_working_socket\n",
       "tags": [],
-      "key": "test_asyncio/__init__.py"
+      "key": "test_asyncio/__init__.py",
+      "updated": "2026-09-30"
     },
     "test_asyncio/test_base_events.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_asyncio/test_base_events.py",
@@ -186,12 +185,9 @@
     },
     "test_asyncio/test_futures.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_asyncio/test_futures.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": 1,
-      "err": "",
-      "out": "Exception: skip\n",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_asyncio/test_futures.py",
       "updated": "2026-09-30"
     },
@@ -255,7 +251,7 @@
       "status": "fail",
       "stage": "compile",
       "rc": -11,
-      "err": "ig\n[IMPORT ERROR] Cannot read: _thread\n[IMPORT ERROR] Cannot read: asyncio\n[IMPORT ERROR] Cannot read: contextvars\n[IMPORT ERROR] Cannot read: re\n[IMPORT ERROR] Cannot read: signal\n[IMPORT ERROR] Cannot read: threading\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 981 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 28950, col 36: Unexpected token in statement\n  In:",
+      "err": "ig\n[IMPORT ERROR] Cannot read: _thread\n[IMPORT ERROR] Cannot read: asyncio\n[IMPORT ERROR] Cannot read: contextvars\n[IMPORT ERROR] Cannot read: re\n[IMPORT ERROR] Cannot read: signal\n[IMPORT ERROR] Cannot read: threading\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 974 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 29310, col 36: Unexpected token in statement\n  In:",
       "out": "",
       "tags": [],
       "key": "test_asyncio/test_runners.py",
@@ -451,7 +447,8 @@
       "err": "",
       "out": "",
       "tags": [],
-      "key": "test_audioop.py"
+      "key": "test_audioop.py",
+      "updated": "2026-09-30"
     },
     "test_audit.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_audit.py",
@@ -507,9 +504,10 @@
       "stage": "run",
       "rc": -11,
       "err": "",
-      "out": "  BytesTest.test_concat\nFAIL: assertRaises\n  BytesTest.test_optimized_concat\n",
+      "out": "  BytesTest.test_concat\n  BytesTest.test_optimized_concat\n  StrTest.test_concat\n",
       "tags": [],
-      "key": "test_bigaddrspace.py"
+      "key": "test_bigaddrspace.py",
+      "updated": "2026-09-30"
     },
     "test_bigmem.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_bigmem.py",
@@ -553,7 +551,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_bool.py",
-      "updated": "2026-09-29"
+      "updated": "2026-09-30"
     },
     "test_buffer.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_buffer.py",
@@ -569,7 +567,7 @@
       "stage": "run",
       "rc": 1,
       "err": "",
-      "out": "d not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nunittest: ran 4 tests, 4 failed\n",
+      "out": "d not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nunittest: ran 1 tests, 1 failed\n",
       "tags": [],
       "key": "test_bufio.py",
       "updated": "2026-09-30"
@@ -589,7 +587,7 @@
       "status": "fail",
       "stage": "compile",
       "rc": -11,
-      "err": "ittest\n[IMPORT] Loaded: AIMacro.AIMacroFormat\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT ERROR] Cannot read: array\n[IMPORT ERROR] Cannot read: re\n[IMPORT ERROR] Cannot read: functools\n[IMPORT ERROR] Cannot read: textwrap\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 1079 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 29685, col 32: Unexpected token in statement\n  In:",
+      "err": "ittest\n[IMPORT] Loaded: AIMacro.AIMacroFormat\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT ERROR] Cannot read: array\n[IMPORT ERROR] Cannot read: re\n[IMPORT ERROR] Cannot read: functools\n[IMPORT ERROR] Cannot read: textwrap\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 1104 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 30766, col 32: Unexpected token in statement\n  In:",
       "out": "",
       "tags": [],
       "key": "test_bytes.py",
@@ -600,7 +598,7 @@
       "status": "fail",
       "stage": "compile",
       "rc": -11,
-      "err": "IMPORT ERROR] Cannot read: random\n[IMPORT ERROR] Cannot read: shutil\n[IMPORT ERROR] Cannot read: subprocess\n[IMPORT ERROR] Cannot read: threading\n[IMPORT ERROR] Cannot read: _compression\n[IMPORT ERROR] Cannot read: bz2\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 978 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 30265, col 32: Unexpected token in statement\n  In:",
+      "err": "MPORT ERROR] Cannot read: random\n[IMPORT ERROR] Cannot read: shutil\n[IMPORT ERROR] Cannot read: subprocess\n[IMPORT ERROR] Cannot read: threading\n[IMPORT ERROR] Cannot read: _compression\n[IMPORT ERROR] Cannot read: bz2\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 1003 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 31346, col 32: Unexpected token in statement\n  In:",
       "out": "",
       "tags": [],
       "key": "test_bz2.py",
@@ -609,10 +607,10 @@
     "test_c_locale_coercion.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_c_locale_coercion.py",
       "status": "fail",
-      "stage": "compile",
-      "rc": -11,
-      "err": "ORT ERROR] Cannot read: subprocess\n[IMPORT ERROR] Cannot read: sysconfig\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 888 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\n[PARSER] Parsed 889 declarations, 77782 total nodes\n[PARSER] SUCCESS\n[SEMANTIC] contract check\n[POOL] Emitting mmap for R15 (295 slots)\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments",
-      "out": "",
+      "stage": "run",
+      "rc": 1,
+      "err": "",
+      "out": "  LocaleCoercionTests.test_LC_ALL_set_to_C\nERROR: Method not found: get_child_details\nERROR: Method not found: get_expected_details\nFAIL: assertEqual\nunittest: ran 1 tests, 1 failed\n",
       "tags": [],
       "key": "test_c_locale_coercion.py",
       "updated": "2026-09-30"
@@ -622,7 +620,7 @@
       "status": "fail",
       "stage": "compile",
       "rc": -11,
-      "err": "MPORT] Loaded: AIMacro.AIMacroUnittest\n[IMPORT] Loaded: AIMacro.AIMacroFormat\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT ERROR] Cannot read: calendar\n[IMPORT ERROR] Cannot read: locale\n[IMPORT ERROR] Cannot read: datetime\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 982 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 29504, col 32: Unexpected token in statement\n  In:",
+      "err": "MPORT] Loaded: AIMacro.AIMacroUnittest\n[IMPORT] Loaded: AIMacro.AIMacroFormat\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT ERROR] Cannot read: calendar\n[IMPORT ERROR] Cannot read: locale\n[IMPORT ERROR] Cannot read: datetime\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 985 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 29896, col 32: Unexpected token in statement\n  In:",
       "out": "",
       "tags": [],
       "key": "test_calendar.py",
@@ -646,16 +644,14 @@
       "err": "no tests ran",
       "out": "",
       "tags": [],
-      "key": "test_capi/__init__.py"
+      "key": "test_capi/__init__.py",
+      "updated": "2026-09-30"
     },
     "test_capi/test_codecs.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_capi/test_codecs.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": 1,
-      "err": "",
-      "out": "  CAPITest.test_decodeutf8\nERROR: Method not found: encode\nFAIL: assertEqual\nERROR: Method not found: encode\nERROR: Method not found: encode\nERROR: Method not found: encode\n  CAPITest.test_decodeutf8stateful\nERROR: Method not found: encode\nFAIL: assertEqual\nERROR: Method not found: encode\nERROR: Method not found: encode\nERROR: Method not found: encode\nunittest: ran 2 tests, 2 failed\n",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_capi/test_codecs.py",
       "updated": "2026-09-30"
     },
@@ -692,7 +688,7 @@
       "stage": "run",
       "rc": -11,
       "err": "",
-      "out": "ERROR: Method not found: import_module\n",
+      "out": "",
       "tags": [],
       "key": "test_capi/test_structmembers.py",
       "updated": "2026-09-30"
@@ -702,7 +698,7 @@
       "status": "fail",
       "stage": "compile",
       "rc": -11,
-      "err": "oaded: AIMacro.AIMacroString\n[IMPORT] Loaded: AIMacro.AIMacroOperator\n[IMPORT] Loaded: AIMacro.AIMacroDict\n[IMPORT] Loaded: AIMacro.AIMacroUnittest\n[IMPORT] Loaded: AIMacro.AIMacroFormat\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 886 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 28013, col 32: Unexpected token in statement\n  In:",
+      "err": "oaded: AIMacro.AIMacroString\n[IMPORT] Loaded: AIMacro.AIMacroOperator\n[IMPORT] Loaded: AIMacro.AIMacroDict\n[IMPORT] Loaded: AIMacro.AIMacroUnittest\n[IMPORT] Loaded: AIMacro.AIMacroFormat\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 909 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 29006, col 32: Unexpected token in statement\n  In:",
       "out": "",
       "tags": [],
       "key": "test_capi/test_unicode.py",
@@ -757,7 +753,7 @@
       "status": "fail",
       "stage": "compile",
       "rc": -11,
-      "err": "T] Loaded: AIMacro.AIMacroUnittest\n[IMPORT] Loaded: AIMacro.AIMacroFormat\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT ERROR] Cannot read: textwrap\n[IMPORT ERROR] Cannot read: inspect\n[IMPORT ERROR] Cannot read: subprocess\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 1049 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 26183, col 32: Unexpected token in statement\n  In:",
+      "err": "T] Loaded: AIMacro.AIMacroUnittest\n[IMPORT] Loaded: AIMacro.AIMacroFormat\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT ERROR] Cannot read: textwrap\n[IMPORT ERROR] Cannot read: inspect\n[IMPORT ERROR] Cannot read: subprocess\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 1078 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 29233, col 32: Unexpected token in statement\n  In:",
       "out": "",
       "tags": [],
       "key": "test_clinic.py",
@@ -818,7 +814,7 @@
       "stage": "run",
       "rc": 1,
       "err": "",
-      "out": "Exception: skip\n",
+      "out": "ERROR: Method not found: InteractiveConsole\nERROR: Method not found: patch\nERROR: Method not found: enter_context\nERROR: Method not found: patch\nERROR: Method not found: enter_context\nERROR: Method not found: patch\nERROR: Method not found: enter_context\nERROR: Method not found: patch\nERROR: Method not found: enter_context\n  TestInteractiveConsole.test_ps1\nERROR: Method not found: interact\nFAIL: assertEqual\nERROR: Method not found: interact\nunittest: ran 1 tests, 1 failed\n",
       "tags": [],
       "key": "test_code_module.py",
       "updated": "2026-09-30"
@@ -835,21 +831,23 @@
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_codecencodings_cn.py",
       "status": "fail",
       "stage": "run",
-      "rc": 0,
-      "err": "no tests ran",
-      "out": "",
+      "rc": 1,
+      "err": "",
+      "out": "ERROR: Method not found: load_teststring\nERROR: Method not found: load_teststring\nERROR: Method not found: load_teststring\nERROR: Method not found: load_teststring\nERROR: Method not found: load_teststring\nERROR: Method not found: load_teststring\nERROR: Method not found: load_teststring\nERROR: Method not found: load_teststring\nunittest: ran 0 tests, 0 failed\nunittest: TestCase scheduled but 0 tests ran\n",
       "tags": [],
-      "key": "test_codecencodings_cn.py"
+      "key": "test_codecencodings_cn.py",
+      "updated": "2026-09-30"
     },
     "test_codecencodings_hk.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_codecencodings_hk.py",
       "status": "fail",
       "stage": "run",
-      "rc": 0,
-      "err": "no tests ran",
-      "out": "",
+      "rc": 1,
+      "err": "",
+      "out": "ERROR: Method not found: load_teststring\nERROR: Method not found: load_teststring\nunittest: ran 0 tests, 0 failed\nunittest: TestCase scheduled but 0 tests ran\n",
       "tags": [],
-      "key": "test_codecencodings_hk.py"
+      "key": "test_codecencodings_hk.py",
+      "updated": "2026-09-30"
     },
     "test_codecencodings_iso2022.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_codecencodings_iso2022.py",
@@ -863,81 +861,89 @@
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_codecencodings_jp.py",
       "status": "fail",
       "stage": "run",
-      "rc": 0,
-      "err": "no tests ran",
-      "out": "",
+      "rc": 1,
+      "err": "",
+      "out": "ERROR: Method not found: load_teststring\nERROR: Method not found: load_teststring\nERROR: Method not found: load_teststring\nERROR: Method not found: load_teststring\nERROR: Method not found: load_teststring\nERROR: Method not found: load_teststring\nERROR: Method not found: load_teststring\nERROR: Method not found: load_teststring\nERROR: Method not found: load_teststring\nERROR: Method not found: load_teststring\nERROR: Method not found: load_teststring\nERROR: Method not found: load_teststring\nERROR: Method not found: load_teststring\nERROR: Method not found: load_teststring\nunittest: ran 0 tests, 0 failed\nunittest: TestCase scheduled but 0 tests ran\n",
       "tags": [],
-      "key": "test_codecencodings_jp.py"
+      "key": "test_codecencodings_jp.py",
+      "updated": "2026-09-30"
     },
     "test_codecencodings_kr.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_codecencodings_kr.py",
       "status": "fail",
       "stage": "run",
-      "rc": 0,
-      "err": "no tests ran",
-      "out": "",
+      "rc": 1,
+      "err": "",
+      "out": "ERROR: Method not found: load_teststring\nERROR: Method not found: load_teststring\nERROR: Method not found: load_teststring\nERROR: Method not found: load_teststring\nERROR: Method not found: load_teststring\nERROR: Method not found: load_teststring\nunittest: ran 0 tests, 0 failed\nunittest: TestCase scheduled but 0 tests ran\n",
       "tags": [],
-      "key": "test_codecencodings_kr.py"
+      "key": "test_codecencodings_kr.py",
+      "updated": "2026-09-30"
     },
     "test_codecencodings_tw.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_codecencodings_tw.py",
       "status": "fail",
-      "stage": "run",
-      "rc": 0,
-      "err": "no tests ran",
+      "stage": "compile",
+      "rc": -11,
+      "err": " symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\n[PARSER] Parsed 900 declarations, 81219 total nodes\n[PARSER] SUCCESS\n[SEMANTIC] contract check\n[POOL] Emitting mmap for R15 (242 slots)\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments",
       "out": "",
       "tags": [],
-      "key": "test_codecencodings_tw.py"
+      "key": "test_codecencodings_tw.py",
+      "updated": "2026-09-30"
     },
     "test_codecmaps_cn.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_codecmaps_cn.py",
       "status": "fail",
       "stage": "run",
-      "rc": 0,
-      "err": "no tests ran",
-      "out": "",
+      "rc": 1,
+      "err": "",
+      "out": "unittest: ran 0 tests, 0 failed\nunittest: TestCase scheduled but 0 tests ran\n",
       "tags": [],
-      "key": "test_codecmaps_cn.py"
+      "key": "test_codecmaps_cn.py",
+      "updated": "2026-09-30"
     },
     "test_codecmaps_hk.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_codecmaps_hk.py",
       "status": "fail",
       "stage": "run",
-      "rc": 0,
-      "err": "no tests ran",
-      "out": "",
+      "rc": 1,
+      "err": "",
+      "out": "unittest: ran 0 tests, 0 failed\nunittest: TestCase scheduled but 0 tests ran\n",
       "tags": [],
-      "key": "test_codecmaps_hk.py"
+      "key": "test_codecmaps_hk.py",
+      "updated": "2026-09-30"
     },
     "test_codecmaps_jp.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_codecmaps_jp.py",
       "status": "fail",
       "stage": "run",
-      "rc": 0,
-      "err": "no tests ran",
-      "out": "",
+      "rc": 1,
+      "err": "",
+      "out": "unittest: ran 0 tests, 0 failed\nunittest: TestCase scheduled but 0 tests ran\n",
       "tags": [],
-      "key": "test_codecmaps_jp.py"
+      "key": "test_codecmaps_jp.py",
+      "updated": "2026-09-30"
     },
     "test_codecmaps_kr.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_codecmaps_kr.py",
       "status": "fail",
       "stage": "run",
-      "rc": 0,
-      "err": "no tests ran",
-      "out": "",
+      "rc": 1,
+      "err": "",
+      "out": "unittest: ran 0 tests, 0 failed\nunittest: TestCase scheduled but 0 tests ran\n",
       "tags": [],
-      "key": "test_codecmaps_kr.py"
+      "key": "test_codecmaps_kr.py",
+      "updated": "2026-09-30"
     },
     "test_codecmaps_tw.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_codecmaps_tw.py",
       "status": "fail",
       "stage": "run",
-      "rc": 0,
-      "err": "no tests ran",
-      "out": "",
+      "rc": 1,
+      "err": "",
+      "out": "unittest: ran 0 tests, 0 failed\nunittest: TestCase scheduled but 0 tests ran\n",
       "tags": [],
-      "key": "test_codecmaps_tw.py"
+      "key": "test_codecmaps_tw.py",
+      "updated": "2026-09-30"
     },
     "test_codecs.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_codecs.py",
@@ -950,12 +956,9 @@
     },
     "test_codeop.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_codeop.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": 1,
-      "err": "",
-      "out": "  CodeopTests.test_valid\nFAIL: assertEqual\nunittest: ran 1 tests, 1 failed\n",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_codeop.py",
       "updated": "2026-09-30"
     },
@@ -1010,7 +1013,7 @@
       "status": "fail",
       "stage": "compile",
       "rc": -11,
-      "err": "T] Loaded: AIMacro.AIMacroOperator\n[IMPORT] Loaded: AIMacro.AIMacroDict\n[IMPORT] Loaded: AIMacro.AIMacroUnittest\n[IMPORT] Loaded: AIMacro.AIMacroFormat\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT ERROR] Cannot read: random\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 922 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 28666, col 32: Unexpected token in statement\n  In:",
+      "err": "T] Loaded: AIMacro.AIMacroOperator\n[IMPORT] Loaded: AIMacro.AIMacroDict\n[IMPORT] Loaded: AIMacro.AIMacroUnittest\n[IMPORT] Loaded: AIMacro.AIMacroFormat\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT ERROR] Cannot read: random\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 951 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 31716, col 32: Unexpected token in statement\n  In:",
       "out": "",
       "tags": [],
       "key": "test_complex.py",
@@ -1141,7 +1144,8 @@
       "err": "no tests ran",
       "out": "",
       "tags": [],
-      "key": "test_ctypes.py"
+      "key": "test_ctypes.py",
+      "updated": "2026-09-30"
     },
     "test_curses.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_curses.py",
@@ -1169,14 +1173,15 @@
       "err": "no tests ran",
       "out": "",
       "tags": [],
-      "key": "test_datetime.py"
+      "key": "test_datetime.py",
+      "updated": "2026-09-30"
     },
     "test_dbm.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_dbm.py",
       "status": "fail",
       "stage": "compile",
       "rc": -11,
-      "err": "PORT] Loaded: AIMacro.AIMacroOperator\n[IMPORT] Loaded: AIMacro.AIMacroDict\n[IMPORT] Loaded: AIMacro.AIMacroUnittest\n[IMPORT] Loaded: AIMacro.AIMacroFormat\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT ERROR] Cannot read: dbm\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 922 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 29013, col 40: Unexpected token in statement\n  In:",
+      "err": "PORT] Loaded: AIMacro.AIMacroOperator\n[IMPORT] Loaded: AIMacro.AIMacroDict\n[IMPORT] Loaded: AIMacro.AIMacroUnittest\n[IMPORT] Loaded: AIMacro.AIMacroFormat\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT ERROR] Cannot read: dbm\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 923 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 29533, col 40: Unexpected token in statement\n  In:",
       "out": "",
       "tags": [],
       "key": "test_dbm.py",
@@ -1197,7 +1202,7 @@
       "status": "fail",
       "stage": "compile",
       "rc": -11,
-      "err": "oaded: AIMacro.AIMacroString\n[IMPORT] Loaded: AIMacro.AIMacroOperator\n[IMPORT] Loaded: AIMacro.AIMacroDict\n[IMPORT] Loaded: AIMacro.AIMacroUnittest\n[IMPORT] Loaded: AIMacro.AIMacroFormat\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 888 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 25940, col 32: Unexpected token in statement\n  In:",
+      "err": "oaded: AIMacro.AIMacroString\n[IMPORT] Loaded: AIMacro.AIMacroOperator\n[IMPORT] Loaded: AIMacro.AIMacroDict\n[IMPORT] Loaded: AIMacro.AIMacroUnittest\n[IMPORT] Loaded: AIMacro.AIMacroFormat\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 917 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 28894, col 32: Unexpected token in statement\n  In:",
       "out": "",
       "tags": [],
       "key": "test_dbm_gnu.py",
@@ -1258,12 +1263,13 @@
     "test_descrtut.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_descrtut.py",
       "status": "fail",
-      "stage": "run",
-      "rc": 0,
-      "err": "no tests ran",
+      "stage": "transpile",
+      "rc": 1,
+      "err": "transpile: \nParse Error: Expected ')' after 'super('\nParse Error: expected token 85 got 3\nParse Error: Expected '}' after class body\nerror: compilation failed",
       "out": "",
       "tags": [],
-      "key": "test_descrtut.py"
+      "key": "test_descrtut.py",
+      "updated": "2026-09-30"
     },
     "test_devpoll.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_devpoll.py",
@@ -1292,7 +1298,7 @@
       "stage": "run",
       "rc": 1,
       "err": "",
-      "out": "  DictVersionTests.test_setitem\nERROR: add\nunittest: ran 1 tests, 1 failed\n",
+      "out": "  DictVersionTests.test_constructor\nERROR: add\nunittest: ran 1 tests, 1 failed\n",
       "tags": [],
       "key": "test_dict_version.py",
       "updated": "2026-09-30"
@@ -1322,7 +1328,7 @@
       "status": "fail",
       "stage": "compile",
       "rc": -11,
-      "err": "MPORT] Loaded: AIMacro.AIMacroDict\n[IMPORT] Loaded: AIMacro.AIMacroUnittest\n[IMPORT] Loaded: AIMacro.AIMacroFormat\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT ERROR] Cannot read: difflib\n[IMPORT ERROR] Cannot read: doctest\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 945 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 28796, col 32: Unexpected token in statement\n  In:",
+      "err": "MPORT] Loaded: AIMacro.AIMacroDict\n[IMPORT] Loaded: AIMacro.AIMacroUnittest\n[IMPORT] Loaded: AIMacro.AIMacroFormat\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT ERROR] Cannot read: difflib\n[IMPORT ERROR] Cannot read: doctest\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 938 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 29156, col 32: Unexpected token in statement\n  In:",
       "out": "",
       "tags": [],
       "key": "test_difflib.py",
@@ -1362,12 +1368,9 @@
     },
     "test_doctest2.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_doctest2.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": 1,
-      "err": "",
-      "out": "  Test.test_testmod\nFAIL: %d of %d doctests failed\nunittest: ran 1 tests, 1 failed\n",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_doctest2.py",
       "updated": "2026-09-30"
     },
@@ -1386,7 +1389,7 @@
       "status": "fail",
       "stage": "compile",
       "rc": -11,
-      "err": "IMacroFormat\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT ERROR] Cannot read: dis\n[IMPORT ERROR] Cannot read: re\n[IMPORT ERROR] Cannot read: subprocess\n[IMPORT ERROR] Cannot read: sysconfig\n[IMPORT ERROR] Cannot read: types\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 896 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 26087, col 32: Unexpected token in statement\n  In:",
+      "err": "IMacroFormat\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT ERROR] Cannot read: dis\n[IMPORT ERROR] Cannot read: re\n[IMPORT ERROR] Cannot read: subprocess\n[IMPORT ERROR] Cannot read: sysconfig\n[IMPORT ERROR] Cannot read: types\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 925 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 29137, col 32: Unexpected token in statement\n  In:",
       "out": "",
       "tags": [],
       "key": "test_dtrace.py",
@@ -1406,8 +1409,8 @@
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_dynamicclassattribute.py",
       "status": "fail",
       "stage": "compile",
-      "rc": -11,
-      "err": "T] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments",
+      "rc": 1,
+      "err": "LLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\nERROR: Variable not found: __bool__\nCompilation Failed: \n[AST] Freeing 84244 node child-lists...\n[AST] Freed 36856 child-lists (node slots stay in pool)",
       "out": "",
       "tags": [],
       "key": "test_dynamicclassattribute.py",
@@ -1438,17 +1441,19 @@
       "err": "no tests ran",
       "out": "",
       "tags": [],
-      "key": "test_email/test__encoded_words.py"
+      "key": "test_email/test__encoded_words.py",
+      "updated": "2026-09-30"
     },
     "test_email/test__header_value_parser.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_email/test__header_value_parser.py",
       "status": "fail",
-      "stage": "run",
-      "rc": 0,
-      "err": "no tests ran",
+      "stage": "compile",
+      "rc": 124,
+      "err": "ALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[SUBDEF] Stack allocation: base=64 + 2 locals * 16 = 96 bytes\n\ntimeout",
       "out": "",
       "tags": [],
-      "key": "test_email/test__header_value_parser.py"
+      "key": "test_email/test__header_value_parser.py",
+      "updated": "2026-09-30"
     },
     "test_email/test_asian_codecs.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_email/test_asian_codecs.py",
@@ -1466,7 +1471,7 @@
       "status": "fail",
       "stage": "compile",
       "rc": -11,
-      "err": "Unittest\n[IMPORT] Loaded: AIMacro.AIMacroFormat\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT ERROR] Cannot read: textwrap\n[IMPORT ERROR] Cannot read: email\n[IMPORT ERROR] Cannot read: email\n[IMPORT ERROR] Cannot read: email\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 943 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 28870, col 32: Unexpected token in statement\n  In:",
+      "err": "Unittest\n[IMPORT] Loaded: AIMacro.AIMacroFormat\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT ERROR] Cannot read: textwrap\n[IMPORT ERROR] Cannot read: email\n[IMPORT ERROR] Cannot read: email\n[IMPORT ERROR] Cannot read: email\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 969 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 31219, col 32: Unexpected token in statement\n  In:",
       "out": "",
       "tags": [],
       "key": "test_email/test_contentmanager.py",
@@ -1493,12 +1498,13 @@
     "test_email/test_generator.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_email/test_generator.py",
       "status": "fail",
-      "stage": "run",
-      "rc": 0,
-      "err": "no tests ran",
+      "stage": "compile",
+      "rc": -11,
+      "err": "edPointTrig\n[IMPORT ERROR] Cannot read: textwrap\n[IMPORT ERROR] Cannot read: email\n[IMPORT ERROR] Cannot read: email\n[IMPORT ERROR] Cannot read: email\n[IMPORT ERROR] Cannot read: email\n[IMPORT ERROR] Cannot read: email\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 918 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 29435, col 32: Unexpected token in statement\n  In:",
       "out": "",
       "tags": [],
-      "key": "test_email/test_generator.py"
+      "key": "test_email/test_generator.py",
+      "updated": "2026-09-30"
     },
     "test_email/test_headerregistry.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_email/test_headerregistry.py",
@@ -1514,11 +1520,12 @@
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_email/test_inversion.py",
       "status": "fail",
       "stage": "run",
-      "rc": 0,
-      "err": "no tests ran",
-      "out": "",
+      "rc": -11,
+      "err": "",
+      "out": "ERROR: Method not found: splitlines\n",
       "tags": [],
-      "key": "test_email/test_inversion.py"
+      "key": "test_email/test_inversion.py",
+      "updated": "2026-09-30"
     },
     "test_email/test_message.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_email/test_message.py",
@@ -1549,7 +1556,8 @@
       "err": "no tests ran",
       "out": "",
       "tags": [],
-      "key": "test_email/test_pickleable.py"
+      "key": "test_email/test_pickleable.py",
+      "updated": "2026-09-30"
     },
     "test_email/test_policy.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_email/test_policy.py",
@@ -1586,10 +1594,11 @@
       "status": "fail",
       "stage": "compile",
       "rc": -11,
-      "err": "d: tempfile\n[IMPORT ERROR] Cannot read: ensurepip\n[IMPORT ERROR] Cannot read: ensurepip\n[IMPORT] Extracting symbols from 14 modules\n[IMPORT] Checking 725 symbols for conflicts\n[IMPORT] Conflict: AIMacro.Range in modules 0 and 11\n[IMPORT] Found 1 conflicting symbols\n[IMPORT] Module 0 gets prefix NS000001\n[IMPORT] Module 11 gets prefix NS000002\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 16672, col 34: Expected ')' after arguments\n  In:",
+      "err": " Loaded: AIMacro.AIMacroUnittest\n[IMPORT] Loaded: AIMacro.AIMacroFormat\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT ERROR] Cannot read: contextlib\n[IMPORT ERROR] Cannot read: ensurepip\n[IMPORT ERROR] Cannot read: ensurepip\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 932 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 29066, col 32: Unexpected token in statement\n  In:",
       "out": "",
       "tags": [],
-      "key": "test_ensurepip.py"
+      "key": "test_ensurepip.py",
+      "updated": "2026-09-30"
     },
     "test_enum.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_enum.py",
@@ -1690,7 +1699,8 @@
       "err": "no tests ran",
       "out": "",
       "tags": [],
-      "key": "test_extcall.py"
+      "key": "test_extcall.py",
+      "updated": "2026-09-30"
     },
     "test_faulthandler.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_faulthandler.py",
@@ -1716,7 +1726,7 @@
       "status": "fail",
       "stage": "compile",
       "rc": -11,
-      "err": "ict\n[IMPORT] Loaded: AIMacro.AIMacroUnittest\n[IMPORT] Loaded: AIMacro.AIMacroFormat\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT ERROR] Cannot read: array\n[IMPORT ERROR] Cannot read: weakref\n[IMPORT ERROR] Cannot read: pyio\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 894 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 25990, col 32: Unexpected token in statement\n  In:",
+      "err": "ict\n[IMPORT] Loaded: AIMacro.AIMacroUnittest\n[IMPORT] Loaded: AIMacro.AIMacroFormat\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT ERROR] Cannot read: array\n[IMPORT ERROR] Cannot read: weakref\n[IMPORT ERROR] Cannot read: pyio\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 923 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 28917, col 32: Unexpected token in statement\n  In:",
       "out": "",
       "tags": [],
       "key": "test_file.py",
@@ -1745,12 +1755,9 @@
     },
     "test_fileinput.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_fileinput.py",
-      "status": "fail",
-      "stage": "compile",
-      "rc": -11,
-      "err": "IMPORT ERROR] Cannot read: fileinput\n[IMPORT ERROR] Cannot read: pathlib\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 964 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\n[PARSER] Parsed 965 declarations, 85149 total nodes\n[PARSER] SUCCESS\n[SEMANTIC] contract check\n[POOL] Emitting mmap for R15 (314 slots)\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments",
-      "out": "",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_fileinput.py",
       "updated": "2026-09-30"
     },
@@ -1825,10 +1832,11 @@
       "status": "fail",
       "stage": "compile",
       "rc": -11,
-      "err": " Cannot read: locale\n[IMPORT ERROR] Cannot read: re\n[IMPORT ERROR] Cannot read: support\n[IMPORT] Extracting symbols from 14 modules\n[IMPORT] Checking 715 symbols for conflicts\n[IMPORT] Conflict: AIMacro.Range in modules 0 and 11\n[IMPORT] Found 1 conflicting symbols\n[IMPORT] Module 0 gets prefix NS000001\n[IMPORT] Module 11 gets prefix NS000002\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 17172, col 66: Expected ')' after arguments\n  In:",
+      "err": "oDict\n[IMPORT] Loaded: AIMacro.AIMacroUnittest\n[IMPORT] Loaded: AIMacro.AIMacroFormat\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT ERROR] Cannot read: locale\n[IMPORT ERROR] Cannot read: re\n[IMPORT ERROR] Cannot read: support\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 921 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 30080, col 71: Expected ')' after arguments\n  In:",
       "out": "",
       "tags": [],
-      "key": "test_format.py"
+      "key": "test_format.py",
+      "updated": "2026-09-30"
     },
     "test_fractions.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_fractions.py",
@@ -1852,12 +1860,9 @@
     },
     "test_frozen.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_frozen.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": 1,
-      "err": "",
-      "out": "  TestFrozen.test_frozen\nERROR: Method not found: frozen_modules\nERROR: argument is not iterable\nunittest: ran 1 tests, 1 failed\n",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_frozen.py",
       "updated": "2026-09-30"
     },
@@ -1907,15 +1912,16 @@
       "err": "no tests ran",
       "out": "",
       "tags": [],
-      "key": "test_future_stmt/__init__.py"
+      "key": "test_future_stmt/__init__.py",
+      "updated": "2026-09-30"
     },
     "test_future_stmt/test_future.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_future_stmt/test_future.py",
       "status": "fail",
-      "stage": "compile",
-      "rc": -11,
-      "err": " ast\n[IMPORT ERROR] Cannot read: textwrap\n[IMPORT ERROR] Cannot read: re\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 884 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\n[PARSER] Parsed 885 declarations, 74845 total nodes\n[PARSER] SUCCESS\n[SEMANTIC] contract check\n[POOL] Emitting mmap for R15 (265 slots)\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments",
-      "out": "",
+      "stage": "run",
+      "rc": 1,
+      "err": "",
+      "out": "  FutureTest.test_ensure_flags_dont_clash\nERROR: Method not found: values\nERROR: Method not found: values\nFAIL: assertEqual\nunittest: ran 1 tests, 1 failed\n",
       "tags": [],
       "key": "test_future_stmt/test_future.py",
       "updated": "2026-09-30"
@@ -1964,11 +1970,12 @@
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_gdb.py",
       "status": "fail",
       "stage": "run",
-      "rc": -11,
+      "rc": 1,
       "err": "",
-      "out": "Exception: ",
+      "out": "ERROR: Method not found: Popen\nERROR: Method not found: communicate\nERROR: Method not found: search\nException: unable to parse GDB version: %r\n",
       "tags": [],
-      "key": "test_gdb.py"
+      "key": "test_gdb.py",
+      "updated": "2026-09-30"
     },
     "test_generator_stop.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_generator_stop.py",
@@ -2013,7 +2020,7 @@
       "status": "fail",
       "stage": "compile",
       "rc": -11,
-      "err": "] Loaded: AIMacro.AIMacroDict\n[IMPORT] Loaded: AIMacro.AIMacroUnittest\n[IMPORT] Loaded: AIMacro.AIMacroFormat\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT ERROR] Cannot read: genericpath\n[IMPORT ERROR] Cannot read: warnings\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 951 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 28855, col 36: Unexpected token in statement\n  In:",
+      "err": "] Loaded: AIMacro.AIMacroDict\n[IMPORT] Loaded: AIMacro.AIMacroUnittest\n[IMPORT] Loaded: AIMacro.AIMacroFormat\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT ERROR] Cannot read: genericpath\n[IMPORT ERROR] Cannot read: warnings\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 944 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 29215, col 36: Unexpected token in statement\n  In:",
       "out": "",
       "tags": [],
       "key": "test_genericpath.py",
@@ -2022,21 +2029,19 @@
     "test_genexps.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_genexps.py",
       "status": "fail",
-      "stage": "run",
-      "rc": 0,
-      "err": "no tests ran",
+      "stage": "compile",
+      "rc": -11,
+      "err": " symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\n[PARSER] Parsed 900 declarations, 81119 total nodes\n[PARSER] SUCCESS\n[SEMANTIC] contract check\n[POOL] Emitting mmap for R15 (245 slots)\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments",
       "out": "",
       "tags": [],
-      "key": "test_genexps.py"
+      "key": "test_genexps.py",
+      "updated": "2026-09-30"
     },
     "test_getopt.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_getopt.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": 1,
-      "err": "",
-      "out": "Exception: argument is not iterable\n",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_getopt.py",
       "updated": "2026-09-30"
     },
@@ -2073,7 +2078,7 @@
       "status": "fail",
       "stage": "compile",
       "rc": -11,
-      "err": "r\n[IMPORT] Loaded: AIMacro.AIMacroDict\n[IMPORT] Loaded: AIMacro.AIMacroUnittest\n[IMPORT] Loaded: AIMacro.AIMacroFormat\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT ERROR] Cannot read: glob\n[IMPORT ERROR] Cannot read: shutil\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 932 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 28736, col 44: Unexpected token in statement\n  In:",
+      "err": "r\n[IMPORT] Loaded: AIMacro.AIMacroDict\n[IMPORT] Loaded: AIMacro.AIMacroUnittest\n[IMPORT] Loaded: AIMacro.AIMacroFormat\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT ERROR] Cannot read: glob\n[IMPORT ERROR] Cannot read: shutil\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 925 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 29096, col 44: Unexpected token in statement\n  In:",
       "out": "",
       "tags": [],
       "key": "test_glob.py",
@@ -2164,10 +2169,10 @@
     "test_html.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_html.py",
       "status": "fail",
-      "stage": "compile",
-      "rc": -11,
-      "err": "oFormat\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT ERROR] Cannot read: html\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 909 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\n[PARSER] Parsed 910 declarations, 80868 total nodes\n[PARSER] SUCCESS\n[SEMANTIC] contract check\n[POOL] Emitting mmap for R15 (253 slots)\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments",
-      "out": "",
+      "stage": "run",
+      "rc": 1,
+      "err": "",
+      "out": "  HtmlTests.test_escape\nFAIL: assertEqual\nunittest: ran 1 tests, 1 failed\n",
       "tags": [],
       "key": "test_html.py",
       "updated": "2026-09-30"
@@ -2194,9 +2199,9 @@
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_http_cookies.py",
       "status": "fail",
       "stage": "run",
-      "rc": -11,
-      "err": "",
-      "out": "  CookieTests.test_basic\n",
+      "rc": 0,
+      "err": "no tests ran",
+      "out": "unittest: ran 0 tests, 0 failed\n",
       "tags": [],
       "key": "test_http_cookies.py",
       "updated": "2026-09-30"
@@ -2225,11 +2230,12 @@
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_idle.py",
       "status": "fail",
       "stage": "run",
-      "rc": 0,
-      "err": "no tests ran",
-      "out": "",
+      "rc": 1,
+      "err": "",
+      "out": "Exception: keyword argument\n",
       "tags": [],
-      "key": "test_idle.py"
+      "key": "test_idle.py",
+      "updated": "2026-09-30"
     },
     "test_imaplib.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_imaplib.py",
@@ -2253,11 +2259,12 @@
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_imp.py",
       "status": "fail",
       "stage": "run",
-      "rc": -8,
+      "rc": -11,
       "err": "",
-      "out": "  LockTests.testLock\n",
+      "out": "ERROR: Method not found: get_tag\nERROR: Method not found: get_tag\n  ImportTests.test_import_encoded_module\n  ImportTests.test_find_module_encoding\n  ImportTests.test_issue1267\nFAIL: assertEqual\n  ImportTests.test_issue3594\nFAIL: assertEqual\nERROR: Method not found: unlink\nERROR: Method not found: unlink\n  ImportTests.test_issue5604\nERROR: Method not found: get\nERROR: Method not found: decode\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: rmtree\nERROR: Method not found: rmtree\n  ImportTests.test_issue9319\n  ImportTests.test_load_from_source\nERROR: Method not found: CleanImport\nERROR: Method not found: load_module\nFAIL: assertIs\n  ImportTests.test_issue15828_load_extensions\nERROR: Method not found: load_module\nFAIL: assertEqual\n  ImportTests.test_issue16421_multiple_modules_in_one_dll\nERROR: Method not found: load_dynamic\nERROR: Method not found: load_dynamic\nERROR: Method not found: load_dynamic\nFAIL: assertEqual\n  ImportTests.test_load_dynamic_ImportError_path\nERROR: Method not found: load_dynamic\nERROR: argument is not iterable\n  ImportTests.test_load_module_extension_file_is_None\nERROR: Method not found: load_module\n  ImportTests.test_issue24748_load_module_skips_sys_modules_check\nERROR: Method not found: load_dynamic\nFAIL: assertEqual\n  ImportTests.test_bug7732\nERROR: Method not found: temp_cwd\nERROR: Method not found: mkdir\n  ImportTests.test_multiple_calls_to_get_data\nERROR: Method not found: _LoadSourceCompatibility\nERROR: Method not found: get_data\nERROR: Method not found: get_data\nERROR: No such file\n  ImportTests.test_load_source\n",
       "tags": [],
-      "key": "test_imp.py"
+      "key": "test_imp.py",
+      "updated": "2026-09-30"
     },
     "test_import/__init__.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_import/__init__.py",
@@ -2277,7 +2284,8 @@
       "err": "no tests ran",
       "out": "",
       "tags": [],
-      "key": "test_importlib/__init__.py"
+      "key": "test_importlib/__init__.py",
+      "updated": "2026-09-30"
     },
     "test_importlib/builtin/test_finder.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_importlib/builtin/test_finder.py",
@@ -2309,9 +2317,9 @@
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_importlib/extension/test_finder.py",
       "status": "fail",
       "stage": "run",
-      "rc": 124,
-      "err": "timeout",
-      "out": "ERROR: Method not found: import_importlib\nERROR: Method not found: test_both\n",
+      "rc": 0,
+      "err": "no tests ran",
+      "out": "ERROR: Method not found: import_importlib\nERROR: Method not found: test_both\nunittest: ran 0 tests, 0 failed\n",
       "tags": [],
       "key": "test_importlib/extension/test_finder.py",
       "updated": "2026-09-30"
@@ -2330,11 +2338,12 @@
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_importlib/extension/test_path_hook.py",
       "status": "fail",
       "stage": "run",
-      "rc": -11,
-      "err": "",
-      "out": "  PathHookTests.test_success\n",
+      "rc": 0,
+      "err": "no tests ran",
+      "out": "ERROR: Method not found: import_importlib\nERROR: Method not found: test_both\n",
       "tags": [],
-      "key": "test_importlib/extension/test_path_hook.py"
+      "key": "test_importlib/extension/test_path_hook.py",
+      "updated": "2026-09-30"
     },
     "test_importlib/frozen/test_finder.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_importlib/frozen/test_finder.py",
@@ -2350,7 +2359,7 @@
       "stage": "run",
       "rc": -11,
       "err": "",
-      "out": "ERROR: Method not found: import_importlib\nERROR: Method not found: test_both\nERROR: Method not found: test_both\nERROR: Method not found: test_both\n  ExecModuleTests.test_lacking_parent\nERROR: Method not found: uncache\nERROR: Method not found: frozen_modules\nERROR: Method not found: split\nERROR: Method not found: ModuleType\nERROR: Method not found: uncache\n  ExecModuleTests.test_module_repr\nERROR: Method not found: frozen_modules\nERROR: Method not found: split\nERROR: Method not found: ModuleType\nERROR: Method not found: uncache\n  ExecModuleTests.test_module_repr_indirect\nERROR: Method not found: frozen_modules\nERROR: Method not found: split\nERROR: Method not found: ModuleType\nERROR: Method not found: uncache\n  ExecModuleTests.test_unloadable\nERROR: Method not found: frozen_modules\nERROR: Method not found: frozen_modules\nERROR: Method not found: split\nERROR: Method not found: ModuleType\nERROR: Method not found: uncache\nFAIL: assertRaises\n",
+      "out": "ERROR: Method not found: import_importlib\nERROR: Method not found: test_both\nERROR: Method not found: test_both\nERROR: Method not found: test_both\n  ExecModuleTests.test_lacking_parent\nERROR: Method not found: uncache\nERROR: Method not found: frozen_modules\nERROR: Method not found: split\nERROR: Method not found: ModuleType\nERROR: Method not found: uncache\n  ExecModuleTests.test_module_repr\nERROR: Method not found: frozen_modules\nERROR: Method not found: split\nERROR: Method not found: ModuleType\nERROR: Method not found: uncache\n  ExecModuleTests.test_module_repr_indirect\nERROR: Method not found: frozen_modules\nERROR: Method not found: split\nERROR: Method not found: ModuleType\nERROR: Method not found: uncache\n  ExecModuleTests.test_unloadable\nERROR: Method not found: frozen_modules\nERROR: Method not found: frozen_modules\nERROR: Method not found: split\nERROR: Method not found: ModuleType\nERROR: Method not found: uncache\n",
       "tags": [],
       "key": "test_importlib/frozen/test_loader.py",
       "updated": "2026-09-30"
@@ -2391,11 +2400,12 @@
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_importlib/import_/test_caching.py",
       "status": "fail",
       "stage": "run",
-      "rc": 0,
-      "err": "no tests ran",
-      "out": "",
+      "rc": -11,
+      "err": "",
+      "out": "ERROR: Method not found: test_both\n  ImportlibUseCache.test_using_cache\nERROR: Method not found: uncache\n",
       "tags": [],
-      "key": "test_importlib/import_/test_caching.py"
+      "key": "test_importlib/import_/test_caching.py",
+      "updated": "2026-09-30"
     },
     "test_importlib/import_/test_fromlist.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_importlib/import_/test_fromlist.py",
@@ -2445,18 +2455,16 @@
       "stage": "run",
       "rc": 0,
       "err": "no tests ran",
-      "out": "",
+      "out": "ERROR: Method not found: test_both\n",
       "tags": [],
-      "key": "test_importlib/import_/test_relative_imports.py"
+      "key": "test_importlib/import_/test_relative_imports.py",
+      "updated": "2026-09-30"
     },
     "test_importlib/source/test_case_sensitivity.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_importlib/source/test_case_sensitivity.py",
-      "status": "fail",
-      "stage": "compile",
-      "rc": -11,
-      "err": "mat\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT ERROR] Cannot read: warnings\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 902 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\n[PARSER] Parsed 903 declarations, 80962 total nodes\n[PARSER] SUCCESS\n[SEMANTIC] contract check\n[POOL] Emitting mmap for R15 (256 slots)\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments",
-      "out": "",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_importlib/source/test_case_sensitivity.py",
       "updated": "2026-09-30"
     },
@@ -2484,10 +2492,10 @@
     "test_importlib/source/test_path_hook.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_importlib/source/test_path_hook.py",
       "status": "fail",
-      "stage": "run",
-      "rc": 0,
-      "err": "no tests ran",
-      "out": "ERROR: Method not found: import_importlib\nERROR: Method not found: test_both\n",
+      "stage": "compile",
+      "rc": -11,
+      "err": " symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\n[PARSER] Parsed 904 declarations, 81504 total nodes\n[PARSER] SUCCESS\n[SEMANTIC] contract check\n[POOL] Emitting mmap for R15 (246 slots)\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments",
+      "out": "",
       "tags": [],
       "key": "test_importlib/source/test_path_hook.py",
       "updated": "2026-09-30"
@@ -2563,7 +2571,7 @@
       "stage": "run",
       "rc": 0,
       "err": "no tests ran",
-      "out": "ERROR: Method not found: import_importlib\nERROR: Method not found: requires_working_threading\nERROR: Method not found: items\nERROR: Method not found: test_both\nERROR: Method not found: items\nERROR: Method not found: test_both\nERROR: Method not found: test_both\n",
+      "out": "ERROR: Method not found: import_importlib\nERROR: Method not found: requires_working_threading\nERROR: Method not found: test_both\nERROR: Method not found: test_both\nERROR: Method not found: test_both\n",
       "tags": [],
       "key": "test_importlib/test_locks.py",
       "updated": "2026-09-30"
@@ -2592,12 +2600,13 @@
     "test_importlib/test_namespace_pkgs.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_importlib/test_namespace_pkgs.py",
       "status": "fail",
-      "stage": "run",
+      "stage": "compile",
       "rc": -11,
-      "err": "",
-      "out": "  ReloadTests.test_simple_package\nFAIL: assertEqual\n  ReloadTests.test_cant_import_other\n",
+      "err": "PORT] Loaded: FixedPointTrig\n[IMPORT ERROR] Cannot read: contextlib\n[IMPORT ERROR] Cannot read: importlib\n[IMPORT ERROR] Cannot read: importlib\n[IMPORT ERROR] Cannot read: importlib\n[IMPORT ERROR] Cannot read: warnings\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 947 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 28941, col 36: Unexpected token in statement\n  In:",
+      "out": "",
       "tags": [],
-      "key": "test_importlib/test_namespace_pkgs.py"
+      "key": "test_importlib/test_namespace_pkgs.py",
+      "updated": "2026-09-30"
     },
     "test_importlib/test_open.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_importlib/test_open.py",
@@ -2619,11 +2628,12 @@
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_importlib/test_pkg_import.py",
       "status": "fail",
       "stage": "run",
-      "rc": -11,
+      "rc": 1,
       "err": "",
-      "out": "  TestImport.test_package_import__semantics\nERROR: Method not found: assertNotIn\n",
+      "out": "ERROR: Method not found: mkdtemp\nERROR: Method not found: mkdir\n  TestImport.test_package_import__semantics\nERROR: Method not found: rmtree\nFAIL: assertNotEqual\nException: assertNotEqual\n",
       "tags": [],
-      "key": "test_importlib/test_pkg_import.py"
+      "key": "test_importlib/test_pkg_import.py",
+      "updated": "2026-09-30"
     },
     "test_importlib/test_read.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_importlib/test_read.py",
@@ -2648,7 +2658,7 @@
       "status": "fail",
       "stage": "compile",
       "rc": -11,
-      "err": "st\n[IMPORT] Loaded: AIMacro.AIMacroFormat\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT ERROR] Cannot read: uuid\n[IMPORT ERROR] Cannot read: pathlib\n[IMPORT ERROR] Cannot read: resources\n[IMPORT ERROR] Cannot read: importlib\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 903 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 26697, col 32: Unexpected token in statement\n  In:",
+      "err": "st\n[IMPORT] Loaded: AIMacro.AIMacroFormat\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT ERROR] Cannot read: uuid\n[IMPORT ERROR] Cannot read: pathlib\n[IMPORT ERROR] Cannot read: resources\n[IMPORT ERROR] Cannot read: importlib\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 932 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 29306, col 32: Unexpected token in statement\n  In:",
       "out": "",
       "tags": [],
       "key": "test_importlib/test_resource.py",
@@ -2687,13 +2697,11 @@
     },
     "test_importlib/test_windows.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_importlib/test_windows.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": -11,
-      "err": "",
-      "out": "  WindowsRegistryFinderTests.test_find_spec_missing\nFAIL: assertIs\n  WindowsRegistryFinderTests.test_find_module_missing\nFAIL: assertIs\n  WindowsRegistryFinderTests.test_module_found\n",
+      "status": "pass",
       "tags": [],
-      "key": "test_importlib/test_windows.py"
+      "stage_ok": "run",
+      "key": "test_importlib/test_windows.py",
+      "updated": "2026-09-30"
     },
     "test_importlib/test_zip.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_importlib/test_zip.py",
@@ -2795,10 +2803,11 @@
       "status": "fail",
       "stage": "compile",
       "rc": -11,
-      "err": ": functools\n[IMPORT ERROR] Cannot read: contextlib\n[IMPORT ERROR] Cannot read: builtins\n[IMPORT] Extracting symbols from 14 modules\n[IMPORT] Checking 819 symbols for conflicts\n[IMPORT] Conflict: AIMacro.Range in modules 0 and 11\n[IMPORT] Found 1 conflicting symbols\n[IMPORT] Module 0 gets prefix NS000001\n[IMPORT] Module 11 gets prefix NS000002\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 17792, col 9: Unexpected token in statement\n  In:",
+      "err": "] Loaded: AIMacro.AIMacroUnittest\n[IMPORT] Loaded: AIMacro.AIMacroFormat\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT ERROR] Cannot read: functools\n[IMPORT ERROR] Cannot read: contextlib\n[IMPORT ERROR] Cannot read: builtins\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 1027 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 30691, col 9: Unexpected token in statement\n  In:",
       "out": "",
       "tags": [],
-      "key": "test_iter.py"
+      "key": "test_iter.py",
+      "updated": "2026-09-30"
     },
     "test_iterlen.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_iterlen.py",
@@ -2832,7 +2841,7 @@
       "status": "fail",
       "stage": "compile",
       "rc": -11,
-      "err": "oaded: AIMacro.AIMacroString\n[IMPORT] Loaded: AIMacro.AIMacroOperator\n[IMPORT] Loaded: AIMacro.AIMacroDict\n[IMPORT] Loaded: AIMacro.AIMacroUnittest\n[IMPORT] Loaded: AIMacro.AIMacroFormat\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 885 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 25900, col 32: Unexpected token in statement\n  In:",
+      "err": "oaded: AIMacro.AIMacroString\n[IMPORT] Loaded: AIMacro.AIMacroOperator\n[IMPORT] Loaded: AIMacro.AIMacroDict\n[IMPORT] Loaded: AIMacro.AIMacroUnittest\n[IMPORT] Loaded: AIMacro.AIMacroFormat\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 914 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 28950, col 32: Unexpected token in statement\n  In:",
       "out": "",
       "tags": [],
       "key": "test_json/test_decode.py",
@@ -2851,7 +2860,7 @@
       "status": "fail",
       "stage": "compile",
       "rc": -11,
-      "err": "oaded: AIMacro.AIMacroString\n[IMPORT] Loaded: AIMacro.AIMacroOperator\n[IMPORT] Loaded: AIMacro.AIMacroDict\n[IMPORT] Loaded: AIMacro.AIMacroUnittest\n[IMPORT] Loaded: AIMacro.AIMacroFormat\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 880 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 25814, col 32: Unexpected token in statement\n  In:",
+      "err": "oaded: AIMacro.AIMacroString\n[IMPORT] Loaded: AIMacro.AIMacroOperator\n[IMPORT] Loaded: AIMacro.AIMacroDict\n[IMPORT] Loaded: AIMacro.AIMacroUnittest\n[IMPORT] Loaded: AIMacro.AIMacroFormat\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 909 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 28864, col 32: Unexpected token in statement\n  In:",
       "out": "",
       "tags": [],
       "key": "test_json/test_dump.py",
@@ -2867,12 +2876,9 @@
     },
     "test_json/test_enum.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_json/test_enum.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": 1,
-      "err": "",
-      "out": "  TestPyEnum.test_weird_floats\nFAIL: assertEqual\n  TestPyEnum.test_ints\nFAIL: assertEqual\n  TestPyEnum.test_list\nFAIL: assertEqual\n  TestPyEnum.test_dict_keys\nERROR: string indices must be integers\n  TestPyEnum.test_dict_values\nERROR: string indices must be integers\n  TestCEnum.test_weird_floats\nFAIL: assertEqual\n  TestCEnum.test_ints\nFAIL: assertEqual\n  TestCEnum.test_list\nFAIL: assertEqual\n  TestCEnum.test_dict_keys\nERROR: string indices must be integers\n  TestCEnum.test_dict_values\nERROR: string indices must be integers\nunittest: ran 10 tests, 10 failed\n",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_json/test_enum.py",
       "updated": "2026-09-30"
     },
@@ -2886,56 +2892,41 @@
     },
     "test_json/test_float.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_json/test_float.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": 1,
-      "err": "",
-      "out": "  TestPyFloat.test_ints\nFAIL: assertEqual\nunittest: ran 1 tests, 1 failed\n",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_json/test_float.py",
       "updated": "2026-09-30"
     },
     "test_json/test_indent.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_json/test_indent.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": 1,
-      "err": "",
-      "out": "  TestPyIndent.test_indent0\nFAIL: assertEqual\nERROR: Method not found: dump\nERROR: Method not found: dump\n  TestCIndent.test_indent0\nFAIL: assertEqual\nERROR: Method not found: dump\nERROR: Method not found: dump\nunittest: ran 2 tests, 2 failed\n",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_json/test_indent.py",
       "updated": "2026-09-30"
     },
     "test_json/test_pass1.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_json/test_pass1.py",
-      "status": "fail",
-      "stage": "compile",
-      "rc": -11,
-      "err": "T] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments",
-      "out": "",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_json/test_pass1.py",
       "updated": "2026-09-30"
     },
     "test_json/test_pass2.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_json/test_pass2.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": 1,
-      "err": "",
-      "out": "  TestPyPass2.test_parse\nFAIL: assertEqual\n  TestCPass2.test_parse\nFAIL: assertEqual\nunittest: ran 2 tests, 2 failed\n",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_json/test_pass2.py",
       "updated": "2026-09-30"
     },
     "test_json/test_pass3.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_json/test_pass3.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": 1,
-      "err": "",
-      "out": "  TestPyPass3.test_parse\nFAIL: assertEqual\n  TestCPass3.test_parse\nFAIL: assertEqual\nunittest: ran 2 tests, 2 failed\n",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_json/test_pass3.py",
       "updated": "2026-09-30"
     },
@@ -3042,11 +3033,12 @@
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_lib2to3.py",
       "status": "fail",
       "stage": "run",
-      "rc": 0,
-      "err": "no tests ran",
-      "out": "",
+      "rc": 1,
+      "err": "",
+      "out": "Exception: keyword argument\n",
       "tags": [],
-      "key": "test_lib2to3.py"
+      "key": "test_lib2to3.py",
+      "updated": "2026-09-30"
     },
     "test_linecache.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_linecache.py",
@@ -3064,7 +3056,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_list.py",
-      "updated": "2026-09-29"
+      "updated": "2026-09-30"
     },
     "test_listcomps.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_listcomps.py",
@@ -3074,16 +3066,14 @@
       "err": "no tests ran",
       "out": "",
       "tags": [],
-      "key": "test_listcomps.py"
+      "key": "test_listcomps.py",
+      "updated": "2026-09-30"
     },
     "test_lltrace.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_lltrace.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": 1,
-      "err": "",
-      "out": "  TestLLTrace.test_lltrace\nFAIL: assertEqual\nERROR: Method not found: decode\nunittest: ran 1 tests, 1 failed\n",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_lltrace.py",
       "updated": "2026-09-30"
     },
@@ -3092,7 +3082,7 @@
       "status": "fail",
       "stage": "compile",
       "rc": -11,
-      "err": "[IMPORT] Loaded: AIMacro.AIMacroDict\n[IMPORT] Loaded: AIMacro.AIMacroUnittest\n[IMPORT] Loaded: AIMacro.AIMacroFormat\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT ERROR] Cannot read: locale\n[IMPORT ERROR] Cannot read: codecs\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 952 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 28170, col 32: Unexpected token in statement\n  In:",
+      "err": "[IMPORT] Loaded: AIMacro.AIMacroDict\n[IMPORT] Loaded: AIMacro.AIMacroUnittest\n[IMPORT] Loaded: AIMacro.AIMacroFormat\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT ERROR] Cannot read: locale\n[IMPORT ERROR] Cannot read: codecs\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 975 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 29217, col 32: Unexpected token in statement\n  In:",
       "out": "",
       "tags": [],
       "key": "test_locale.py",
@@ -3111,10 +3101,11 @@
       "status": "fail",
       "stage": "compile",
       "rc": -11,
-      "err": "IMacro.AIMacroDict\n[IMPORT ERROR] Cannot read: random\n[IMPORT ERROR] Cannot read: array\n[IMPORT] Extracting symbols from 14 modules\n[IMPORT] Checking 766 symbols for conflicts\n[IMPORT] Conflict: AIMacro.Range in modules 0 and 11\n[IMPORT] Found 1 conflicting symbols\n[IMPORT] Module 0 gets prefix NS000001\n[IMPORT] Module 11 gets prefix NS000002\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 21554, col 9: Unexpected token in statement\n  In:",
+      "err": "\n[IMPORT] Loaded: AIMacro.AIMacroDict\n[IMPORT] Loaded: AIMacro.AIMacroUnittest\n[IMPORT] Loaded: AIMacro.AIMacroFormat\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT ERROR] Cannot read: random\n[IMPORT ERROR] Cannot read: array\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 972 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 33251, col 32: Unexpected token in statement\n  In:",
       "out": "",
       "tags": [],
-      "key": "test_long.py"
+      "key": "test_long.py",
+      "updated": "2026-09-30"
     },
     "test_longexp.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_longexp.py",
@@ -3176,7 +3167,7 @@
       "status": "fail",
       "stage": "compile",
       "rc": -11,
-      "err": "ORT] Loaded: AIMacro.AIMacroOperator\n[IMPORT] Loaded: AIMacro.AIMacroDict\n[IMPORT] Loaded: AIMacro.AIMacroUnittest\n[IMPORT] Loaded: AIMacro.AIMacroFormat\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT ERROR] Cannot read: pyio\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 950 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 28316, col 32: Unexpected token in statement\n  In:",
+      "err": "ORT] Loaded: AIMacro.AIMacroOperator\n[IMPORT] Loaded: AIMacro.AIMacroDict\n[IMPORT] Loaded: AIMacro.AIMacroUnittest\n[IMPORT] Loaded: AIMacro.AIMacroFormat\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT ERROR] Cannot read: pyio\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 976 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 30665, col 32: Unexpected token in statement\n  In:",
       "out": "",
       "tags": [],
       "key": "test_memoryio.py",
@@ -3187,7 +3178,7 @@
       "status": "fail",
       "stage": "compile",
       "rc": -11,
-      "err": "[IMPORT] Loaded: AIMacro.AIMacroDict\n[IMPORT] Loaded: AIMacro.AIMacroUnittest\n[IMPORT] Loaded: AIMacro.AIMacroFormat\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT ERROR] Cannot read: weakref\n[IMPORT ERROR] Cannot read: array\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 938 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 28024, col 32: Unexpected token in statement\n  In:",
+      "err": "[IMPORT] Loaded: AIMacro.AIMacroDict\n[IMPORT] Loaded: AIMacro.AIMacroUnittest\n[IMPORT] Loaded: AIMacro.AIMacroFormat\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT ERROR] Cannot read: weakref\n[IMPORT ERROR] Cannot read: array\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 967 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 30633, col 32: Unexpected token in statement\n  In:",
       "out": "",
       "tags": [],
       "key": "test_memoryview.py",
@@ -3196,19 +3187,20 @@
     "test_metaclass.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_metaclass.py",
       "status": "fail",
-      "stage": "run",
-      "rc": 0,
-      "err": "no tests ran",
+      "stage": "compile",
+      "rc": -11,
+      "err": " symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\n[PARSER] Parsed 900 declarations, 81119 total nodes\n[PARSER] SUCCESS\n[SEMANTIC] contract check\n[POOL] Emitting mmap for R15 (245 slots)\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments",
       "out": "",
       "tags": [],
-      "key": "test_metaclass.py"
+      "key": "test_metaclass.py",
+      "updated": "2026-09-30"
     },
     "test_mimetypes.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_mimetypes.py",
       "status": "fail",
       "stage": "compile",
       "rc": -11,
-      "err": "ORT] Loaded: AIMacro.AIMacroDict\n[IMPORT] Loaded: AIMacro.AIMacroUnittest\n[IMPORT] Loaded: AIMacro.AIMacroFormat\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT ERROR] Cannot read: mimetypes\n[IMPORT ERROR] Cannot read: pathlib\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 928 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 29028, col 32: Unexpected token in statement\n  In:",
+      "err": "ORT] Loaded: AIMacro.AIMacroDict\n[IMPORT] Loaded: AIMacro.AIMacroUnittest\n[IMPORT] Loaded: AIMacro.AIMacroFormat\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT ERROR] Cannot read: mimetypes\n[IMPORT ERROR] Cannot read: pathlib\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 929 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 29548, col 32: Unexpected token in statement\n  In:",
       "out": "",
       "tags": [],
       "key": "test_mimetypes.py",
@@ -3237,12 +3229,13 @@
     "test_module/__init__.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_module/__init__.py",
       "status": "fail",
-      "stage": "run",
-      "rc": -11,
-      "err": "",
-      "out": "rtEqual\n  ModuleTests.test_unicode_docstring\nFAIL: assertEqual\n  ModuleTests.test_reinit\nFAIL: assertEqual\n  ModuleTests.test_dont_clear_dict\nFAIL: assertEqual\n  ModuleTests.test_clear_dict_in_ref_cycle\nFAIL: assertEqual\n  ModuleTests.test_weakref\n  ModuleTests.test_module_getattr\nFAIL: assertEqual\n",
+      "stage": "compile",
+      "rc": 1,
+      "err": "[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\nERROR: Variable not found: Descr\nCompilation Failed: \n[AST] Freeing 85802 node child-lists...\n[AST] Freed 37507 child-lists (node slots stay in pool)",
+      "out": "",
       "tags": [],
-      "key": "test_module/__init__.py"
+      "key": "test_module/__init__.py",
+      "updated": "2026-09-30"
     },
     "test_modulefinder.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_modulefinder.py",
@@ -3259,7 +3252,7 @@
       "status": "fail",
       "stage": "compile",
       "rc": -11,
-      "err": "MPORT] Loaded: AIMacro.AIMacroDict\n[IMPORT] Loaded: AIMacro.AIMacroUnittest\n[IMPORT] Loaded: AIMacro.AIMacroFormat\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT ERROR] Cannot read: warnings\n[IMPORT ERROR] Cannot read: msilib\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 882 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 26301, col 32: Unexpected token in statement\n  In:",
+      "err": "MPORT] Loaded: AIMacro.AIMacroDict\n[IMPORT] Loaded: AIMacro.AIMacroUnittest\n[IMPORT] Loaded: AIMacro.AIMacroFormat\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT ERROR] Cannot read: warnings\n[IMPORT ERROR] Cannot read: msilib\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 911 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 29255, col 32: Unexpected token in statement\n  In:",
       "out": "",
       "tags": [],
       "key": "test_msilib.py",
@@ -3279,7 +3272,7 @@
       "stage": "run",
       "rc": 1,
       "err": "",
-      "out": "ERROR: Method not found: import_module\nERROR: Method not found: get_all_start_methods\nERROR: Method not found: skip_if_broken_multiprocessing_synchronize\nException: %r start method not available\n",
+      "out": "ERROR: Method not found: get_all_start_methods\nERROR: Method not found: skip_if_broken_multiprocessing_synchronize\nException: %r start method not available\n",
       "tags": [],
       "key": "test_multiprocessing_main_handling.py",
       "updated": "2026-09-30"
@@ -3405,23 +3398,17 @@
     },
     "test_ossaudiodev.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_ossaudiodev.py",
-      "status": "fail",
-      "stage": "compile",
-      "rc": -11,
-      "err": "g\n[IMPORT ERROR] Cannot read: warnings\n[IMPORT ERROR] Cannot read: errno\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 882 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\n[PARSER] Parsed 883 declarations, 77628 total nodes\n[PARSER] SUCCESS\n[SEMANTIC] contract check\n[POOL] Emitting mmap for R15 (271 slots)\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments",
-      "out": "",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_ossaudiodev.py",
       "updated": "2026-09-30"
     },
     "test_osx_env.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_osx_env.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": -11,
-      "err": "",
-      "out": "  OSXEnvironmentVariableTestCase.test_pythonexecutable_sets_sys_executable\nERROR: Method not found: unset\n",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_osx_env.py",
       "updated": "2026-09-30"
     },
@@ -3469,19 +3456,21 @@
       "stage": "run",
       "rc": 0,
       "err": "no tests ran",
-      "out": "",
+      "out": "ERROR: Method not found: check_sanitizer\n",
       "tags": [],
-      "key": "test_peg_generator/__init__.py"
+      "key": "test_peg_generator/__init__.py",
+      "updated": "2026-09-30"
     },
     "test_peg_generator/test_c_parser.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_peg_generator/test_c_parser.py",
       "status": "fail",
       "stage": "run",
-      "rc": -8,
+      "rc": 1,
       "err": "",
-      "out": "",
+      "out": "ERROR: Method not found: get_config_var\nERROR: Method not found: get_config_var\nERROR: Method not found: skip_if_missing\nERROR: Method not found: missing_compiler_executable\nException: The %r command is not found\n",
       "tags": [],
-      "key": "test_peg_generator/test_c_parser.py"
+      "key": "test_peg_generator/test_c_parser.py",
+      "updated": "2026-09-30"
     },
     "test_peg_generator/test_first_sets.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_peg_generator/test_first_sets.py",
@@ -3517,7 +3506,8 @@
       "err": "no tests ran",
       "out": "",
       "tags": [],
-      "key": "test_pep646_syntax.py"
+      "key": "test_pep646_syntax.py",
+      "updated": "2026-09-30"
     },
     "test_pickle.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_pickle.py",
@@ -3533,10 +3523,10 @@
     "test_picklebuffer.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_picklebuffer.py",
       "status": "fail",
-      "stage": "compile",
-      "rc": -11,
-      "err": "T] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments",
-      "out": "",
+      "stage": "run",
+      "rc": 1,
+      "err": "",
+      "out": "  PickleBufferTest.test_constructor_failure\nERROR: Method not found: release\n  PickleBufferTest.test_basics\n  PickleBufferTest.test_release\nERROR: Method not found: release\nFAIL: assertIn\nERROR: Method not found: release\n  PickleBufferTest.test_ndarray_2d\n  PickleBufferTest.test_raw\nERROR: Method not found: raw\n  PickleBufferTest.test_raw_ndarray\nERROR: Method not found: raw\nERROR: Method not found: raw\nERROR: Method not found: raw\nERROR: Method not found: raw\n  PickleBufferTest.test_raw_non_contiguous\n  PickleBufferTest.test_raw_released\nERROR: Method not found: release\nunittest: ran 8 tests, 1 failed\n",
       "tags": [],
       "key": "test_picklebuffer.py",
       "updated": "2026-09-30"
@@ -3566,7 +3556,7 @@
       "stage": "run",
       "rc": 1,
       "err": "",
-      "out": "  TestPkg.test_1\nERROR: Method not found: mkdtemp\nERROR: Method not found: mkdir\nERROR: Method not found: split\nERROR: Method not found: mkdir\nERROR: Method not found: split\nERROR: No such file\nException: argument is not iterable\n",
+      "out": "  TestPkg.test_1\nERROR: Method not found: mkdtemp\nERROR: Method not found: mkdir\nERROR: Method not found: split\nERROR: Method not found: mkdir\nERROR: Method not found: split\nERROR: No such file\nunittest: ran 1 tests, 1 failed\n",
       "tags": [],
       "key": "test_pkg.py",
       "updated": "2026-09-30"
@@ -3586,7 +3576,7 @@
       "status": "fail",
       "stage": "compile",
       "rc": -11,
-      "err": "oaded: AIMacro.AIMacroOperator\n[IMPORT] Loaded: AIMacro.AIMacroDict\n[IMPORT] Loaded: AIMacro.AIMacroUnittest\n[IMPORT] Loaded: AIMacro.AIMacroFormat\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT ERROR] Cannot read: subprocess\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 938 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 29387, col 32: Unexpected token in statement\n  In:",
+      "err": "oaded: AIMacro.AIMacroOperator\n[IMPORT] Loaded: AIMacro.AIMacroDict\n[IMPORT] Loaded: AIMacro.AIMacroUnittest\n[IMPORT] Loaded: AIMacro.AIMacroFormat\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT ERROR] Cannot read: subprocess\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 931 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 29747, col 32: Unexpected token in statement\n  In:",
       "out": "",
       "tags": [],
       "key": "test_platform.py",
@@ -3597,7 +3587,7 @@
       "status": "fail",
       "stage": "compile",
       "rc": -11,
-      "err": "IMPORT ERROR] Cannot read: struct\n[IMPORT ERROR] Cannot read: plistlib\n[IMPORT ERROR] Cannot read: datetime\n[IMPORT ERROR] Cannot read: codecs\n[IMPORT ERROR] Cannot read: subprocess\n[IMPORT ERROR] Cannot read: plistlib\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 941 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 30241, col 40: Unexpected token in statement\n  In:",
+      "err": "IMPORT ERROR] Cannot read: struct\n[IMPORT ERROR] Cannot read: plistlib\n[IMPORT ERROR] Cannot read: datetime\n[IMPORT ERROR] Cannot read: codecs\n[IMPORT ERROR] Cannot read: subprocess\n[IMPORT ERROR] Cannot read: plistlib\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 967 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 31348, col 40: Unexpected token in statement\n  In:",
       "out": "",
       "tags": [],
       "key": "test_plistlib.py",
@@ -3630,7 +3620,7 @@
       "status": "fail",
       "stage": "compile",
       "rc": -11,
-      "err": "ttest\n[IMPORT] Loaded: AIMacro.AIMacroFormat\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT ERROR] Cannot read: poplib\n[IMPORT ERROR] Cannot read: socket\n[IMPORT ERROR] Cannot read: errno\n[IMPORT ERROR] Cannot read: threading\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 978 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 28802, col 36: Unexpected token in statement\n  In:",
+      "err": "ttest\n[IMPORT] Loaded: AIMacro.AIMacroFormat\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT ERROR] Cannot read: poplib\n[IMPORT ERROR] Cannot read: socket\n[IMPORT ERROR] Cannot read: errno\n[IMPORT ERROR] Cannot read: threading\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 971 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 29162, col 36: Unexpected token in statement\n  In:",
       "out": "",
       "tags": [],
       "key": "test_poplib.py",
@@ -3739,7 +3729,7 @@
       "status": "fail",
       "stage": "compile",
       "rc": -11,
-      "err": "cro.AIMacroUnittest\n[IMPORT] Loaded: AIMacro.AIMacroFormat\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT ERROR] Cannot read: xml\n[IMPORT ERROR] Cannot read: xml\n[IMPORT ERROR] Cannot read: xml\n[IMPORT ERROR] Cannot read: xml\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 875 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 26592, col 36: Unexpected token in statement\n  In:",
+      "err": "cro.AIMacroUnittest\n[IMPORT] Loaded: AIMacro.AIMacroFormat\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT ERROR] Cannot read: xml\n[IMPORT ERROR] Cannot read: xml\n[IMPORT ERROR] Cannot read: xml\n[IMPORT ERROR] Cannot read: xml\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 917 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 29804, col 36: Unexpected token in statement\n  In:",
       "out": "",
       "tags": [],
       "key": "test_pulldom.py",
@@ -3758,7 +3748,7 @@
       "status": "fail",
       "stage": "compile",
       "rc": -11,
-      "err": "PORT ERROR] Cannot read: functools\n[IMPORT ERROR] Cannot read: importlib\n[IMPORT ERROR] Cannot read: py_compile\n[IMPORT ERROR] Cannot read: shutil\n[IMPORT ERROR] Cannot read: stat\n[IMPORT ERROR] Cannot read: subprocess\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 935 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 28540, col 32: Unexpected token in statement\n  In:",
+      "err": "PORT ERROR] Cannot read: functools\n[IMPORT ERROR] Cannot read: importlib\n[IMPORT ERROR] Cannot read: py_compile\n[IMPORT ERROR] Cannot read: shutil\n[IMPORT ERROR] Cannot read: stat\n[IMPORT ERROR] Cannot read: subprocess\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 928 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 28900, col 32: Unexpected token in statement\n  In:",
       "out": "",
       "tags": [],
       "key": "test_py_compile.py",
@@ -3795,10 +3785,10 @@
     "test_queue.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_queue.py",
       "status": "fail",
-      "stage": "compile",
+      "stage": "run",
       "rc": -11,
-      "err": "IMPORT ERROR] Cannot read: threading\n[IMPORT ERROR] Cannot read: weakref\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 960 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\n[PARSER] Parsed 961 declarations, 88228 total nodes\n[PARSER] SUCCESS\n[SEMANTIC] contract check\n[POOL] Emitting mmap for R15 (275 slots)\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments",
-      "out": "",
+      "err": "",
+      "out": "ERROR: Method not found: requires_working_threading\nERROR: Method not found: skipUnless\nERROR: Method not found: Lock\n  QueueTest.test_queue_task_done\nERROR: Method not found: task_done\nFAIL: Did not detect task count going negative\nERROR: Method not found: Lock\n  QueueTest.test_queue_join\nERROR: Method not found: Thread\nERROR: Method not found: start\nERROR: Method not found: Thread\nERROR: Method not found: start\nERROR: Method not found: put\nERROR: Method not found: put\nERROR: Method not found: put\nERROR: Method not found: put\nERROR: Method not found: put\nERROR: Method not found: put\nERROR: Method not found: put\nERROR: Method not found: put\nERROR: Method not found: put\nERROR: Method not found: put\nERROR: Method not found: put\nERROR: Method not found: put\nERROR: Method not found: put\nERROR: Method not found: put\nERROR: Method not found: put\nERROR: Method not found: put\nERROR: Method not found: put\nERROR: Method not found: put\nERROR: Method not found: put\nERROR: Method not found: put\nERROR: Method not found: put\nERROR: Method not found: put\nERROR: Method not found: put\nERROR: Method not found: put\nERROR: Method not found: put\nERROR: Method not found: put\nERROR: Method not found: put\nERROR: Method not found: put\nERROR: Method not found: put\nERROR: Method not found: put\nERROR: Method not found: put\nERROR: Method not found: put\nERROR: Method not found: put\nERROR: Method not found: put\nERROR: Method not found: put\nERROR: Method not found: put\nERROR: Method not found: put\nERROR: Method not found: put\nERROR: Method not found: put\nERROR: Method not found: put\nERROR: Method not found: put\nERROR: Method not found: put\nERROR: Method not found: put\nERROR: Method not found: put\nERROR: Method not found: put\nERROR: Method not found: put\nERROR: Method not found: put\nERROR: Method not found: put\nERROR: Method not found: put\nERROR: Method not found: put\nERROR: Method not found: put\nERROR: Method not found: put\nERROR: Method not found: put\nERROR: Method not found: put\nERROR: Method not found: put\nERROR: Method not found: put\nERROR: Method not found: put\nERROR: Method not found: put\nERROR: Method not found: put\nERROR: Method not found: put\nERROR: Method not found: put\nERROR: Method not found: put\nERROR: Method not found: put\nERROR: Method not found: put\nERROR: Method not found: put\nERROR: Method not found: put\nERROR: Method not found: put\nERROR: Method not found: put\nERROR: Method not found: put\nERROR: Method not found: put\nERROR: Method not found: put\nERROR: Method not found: put\nERROR: Method not found: put\nERROR: Method not found: put\nERROR: Method not found: put\nERROR: Method not found: put\nERROR: Method not found: put\nERROR: Method not found: put\nERROR: Method not found: put\nERROR: Method not found: put\nERROR: Method not found: put\nERROR: Method not found: put\nERROR: Method not found: put\nERROR: Method not found: put\nERROR: Method not found: put\nERROR: Method not found: put\nERROR: Method not found: put\nERROR: Method not found: put\nERROR: Method not found: put\nERROR: Method not found: put\nERROR: Method not found: put\nERROR: Method not found: put\nERROR: Method not found: put\nERROR: Method not found: put\nERROR: Method not found: put\nERROR: Method not found: put\nERROR: Method not found: put\nERROR: Method not found: put\nERROR: Method not found: put\nERROR: Method not found: put\nERROR: Method not found: join\n",
       "tags": [],
       "key": "test_queue.py",
       "updated": "2026-09-30"
@@ -3826,20 +3816,22 @@
       "status": "fail",
       "stage": "compile",
       "rc": -11,
-      "err": "functools\n[IMPORT ERROR] Cannot read: fractions\n[IMPORT ERROR] Cannot read: collections\n[IMPORT] Extracting symbols from 14 modules\n[IMPORT] Checking 789 symbols for conflicts\n[IMPORT] Conflict: AIMacro.Range in modules 0 and 11\n[IMPORT] Found 1 conflicting symbols\n[IMPORT] Module 0 gets prefix NS000001\n[IMPORT] Module 11 gets prefix NS000002\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 20013, col 43: Expected ')' after arguments\n  In:",
+      "err": "PORT] Loaded: AIMacro.AIMacroUnittest\n[IMPORT] Loaded: AIMacro.AIMacroFormat\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT ERROR] Cannot read: random\n[IMPORT ERROR] Cannot read: warnings\n[IMPORT ERROR] Cannot read: functools\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 997 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 31526, col 36: Unexpected token in statement\n  In:",
       "out": "",
       "tags": [],
-      "key": "test_random.py"
+      "key": "test_random.py",
+      "updated": "2026-09-30"
     },
     "test_range.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_range.py",
       "status": "fail",
       "stage": "compile",
       "rc": -11,
-      "err": "ro.AIMacroDict\n[IMPORT ERROR] Cannot read: pickle\n[IMPORT ERROR] Cannot read: itertools\n[IMPORT] Extracting symbols from 14 modules\n[IMPORT] Checking 732 symbols for conflicts\n[IMPORT] Conflict: AIMacro.Range in modules 0 and 11\n[IMPORT] Found 1 conflicting symbols\n[IMPORT] Module 0 gets prefix NS000001\n[IMPORT] Module 11 gets prefix NS000002\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 16739, col 54: Expected ')' after arguments\n  In:",
+      "err": " Loaded: AIMacro.AIMacroOperator\n[IMPORT] Loaded: AIMacro.AIMacroDict\n[IMPORT] Loaded: AIMacro.AIMacroUnittest\n[IMPORT] Loaded: AIMacro.AIMacroFormat\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT ERROR] Cannot read: itertools\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 938 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 29526, col 59: Expected ')' after arguments\n  In:",
       "out": "",
       "tags": [],
-      "key": "test_range.py"
+      "key": "test_range.py",
+      "updated": "2026-09-30"
     },
     "test_re.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_re.py",
@@ -3851,13 +3843,11 @@
     },
     "test_readline.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_readline.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": 124,
-      "err": "timeout",
-      "out": "  TestHistoryManipulation.testHistoryUpdates\nFAIL: assertEqual\n  TestHistoryManipulation.test_write_read_append\nFAIL: assertEqual\n  TestHistoryManipulation.test_nonascii_history\nFAIL: assertEqual\n  TestReadline.test_init\nFAIL: assertEqual\n  TestReadline.test_auto_history_enabled\n",
+      "status": "pass",
       "tags": [],
-      "key": "test_readline.py"
+      "stage_ok": "run",
+      "key": "test_readline.py",
+      "updated": "2026-09-30"
     },
     "test_regrtest.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_regrtest.py",
@@ -3885,7 +3875,7 @@
       "status": "fail",
       "stage": "compile",
       "rc": -11,
-      "err": "[IMPORT ERROR] Cannot read: shutil\n[IMPORT ERROR] Cannot read: importlib\n[IMPORT ERROR] Cannot read: importlib\n[IMPORT ERROR] Cannot read: reprlib\n[IMPORT ERROR] Cannot read: reprlib\n[IMPORT ERROR] Cannot read: reprlib\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 911 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 26647, col 36: Unexpected token in statement\n  In:",
+      "err": "[IMPORT ERROR] Cannot read: shutil\n[IMPORT ERROR] Cannot read: importlib\n[IMPORT ERROR] Cannot read: importlib\n[IMPORT ERROR] Cannot read: reprlib\n[IMPORT ERROR] Cannot read: reprlib\n[IMPORT ERROR] Cannot read: reprlib\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 940 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 29697, col 36: Unexpected token in statement\n  In:",
       "out": "",
       "tags": [],
       "key": "test_reprlib.py",
@@ -3914,7 +3904,7 @@
       "status": "fail",
       "stage": "compile",
       "rc": -11,
-      "err": "] Loaded: AIMacro.AIMacroDict\n[IMPORT] Loaded: AIMacro.AIMacroUnittest\n[IMPORT] Loaded: AIMacro.AIMacroFormat\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT ERROR] Cannot read: builtins\n[IMPORT ERROR] Cannot read: rlcompleter\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 868 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 25158, col 32: Unexpected token in statement\n  In:",
+      "err": "] Loaded: AIMacro.AIMacroDict\n[IMPORT] Loaded: AIMacro.AIMacroUnittest\n[IMPORT] Loaded: AIMacro.AIMacroFormat\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT ERROR] Cannot read: builtins\n[IMPORT ERROR] Cannot read: rlcompleter\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 915 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 28876, col 32: Unexpected token in statement\n  In:",
       "out": "",
       "tags": [],
       "key": "test_rlcompleter.py",
@@ -3999,7 +3989,7 @@
       "status": "fail",
       "stage": "compile",
       "rc": -11,
-      "err": "croFormat\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT ERROR] Cannot read: errno\n[IMPORT ERROR] Cannot read: random\n[IMPORT ERROR] Cannot read: selectors\n[IMPORT ERROR] Cannot read: signal\n[IMPORT ERROR] Cannot read: socket\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 931 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 28681, col 32: Unexpected token in statement\n  In:",
+      "err": "croFormat\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT ERROR] Cannot read: errno\n[IMPORT ERROR] Cannot read: random\n[IMPORT ERROR] Cannot read: selectors\n[IMPORT ERROR] Cannot read: signal\n[IMPORT ERROR] Cannot read: socket\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 933 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 28941, col 32: Unexpected token in statement\n  In:",
       "out": "",
       "tags": [],
       "key": "test_selectors.py",
@@ -4010,7 +4000,7 @@
       "status": "fail",
       "stage": "compile",
       "rc": -11,
-      "err": "t\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT ERROR] Cannot read: weakref\n[IMPORT ERROR] Cannot read: random\n[IMPORT ERROR] Cannot read: warnings\n[IMPORT ERROR] Cannot read: itertools\n[IMPORT ERROR] Cannot read: itertools\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 1216 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 31005, col 32: Unexpected token in statement\n  In:",
+      "err": "t\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT ERROR] Cannot read: weakref\n[IMPORT ERROR] Cannot read: random\n[IMPORT ERROR] Cannot read: warnings\n[IMPORT ERROR] Cannot read: itertools\n[IMPORT ERROR] Cannot read: itertools\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 1242 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 32115, col 32: Unexpected token in statement\n  In:",
       "out": "",
       "tags": [],
       "key": "test_set.py",
@@ -4024,15 +4014,16 @@
       "err": "no tests ran",
       "out": "",
       "tags": [],
-      "key": "test_setcomps.py"
+      "key": "test_setcomps.py",
+      "updated": "2026-09-30"
     },
     "test_shelve.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_shelve.py",
       "status": "fail",
-      "stage": "compile",
+      "stage": "run",
       "rc": -11,
-      "err": " dbm\n[IMPORT ERROR] Cannot read: shelve\n[IMPORT ERROR] Cannot read: glob\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 900 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\n[PARSER] Parsed 901 declarations, 75041 total nodes\n[PARSER] SUCCESS\n[SEMANTIC] contract check\n[POOL] Emitting mmap for R15 (263 slots)\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments",
-      "out": "",
+      "err": "",
+      "out": "  TestCase.test_open_template\nERROR: Method not found: mkdir\nERROR: Method not found: open\nFAIL: assertEqual\n  TestCase.test_ascii_file_shelf\nERROR: Method not found: mkdir\nERROR: Method not found: open\nFAIL: assertEqual\n  TestCase.test_binary_file_shelf\nERROR: Method not found: mkdir\nERROR: Method not found: open\nFAIL: assertEqual\n  TestCase.test_proto2_file_shelf\nERROR: Method not found: mkdir\nERROR: Method not found: open\nFAIL: assertEqual\n  TestCase.test_pathlib_path_file_shelf\nERROR: Method not found: FakePath\nERROR: Method not found: mkdir\nERROR: Method not found: open\nFAIL: assertEqual\n  TestCase.test_bytes_path_file_shelf\nERROR: Method not found: fsencode\nERROR: Method not found: mkdir\nERROR: Method not found: open\nFAIL: assertEqual\n  TestCase.test_pathlib_bytes_path_file_shelf\nERROR: Method not found: fsencode\nERROR: Method not found: FakePath\nERROR: Method not found: mkdir\nERROR: Method not found: open\nFAIL: assertEqual\n  TestCase.test_in_memory_shelf\nERROR: Method not found: Shelf\nFAIL: assertEqual\nERROR: Method not found: Shelf\n  TestCase.test_mutable_entry\nERROR: Method not found: Shelf\nFAIL: assertEqual\nERROR: Method not found: Shelf\n  TestCase.test_keyencoding\nERROR: Method not found: Shelf\nERROR: Method not found: encode\nFAIL: assertIn\nERROR: Method not found: Shelf\nERROR: Method not found: encode\nERROR: Method not found: Shelf\n  TestCase.test_writeback_also_writes_immediately\nERROR: Method not found: encode\nERROR: Method not found: Shelf\n",
       "tags": [],
       "key": "test_shelve.py",
       "updated": "2026-09-30"
@@ -4070,7 +4061,7 @@
       "status": "fail",
       "stage": "compile",
       "rc": -11,
-      "err": " re\n[IMPORT ERROR] Cannot read: shutil\n[IMPORT ERROR] Cannot read: subprocess\n[IMPORT ERROR] Cannot read: sysconfig\n[IMPORT ERROR] Cannot read: urllib\n[IMPORT ERROR] Cannot read: urllib\n[IMPORT ERROR] Cannot read: site\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 915 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 25943, col 32: Unexpected token in statement\n  In:",
+      "err": " re\n[IMPORT ERROR] Cannot read: shutil\n[IMPORT ERROR] Cannot read: subprocess\n[IMPORT ERROR] Cannot read: sysconfig\n[IMPORT ERROR] Cannot read: urllib\n[IMPORT ERROR] Cannot read: urllib\n[IMPORT ERROR] Cannot read: site\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 944 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 28993, col 32: Unexpected token in statement\n  In:",
       "out": "",
       "tags": [],
       "key": "test_site.py",
@@ -4143,10 +4134,11 @@
       "status": "fail",
       "stage": "compile",
       "rc": -11,
-      "err": "ro.AIMacroDict\n[IMPORT ERROR] Cannot read: random\n[IMPORT ERROR] Cannot read: functools\n[IMPORT] Extracting symbols from 14 modules\n[IMPORT] Checking 743 symbols for conflicts\n[IMPORT] Conflict: AIMacro.Range in modules 0 and 11\n[IMPORT] Found 1 conflicting symbols\n[IMPORT] Module 0 gets prefix NS000001\n[IMPORT] Module 11 gets prefix NS000002\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 16873, col 45: Expected ')' after arguments\n  In:",
+      "err": "MPORT] Loaded: AIMacro.AIMacroDict\n[IMPORT] Loaded: AIMacro.AIMacroUnittest\n[IMPORT] Loaded: AIMacro.AIMacroFormat\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT ERROR] Cannot read: random\n[IMPORT ERROR] Cannot read: functools\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 950 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 29711, col 50: Expected ')' after arguments\n  In:",
       "out": "",
       "tags": [],
-      "key": "test_sort.py"
+      "key": "test_sort.py",
+      "updated": "2026-09-30"
     },
     "test_source_encoding.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_source_encoding.py",
@@ -4161,10 +4153,10 @@
     "test_spwd.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_spwd.py",
       "status": "fail",
-      "stage": "compile",
-      "rc": -11,
-      "err": " symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\n[PARSER] Parsed 898 declarations, 80039 total nodes\n[PARSER] SUCCESS\n[SEMANTIC] contract check\n[POOL] Emitting mmap for R15 (248 slots)\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments",
-      "out": "",
+      "stage": "run",
+      "rc": 1,
+      "err": "",
+      "out": "ERROR: Method not found: simplefilter\n  TestSpwdRoot.test_getspnam\nFAIL: assertEqual\nunittest: ran 1 tests, 1 failed\n",
       "tags": [],
       "key": "test_spwd.py",
       "updated": "2026-09-30"
@@ -4177,7 +4169,8 @@
       "err": "no tests ran",
       "out": "",
       "tags": [],
-      "key": "test_sqlite3/__init__.py"
+      "key": "test_sqlite3/__init__.py",
+      "updated": "2026-09-30"
     },
     "test_sqlite3/test_backup.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_sqlite3/test_backup.py",
@@ -4202,7 +4195,7 @@
       "status": "fail",
       "stage": "compile",
       "rc": -11,
-      "err": "ORT] Loaded: AIMacro.AIMacroDict\n[IMPORT] Loaded: AIMacro.AIMacroUnittest\n[IMPORT] Loaded: AIMacro.AIMacroFormat\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT ERROR] Cannot read: sqlite\n[IMPORT ERROR] Cannot read: test_dbapi\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 865 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 25715, col 32: Unexpected token in statement\n  In:",
+      "err": "ORT] Loaded: AIMacro.AIMacroDict\n[IMPORT] Loaded: AIMacro.AIMacroUnittest\n[IMPORT] Loaded: AIMacro.AIMacroFormat\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT ERROR] Cannot read: sqlite\n[IMPORT ERROR] Cannot read: test_dbapi\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 907 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 28927, col 32: Unexpected token in statement\n  In:",
       "out": "",
       "tags": [],
       "key": "test_sqlite3/test_dump.py",
@@ -4253,7 +4246,7 @@
       "status": "fail",
       "stage": "compile",
       "rc": -11,
-      "err": "MPORT] Loaded: AIMacro.AIMacroDict\n[IMPORT] Loaded: AIMacro.AIMacroUnittest\n[IMPORT] Loaded: AIMacro.AIMacroFormat\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT ERROR] Cannot read: datetime\n[IMPORT ERROR] Cannot read: sqlite\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 953 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 27160, col 32: Unexpected token in statement\n  In:",
+      "err": "MPORT] Loaded: AIMacro.AIMacroDict\n[IMPORT] Loaded: AIMacro.AIMacroUnittest\n[IMPORT] Loaded: AIMacro.AIMacroFormat\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT ERROR] Cannot read: datetime\n[IMPORT ERROR] Cannot read: sqlite\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 982 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 29769, col 32: Unexpected token in statement\n  In:",
       "out": "",
       "tags": [],
       "key": "test_sqlite3/test_types.py",
@@ -4298,7 +4291,7 @@
       "status": "fail",
       "stage": "compile",
       "rc": -11,
-      "err": "T] Loaded: AIMacro.AIMacroOperator\n[IMPORT] Loaded: AIMacro.AIMacroDict\n[IMPORT] Loaded: AIMacro.AIMacroUnittest\n[IMPORT] Loaded: AIMacro.AIMacroFormat\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT ERROR] Cannot read: socket\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 865 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 25998, col 32: Unexpected token in statement\n  In:",
+      "err": "T] Loaded: AIMacro.AIMacroOperator\n[IMPORT] Loaded: AIMacro.AIMacroDict\n[IMPORT] Loaded: AIMacro.AIMacroUnittest\n[IMPORT] Loaded: AIMacro.AIMacroFormat\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT ERROR] Cannot read: socket\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 912 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 29380, col 32: Unexpected token in statement\n  In:",
       "out": "",
       "tags": [],
       "key": "test_stat.py",
@@ -4529,7 +4522,7 @@
       "status": "fail",
       "stage": "compile",
       "rc": -11,
-      "err": "le\n[IMPORT ERROR] Cannot read: re\n[IMPORT ERROR] Cannot read: subprocess\n[IMPORT ERROR] Cannot read: warnings\n[IMPORT ERROR] Cannot read: tkinter\n[IMPORT ERROR] Cannot read: tkinter\n[IMPORT ERROR] Cannot read: _tkinter\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 929 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 27402, col 32: Unexpected token in statement\n  In:",
+      "err": "le\n[IMPORT ERROR] Cannot read: re\n[IMPORT ERROR] Cannot read: subprocess\n[IMPORT ERROR] Cannot read: warnings\n[IMPORT ERROR] Cannot read: tkinter\n[IMPORT ERROR] Cannot read: tkinter\n[IMPORT ERROR] Cannot read: _tkinter\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 955 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 29751, col 32: Unexpected token in statement\n  In:",
       "out": "",
       "tags": [],
       "key": "test_tcl.py",
@@ -4567,11 +4560,12 @@
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_thread.py",
       "status": "fail",
       "stage": "run",
-      "rc": -8,
+      "rc": -11,
       "err": "",
-      "out": "  ThreadRunningTests.test_starting_threads\n",
+      "out": "ERROR: Method not found: requires_working_threading\nERROR: Method not found: allocate_lock\nERROR: Method not found: allocate_lock\nERROR: Method not found: acquire\nERROR: Method not found: allocate_lock\nERROR: Method not found: allocate_lock\nERROR: Method not found: threading_setup\n  ThreadRunningTests.test_starting_threads\nERROR: Method not found: wait_threads_exit\nERROR: Method not found: start_new_thread\nERROR: Method not found: start_new_thread\nERROR: Method not found: start_new_thread\nERROR: Method not found: start_new_thread\nERROR: Method not found: start_new_thread\nERROR: Method not found: start_new_thread\nERROR: Method not found: start_new_thread\nERROR: Method not found: start_new_thread\nERROR: Method not found: start_new_thread\nERROR: Method not found: start_new_thread\nERROR: Method not found: acquire\nERROR: Method not found: allocate_lock\nERROR: Method not found: acquire\nERROR: Method not found: allocate_lock\nERROR: Method not found: allocate_lock\nERROR: Method not found: threading_setup\n  ThreadRunningTests.test_stack_size\nERROR: Method not found: stack_size\nERROR: Method not found: stack_size\nERROR: Method not found: stack_size\nERROR: Method not found: allocate_lock\nERROR: Method not found: acquire\nERROR: Method not found: allocate_lock\nERROR: Method not found: allocate_lock\nERROR: Method not found: threading_setup\n  ThreadRunningTests.test_nt_and_posix_stack_size\nERROR: Method not found: stack_size\nERROR: Method not found: stack_size\nERROR: Method not found: stack_size\nFAIL: assertEqual\n",
       "tags": [],
-      "key": "test_thread.py"
+      "key": "test_thread.py",
+      "updated": "2026-09-30"
     },
     "test_threadedtempfile.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_threadedtempfile.py",
@@ -4610,9 +4604,10 @@
       "stage": "run",
       "rc": -11,
       "err": "",
-      "out": "",
+      "out": "ERROR: Method not found: getpid\nERROR: Method not found: allocate_lock\n",
       "tags": [],
-      "key": "test_threadsignals.py"
+      "key": "test_threadsignals.py",
+      "updated": "2026-09-30"
     },
     "test_time.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_time.py",
@@ -4651,11 +4646,12 @@
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_tk.py",
       "status": "fail",
       "stage": "run",
-      "rc": 0,
-      "err": "no tests ran",
-      "out": "",
+      "rc": 1,
+      "err": "",
+      "out": "Exception: keyword argument\n",
       "tags": [],
-      "key": "test_tk.py"
+      "key": "test_tk.py",
+      "updated": "2026-09-30"
     },
     "test_tokenize.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_tokenize.py",
@@ -4675,7 +4671,8 @@
       "err": "no tests ran",
       "out": "",
       "tags": [],
-      "key": "test_tomllib/__init__.py"
+      "key": "test_tomllib/__init__.py",
+      "updated": "2026-09-30"
     },
     "test_tomllib/test_data.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_tomllib/test_data.py",
@@ -4725,7 +4722,7 @@
       "status": "fail",
       "stage": "compile",
       "rc": 1,
-      "err": "CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\nERROR: Variable not found: helper\nCompilation Failed: \n[AST] Freeing 71178 node child-lists...\n[AST] Freed 31245 child-lists (node slots stay in pool)",
+      "err": "CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\nERROR: Variable not found: helper\nCompilation Failed: \n[AST] Freeing 81847 node child-lists...\n[AST] Freed 36292 child-lists (node slots stay in pool)",
       "out": "",
       "tags": [],
       "key": "test_tools/test_freeze.py",
@@ -4741,12 +4738,9 @@
     },
     "test_tools/test_i18n.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_tools/test_i18n.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": 1,
-      "err": "",
-      "out": "  Test_pygettext.test_header\nERROR: No such file\n  Test_pygettext.test_POT_Creation_Date\nERROR: No such file\n  Test_pygettext.test_funcdocstring\nERROR: Method not found: split\nERROR: No such file\n  Test_pygettext.test_funcdocstring_bytes\nERROR: Method not found: split\nERROR: No such file\n  Test_pygettext.test_funcdocstring_fstring\nERROR: Method not found: split\nERROR: No such file\n  Test_pygettext.test_classdocstring\nERROR: Method not found: split\nERROR: No such file\n  Test_pygettext.test_classdocstring_bytes\nERROR: Method not found: split\nERROR: No such file\n  Test_pygettext.test_classdocstring_fstring\nERROR: Method not found: split\nERROR: No such file\n  Test_pygettext.test_moduledocstring\nERROR: Method not found: split\nERROR: No such file\n  Test_pygettext.test_moduledocstring_bytes\nERROR: Method not found: split\nERROR: No such file\n  Test_pygettext.test_moduledocstring_fstring\nERROR: Method not found: split\nERROR: No such file\n  Test_pygettext.test_msgid\nERROR: Method not found: split\nERROR: No such file\n  Test_pygettext.test_msgid_bytes\nERROR: Method not found: split\nERROR: No such file\n  Test_pygettext.test_msgid_fstring\nERROR: Method not found: split\nERROR: No such file\n  Test_pygettext.test_funcdocstring_annotated_args\nERROR: Method not found: split\nERROR: No such file\n  Test_pygettext.test_funcdocstring_annotated_return\nERROR: Method not found: split\nERROR: No such file\n  Test_pygettext.test_funcdocstring_defvalue_args\nERROR: Method not found: split\nERROR: No such file\n  Test_pygettext.test_funcdocstring_multiple_funcs\nERROR: Method not found: split\nERROR: No such file\n  Test_pygettext.test_classdocstring_early_colon\nERROR: Method not found: split\nERROR: No such file\n  Test_pygettext.test_calls_in_fstrings\nERROR: Method not found: split\nERROR: No such file\n  Test_pygettext.test_calls_in_fstrings_raw\nERROR: Method not found: split\nERROR: No such file\n  Test_pygettext.test_calls_in_fstrings_nested\nERROR: Method not found: split\nERROR: No such file\n  Test_pygettext.test_calls_in_fstrings_attribute\nERROR: Method not found: split\nERROR: No such file\n  Test_pygettext.test_calls_in_fstrings_with_call_on_call\nERROR: Method not found: split\nERROR: No such file\n  Test_pygettext.test_calls_in_fstrings_with_format\nERROR: Method not found: split\nERROR: No such file\n  Test_pygettext.test_calls_in_fstrings_with_wrong_input_1\nERROR: Method not found: split\nERROR: No such file\n  Test_pygettext.test_calls_in_fstrings_with_wrong_input_2\nERROR: Method not found: split\nERROR: No such file\n  Test_pygettext.test_calls_in_fstring_with_multiple_args\nERROR: Method not found: split\nERROR: No such file\n  Test_pygettext.test_calls_in_fstring_with_keyword_args\nERROR: Method not found: split\nERROR: No such file\n  Test_pygettext.test_calls_in_fstring_with_partially_wrong_expression\nERROR: Method not found: split\nERROR: No such file\n  Test_pygettext.test_files_list\nERROR: Method not found: mkdir\nERROR: No such file\nunittest: ran 31 tests, 31 failed\n",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_tools/test_i18n.py",
       "updated": "2026-09-30"
     },
@@ -4764,7 +4758,7 @@
       "stage": "run",
       "rc": -11,
       "err": "",
-      "out": "  MD5SumTests.test_noargs\nFAIL: assertTrue\n  MD5SumTests.test_checksum_fodder\nERROR: Method not found: split\nERROR: index out of range\n  MD5SumTests.test_dash_l\nERROR: Method not found: split\nERROR: Method not found: encode\nERROR: Method not found: encode\nERROR: argument is not iterable\n  MD5SumTests.test_dash_t\nFAIL: assertTrue\n  MD5SumTests.test_dash_s\n",
+      "out": "  MD5SumTests.test_noargs\n  MD5SumTests.test_checksum_fodder\nERROR: Method not found: split\nERROR: index out of range\n  MD5SumTests.test_dash_l\nERROR: Method not found: split\nERROR: Method not found: encode\nERROR: Method not found: encode\nERROR: index out of range\n  MD5SumTests.test_dash_t\nERROR: index out of range\n  MD5SumTests.test_dash_s\n",
       "tags": [],
       "key": "test_tools/test_md5sum.py",
       "updated": "2026-09-30"
@@ -4848,11 +4842,12 @@
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_ttk_guionly.py",
       "status": "fail",
       "stage": "run",
-      "rc": 0,
-      "err": "no tests ran",
-      "out": "",
+      "rc": 1,
+      "err": "",
+      "out": "Exception: keyword argument\n",
       "tags": [],
-      "key": "test_ttk_guionly.py"
+      "key": "test_ttk_guionly.py",
+      "updated": "2026-09-30"
     },
     "test_ttk_textonly.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_ttk_textonly.py",
@@ -4875,7 +4870,7 @@
       "status": "fail",
       "stage": "compile",
       "rc": -11,
-      "err": "oaded: AIMacro.AIMacroString\n[IMPORT] Loaded: AIMacro.AIMacroOperator\n[IMPORT] Loaded: AIMacro.AIMacroDict\n[IMPORT] Loaded: AIMacro.AIMacroUnittest\n[IMPORT] Loaded: AIMacro.AIMacroFormat\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 944 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 29361, col 32: Unexpected token in statement\n  In:",
+      "err": "oaded: AIMacro.AIMacroString\n[IMPORT] Loaded: AIMacro.AIMacroOperator\n[IMPORT] Loaded: AIMacro.AIMacroDict\n[IMPORT] Loaded: AIMacro.AIMacroUnittest\n[IMPORT] Loaded: AIMacro.AIMacroFormat\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 937 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 29721, col 32: Unexpected token in statement\n  In:",
       "out": "",
       "tags": [],
       "key": "test_turtle.py",
@@ -4891,12 +4886,9 @@
     },
     "test_type_cache.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_type_cache.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": -11,
-      "err": "",
-      "out": "  TypeCacheTests.test_tp_version_tag_unique\n",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_type_cache.py",
       "updated": "2026-09-30"
     },
@@ -5012,7 +5004,8 @@
       "err": "no tests ran",
       "out": "",
       "tags": [],
-      "key": "test_unittest.py"
+      "key": "test_unittest.py",
+      "updated": "2026-09-30"
     },
     "test_univnewlines.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_univnewlines.py",
@@ -5041,7 +5034,8 @@
       "err": "no tests ran",
       "out": "",
       "tags": [],
-      "key": "test_unpack_ex.py"
+      "key": "test_unpack_ex.py",
+      "updated": "2026-09-30"
     },
     "test_unparse.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_unparse.py",
@@ -5085,13 +5079,11 @@
     },
     "test_urllib2net.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_urllib2net.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": 124,
-      "err": "timeout",
-      "out": "  CloseSocketTest.test_close\nFAIL: assertTrue\n  OtherNetworkTests.test_ftp\nERROR: Method not found: subTest\n",
+      "status": "pass",
       "tags": [],
-      "key": "test_urllib2net.py"
+      "stage_ok": "run",
+      "key": "test_urllib2net.py",
+      "updated": "2026-09-30"
     },
     "test_urllib_response.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_urllib_response.py",
@@ -5257,10 +5249,10 @@
     "test_webbrowser.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_webbrowser.py",
       "status": "fail",
-      "stage": "run",
-      "rc": 1,
-      "err": "",
-      "out": "Exception: \n",
+      "stage": "compile",
+      "rc": -11,
+      "err": "RT ERROR] Cannot read: webbrowser\n[IMPORT ERROR] Cannot read: subprocess\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 946 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\n[PARSER] Parsed 947 declarations, 85179 total nodes\n[PARSER] SUCCESS\n[SEMANTIC] contract check\n[POOL] Emitting mmap for R15 (261 slots)\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments",
+      "out": "",
       "tags": [],
       "key": "test_webbrowser.py",
       "updated": "2026-09-30"
@@ -5268,10 +5260,10 @@
     "test_winconsoleio.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_winconsoleio.py",
       "status": "fail",
-      "stage": "run",
-      "rc": 1,
-      "err": "",
-      "out": "Exception: \n",
+      "stage": "compile",
+      "rc": -11,
+      "err": "[IMPORT] Loaded: FixedPointTrig\n[IMPORT ERROR] Cannot read: _testconsole\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 910 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\n[PARSER] Parsed 911 declarations, 83443 total nodes\n[PARSER] SUCCESS\n[SEMANTIC] contract check\n[POOL] Emitting mmap for R15 (257 slots)\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments",
+      "out": "",
       "tags": [],
       "key": "test_winconsoleio.py",
       "updated": "2026-09-30"
@@ -5432,12 +5424,9 @@
     },
     "test_zipimport_support.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_zipimport_support.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": 1,
-      "err": "",
-      "out": "Exception: skip\n",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_zipimport_support.py",
       "updated": "2026-09-30"
     },
@@ -5459,7 +5448,8 @@
       "err": "no tests ran",
       "out": "",
       "tags": [],
-      "key": "test_zoneinfo/__init__.py"
+      "key": "test_zoneinfo/__init__.py",
+      "updated": "2026-09-30"
     },
     "test_zoneinfo/test_zoneinfo.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_zoneinfo/test_zoneinfo.py",

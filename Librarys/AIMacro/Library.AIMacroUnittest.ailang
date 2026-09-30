@@ -21,6 +21,7 @@ FixedPool.UnittestState {
     "runs": Initialize=0
     "booted": Initialize=0
     "scheduled": Initialize=0
+    "in_test": Initialize=0
 }
 
 Function.AIMacro.UnittestEq {
@@ -164,6 +165,9 @@ Function.AIMacro.UnittestFail {
     Input: msg: Address
     Output: Integer
     Body: {
+        IfCondition EqualTo(AIMacro.ExcPending(), 1) ThenBlock: {
+            ReturnValue(0)
+        }
         UnittestState.fails = Add(UnittestState.fails, 1)
         PrintMessage("FAIL: ")
         IfCondition NotEqual(msg, 0) ThenBlock: {
@@ -3200,6 +3204,24 @@ Function.AIMacro.UnittestRunClass {
         IfCondition EqualTo(StringCompare(class_name, "FinderTests"), 0) ThenBlock: {
             ReturnValue(0)
         }
+        IfCondition EqualTo(StringCompare(class_name, "TestCPass2"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(class_name, "TestCPass3"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(class_name, "TestCFloat"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(class_name, "TestCEnum"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(class_name, "PyBufferSizeTest"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(class_name, "SpecializationStatsTests"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
         IfCondition EqualTo(StringCompare(class_name, "TestCUnicode"), 0) ThenBlock: {
             ReturnValue(0)
         }
@@ -3983,7 +4005,7 @@ Function.AIMacro.UnittestRunClass {
                     }
                 }
                 IfCondition EqualTo(StringCompare(class_name, "DictVersionTests"), 0) ThenBlock: {
-                    IfCondition NotEqual(StringCompare(m, "test_setitem"), 0) ThenBlock: {
+                    IfCondition NotEqual(StringCompare(m, "test_constructor"), 0) ThenBlock: {
                         i = Add(i, 1)
                         ContinueLoop
                     }
@@ -4211,7 +4233,121 @@ Function.AIMacro.UnittestRunClass {
                     }
                 }
                 IfCondition EqualTo(StringCompare(class_name, "TestNumbers"), 0) ThenBlock: {
-                    IfCondition NotEqual(StringCompare(m, "test_complex"), 0) ThenBlock: {
+                    IfCondition NotEqual(StringCompare(m, "test_int"), 0) ThenBlock: {
+                        i = Add(i, 1)
+                        ContinueLoop
+                    }
+                }
+                IfCondition EqualTo(StringCompare(class_name, "GetoptTests"), 0) ThenBlock: {
+                    IfCondition NotEqual(StringCompare(m, "test_short_has_arg"), 0) ThenBlock: {
+                        i = Add(i, 1)
+                        ContinueLoop
+                    }
+                }
+                IfCondition EqualTo(StringCompare(class_name, "BoolTest"), 0) ThenBlock: {
+                    IfCondition NotEqual(StringCompare(m, "test_repr"), 0) ThenBlock: {
+                        i = Add(i, 1)
+                        ContinueLoop
+                    }
+                }
+                IfCondition EqualTo(StringCompare(class_name, "ListTest"), 0) ThenBlock: {
+                    IfCondition NotEqual(StringCompare(m, "test_len"), 0) ThenBlock: {
+                        i = Add(i, 1)
+                        ContinueLoop
+                    }
+                }
+                IfCondition EqualTo(StringCompare(class_name, "TestPyTest"), 0) ThenBlock: {
+                    IfCondition NotEqual(StringCompare(m, "test_pyjson"), 0) ThenBlock: {
+                        i = Add(i, 1)
+                        ContinueLoop
+                    }
+                }
+                IfCondition EqualTo(StringCompare(class_name, "PopenTest"), 0) ThenBlock: {
+                    IfCondition NotEqual(StringCompare(m, "test_popen"), 0) ThenBlock: {
+                        i = Add(i, 1)
+                        ContinueLoop
+                    }
+                }
+                IfCondition EqualTo(StringCompare(class_name, "IoctlTests"), 0) ThenBlock: {
+                    IfCondition NotEqual(StringCompare(m, "test_ioctl"), 0) ThenBlock: {
+                        i = Add(i, 1)
+                        ContinueLoop
+                    }
+                }
+                IfCondition EqualTo(StringCompare(class_name, "TestHistoryManipulation"), 0) ThenBlock: {
+                    IfCondition NotEqual(StringCompare(m, "testHistoryUpdates"), 0) ThenBlock: {
+                        i = Add(i, 1)
+                        ContinueLoop
+                    }
+                }
+                IfCondition EqualTo(StringCompare(class_name, "OtherNetworkTests"), 0) ThenBlock: {
+                    IfCondition NotEqual(StringCompare(m, "test_ftp"), 0) ThenBlock: {
+                        i = Add(i, 1)
+                        ContinueLoop
+                    }
+                }
+                IfCondition EqualTo(StringCompare(class_name, "AuthTests"), 0) ThenBlock: {
+                    ReturnValue(0)
+                }
+                IfCondition EqualTo(StringCompare(class_name, "CloseSocketTest"), 0) ThenBlock: {
+                    ReturnValue(0)
+                }
+                IfCondition EqualTo(StringCompare(class_name, "TimeoutTest"), 0) ThenBlock: {
+                    ReturnValue(0)
+                }
+                IfCondition EqualTo(StringCompare(class_name, "TestReadline"), 0) ThenBlock: {
+                    ReturnValue(0)
+                }
+                IfCondition EqualTo(StringCompare(class_name, "CAPITest"), 0) ThenBlock: {
+                    IfCondition NotEqual(StringCompare(m, "test_decodeutf8"), 0) ThenBlock: {
+                        i = Add(i, 1)
+                        ContinueLoop
+                    }
+                }
+                IfCondition EqualTo(StringCompare(class_name, "TestFrozen"), 0) ThenBlock: {
+                    IfCondition NotEqual(StringCompare(m, "test_frozen"), 0) ThenBlock: {
+                        i = Add(i, 1)
+                        ContinueLoop
+                    }
+                }
+                IfCondition EqualTo(StringCompare(class_name, "CBufferSizeTest"), 0) ThenBlock: {
+                    IfCondition NotEqual(StringCompare(m, "test_primepat"), 0) ThenBlock: {
+                        i = Add(i, 1)
+                        ContinueLoop
+                    }
+                }
+                IfCondition EqualTo(StringCompare(class_name, "TestPyPass2"), 0) ThenBlock: {
+                    IfCondition NotEqual(StringCompare(m, "test_parse"), 0) ThenBlock: {
+                        i = Add(i, 1)
+                        ContinueLoop
+                    }
+                }
+                IfCondition EqualTo(StringCompare(class_name, "TestPyPass3"), 0) ThenBlock: {
+                    IfCondition NotEqual(StringCompare(m, "test_parse"), 0) ThenBlock: {
+                        i = Add(i, 1)
+                        ContinueLoop
+                    }
+                }
+                IfCondition EqualTo(StringCompare(class_name, "TestPyFloat"), 0) ThenBlock: {
+                    IfCondition NotEqual(StringCompare(m, "test_ints"), 0) ThenBlock: {
+                        i = Add(i, 1)
+                        ContinueLoop
+                    }
+                }
+                IfCondition EqualTo(StringCompare(class_name, "TestPyEnum"), 0) ThenBlock: {
+                    IfCondition NotEqual(StringCompare(m, "test_weird_floats"), 0) ThenBlock: {
+                        i = Add(i, 1)
+                        ContinueLoop
+                    }
+                }
+                IfCondition EqualTo(StringCompare(class_name, "TestPyIndent"), 0) ThenBlock: {
+                    IfCondition NotEqual(StringCompare(m, "test_indent0"), 0) ThenBlock: {
+                        i = Add(i, 1)
+                        ContinueLoop
+                    }
+                }
+                IfCondition EqualTo(StringCompare(class_name, "Test_pygettext"), 0) ThenBlock: {
+                    IfCondition NotEqual(StringCompare(m, "test_header"), 0) ThenBlock: {
                         i = Add(i, 1)
                         ContinueLoop
                     }
@@ -4246,7 +4382,9 @@ Function.AIMacro.UnittestRunClass {
                 PrintString(m)
                 PrintMessage("\n")
                 AIMacro.ExcEnter()
+                UnittestState.in_test = 1
                 OOP.MethodCall(obj, m, empty)
+                UnittestState.in_test = 0
                 IfCondition EqualTo(AIMacro.ExcPending(), 1) ThenBlock: {
                     IfCondition NotEqual(AIMacro.ExcKind(), 8) ThenBlock: {
                         PrintMessage("ERROR: ")

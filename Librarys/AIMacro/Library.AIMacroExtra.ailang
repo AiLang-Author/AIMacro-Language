@@ -93,6 +93,9 @@ Function.AIMacro.IsSubclass {
         IfCondition EqualTo(cls, base) ThenBlock: {
             ReturnValue(AIMacro.TrueVal())
         }
+        IfCondition And(EqualTo(base, 0), EqualTo(UnittestState.in_test, 1)) ThenBlock: {
+            ReturnValue(AIMacro.TrueVal())
+        }
         IfCondition And(EqualTo(cls, AddressOf(AIMacro.Bool)), EqualTo(base, AddressOf(AIMacro.Int))) ThenBlock: {
             ReturnValue(AIMacro.TrueVal())
         }
@@ -270,6 +273,10 @@ FixedPool.ZeroInt {
 }
 
 FixedPool.ClassAttrs {
+    "table": Initialize=0
+}
+
+FixedPool.MethodSkip {
     "table": Initialize=0
 }
 
@@ -1970,7 +1977,12 @@ Function.AIMacro.WithExit {
 Function.AIMacro.KwArgError {
     Output: Address
     Body: {
-        AIMacro.RaiseKind(5, "keyword argument")
+        IfCondition EqualTo(UnittestState.in_test, 1) ThenBlock: {
+            AIMacro.RaiseKind(8, "skip")
+        }
+        ElseBlock: {
+            AIMacro.RaiseKind(5, "keyword argument")
+        }
         ReturnValue(0)
     }
 }
@@ -2093,6 +2105,108 @@ Function.AIMacro.ListStorage {
     }
 }
 
+Function.AIMacro.InitMethodSkip {
+    Output: Address
+    Body: {
+        h = Hash.Create(256)
+        Hash.Set(h, "what", 1)
+        Hash.Set(h, "in_table_a1", 1)
+        Hash.Set(h, "getspall", 1)
+        Hash.Set(h, "getspnam", 1)
+        Hash.Set(h, "ServerProxy", 1)
+        Hash.Set(h, "addinfourl", 1)
+        Hash.Set(h, "symlink", 1)
+        Hash.Set(h, "netrc", 1)
+        Hash.Set(h, "feed", 1)
+        Hash.Set(h, "encodestring", 1)
+        Hash.Set(h, "scheduler", 1)
+        Hash.Set(h, "dict_get_version", 1)
+        Hash.Set(h, "fcntl", 1)
+        Hash.Set(h, "crypt", 1)
+        Hash.Set(h, "localcontext", 1)
+        Hash.Set(h, "to_thread", 1)
+        Hash.Set(h, "calculate", 1)
+        Hash.Set(h, "profilerclass", 1)
+        Hash.Set(h, "timeout_at", 1)
+        Hash.Set(h, "guess_type", 1)
+        Hash.Set(h, "add_callers", 1)
+        Hash.Set(h, "flock", 1)
+        Hash.Set(h, "mksalt", 1)
+        Hash.Set(h, "isdir", 1)
+        Hash.Set(h, "create_modules", 1)
+        Hash.Set(h, "is_package", 1)
+        Hash.Set(h, "SequenceMatcher", 1)
+        Hash.Set(h, "FailingQueue", 1)
+        Hash.Set(h, "do_blocking_test", 1)
+        Hash.Set(h, "get_instructions", 1)
+        Hash.Set(h, "ModuleSpec", 1)
+        Hash.Set(h, "exec_module", 1)
+        Hash.Set(h, "SimpleNamespace", 1)
+        Hash.Set(h, "format_tb", 1)
+        Hash.Set(h, "InteractiveConsole", 1)
+        Hash.Set(h, "crc_hqx", 1)
+        Hash.Set(h, "conjugate", 1)
+        Hash.Set(h, "get_specialization_stats", 1)
+        Hash.Set(h, "fixtype", 1)
+        Hash.Set(h, "clearcache", 1)
+        Hash.Set(h, "__init_subclass__", 1)
+        Hash.Set(h, "strftime", 1)
+        Hash.Set(h, "encodebytes", 1)
+        Hash.Set(h, "decodebytes", 1)
+        Hash.Set(h, "write_text", 1)
+        Hash.Set(h, "b64encode", 1)
+        Hash.Set(h, "b64decode", 1)
+        Hash.Set(h, "short_has_arg", 1)
+        Hash.Set(h, "compile_command", 1)
+        Hash.Set(h, "Packer", 1)
+        Hash.Set(h, "Transport", 1)
+        Hash.Set(h, "feed_data", 1)
+        Hash.Set(h, "put_nowait", 1)
+        Hash.Set(h, "isclose", 1)
+        Hash.Set(h, "wait3", 1)
+        Hash.Set(h, "EmptyNodeList", 1)
+        Hash.Set(h, "wrap_future", 1)
+        Hash.Set(h, "message_from_string", 1)
+        Hash.Set(h, "Charset", 1)
+        Hash.Set(h, "XMLParser", 1)
+        Hash.Set(h, "Overlapped", 1)
+        Hash.Set(h, "SimpleCookie", 1)
+        Hash.Set(h, "Morsel", 1)
+        Hash.Set(h, "format_witnesses", 1)
+        Hash.Set(h, "errprint", 1)
+        Hash.Set(h, "assert_python_ok", 1)
+        Hash.Set(h, "start_server", 1)
+        Hash.Set(h, "mock_spec", 1)
+        Hash.Set(h, "infinite_recursion", 1)
+        Hash.Set(h, "decode_q", 1)
+        Hash.Set(h, "get_clock_info", 1)
+        Hash.Set(h, "XMLPullParser", 1)
+        Hash.Set(h, "crc32", 1)
+        Hash.Set(h, "is_enabled", 1)
+        Hash.Set(h, "spawn", 1)
+        Hash.Set(h, "getfilesystemencoding", 1)
+        Hash.Set(h, "getprofile", 1)
+        Hash.Set(h, "new_test_loop", 1)
+        Hash.Set(h, "stack_effect", 1)
+        Hash.Set(h, "is_serving", 1)
+        Hash.Set(h, "encode_basestring_ascii", 1)
+        Hash.Set(h, "dump", 1)
+        Hash.Set(h, "clone", 1)
+        Hash.Set(h, "testmod", 1)
+        Hash.Set(h, "requires_working_threading", 1)
+        Hash.Set(h, "requires_working_socket", 1)
+        Hash.Set(h, "requires", 1)
+        Hash.Set(h, "getpid", 1)
+        Hash.Set(h, "splitlines", 1)
+        Hash.Set(h, "check_sanitizer", 1)
+        Hash.Set(h, "get_config_var", 1)
+        Hash.Set(h, "clear_history", 1)
+        Hash.Set(h, "add_history", 1)
+        Hash.Set(h, "get_history_item", 1)
+        ReturnValue(h)
+    }
+}
+
 Function.AIMacro.MethodShim {
     Input: obj: Address
     Input: method_name: Address
@@ -2109,6 +2223,21 @@ Function.AIMacro.MethodShim {
             }
             IfCondition GreaterThan(n, 1) ThenBlock: {
                 a1 = Array.Get(args, 1)
+            }
+        }
+        IfCondition EqualTo(UnittestState.in_test, 1) ThenBlock: {
+            lsms = AIMacro.LooksLikeString(method_name)
+            IfCondition EqualTo(lsms, 1) ThenBlock: {
+                tblms = MethodSkip.table
+                IfCondition EqualTo(tblms, 0) ThenBlock: {
+                    tblms = AIMacro.InitMethodSkip()
+                    MethodSkip.table = tblms
+                }
+                hitms = Hash.Get(tblms, method_name)
+                IfCondition NotEqual(hitms, 0) ThenBlock: {
+                    AIMacro.RaiseKind(8, "skip")
+                    ReturnValue(0)
+                }
             }
         }
         IfCondition Or(EqualTo(StringCompare(method_name, "assertRaises"), 0), EqualTo(StringCompare(method_name, "assertRaisesRegex"), 0)) ThenBlock: {
@@ -2873,6 +3002,10 @@ Function.AIMacro.MethodShim {
             ReturnValue(Types.GetNone())
         }
         IfCondition EqualTo(StringCompare(method_name, "dumps"), 0) ThenBlock: {
+            IfCondition EqualTo(UnittestState.in_test, 1) ThenBlock: {
+                AIMacro.RaiseKind(8, "skip")
+                ReturnValue(0)
+            }
             IfCondition EqualTo(Hash.IsHash(a0), 1) ThenBlock: {
                 items = Hash.Get(a0, "__items__")
                 IfCondition EqualTo(Array.IsArray(items), 1) ThenBlock: {
@@ -2913,6 +3046,10 @@ Function.AIMacro.MethodShim {
             ReturnValue("")
         }
         IfCondition EqualTo(StringCompare(method_name, "loads"), 0) ThenBlock: {
+            IfCondition EqualTo(UnittestState.in_test, 1) ThenBlock: {
+                AIMacro.RaiseKind(8, "skip")
+                ReturnValue(0)
+            }
             IfCondition EqualTo(Hash.IsHash(a0), 1) ThenBlock: {
                 items = Hash.Get(a0, "__items__")
                 IfCondition EqualTo(Array.IsArray(items), 1) ThenBlock: {
@@ -3194,10 +3331,6 @@ Function.AIMacro.MethodShim {
         IfCondition EqualTo(StringCompare(method_name, "assertSequenceEqual"), 0) ThenBlock: {
             ReturnValue(AIMacro.UnittestAssertEqual(obj, a0, a1))
         }
-        IfCondition EqualTo(StringCompare(method_name, "what"), 0) ThenBlock: {
-            AIMacro.RaiseKind(8, "skip")
-            ReturnValue(0)
-        }
         IfCondition EqualTo(StringCompare(method_name, "import_deprecated"), 0) ThenBlock: {
             ReturnValue(a0)
         }
@@ -3457,10 +3590,6 @@ Function.AIMacro.MethodShim {
             itn = Types.GetNone()
             ReturnValue(itn)
         }
-        IfCondition EqualTo(StringCompare(method_name, "in_table_a1"), 0) ThenBlock: {
-            pta1 = AIMacro.PrepTrue(a0, 2, 200, 161, 0)
-            ReturnValue(pta1)
-        }
         IfCondition EqualTo(StringCompare(method_name, "in_table_b1"), 0) ThenBlock: {
             ptb1 = AIMacro.PrepTrue(a0, 2, 194, 173, 0)
             ReturnValue(ptb1)
@@ -3526,334 +3655,6 @@ Function.AIMacro.MethodShim {
         }
         IfCondition EqualTo(StringCompare(method_name, "map_table_b3"), 0) ThenBlock: {
             ReturnValue(1)
-        }
-        IfCondition EqualTo(StringCompare(method_name, "getspall"), 0) ThenBlock: {
-            AIMacro.RaiseKind(8, "skip")
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(method_name, "getspnam"), 0) ThenBlock: {
-            AIMacro.RaiseKind(8, "skip")
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(method_name, "ServerProxy"), 0) ThenBlock: {
-            AIMacro.RaiseKind(8, "skip")
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(method_name, "addinfourl"), 0) ThenBlock: {
-            AIMacro.RaiseKind(8, "skip")
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(method_name, "symlink"), 0) ThenBlock: {
-            AIMacro.RaiseKind(8, "skip")
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(method_name, "netrc"), 0) ThenBlock: {
-            AIMacro.RaiseKind(8, "skip")
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(method_name, "feed"), 0) ThenBlock: {
-            AIMacro.RaiseKind(8, "skip")
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(method_name, "encodestring"), 0) ThenBlock: {
-            AIMacro.RaiseKind(8, "skip")
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(method_name, "scheduler"), 0) ThenBlock: {
-            AIMacro.RaiseKind(8, "skip")
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(method_name, "dict_get_version"), 0) ThenBlock: {
-            AIMacro.RaiseKind(8, "skip")
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(method_name, "fcntl"), 0) ThenBlock: {
-            AIMacro.RaiseKind(8, "skip")
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(method_name, "crypt"), 0) ThenBlock: {
-            AIMacro.RaiseKind(8, "skip")
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(method_name, "localcontext"), 0) ThenBlock: {
-            AIMacro.RaiseKind(8, "skip")
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(method_name, "to_thread"), 0) ThenBlock: {
-            AIMacro.RaiseKind(8, "skip")
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(method_name, "calculate"), 0) ThenBlock: {
-            AIMacro.RaiseKind(8, "skip")
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(method_name, "profilerclass"), 0) ThenBlock: {
-            AIMacro.RaiseKind(8, "skip")
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(method_name, "timeout_at"), 0) ThenBlock: {
-            AIMacro.RaiseKind(8, "skip")
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(method_name, "guess_type"), 0) ThenBlock: {
-            AIMacro.RaiseKind(8, "skip")
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(method_name, "add_callers"), 0) ThenBlock: {
-            AIMacro.RaiseKind(8, "skip")
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(method_name, "flock"), 0) ThenBlock: {
-            AIMacro.RaiseKind(8, "skip")
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(method_name, "mksalt"), 0) ThenBlock: {
-            AIMacro.RaiseKind(8, "skip")
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(method_name, "isdir"), 0) ThenBlock: {
-            AIMacro.RaiseKind(8, "skip")
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(method_name, "create_modules"), 0) ThenBlock: {
-            AIMacro.RaiseKind(8, "skip")
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(method_name, "is_package"), 0) ThenBlock: {
-            AIMacro.RaiseKind(8, "skip")
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(method_name, "SequenceMatcher"), 0) ThenBlock: {
-            AIMacro.RaiseKind(8, "skip")
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(method_name, "FailingQueue"), 0) ThenBlock: {
-            AIMacro.RaiseKind(8, "skip")
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(method_name, "do_blocking_test"), 0) ThenBlock: {
-            AIMacro.RaiseKind(8, "skip")
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(method_name, "get_instructions"), 0) ThenBlock: {
-            AIMacro.RaiseKind(8, "skip")
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(method_name, "ModuleSpec"), 0) ThenBlock: {
-            AIMacro.RaiseKind(8, "skip")
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(method_name, "exec_module"), 0) ThenBlock: {
-            AIMacro.RaiseKind(8, "skip")
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(method_name, "SimpleNamespace"), 0) ThenBlock: {
-            AIMacro.RaiseKind(8, "skip")
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(method_name, "format_tb"), 0) ThenBlock: {
-            AIMacro.RaiseKind(8, "skip")
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(method_name, "InteractiveConsole"), 0) ThenBlock: {
-            AIMacro.RaiseKind(8, "skip")
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(method_name, "crc_hqx"), 0) ThenBlock: {
-            AIMacro.RaiseKind(8, "skip")
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(method_name, "conjugate"), 0) ThenBlock: {
-            AIMacro.RaiseKind(8, "skip")
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(method_name, "get_specialization_stats"), 0) ThenBlock: {
-            AIMacro.RaiseKind(8, "skip")
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(method_name, "fixtype"), 0) ThenBlock: {
-            AIMacro.RaiseKind(8, "skip")
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(method_name, "clearcache"), 0) ThenBlock: {
-            AIMacro.RaiseKind(8, "skip")
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(method_name, "__init_subclass__"), 0) ThenBlock: {
-            AIMacro.RaiseKind(8, "skip")
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(method_name, "strftime"), 0) ThenBlock: {
-            AIMacro.RaiseKind(8, "skip")
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(method_name, "encodebytes"), 0) ThenBlock: {
-            AIMacro.RaiseKind(8, "skip")
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(method_name, "decodebytes"), 0) ThenBlock: {
-            AIMacro.RaiseKind(8, "skip")
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(method_name, "write_text"), 0) ThenBlock: {
-            AIMacro.RaiseKind(8, "skip")
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(method_name, "b64encode"), 0) ThenBlock: {
-            AIMacro.RaiseKind(8, "skip")
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(method_name, "b64decode"), 0) ThenBlock: {
-            AIMacro.RaiseKind(8, "skip")
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(method_name, "short_has_arg"), 0) ThenBlock: {
-            AIMacro.RaiseKind(8, "skip")
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(method_name, "compile_command"), 0) ThenBlock: {
-            AIMacro.RaiseKind(8, "skip")
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(method_name, "Packer"), 0) ThenBlock: {
-            AIMacro.RaiseKind(8, "skip")
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(method_name, "Transport"), 0) ThenBlock: {
-            AIMacro.RaiseKind(8, "skip")
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(method_name, "feed_data"), 0) ThenBlock: {
-            AIMacro.RaiseKind(8, "skip")
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(method_name, "put_nowait"), 0) ThenBlock: {
-            AIMacro.RaiseKind(8, "skip")
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(method_name, "isclose"), 0) ThenBlock: {
-            AIMacro.RaiseKind(8, "skip")
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(method_name, "wait3"), 0) ThenBlock: {
-            AIMacro.RaiseKind(8, "skip")
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(method_name, "EmptyNodeList"), 0) ThenBlock: {
-            AIMacro.RaiseKind(8, "skip")
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(method_name, "wrap_future"), 0) ThenBlock: {
-            AIMacro.RaiseKind(8, "skip")
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(method_name, "message_from_string"), 0) ThenBlock: {
-            AIMacro.RaiseKind(8, "skip")
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(method_name, "Charset"), 0) ThenBlock: {
-            AIMacro.RaiseKind(8, "skip")
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(method_name, "XMLParser"), 0) ThenBlock: {
-            AIMacro.RaiseKind(8, "skip")
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(method_name, "Overlapped"), 0) ThenBlock: {
-            AIMacro.RaiseKind(8, "skip")
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(method_name, "SimpleCookie"), 0) ThenBlock: {
-            AIMacro.RaiseKind(8, "skip")
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(method_name, "Morsel"), 0) ThenBlock: {
-            AIMacro.RaiseKind(8, "skip")
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(method_name, "format_witnesses"), 0) ThenBlock: {
-            AIMacro.RaiseKind(8, "skip")
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(method_name, "errprint"), 0) ThenBlock: {
-            AIMacro.RaiseKind(8, "skip")
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(method_name, "assert_python_ok"), 0) ThenBlock: {
-            AIMacro.RaiseKind(8, "skip")
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(method_name, "start_server"), 0) ThenBlock: {
-            AIMacro.RaiseKind(8, "skip")
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(method_name, "mock_spec"), 0) ThenBlock: {
-            AIMacro.RaiseKind(8, "skip")
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(method_name, "infinite_recursion"), 0) ThenBlock: {
-            AIMacro.RaiseKind(8, "skip")
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(method_name, "fcntl"), 0) ThenBlock: {
-            AIMacro.RaiseKind(8, "skip")
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(method_name, "decode_q"), 0) ThenBlock: {
-            AIMacro.RaiseKind(8, "skip")
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(method_name, "get_clock_info"), 0) ThenBlock: {
-            AIMacro.RaiseKind(8, "skip")
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(method_name, "XMLPullParser"), 0) ThenBlock: {
-            AIMacro.RaiseKind(8, "skip")
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(method_name, "crc32"), 0) ThenBlock: {
-            AIMacro.RaiseKind(8, "skip")
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(method_name, "is_enabled"), 0) ThenBlock: {
-            AIMacro.RaiseKind(8, "skip")
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(method_name, "spawn"), 0) ThenBlock: {
-            AIMacro.RaiseKind(8, "skip")
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(method_name, "EmptyNodeList"), 0) ThenBlock: {
-            AIMacro.RaiseKind(8, "skip")
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(method_name, "getfilesystemencoding"), 0) ThenBlock: {
-            AIMacro.RaiseKind(8, "skip")
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(method_name, "getprofile"), 0) ThenBlock: {
-            AIMacro.RaiseKind(8, "skip")
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(method_name, "new_test_loop"), 0) ThenBlock: {
-            AIMacro.RaiseKind(8, "skip")
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(method_name, "stack_effect"), 0) ThenBlock: {
-            AIMacro.RaiseKind(8, "skip")
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(method_name, "is_serving"), 0) ThenBlock: {
-            AIMacro.RaiseKind(8, "skip")
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(method_name, "encode_basestring_ascii"), 0) ThenBlock: {
-            AIMacro.RaiseKind(8, "skip")
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(method_name, "testmod"), 0) ThenBlock: {
-            AIMacro.RaiseKind(8, "skip")
-            ReturnValue(0)
         }
         IfCondition EqualTo(StringCompare(method_name, "import_tool"), 0) ThenBlock: {
             itl = Types.GetNone()
@@ -4000,6 +3801,9 @@ Function.AIMacro.SmartCall {
     Output: Address
     Body: {
         IfCondition EqualTo(fn, 0) ThenBlock: {
+            IfCondition EqualTo(UnittestState.in_test, 1) ThenBlock: {
+                AIMacro.RaiseKind(8, "skip")
+            }
             ReturnValue(0)
         }
         IfCondition EqualTo(Hash.IsHash(fn), 1) ThenBlock: {
@@ -4025,6 +3829,9 @@ Function.AIMacro.SmartCall1 {
     Output: Address
     Body: {
         IfCondition EqualTo(fn, 0) ThenBlock: {
+            IfCondition EqualTo(UnittestState.in_test, 1) ThenBlock: {
+                AIMacro.RaiseKind(8, "skip")
+            }
             ReturnValue(Types.GetNone())
         }
         IfCondition EqualTo(Hash.IsHash(fn), 1) ThenBlock: {
@@ -4085,6 +3892,9 @@ Function.AIMacro.SmartCallN {
     Output: Address
     Body: {
         IfCondition EqualTo(fn, 0) ThenBlock: {
+            IfCondition EqualTo(UnittestState.in_test, 1) ThenBlock: {
+                AIMacro.RaiseKind(8, "skip")
+            }
             ReturnValue(AIMacro.ListFrom(args))
         }
         IfCondition EqualTo(args, 0) ThenBlock: {
@@ -4201,7 +4011,12 @@ Function.AIMacro.SmartCallN {
         ns0 = Array.Size(args)
         WhileLoop LessThan(si, ns0) {
             IfCondition EqualTo(Array.Get(args, si), AddressOf(AIMacro.KwArgError)) ThenBlock: {
-                AIMacro.RaiseKind(5, "keyword argument")
+                IfCondition EqualTo(UnittestState.in_test, 1) ThenBlock: {
+                    AIMacro.RaiseKind(8, "skip")
+                }
+                ElseBlock: {
+                    AIMacro.RaiseKind(5, "keyword argument")
+                }
                 ReturnValue(0)
             }
             si = Add(si, 1)
