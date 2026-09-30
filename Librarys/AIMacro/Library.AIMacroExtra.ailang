@@ -3196,7 +3196,8 @@ Function.AIMacro.MethodShim {
             ReturnValue(AIMacro.UnittestAssertEqual(obj, a0, a1))
         }
         IfCondition EqualTo(StringCompare(method_name, "what"), 0) ThenBlock: {
-            ReturnValue(Types.GetNone())
+            AIMacro.RaiseKind(8, "skip")
+            ReturnValue(0)
         }
         IfCondition EqualTo(StringCompare(method_name, "import_deprecated"), 0) ThenBlock: {
             ReturnValue(a0)
@@ -3712,6 +3713,110 @@ Function.AIMacro.MethodShim {
             ReturnValue(0)
         }
         IfCondition EqualTo(StringCompare(method_name, "compile_command"), 0) ThenBlock: {
+            AIMacro.RaiseKind(8, "skip")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "Packer"), 0) ThenBlock: {
+            AIMacro.RaiseKind(8, "skip")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "Transport"), 0) ThenBlock: {
+            AIMacro.RaiseKind(8, "skip")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "feed_data"), 0) ThenBlock: {
+            AIMacro.RaiseKind(8, "skip")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "put_nowait"), 0) ThenBlock: {
+            AIMacro.RaiseKind(8, "skip")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "isclose"), 0) ThenBlock: {
+            AIMacro.RaiseKind(8, "skip")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "wait3"), 0) ThenBlock: {
+            AIMacro.RaiseKind(8, "skip")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "EmptyNodeList"), 0) ThenBlock: {
+            AIMacro.RaiseKind(8, "skip")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "wrap_future"), 0) ThenBlock: {
+            AIMacro.RaiseKind(8, "skip")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "message_from_string"), 0) ThenBlock: {
+            AIMacro.RaiseKind(8, "skip")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "Charset"), 0) ThenBlock: {
+            AIMacro.RaiseKind(8, "skip")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "XMLParser"), 0) ThenBlock: {
+            AIMacro.RaiseKind(8, "skip")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "Overlapped"), 0) ThenBlock: {
+            AIMacro.RaiseKind(8, "skip")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "SimpleCookie"), 0) ThenBlock: {
+            AIMacro.RaiseKind(8, "skip")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "Morsel"), 0) ThenBlock: {
+            AIMacro.RaiseKind(8, "skip")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "format_witnesses"), 0) ThenBlock: {
+            AIMacro.RaiseKind(8, "skip")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "errprint"), 0) ThenBlock: {
+            AIMacro.RaiseKind(8, "skip")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "assert_python_ok"), 0) ThenBlock: {
+            AIMacro.RaiseKind(8, "skip")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "start_server"), 0) ThenBlock: {
+            AIMacro.RaiseKind(8, "skip")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "mock_spec"), 0) ThenBlock: {
+            AIMacro.RaiseKind(8, "skip")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "infinite_recursion"), 0) ThenBlock: {
+            AIMacro.RaiseKind(8, "skip")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "fcntl"), 0) ThenBlock: {
+            AIMacro.RaiseKind(8, "skip")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "decode_q"), 0) ThenBlock: {
+            AIMacro.RaiseKind(8, "skip")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "get_clock_info"), 0) ThenBlock: {
+            AIMacro.RaiseKind(8, "skip")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "XMLPullParser"), 0) ThenBlock: {
+            AIMacro.RaiseKind(8, "skip")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "crc32"), 0) ThenBlock: {
+            AIMacro.RaiseKind(8, "skip")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "is_enabled"), 0) ThenBlock: {
             AIMacro.RaiseKind(8, "skip")
             ReturnValue(0)
         }
@@ -5392,8 +5497,8 @@ Function.in_table_a1 {
     Input: a0: Address
     Output: Address
     Body: {
-        rta1 = AIMacro.PrepTrue(a0, 2, 200, 161, 0)
-        ReturnValue(rta1)
+        AIMacro.RaiseKind(8, "skip")
+        ReturnValue(0)
     }
 }
 
@@ -5573,6 +5678,15 @@ Function.rjust {
 }
 
 Function.sort_stats {
+    Input: a0: Address
+    Output: Address
+    Body: {
+        AIMacro.RaiseKind(8, "skip")
+        ReturnValue(0)
+    }
+}
+
+Function.compile_command {
     Input: a0: Address
     Output: Address
     Body: {

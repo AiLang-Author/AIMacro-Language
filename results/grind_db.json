@@ -91,10 +91,10 @@
     "test_array.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_array.py",
       "status": "fail",
-      "stage": "run",
-      "rc": 1,
-      "err": "",
-      "out": "ERROR: Method not found: array\nunittest: ran 0 tests, 0 failed\nunittest: TestCase scheduled but 0 tests ran\n",
+      "stage": "compile",
+      "rc": 124,
+      "err": "ments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 4 arguments\n\ntimeout",
+      "out": "",
       "tags": [],
       "key": "test_array.py",
       "updated": "2026-09-30"
@@ -218,13 +218,11 @@
     },
     "test_asyncio/test_pep492.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_asyncio/test_pep492.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": -11,
-      "err": "",
-      "out": "test_iscoroutinefunction\nFAIL: assertTrue\n  CoroutineTests.test_async_def_coroutines\nFAIL: assertEqual\n  CoroutineTests.test_debug_mode_manages_coroutine_origin_tracking\n  CoroutineTests.test_types_coroutine\nFAIL: assertEqual\n  CoroutineTests.test_task_print_stack\n  CoroutineTests.test_double_await\n",
+      "status": "pass",
       "tags": [],
-      "key": "test_asyncio/test_pep492.py"
+      "stage_ok": "run",
+      "key": "test_asyncio/test_pep492.py",
+      "updated": "2026-09-30"
     },
     "test_asyncio/test_proactor_events.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_asyncio/test_proactor_events.py",
@@ -246,13 +244,11 @@
     },
     "test_asyncio/test_queues.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_asyncio/test_queues.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": -11,
-      "err": "",
-      "out": "QueueGetTests.test_nonblocking_get_exception\nFAIL: assertRaises\n  QueueGetTests.test_get_cancelled_race\nFAIL: assertTrue\n  QueueGetTests.test_get_with_waiting_putters\nFAIL: assertEqual\n  QueueGetTests.test_why_are_getters_waiting\n  QueueGetTests.test_cancelled_getters_not_being_held_in_self_getters\n",
+      "status": "pass",
       "tags": [],
-      "key": "test_asyncio/test_queues.py"
+      "stage_ok": "run",
+      "key": "test_asyncio/test_queues.py",
+      "updated": "2026-09-30"
     },
     "test_asyncio/test_runners.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_asyncio/test_runners.py",
@@ -289,11 +285,12 @@
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_asyncio/test_server.py",
       "status": "fail",
       "stage": "run",
-      "rc": -11,
+      "rc": 1,
       "err": "",
-      "out": "  SelectorStartServerTests.test_start_unix_server_1\n",
+      "out": "  SelectorStartServerTests.test_start_server_1\nERROR: Method not found: run_until_complete\nERROR: Method not found: is_serving\nERROR: Method not found: create_task\nERROR: Method not found: getsockname\nFAIL: assertEqual\nFAIL: assertIsNone\nFAIL: assertIsNone\nERROR: Method not found: is_serving\nFAIL: assertRaises\nunittest: ran 1 tests, 4 failed\n",
       "tags": [],
-      "key": "test_asyncio/test_server.py"
+      "key": "test_asyncio/test_server.py",
+      "updated": "2026-09-30"
     },
     "test_asyncio/test_sock_lowlevel.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_asyncio/test_sock_lowlevel.py",
@@ -383,13 +380,11 @@
     },
     "test_asyncio/test_transports.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_asyncio/test_transports.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": -11,
-      "err": "",
-      "out": "  TransportTests.test_ctor_extra_is_none\nFAIL: assertEqual\n  TransportTests.test_get_extra_info\nFAIL: assertEqual\nFAIL: assertIsNone\nFAIL: assertIs\n  TransportTests.test_writelines\n",
+      "status": "pass",
       "tags": [],
-      "key": "test_asyncio/test_transports.py"
+      "stage_ok": "run",
+      "key": "test_asyncio/test_transports.py",
+      "updated": "2026-09-30"
     },
     "test_asyncio/test_unix_events.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_asyncio/test_unix_events.py",
@@ -528,12 +523,9 @@
     },
     "test_binascii.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_binascii.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": 1,
-      "err": "",
-      "out": "  BinASCIITest.test_exceptions\nFAIL: assertTrue\n  BinASCIITest.test_functions\nFAIL: assertTrue\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\n  BinASCIITest.test_returned_value\nFAIL: assertEqual\nFAIL: {}/{} conversion raises {!r}\nFAIL: assertEqual\nFAIL: {}/{} conversion raises {!r}\nFAIL: assertEqual\nFAIL: {}/{} conversion raises {!r}\nFAIL: assertEqual\nFAIL: {}/{} conversion raises {!r}\nFAIL: assertEqual\nERROR: Method not found: crc_hqx\nERROR: Method not found: crc32\nunittest: ran 3 tests, 23 failed\n",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_binascii.py",
       "updated": "2026-09-30"
     },
@@ -778,9 +770,9 @@
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_cmath.py",
       "status": "fail",
       "stage": "run",
-      "rc": 1,
+      "rc": -9,
       "err": "",
-      "out": "Exception: No such file\n",
+      "out": "",
       "tags": [],
       "key": "test_cmath.py",
       "updated": "2026-09-30"
@@ -826,10 +818,10 @@
     "test_code_module.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_code_module.py",
       "status": "fail",
-      "stage": "run",
+      "stage": "compile",
       "rc": 1,
-      "err": "",
-      "out": "Exception: skip\n",
+      "err": "tialized, pool-backed node storage\n[PARSER] Starting parse...\n[PARSER] Parsed 908 declarations, 82070 total nodes\n[PARSER] SUCCESS\n[SEMANTIC] contract check\nSEMANTIC ERROR AIMacro.AIMacroExtra:5624: duplicate definition of 'in_table_a1' first seen at AIMacro.AIMacroExtra:5431 \u2014 aborting, same-file copies are unpredictable\nSEMANTIC ERROR at line 20264, col 0: duplicate function\nSemantic Analysis Failed\n[AST] Freeing 82070 node child-lists...\n[AST] Freed 36142 child-lists (node slots stay in pool)",
+      "out": "",
       "tags": [],
       "key": "test_code_module.py",
       "updated": "2026-09-30"
@@ -965,7 +957,7 @@
       "stage": "run",
       "rc": 1,
       "err": "",
-      "out": "  CodeopTests.test_valid\nFAIL: assertEqual\n  CodeopTests.test_invalid\nERROR: keyword argument\nunittest: ran 2 tests, 2 failed\n",
+      "out": "  CodeopTests.test_valid\nFAIL: assertEqual\nunittest: ran 1 tests, 1 failed\n",
       "tags": [],
       "key": "test_codeop.py",
       "updated": "2026-09-30"
@@ -1550,9 +1542,10 @@
       "stage": "run",
       "rc": 0,
       "err": "no tests ran",
-      "out": "",
+      "out": "ERROR: Method not found: clone\nERROR: Method not found: clone\n",
       "tags": [],
-      "key": "test_email/test_parser.py"
+      "key": "test_email/test_parser.py",
+      "updated": "2026-09-30"
     },
     "test_email/test_pickleable.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_email/test_pickleable.py",
@@ -1718,12 +1711,9 @@
     },
     "test_fcntl.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_fcntl.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": 1,
-      "err": "",
-      "out": "ERROR: Method not found: pack\nunittest: ran 0 tests, 0 failed\nunittest: TestCase scheduled but 0 tests ran\n",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_fcntl.py",
       "updated": "2026-09-30"
     },
@@ -2051,7 +2041,7 @@
       "stage": "run",
       "rc": 1,
       "err": "",
-      "out": "unittest: ran 0 tests, 0 failed\nunittest: TestCase scheduled but 0 tests ran\n",
+      "out": "Exception: argument is not iterable\n",
       "tags": [],
       "key": "test_getopt.py",
       "updated": "2026-09-30"
@@ -2210,9 +2200,9 @@
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_http_cookies.py",
       "status": "fail",
       "stage": "run",
-      "rc": 0,
-      "err": "no tests ran",
-      "out": "unittest: ran 0 tests, 0 failed\n",
+      "rc": -11,
+      "err": "",
+      "out": "  CookieTests.test_basic\n",
       "tags": [],
       "key": "test_http_cookies.py",
       "updated": "2026-09-30"
@@ -2441,11 +2431,12 @@
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_importlib/import_/test_packages.py",
       "status": "fail",
       "stage": "run",
-      "rc": -11,
-      "err": "",
-      "out": "  ParentModuleTests.test_import_parent\nERROR: Method not found: __import__\nFAIL: assertIn\n  ParentModuleTests.test_bad_parent\n",
+      "rc": 0,
+      "err": "no tests ran",
+      "out": "ERROR: Method not found: test_both\n",
       "tags": [],
-      "key": "test_importlib/import_/test_packages.py"
+      "key": "test_importlib/import_/test_packages.py",
+      "updated": "2026-09-30"
     },
     "test_importlib/import_/test_path.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_importlib/import_/test_path.py",
@@ -4026,7 +4017,7 @@
       "status": "fail",
       "stage": "compile",
       "rc": -11,
-      "err": "croFormat\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT ERROR] Cannot read: errno\n[IMPORT ERROR] Cannot read: random\n[IMPORT ERROR] Cannot read: selectors\n[IMPORT ERROR] Cannot read: signal\n[IMPORT ERROR] Cannot read: socket\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 907 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 27024, col 32: Unexpected token in statement\n  In:",
+      "err": "croFormat\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT ERROR] Cannot read: errno\n[IMPORT ERROR] Cannot read: random\n[IMPORT ERROR] Cannot read: selectors\n[IMPORT ERROR] Cannot read: signal\n[IMPORT ERROR] Cannot read: socket\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 931 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 28681, col 32: Unexpected token in statement\n  In:",
       "out": "",
       "tags": [],
       "key": "test_selectors.py",
@@ -4141,12 +4132,9 @@
     },
     "test_sndhdr.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_sndhdr.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": 1,
-      "err": "",
-      "out": "unittest: ran 0 tests, 0 failed\nunittest: TestCase scheduled but 0 tests ran\n",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_sndhdr.py",
       "updated": "2026-09-30"
     },
@@ -4543,13 +4531,11 @@
     },
     "test_tabnanny.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_tabnanny.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": -11,
-      "err": "",
-      "out": ": assertEqual\n  TestProcessTokens.test_with_correct_code\nERROR: No such file\n  TestProcessTokens.test_with_errored_codes_samples\nERROR: Method not found: subTest\nERROR: Method not found: subTest\nERROR: No such file\n  TestCommandLine.test_with_errored_file\n  TestCommandLine.test_with_error_free_file\n",
+      "status": "pass",
       "tags": [],
-      "key": "test_tabnanny.py"
+      "stage_ok": "run",
+      "key": "test_tabnanny.py",
+      "updated": "2026-09-30"
     },
     "test_tarfile.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_tarfile.py",
@@ -4651,12 +4637,9 @@
     },
     "test_time.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_time.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": -11,
-      "err": "",
-      "out": "ERROR: Method not found: ceil\nERROR: Method not found: get_config_var\nERROR: Method not found: ceil\n  TimeTestCase.test_data_attributes\nERROR: Method not found: setlocale\n  TestLocale.test_bug_3061\nERROR: Method not found: setlocale\nERROR: Method not found: setlocale\n  TestAsctime4dyear.test_large_year\nERROR: Method not found: asctime\nERROR: Method not found: split\nFAIL: assertEqual\n",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_time.py",
       "updated": "2026-09-30"
     },
@@ -4733,12 +4716,9 @@
     },
     "test_tomllib/test_misc.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_tomllib/test_misc.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": 1,
-      "err": "",
-      "out": "unittest: ran 0 tests, 0 failed\nunittest: TestCase scheduled but 0 tests ran\n",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_tomllib/test_misc.py",
       "updated": "2026-09-30"
     },
@@ -4937,9 +4917,9 @@
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_type_cache.py",
       "status": "fail",
       "stage": "run",
-      "rc": 1,
+      "rc": -11,
       "err": "",
-      "out": "unittest: ran 0 tests, 0 failed\nunittest: TestCase scheduled but 0 tests ran\n",
+      "out": "  TypeCacheTests.test_tp_version_tag_unique\n",
       "tags": [],
       "key": "test_type_cache.py",
       "updated": "2026-09-30"
@@ -5363,12 +5343,9 @@
     },
     "test_xdrlib.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_xdrlib.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": 1,
-      "err": "",
-      "out": "unittest: ran 0 tests, 0 failed\nunittest: TestCase scheduled but 0 tests ran\n",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_xdrlib.py",
       "updated": "2026-09-30"
     },

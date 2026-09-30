@@ -2,12 +2,16 @@ test__osx_support.py
 test_aifc.py
 test_asynchat.py
 test_asyncio/test_context.py
+test_asyncio/test_pep492.py
 test_asyncio/test_protocols.py
+test_asyncio/test_queues.py
 test_asyncio/test_threads.py
 test_asyncio/test_timeouts.py
+test_asyncio/test_transports.py
 test_asyncio/test_waitfor.py
 test_atexit.py
 test_base64.py
+test_binascii.py
 test_binop.py
 test_bool.py
 test_capi/test_eval_code_ex.py
@@ -31,6 +35,7 @@ test_enumerate.py
 test_eof.py
 test_errno.py
 test_exception_hierarchy.py
+test_fcntl.py
 test_fileutils.py
 test_flufl.py
 test_fnmatch.py
@@ -86,6 +91,7 @@ test_select.py
 test_signal.py
 test_slice.py
 test_smtpnet.py
+test_sndhdr.py
 test_sqlite3/test_backup.py
 test_stable_abi_ctypes.py
 test_startfile.py
@@ -96,11 +102,14 @@ test_structseq.py
 test_sundry.py
 test_symtable.py
 test_syslog.py
+test_tabnanny.py
 test_telnetlib.py
+test_time.py
 test_timeit.py
 test_tix.py
 test_tomllib/test_data.py
 test_tomllib/test_error.py
+test_tomllib/test_misc.py
 test_tools/test_fixcid.py
 test_tools/test_gprof2html.py
 test_tools/test_lll.py
@@ -118,6 +127,7 @@ test_utf8source.py
 test_wave.py
 test_weakset.py
 test_winsound.py
+test_xdrlib.py
 test_xmlrpc_net.py
 test_xxlimited.py
 test_xxtestfuzz.py

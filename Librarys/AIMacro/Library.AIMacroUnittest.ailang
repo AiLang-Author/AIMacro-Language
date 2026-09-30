@@ -203,6 +203,9 @@ Function.AIMacro.UnittestAssertNotEqual {
     Input: b: Address
     Output: Integer
     Body: {
+        IfCondition EqualTo(AIMacro.ExcPending(), 1) ThenBlock: {
+            ReturnValue(0)
+        }
         IfCondition EqualTo(AIMacro.UnittestEq(a, b), 0) ThenBlock: {
             ReturnValue(1)
         }
@@ -230,6 +233,9 @@ Function.AIMacro.UnittestAssertFalse {
     Input: expr: Address
     Output: Integer
     Body: {
+        IfCondition EqualTo(AIMacro.ExcPending(), 1) ThenBlock: {
+            ReturnValue(0)
+        }
         IfCondition EqualTo(AIMacro.SmartBool(expr), 0) ThenBlock: {
             ReturnValue(1)
         }
@@ -313,6 +319,9 @@ Function.AIMacro.UnittestAssertIsNone {
     Input: a: Address
     Output: Integer
     Body: {
+        IfCondition EqualTo(AIMacro.ExcPending(), 1) ThenBlock: {
+            ReturnValue(0)
+        }
         IfCondition EqualTo(AIMacro.IsNone(a), 1) ThenBlock: {
             ReturnValue(1)
         }
@@ -553,6 +562,9 @@ Function.AIMacro.UnittestAssertRaisesCall {
     Input: fnargs: Address
     Output: Integer
     Body: {
+        IfCondition EqualTo(AIMacro.ExcPending(), 1) ThenBlock: {
+            ReturnValue(0)
+        }
         opsh = 0
         IfCondition EqualTo(Hash.IsHash(func), 1) ThenBlock: {
             IfCondition NotEqual(Hash.Get(func, "__opshim__"), 0) ThenBlock: {
@@ -689,11 +701,17 @@ Function.AIMacro.UnittestIsTestName {
             ReturnValue(0)
         }
         pi = 0
+        pickle_hit = 0
         WhileLoop NotEqual(GetByte(name, pi), 0) {
             IfCondition And(EqualTo(GetByte(name, pi), 112), And(EqualTo(GetByte(name, Add(pi, 1)), 105), And(EqualTo(GetByte(name, Add(pi, 2)), 99), And(EqualTo(GetByte(name, Add(pi, 3)), 107), And(EqualTo(GetByte(name, Add(pi, 4)), 108), EqualTo(GetByte(name, Add(pi, 5)), 101)))))) ThenBlock: {
-                ReturnValue(0)
+                pickle_hit = 1
             }
             pi = Add(pi, 1)
+        }
+        IfCondition EqualTo(pickle_hit, 1) ThenBlock: {
+            IfCondition NotEqual(StringCompare(name, "test_pickleable"), 0) ThenBlock: {
+                ReturnValue(0)
+            }
         }
         IfCondition EqualTo(StringCompare(name, "test_repr_large"), 0) ThenBlock: {
             ReturnValue(0)
@@ -1157,7 +1175,7 @@ Function.AIMacro.UnittestIsTestName {
         IfCondition EqualTo(StringCompare(name, "test_values_extended"), 0) ThenBlock: {
             ReturnValue(0)
         }
-        IfCondition EqualTo(StringCompare(name, "test_xdr"), 0) ThenBlock: {
+        IfCondition EqualTo(StringCompare(name, "test_xdr_unused"), 0) ThenBlock: {
             ReturnValue(0)
         }
         IfCondition EqualTo(StringCompare(name, "test_pack_int"), 0) ThenBlock: {
@@ -1169,7 +1187,7 @@ Function.AIMacro.UnittestIsTestName {
         IfCondition EqualTo(StringCompare(name, "test_uhyper"), 0) ThenBlock: {
             ReturnValue(0)
         }
-        IfCondition EqualTo(StringCompare(name, "test_short_has_arg"), 0) ThenBlock: {
+        IfCondition EqualTo(StringCompare(name, "test_short_has_arg_unused"), 0) ThenBlock: {
             ReturnValue(0)
         }
         IfCondition EqualTo(StringCompare(name, "test_long_has_args"), 0) ThenBlock: {
@@ -2450,7 +2468,7 @@ Function.AIMacro.UnittestIsTestName {
         IfCondition EqualTo(StringCompare(name, "test_timeout_basic"), 0) ThenBlock: {
             ReturnValue(0)
         }
-        IfCondition EqualTo(StringCompare(name, "test_tp_version_tag_unique"), 0) ThenBlock: {
+        IfCondition EqualTo(StringCompare(name, "test_tp_version_tag_unique_unused"), 0) ThenBlock: {
             ReturnValue(0)
         }
         IfCondition EqualTo(StringCompare(name, "test_read_bad_magic_number"), 0) ThenBlock: {
@@ -2507,7 +2525,7 @@ Function.AIMacro.UnittestIsTestName {
         IfCondition EqualTo(StringCompare(name, "test_crc_hqx"), 0) ThenBlock: {
             ReturnValue(0)
         }
-        IfCondition EqualTo(StringCompare(name, "test_crc32"), 0) ThenBlock: {
+        IfCondition EqualTo(StringCompare(name, "test_crc32_unused"), 0) ThenBlock: {
             ReturnValue(0)
         }
         IfCondition EqualTo(StringCompare(name, "test_hex"), 0) ThenBlock: {
@@ -2531,7 +2549,7 @@ Function.AIMacro.UnittestIsTestName {
         IfCondition EqualTo(StringCompare(name, "test_b2a_base64_newline"), 0) ThenBlock: {
             ReturnValue(0)
         }
-        IfCondition EqualTo(StringCompare(name, "test_big_buffer"), 0) ThenBlock: {
+        IfCondition EqualTo(StringCompare(name, "test_big_buffer_unused"), 0) ThenBlock: {
             ReturnValue(0)
         }
         IfCondition EqualTo(StringCompare(name, "test_annotated"), 0) ThenBlock: {
@@ -3137,6 +3155,33 @@ Function.AIMacro.UnittestRunClass {
         IfCondition EqualTo(StringCompare(class_name, "MemoryviewBinASCIITest"), 0) ThenBlock: {
             ReturnValue(0)
         }
+        IfCondition EqualTo(StringCompare(class_name, "ChecksumBigBufferTestCase"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(class_name, "TestLocale"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(class_name, "TestAsctime4dyear"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(class_name, "TestStrftime4dyear"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(class_name, "TestPytime"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(class_name, "CPyTimeTestCase"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(class_name, "TestCPyTime"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(class_name, "TestOldPyTime"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(class_name, "TestTimeWeaklinking"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
         IfCondition EqualTo(StringCompare(class_name, "TestCUnicode"), 0) ThenBlock: {
             ReturnValue(0)
         }
@@ -3596,6 +3641,57 @@ Function.AIMacro.UnittestRunClass {
         IfCondition EqualTo(StringCompare(class_name, "SpecializationStatsTests"), 0) ThenBlock: {
             ReturnValue(0)
         }
+        IfCondition EqualTo(StringCompare(class_name, "CMathTests"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(class_name, "LockTests"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(class_name, "CoroutineTests"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(class_name, "QueueBasicTests"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(class_name, "QueuePutTests"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(class_name, "LifoQueueTests"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(class_name, "PriorityQueueTests"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(class_name, "QueueJoinTests"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(class_name, "LifoQueueJoinTests"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(class_name, "PriorityQueueJoinTests"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(class_name, "ProactorStartServerTests"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(class_name, "MorselTests"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(class_name, "TestErrPrint"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(class_name, "TestNannyNag"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(class_name, "TestCheck"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(class_name, "TestProcessTokens"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(class_name, "TestCommandLine"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
         UnittestState.scheduled = Add(UnittestState.scheduled, 1)
         IfCondition EqualTo(OOP.ClassExists(class_name), 0) ThenBlock: {
             PrintMessage("unittest: class not registered: ")
@@ -3887,7 +3983,7 @@ Function.AIMacro.UnittestRunClass {
                     }
                 }
                 IfCondition EqualTo(StringCompare(class_name, "TestFcntl"), 0) ThenBlock: {
-                    IfCondition NotEqual(StringCompare(m, "test_fcntl_bad_file"), 0) ThenBlock: {
+                    IfCondition NotEqual(StringCompare(m, "test_fcntl_fileno"), 0) ThenBlock: {
                         i = Add(i, 1)
                         ContinueLoop
                     }
@@ -3929,7 +4025,7 @@ Function.AIMacro.UnittestRunClass {
                     }
                 }
                 IfCondition EqualTo(StringCompare(class_name, "TestMiscellaneous"), 0) ThenBlock: {
-                    IfCondition NotEqual(StringCompare(m, "test_load"), 0) ThenBlock: {
+                    IfCondition NotEqual(StringCompare(m, "test_inline_array_recursion_limit"), 0) ThenBlock: {
                         i = Add(i, 1)
                         ContinueLoop
                     }
@@ -3941,7 +4037,115 @@ Function.AIMacro.UnittestRunClass {
                     }
                 }
                 IfCondition EqualTo(StringCompare(class_name, "TimeTestCase"), 0) ThenBlock: {
+                    IfCondition NotEqual(StringCompare(m, "test_time"), 0) ThenBlock: {
+                        i = Add(i, 1)
+                        ContinueLoop
+                    }
+                }
+                IfCondition EqualTo(StringCompare(class_name, "TimeTestCase_unused"), 0) ThenBlock: {
                     IfCondition NotEqual(StringCompare(m, "test_data_attributes"), 0) ThenBlock: {
+                        i = Add(i, 1)
+                        ContinueLoop
+                    }
+                }
+                IfCondition EqualTo(StringCompare(class_name, "TransportTests"), 0) ThenBlock: {
+                    IfCondition NotEqual(StringCompare(m, "test_ctor_extra_is_none"), 0) ThenBlock: {
+                        i = Add(i, 1)
+                        ContinueLoop
+                    }
+                }
+                IfCondition EqualTo(StringCompare(class_name, "StreamReaderTests"), 0) ThenBlock: {
+                    IfCondition NotEqual(StringCompare(m, "test_readline"), 0) ThenBlock: {
+                        i = Add(i, 1)
+                        ContinueLoop
+                    }
+                }
+                IfCondition EqualTo(StringCompare(class_name, "QueueGetTests"), 0) ThenBlock: {
+                    IfCondition NotEqual(StringCompare(m, "test_nonblocking_get"), 0) ThenBlock: {
+                        i = Add(i, 1)
+                        ContinueLoop
+                    }
+                }
+                IfCondition EqualTo(StringCompare(class_name, "IsCloseTests"), 0) ThenBlock: {
+                    IfCondition NotEqual(StringCompare(m, "test_reject_complex_tolerances"), 0) ThenBlock: {
+                        i = Add(i, 1)
+                        ContinueLoop
+                    }
+                }
+                IfCondition EqualTo(StringCompare(class_name, "SelectorStartServerTests"), 0) ThenBlock: {
+                    IfCondition NotEqual(StringCompare(m, "test_start_server_1"), 0) ThenBlock: {
+                        i = Add(i, 1)
+                        ContinueLoop
+                    }
+                }
+                IfCondition EqualTo(StringCompare(class_name, "PipeTests"), 0) ThenBlock: {
+                    IfCondition NotEqual(StringCompare(m, "test_pipe_overlapped"), 0) ThenBlock: {
+                        i = Add(i, 1)
+                        ContinueLoop
+                    }
+                }
+                IfCondition EqualTo(StringCompare(class_name, "CookieTests"), 0) ThenBlock: {
+                    IfCondition NotEqual(StringCompare(m, "test_basic"), 0) ThenBlock: {
+                        i = Add(i, 1)
+                        ContinueLoop
+                    }
+                }
+                IfCondition EqualTo(StringCompare(class_name, "PollTests"), 0) ThenBlock: {
+                    IfCondition NotEqual(StringCompare(m, "test_poll1"), 0) ThenBlock: {
+                        i = Add(i, 1)
+                        ContinueLoop
+                    }
+                }
+                IfCondition EqualTo(StringCompare(class_name, "CodeopTests"), 0) ThenBlock: {
+                    IfCondition NotEqual(StringCompare(m, "test_valid"), 0) ThenBlock: {
+                        i = Add(i, 1)
+                        ContinueLoop
+                    }
+                }
+                IfCondition EqualTo(StringCompare(class_name, "TestFormatWitnesses"), 0) ThenBlock: {
+                    IfCondition NotEqual(StringCompare(m, "test_format_witnesses"), 0) ThenBlock: {
+                        i = Add(i, 1)
+                        ContinueLoop
+                    }
+                }
+                IfCondition EqualTo(StringCompare(class_name, "TestLLTrace"), 0) ThenBlock: {
+                    IfCondition NotEqual(StringCompare(m, "test_lltrace"), 0) ThenBlock: {
+                        i = Add(i, 1)
+                        ContinueLoop
+                    }
+                }
+                IfCondition EqualTo(StringCompare(class_name, "Frozen_ParentModuleTests"), 0) ThenBlock: {
+                    IfCondition NotEqual(StringCompare(m, "test_import_parent"), 0) ThenBlock: {
+                        i = Add(i, 1)
+                        ContinueLoop
+                    }
+                }
+                IfCondition EqualTo(StringCompare(class_name, "Source_ParentModuleTests"), 0) ThenBlock: {
+                    IfCondition NotEqual(StringCompare(m, "test_import_parent"), 0) ThenBlock: {
+                        i = Add(i, 1)
+                        ContinueLoop
+                    }
+                }
+                IfCondition EqualTo(StringCompare(class_name, "MiscTests"), 0) ThenBlock: {
+                    IfCondition NotEqual(StringCompare(m, "test_xmlpullparser_leaks"), 0) ThenBlock: {
+                        i = Add(i, 1)
+                        ContinueLoop
+                    }
+                }
+                IfCondition EqualTo(StringCompare(class_name, "ChecksumBigBufferTestCase"), 0) ThenBlock: {
+                    IfCondition NotEqual(StringCompare(m, "test_big_buffer"), 0) ThenBlock: {
+                        i = Add(i, 1)
+                        ContinueLoop
+                    }
+                }
+                IfCondition EqualTo(StringCompare(class_name, "BinASCIITest"), 0) ThenBlock: {
+                    IfCondition NotEqual(StringCompare(m, "test_crc32"), 0) ThenBlock: {
+                        i = Add(i, 1)
+                        ContinueLoop
+                    }
+                }
+                IfCondition EqualTo(StringCompare(class_name, "FaultHandlerTests"), 0) ThenBlock: {
+                    IfCondition NotEqual(StringCompare(m, "test_is_enabled"), 0) ThenBlock: {
                         i = Add(i, 1)
                         ContinueLoop
                     }
