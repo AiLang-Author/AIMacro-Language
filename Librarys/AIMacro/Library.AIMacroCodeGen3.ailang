@@ -1790,6 +1790,9 @@ Function.Gen_FlattenExpr {
         IfCondition EqualTo(t, Node.LIST_LIT) ThenBlock: {
             ReturnValue(Gen_CreateListLiteral(node))
         }
+        IfCondition EqualTo(t, Node.TUPLE_LIT) ThenBlock: {
+            ReturnValue(Gen_CreateListLiteral(node))
+        }
 
         IfCondition EqualTo(t, Node.DICT_LIT) ThenBlock: {
             ReturnValue(Gen_CreateDictLiteral(node))
@@ -1818,7 +1821,7 @@ Function.Gen_FlattenCallArgs {
             arg_type = AST_Type(arg)
             
             // Handle inline list literals
-            IfCondition EqualTo(arg_type, Node.LIST_LIT) ThenBlock: {
+            IfCondition Or(EqualTo(arg_type, Node.LIST_LIT), EqualTo(arg_type, Node.TUPLE_LIT)) ThenBlock: {
                 list_ident = Gen_CreateListLiteral(arg)
                 Array.Set(args, idx, list_ident)
                 idx = Add(idx, 1)
@@ -1881,7 +1884,7 @@ Function.Gen_FlattenMethodArgs {
             }
             
             // Handle inline list literals
-            IfCondition EqualTo(arg_type, Node.LIST_LIT) ThenBlock: {
+            IfCondition Or(EqualTo(arg_type, Node.LIST_LIT), EqualTo(arg_type, Node.TUPLE_LIT)) ThenBlock: {
                 list_ident = Gen_CreateListLiteral(arg)
                 Array.Set(args, idx, list_ident)
                 idx = Add(idx, 1)
@@ -1955,6 +1958,22 @@ Function.Gen_CreateListLiteral {
                 Gen_Emit(")\n")
             }
             i = Add(i, 1)
+        }
+
+        is_tup = EqualTo(AST_Type(list_node), Node.TUPLE_LIT)
+        IfCondition EqualTo(is_tup, 0) ThenBlock: {
+            IfCondition GreaterEqual(Array.Size(list_node), 5) ThenBlock: {
+                is_tup = ArrayGet(list_node, 4)
+            }
+        }
+        IfCondition EqualTo(is_tup, 1) ThenBlock: {
+            wrap = Gen_TempName()
+            Gen_EmitIndent()
+            Gen_Emit(wrap)
+            Gen_Emit(" = AIMacro.WrapSeq(")
+            Gen_Emit(temp)
+            Gen_Emit(", \"tuple\")\n")
+            ReturnValue(Gen_MakeIdent(wrap))
         }
         
         // Return identifier node for the temp

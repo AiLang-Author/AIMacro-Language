@@ -990,22 +990,17 @@
     },
     "test_colorsys.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_colorsys.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": 1,
-      "err": "",
-      "out": "\n  ColorsysTest.test_hsv_values\nFAIL: assertEqual\n  ColorsysTest.test_hls_roundtrip\n  ColorsysTest.test_hls_values\nFAIL: assertEqual\n  ColorsysTest.test_hls_nearwhite\nFAIL: assertEqual\n  ColorsysTest.test_yiq_roundtrip\n  ColorsysTest.test_yiq_values\nFAIL: assertEqual\nunittest: ran 7 tests, 4 failed\n",
+      "status": "pass",
       "tags": [],
-      "key": "test_colorsys.py"
+      "stage_ok": "run",
+      "key": "test_colorsys.py",
+      "updated": "2026-09-29"
     },
     "test_compare.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_compare.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": 1,
-      "err": "",
-      "out": "  ComparisonSimpleTest.test_comparisons\n  ComparisonSimpleTest.test_id_comparisons\n  ComparisonSimpleTest.test_ne_defaults_to_not_eq\n  ComparisonSimpleTest.test_ne_high_priority\n  ComparisonSimpleTest.test_ne_low_priority\n  ComparisonSimpleTest.test_other_delegation\n  ComparisonSimpleTest.test_issue_1393\n  ComparisonFullTest.test_objects\n  ComparisonFullTest.test_comp_classes_same\nFAIL: assertEqual\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\n  ComparisonFullTest.test_comp_classes_different\nFAIL: assertEqual\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\n  ComparisonFullTest.test_str_subclass\n  ComparisonFullTest.test_numbers\nFAIL: assertEqual\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\n  ComparisonFullTest.test_sequences\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\n  ComparisonFullTest.test_bytes\n  ComparisonFullTest.test_sets\n  ComparisonFullTest.test_mappings\nFAIL: assertEqual\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nunittest: ran 16 tests, 98 failed\n",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_compare.py",
       "updated": "2026-09-29"
     },
@@ -1099,13 +1094,11 @@
     },
     "test_copyreg.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_copyreg.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": 1,
-      "err": "",
-      "out": "L: assertRaises\n  CopyRegTestCase.test_bool\nFAIL: assertEqual\n  CopyRegTestCase.test_extension_registry\nFAIL: assertRaises\nERROR: Method not found: assertNotIn\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\n  CopyRegTestCase.test_slotnames\nFAIL: assertEqual\nunittest: ran 6 tests, 9 failed\n",
+      "status": "pass",
       "tags": [],
-      "key": "test_copyreg.py"
+      "stage_ok": "run",
+      "key": "test_copyreg.py",
+      "updated": "2026-09-29"
     },
     "test_coroutines.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_coroutines.py",
@@ -2734,7 +2727,7 @@
       "stage": "run",
       "rc": -11,
       "err": "",
-      "out": "  BaseTestCase.test_basic\n  BaseTestCase.test_slice\n  BaseTestCase.test_wrappers\n  BaseTestCase.test_subclasses\nFAIL: assertEqual\n  BaseTestCase.test_error\n  BaseTestCase.test_int_subclass_with_index\nFAIL: assertEqual\nFAIL: assertIs\n  BaseTestCase.test_index_returns_int_subclass\nFAIL: assertEqual\n  ListTestCase.test_index\n  ListTestCase.test_slice\n  ListTestCase.test_slice_bug7532\n  ListTestCase.test_repeat\n  ListTestCase.test_wrappers\n  ListTestCase.test_subclasses\n  ListTestCase.test_error\n  ListTestCase.test_setdelitem\n  ListTestCase.test_inplace_repeat\n  TupleTestCase.test_index\n  TupleTestCase.test_slice\n  TupleTestCase.test_slice_bug7532\n  TupleTestCase.test_repeat\n  TupleTestCase.test_wrappers\n  TupleTestCase.test_subclasses\n  TupleTestCase.test_error\n  ByteArrayTestCase.test_index\nFAIL: assertEqual\n  ByteArrayTestCase.test_slice\n  ByteArrayTestCase.test_slice_bug7532\nFAIL: assertEqual\n  ByteArrayTestCase.test_repeat\nFAIL: assertEqual\n  ByteArrayTestCase.test_wrappers\nFAIL: assertEqual\n  ByteArrayTestCase.test_subclasses\n  ByteArrayTestCase.test_error\n  BytesTestCase.test_index\n",
+      "out": "  BaseTestCase.test_basic\n  BaseTestCase.test_slice\n  BaseTestCase.test_wrappers\n  BaseTestCase.test_subclasses\nFAIL: assertEqual\n  BaseTestCase.test_error\n  BaseTestCase.test_int_subclass_with_index\nFAIL: assertEqual\nFAIL: assertIs\n  BaseTestCase.test_index_returns_int_subclass\nFAIL: assertEqual\n  ListTestCase.test_index\n  ListTestCase.test_slice\n  ListTestCase.test_slice_bug7532\n  ListTestCase.test_repeat\n  ListTestCase.test_wrappers\n  ListTestCase.test_subclasses\n  ListTestCase.test_error\n  ListTestCase.test_setdelitem\n  ListTestCase.test_inplace_repeat\n  TupleTestCase.test_index\nFAIL: assertEqual\n  TupleTestCase.test_slice\n  TupleTestCase.test_slice_bug7532\nFAIL: assertEqual\n  TupleTestCase.test_repeat\n  TupleTestCase.test_wrappers\n  TupleTestCase.test_subclasses\n  TupleTestCase.test_error\n  ByteArrayTestCase.test_index\nFAIL: assertEqual\n  ByteArrayTestCase.test_slice\n  ByteArrayTestCase.test_slice_bug7532\nFAIL: assertEqual\n  ByteArrayTestCase.test_repeat\n  ByteArrayTestCase.test_wrappers\n  ByteArrayTestCase.test_subclasses\n  ByteArrayTestCase.test_error\n  BytesTestCase.test_index\n",
       "tags": [],
       "key": "test_index.py",
       "updated": "2026-09-29"
@@ -5204,12 +5197,13 @@
     "test_userlist.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_userlist.py",
       "status": "fail",
-      "stage": "run",
+      "stage": "compile",
       "rc": -11,
-      "err": "",
-      "out": "  UserListTest.test_getslice\nERROR: Method not found: type2test\nFAIL: assertEqual\n  UserListTest.test_slice_type\n",
+      "err": "T] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments",
+      "out": "",
       "tags": [],
-      "key": "test_userlist.py"
+      "key": "test_userlist.py",
+      "updated": "2026-09-29"
     },
     "test_userstring.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_userstring.py",

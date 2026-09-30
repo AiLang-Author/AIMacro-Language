@@ -1410,6 +1410,9 @@ Function.Gen_HasCall {
         IfCondition EqualTo(t, Node.LIST_LIT) ThenBlock: {
             ReturnValue(1)
         }
+        IfCondition EqualTo(t, Node.TUPLE_LIT) ThenBlock: {
+            ReturnValue(1)
+        }
         IfCondition EqualTo(t, Node.DICT_LIT) ThenBlock: {
             ReturnValue(1)
         }
@@ -1682,6 +1685,18 @@ Function.Gen_IsShimModule {
         cmp = StringCompare(name, "operator")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
         cmp = StringCompare(name, "abc")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+        cmp = StringCompare(name, "fractions")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+        cmp = StringCompare(name, "decimal")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+        cmp = StringCompare(name, "colorsys")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+        cmp = StringCompare(name, "collections")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+        cmp = StringCompare(name, "copy")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+        cmp = StringCompare(name, "copyreg")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
         IfCondition EqualTo(Gen_NameStartsWith(name, "unittest"), 1) ThenBlock: {
             ReturnValue(1)

@@ -235,7 +235,7 @@ Function.Gen_Expr {
             ReturnValue(0)
         }
         
-        IfCondition EqualTo(t, Node.LIST_LIT) ThenBlock: {
+        IfCondition Or(EqualTo(t, Node.LIST_LIT), EqualTo(t, Node.TUPLE_LIT)) ThenBlock: {
             elems = ArrayGet(node, 3)
             n = Array.Size(elems)
             Gen_EmitArrayCreate(n)
@@ -982,7 +982,8 @@ Function.Gen_CallExpr {
         }
 
         // Param/local/module var holding a callable (constructor(values)) → CallIndirect
-        IfCondition Or(EqualTo(Gen_IsCallableVar(name), 1), Or(EqualTo(Gen_IsParam(name), 1), EqualTo(Gen_IsModuleVar(name), 1))) ThenBlock: {
+        // Packed methods store params as enclosing names (not Gen.param_names).
+        IfCondition Or(EqualTo(Gen_IsCallableVar(name), 1), Or(EqualTo(Gen_IsParam(name), 1), Or(EqualTo(Gen_IsModuleVar(name), 1), EqualTo(Gen_IsEnclosingParam(name), 1)))) ThenBlock: {
             // Bound list.append → AIMacro.SmartPush(self, args...)
             bound_self = Gen_GetBoundAppendSelf(name)
             IfCondition NotEqual(bound_self, 0) ThenBlock: {
@@ -3233,6 +3234,9 @@ Function.Gen_MapMethod {
 
         cmp = StringCompare(method, "reverse")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.ListReverse") }
+
+        cmp = StringCompare(method, "isdisjoint")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.SetIsdisjoint") }
                 
         ReturnValue(method)
     }

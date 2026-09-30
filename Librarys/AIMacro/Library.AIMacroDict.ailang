@@ -17,12 +17,7 @@ Function.DictGen_HashKey {
     Input: key: Address
     Output: Address
     Body: {
-        IfCondition EqualTo(AIMacro.LooksLikeString(key), 1) ThenBlock: {
-            IfCondition EqualTo(Types.IsBigInt(key), 0) ThenBlock: {
-                ReturnValue(key)
-            }
-        }
-        ReturnValue(NumberToString(AIMacro.UnboxIntZero(key)))
+        ReturnValue(AIMacro.DictKey(key))
     }
 }
 
@@ -264,6 +259,29 @@ Function.DictGen_SmartGet {
     Body: {
         IfCondition EqualTo(container, 0) ThenBlock: {
             ReturnValue(-999999)
+        }
+        IfCondition EqualTo(AIMacro.SafeIsHash(container), 1) ThenBlock: {
+            IfCondition EqualTo(OOP.MethodExists(container, "__getitem__"), 1) ThenBlock: {
+                gargs = Array.Create(1)
+                Array.Push(gargs, key)
+                ReturnValue(OOP.MethodCall(container, "__getitem__", gargs))
+            }
+            wlst = Hash.Get(container, "__list__")
+            IfCondition EqualTo(Array.IsArray(wlst), 1) ThenBlock: {
+                IfCondition EqualTo(Hash.IsHash(key), 1) ThenBlock: {
+                    IfCondition EqualTo(StringCompare(Hash.Get(key, "__class__"), "slice"), 0) ThenBlock: {
+                        ReturnValue(AIMacro.ListSlice(wlst, Hash.Get(key, "start"), Hash.Get(key, "stop"), Hash.Get(key, "step")))
+                    }
+                }
+                n = Array.Size(wlst)
+                idx = AIMacro.NormIndex(key, n)
+                IfCondition Or(LessThan(idx, 0), GreaterEqual(idx, n)) ThenBlock: {
+                    AIMacro.RaiseKind(17, "index out of range")
+                    ReturnValue(0)
+                }
+                ReturnValue(Array.Get(wlst, idx))
+            }
+            ReturnValue(Hash.Get(container, DictGen_HashKey(key)))
         }
         IfCondition EqualTo(AIMacro.LooksLikeString(container), 1) ThenBlock: {
             IfCondition EqualTo(AIMacro.LooksLikeString(key), 1) ThenBlock: {

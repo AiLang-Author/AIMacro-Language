@@ -121,6 +121,7 @@ FixedPool.Node {
     "STR_LIT": Initialize=16
     "BOOL_LIT": Initialize=17
     "LIST_LIT": Initialize=18
+    "TUPLE_LIT": Initialize=48
     "DICT_LIT": Initialize=19
     "EXPR_STMT": Initialize=20
     "BREAK_STMT": Initialize=21

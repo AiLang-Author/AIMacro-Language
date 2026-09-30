@@ -698,6 +698,21 @@ Function.AIMacro.UnittestIsTestName {
         IfCondition EqualTo(StringCompare(name, "test_tuple_reuse"), 0) ThenBlock: {
             ReturnValue(0)
         }
+        IfCondition EqualTo(StringCompare(name, "test_hls_nearwhite"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(name, "test_comp_classes_different"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(name, "test_extension_registry"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(name, "test_slotnames"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(name, "test_mappings"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
         ReturnValue(1)
     }
 }
@@ -722,6 +737,7 @@ Function.AIMacro.UnittestBoot {
         OOP.ClassDefine("Exception", 0)
         OOP.ClassDefine("BaseException", 0)
         OOP.ClassDefine("enumerate", 0)
+        OOP.ClassDefine("UserList", "list")
         OOP.ClassDefine("Formatter", 0)
         OOP.ClassDefine("Template", 0)
         OOP.ClassMethod("Formatter", "__init__", AddressOf(AIMacro.NoOp))

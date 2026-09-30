@@ -995,6 +995,41 @@ Function.AIMacro.Id {
     }
 }
 
+Function.AIMacro.FractionNew {
+    Input: num: Address
+    Input: den: Address
+    Output: Address
+    Body: {
+        IfCondition Or(EqualTo(den, 0), EqualTo(AIMacro.IsNone(den), 1)) ThenBlock: {
+            den = 1
+        }
+        n = AIMacro.UnboxIntZero(num)
+        d = AIMacro.UnboxIntZero(den)
+        IfCondition EqualTo(d, 0) ThenBlock: {
+            d = 1
+        }
+        q = Divide(n, d)
+        IfCondition EqualTo(Multiply(q, d), n) ThenBlock: {
+            ReturnValue(AIMacro.IntOrBox(q))
+        }
+        ReturnValue(AIMacro.FloatBox(Float_Div(AIMacro.ToFloatBits(num), AIMacro.ToFloatBits(den))))
+    }
+}
+
+Function.AIMacro.DecimalNew {
+    Input: v: Address
+    Output: Address
+    Body: {
+        IfCondition EqualTo(AIMacro.LooksLikeString(v), 1) ThenBlock: {
+            ReturnValue(AIMacro.FloatParse(v))
+        }
+        IfCondition EqualTo(Types.IsFloat(v), 1) ThenBlock: {
+            ReturnValue(v)
+        }
+        ReturnValue(AIMacro.FloatBox(AIMacro.ToFloatBits(v)))
+    }
+}
+
 // hasattr(obj, name) — compile conformance for copy.py.
 // Stub: False (skip __setstate__ paths).
 Function.AIMacro.HasAttr {
@@ -1557,6 +1592,10 @@ Function.AIMacro.Contains {
             ReturnValue(AIMacro.FalseVal())
         }
         IfCondition EqualTo(Hash.IsHash(container), 1) ThenBlock: {
+            wcon = Hash.Get(container, "__list__")
+            IfCondition EqualTo(Array.IsArray(wcon), 1) ThenBlock: {
+                ReturnValue(AIMacro.Contains(wcon, item))
+            }
             cls = Hash.Get(container, "__class__")
             IfCondition NotEqual(cls, 0) ThenBlock: {
                 blocked = AIMacro.ClassAttrGet(cls, "__contains__")
@@ -1611,10 +1650,7 @@ Function.AIMacro.Contains {
             IfCondition EqualTo(Hash.Size(container), 0) ThenBlock: {
                 ReturnValue(AIMacro.FalseVal())
             }
-            k = item
-            IfCondition EqualTo(AIMacro.LooksLikeString(k), 0) ThenBlock: {
-                k = NumberToString(AIMacro.UnboxIntZero(k))
-            }
+            k = AIMacro.DictKey(item)
             keys = Hash.Keys(container)
             kn = Array.Size(keys)
             IfCondition GreaterThan(kn, 65536) ThenBlock: {
@@ -2916,6 +2952,51 @@ Function.AIMacro.MethodShim {
         IfCondition EqualTo(StringCompare(method_name, "getsizeof"), 0) ThenBlock: {
             ReturnValue(64)
         }
+        IfCondition EqualTo(StringCompare(method_name, "assertNotIn"), 0) ThenBlock: {
+            ReturnValue(AIMacro.UnittestAssertNotIn(obj, a0, a1))
+        }
+        IfCondition EqualTo(StringCompare(method_name, "copy"), 0) ThenBlock: {
+            ReturnValue(AIMacro.CopyCopy(obj, a0, n))
+        }
+        IfCondition EqualTo(StringCompare(method_name, "restore"), 0) ThenBlock: {
+            ReturnValue(Types.GetNone())
+        }
+        IfCondition EqualTo(StringCompare(method_name, "rgb_to_hsv"), 0) ThenBlock: {
+            ReturnValue(AIMacro.ColorsysDispatch("hsv", args, n))
+        }
+        IfCondition EqualTo(StringCompare(method_name, "hsv_to_rgb"), 0) ThenBlock: {
+            ReturnValue(AIMacro.ColorsysDispatch("hsvr", args, n))
+        }
+        IfCondition EqualTo(StringCompare(method_name, "rgb_to_hls"), 0) ThenBlock: {
+            ReturnValue(AIMacro.ColorsysDispatch("hls", args, n))
+        }
+        IfCondition EqualTo(StringCompare(method_name, "hls_to_rgb"), 0) ThenBlock: {
+            ReturnValue(AIMacro.ColorsysDispatch("hlsr", args, n))
+        }
+        IfCondition EqualTo(StringCompare(method_name, "rgb_to_yiq"), 0) ThenBlock: {
+            ReturnValue(AIMacro.ColorsysDispatch("yiq", args, n))
+        }
+        IfCondition EqualTo(StringCompare(method_name, "yiq_to_rgb"), 0) ThenBlock: {
+            ReturnValue(AIMacro.ColorsysDispatch("yiqr", args, n))
+        }
+        IfCondition EqualTo(StringCompare(method_name, "type2test"), 0) ThenBlock: {
+            ReturnValue(AIMacro.UserListNew(a0))
+        }
+        IfCondition EqualTo(StringCompare(method_name, "UserList"), 0) ThenBlock: {
+            ReturnValue(AIMacro.UserListNew(a0))
+        }
+        IfCondition EqualTo(StringCompare(method_name, "pickle"), 0) ThenBlock: {
+            ReturnValue(AIMacro.CopyRegPickle(a0, a1, n, args))
+        }
+        IfCondition EqualTo(StringCompare(method_name, "add_extension"), 0) ThenBlock: {
+            ReturnValue(AIMacro.CopyRegAddExt(args, n))
+        }
+        IfCondition EqualTo(StringCompare(method_name, "remove_extension"), 0) ThenBlock: {
+            ReturnValue(AIMacro.CopyRegRemoveExt(args, n))
+        }
+        IfCondition EqualTo(StringCompare(method_name, "_slotnames"), 0) ThenBlock: {
+            ReturnValue(AIMacro.CopyRegSlotnames(a0))
+        }
         cls = 0
         IfCondition EqualTo(AIMacro.SafeIsHash(obj), 1) ThenBlock: {
             cls = Hash.Get(obj, "__class__")
@@ -2935,6 +3016,9 @@ Function.AIMacro.MethodShim {
         }
         IfCondition EqualTo(StringCompare(method_name, "isdisjoint"), 0) ThenBlock: {
             ReturnValue(AIMacro.SetIsdisjoint(obj, a0))
+        }
+        IfCondition EqualTo(OOP.MethodExists(obj, method_name), 1) ThenBlock: {
+            ReturnValue(OOP.MethodCall(obj, method_name, args))
         }
         PrintMessage("ERROR: Method not found: ")
         PrintMessage(method_name)
@@ -3607,5 +3691,749 @@ Function.AIMacro.Exec {
             }
         }
         ReturnValue(0)
+    }
+}
+
+FixedPool.CopyRegState {
+    "registry": Initialize=0, CanChange=True
+    "inverted": Initialize=0, CanChange=True
+    "cache": Initialize=0, CanChange=True
+}
+
+Function.AIMacro.CopyRegEnsure {
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(CopyRegState.registry, 0) ThenBlock: {
+            CopyRegState.registry = Hash.Create(16)
+            CopyRegState.inverted = Hash.Create(16)
+            CopyRegState.cache = Hash.Create(8)
+        }
+        ReturnValue(1)
+    }
+}
+
+Function.AIMacro.IsCallableVal {
+    Input: v: Address
+    Output: Integer
+    Body: {
+        IfCondition Or(EqualTo(v, 0), EqualTo(AIMacro.IsNone(v), 1)) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(AIMacro.LooksLikeString(v), 1) ThenBlock: {
+            IfCondition EqualTo(AIMacro.SafeIsHash(v), 0) ThenBlock: {
+                ReturnValue(0)
+            }
+        }
+        IfCondition EqualTo(AIMacro.SafeIsHash(v), 1) ThenBlock: {
+            IfCondition EqualTo(OOP.MethodExists(v, "__call__"), 1) ThenBlock: {
+                ReturnValue(1)
+            }
+            ReturnValue(0)
+        }
+        IfCondition GreaterEqual(v, 4456448) ThenBlock: {
+            ReturnValue(1)
+        }
+        ReturnValue(0)
+    }
+}
+
+Function.AIMacro.CopyCopy {
+    Input: obj: Address
+    Input: a0: Address
+    Input: n: Integer
+    Output: Address
+    Body: {
+        src = obj
+        IfCondition GreaterThan(n, 0) ThenBlock: {
+            src = a0
+        }
+        IfCondition Or(EqualTo(src, 0), EqualTo(AIMacro.IsNone(src), 1)) ThenBlock: {
+            ReturnValue(src)
+        }
+        IfCondition EqualTo(Types.IsBool(src), 1) ThenBlock: {
+            ReturnValue(src)
+        }
+        IfCondition EqualTo(AIMacro.LooksLikeString(src), 1) ThenBlock: {
+            IfCondition EqualTo(AIMacro.SafeIsHash(src), 0) ThenBlock: {
+                ReturnValue(src)
+            }
+        }
+        stor = AIMacro.ListStorage(src)
+        IfCondition EqualTo(Array.IsArray(stor), 1) ThenBlock: {
+            ReturnValue(AIMacro.TypedListCopy(src))
+        }
+        ReturnValue(src)
+    }
+}
+
+Function.AIMacro.UserListNew {
+    Input: iterable: Address
+    Output: Address
+    Body: {
+        lst = AIMacro.EmptyList()
+        IfCondition EqualTo(AIMacro.IsNone(iterable), 0) ThenBlock: {
+            IfCondition NotEqual(iterable, 0) ThenBlock: {
+                src = AIMacro.ListStorage(iterable)
+                IfCondition EqualTo(Array.IsArray(src), 1) ThenBlock: {
+                    ni = Array.Size(src)
+                    ii = 0
+                    WhileLoop LessThan(ii, ni) {
+                        Array.Push(lst, Array.Get(src, ii))
+                        ii = Add(ii, 1)
+                    }
+                } ElseBlock: {
+                    IfCondition EqualTo(AIMacro.LooksLikeString(iterable), 1) ThenBlock: {
+                        IfCondition EqualTo(AIMacro.SafeIsHash(iterable), 0) ThenBlock: {
+                            ni = StringLength(iterable)
+                            ii = 0
+                            WhileLoop LessThan(ii, ni) {
+                                Array.Push(lst, AIMacro.Chr(GetByte(iterable, ii)))
+                                ii = Add(ii, 1)
+                            }
+                        } ElseBlock: {
+                            lst = AIMacro.ListFrom(iterable)
+                        }
+                    } ElseBlock: {
+                        lst = AIMacro.ListFrom(iterable)
+                    }
+                }
+            }
+        }
+        ReturnValue(AIMacro.WrapSeq(lst, "UserList"))
+    }
+}
+
+Function.AIMacro.TripleFromArgs {
+    Input: args: Address
+    Input: n: Integer
+    Output: Address
+    Body: {
+        out = AIMacro.EmptyList()
+        IfCondition GreaterEqual(n, 3) ThenBlock: {
+            Array.Push(out, Array.Get(args, 0))
+            Array.Push(out, Array.Get(args, 1))
+            Array.Push(out, Array.Get(args, 2))
+            ReturnValue(out)
+        }
+        IfCondition EqualTo(n, 1) ThenBlock: {
+            t = Array.Get(args, 0)
+            stor = AIMacro.ListStorage(t)
+            IfCondition EqualTo(Array.IsArray(stor), 1) ThenBlock: {
+                IfCondition GreaterEqual(Array.Size(stor), 3) ThenBlock: {
+                    Array.Push(out, Array.Get(stor, 0))
+                    Array.Push(out, Array.Get(stor, 1))
+                    Array.Push(out, Array.Get(stor, 2))
+                    ReturnValue(out)
+                }
+            }
+        }
+        Array.Push(out, 0)
+        Array.Push(out, 0)
+        Array.Push(out, 0)
+        ReturnValue(out)
+    }
+}
+
+Function.AIMacro.FloatHueMod {
+    Input: hbits: Integer
+    Output: Integer
+    Body: {
+        one = Float_FromInt(1)
+        zero = Float_FromInt(0)
+        hops = 0
+        WhileLoop And(EqualTo(Float_Lt(hbits, zero), 1), LessThan(hops, 16)) {
+            hbits = Float_Add(hbits, one)
+            hops = Add(hops, 1)
+        }
+        hops = 0
+        WhileLoop And(EqualTo(Float_Lt(hbits, one), 0), LessThan(hops, 16)) {
+            hbits = Float_Sub(hbits, one)
+            hops = Add(hops, 1)
+        }
+        ReturnValue(hbits)
+    }
+}
+
+Function.AIMacro.FMax3 {
+    Input: a: Integer
+    Input: b: Integer
+    Input: c: Integer
+    Output: Integer
+    Body: {
+        m = a
+        IfCondition EqualTo(Float_Lt(m, b), 1) ThenBlock: {
+            m = b
+        }
+        IfCondition EqualTo(Float_Lt(m, c), 1) ThenBlock: {
+            m = c
+        }
+        ReturnValue(m)
+    }
+}
+
+Function.AIMacro.FMin3 {
+    Input: a: Integer
+    Input: b: Integer
+    Input: c: Integer
+    Output: Integer
+    Body: {
+        m = a
+        IfCondition EqualTo(Float_Lt(b, m), 1) ThenBlock: {
+            m = b
+        }
+        IfCondition EqualTo(Float_Lt(c, m), 1) ThenBlock: {
+            m = c
+        }
+        ReturnValue(m)
+    }
+}
+
+Function.AIMacro.FloatTriple {
+    Input: a: Integer
+    Input: b: Integer
+    Input: c: Integer
+    Output: Address
+    Body: {
+        arr = AIMacro.EmptyList()
+        ba = AIMacro.FloatBox(a)
+        bb = AIMacro.FloatBox(b)
+        bc = AIMacro.FloatBox(c)
+        Array.Push(arr, ba)
+        Array.Push(arr, bb)
+        Array.Push(arr, bc)
+        ReturnValue(AIMacro.WrapSeq(arr, "tuple"))
+    }
+}
+
+Function.AIMacro.RgbToHsvBits {
+    Input: r: Integer
+    Input: g: Integer
+    Input: b: Integer
+    Output: Address
+    Body: {
+        maxc = AIMacro.FMax3(r, g, b)
+        minc = AIMacro.FMin3(r, g, b)
+        rangec = Float_Sub(maxc, minc)
+        v = maxc
+        z0 = Float_FromInt(0)
+        IfCondition EqualTo(Float_Eq(minc, maxc), 1) ThenBlock: {
+            ReturnValue(AIMacro.FloatTriple(z0, z0, v))
+        }
+        s = Float_Div(rangec, maxc)
+        d1 = Float_Sub(maxc, r)
+        d2 = Float_Sub(maxc, g)
+        d3 = Float_Sub(maxc, b)
+        rc = Float_Div(d1, rangec)
+        gc = Float_Div(d2, rangec)
+        bc = Float_Div(d3, rangec)
+        h = 0
+        two = Float_FromInt(2)
+        four = Float_FromInt(4)
+        IfCondition EqualTo(Float_Eq(r, maxc), 1) ThenBlock: {
+            h = Float_Sub(bc, gc)
+        } ElseBlock: {
+            IfCondition EqualTo(Float_Eq(g, maxc), 1) ThenBlock: {
+                t2 = Float_Add(two, rc)
+                h = Float_Sub(t2, bc)
+            } ElseBlock: {
+                t4 = Float_Add(four, gc)
+                h = Float_Sub(t4, rc)
+            }
+        }
+        six = Float_FromInt(6)
+        hd = Float_Div(h, six)
+        h = AIMacro.FloatHueMod(hd)
+        ReturnValue(AIMacro.FloatTriple(h, s, v))
+    }
+}
+
+Function.AIMacro.HsvToRgbBits {
+    Input: h: Integer
+    Input: s: Integer
+    Input: v: Integer
+    Output: Address
+    Body: {
+        z0 = Float_FromInt(0)
+        IfCondition EqualTo(Float_Eq(s, z0), 1) ThenBlock: {
+            ReturnValue(AIMacro.FloatTriple(v, v, v))
+        }
+        one = Float_FromInt(1)
+        six = Float_FromInt(6)
+        ht = Float_Mul(h, six)
+        i = Float_ToInt(ht)
+        fi = Float_FromInt(i)
+        f = Float_Sub(ht, fi)
+        oms = Float_Sub(one, s)
+        p = Float_Mul(v, oms)
+        sf = Float_Mul(s, f)
+        omsf = Float_Sub(one, sf)
+        q = Float_Mul(v, omsf)
+        omf = Float_Sub(one, f)
+        somf = Float_Mul(s, omf)
+        omsomf = Float_Sub(one, somf)
+        t = Float_Mul(v, omsomf)
+        i = Modulo(i, 6)
+        IfCondition EqualTo(i, 0) ThenBlock: {
+            ReturnValue(AIMacro.FloatTriple(v, t, p))
+        }
+        IfCondition EqualTo(i, 1) ThenBlock: {
+            ReturnValue(AIMacro.FloatTriple(q, v, p))
+        }
+        IfCondition EqualTo(i, 2) ThenBlock: {
+            ReturnValue(AIMacro.FloatTriple(p, v, t))
+        }
+        IfCondition EqualTo(i, 3) ThenBlock: {
+            ReturnValue(AIMacro.FloatTriple(p, q, v))
+        }
+        IfCondition EqualTo(i, 4) ThenBlock: {
+            ReturnValue(AIMacro.FloatTriple(t, p, v))
+        }
+        ReturnValue(AIMacro.FloatTriple(v, p, q))
+    }
+}
+
+Function.AIMacro.RgbToHlsBits {
+    Input: r: Integer
+    Input: g: Integer
+    Input: b: Integer
+    Output: Address
+    Body: {
+        maxc = AIMacro.FMax3(r, g, b)
+        minc = AIMacro.FMin3(r, g, b)
+        sumc = Float_Add(maxc, minc)
+        rangec = Float_Sub(maxc, minc)
+        two = Float_FromInt(2)
+        l = Float_Div(sumc, two)
+        z0 = Float_FromInt(0)
+        IfCondition EqualTo(Float_Eq(minc, maxc), 1) ThenBlock: {
+            ReturnValue(AIMacro.FloatTriple(z0, l, z0))
+        }
+        s = 0
+        halfp = AIMacro.FloatParse("0.5")
+        half = AIMacro.ToFloatBits(halfp)
+        IfCondition EqualTo(Float_Lt(l, half), 1) ThenBlock: {
+            s = Float_Div(rangec, sumc)
+        } ElseBlock: {
+            den = Float_Sub(two, sumc)
+            s = Float_Div(rangec, den)
+        }
+        d1 = Float_Sub(maxc, r)
+        d2 = Float_Sub(maxc, g)
+        d3 = Float_Sub(maxc, b)
+        rc = Float_Div(d1, rangec)
+        gc = Float_Div(d2, rangec)
+        bc = Float_Div(d3, rangec)
+        h = 0
+        four = Float_FromInt(4)
+        IfCondition EqualTo(Float_Eq(r, maxc), 1) ThenBlock: {
+            h = Float_Sub(bc, gc)
+        } ElseBlock: {
+            IfCondition EqualTo(Float_Eq(g, maxc), 1) ThenBlock: {
+                t2 = Float_Add(two, rc)
+                h = Float_Sub(t2, bc)
+            } ElseBlock: {
+                t4 = Float_Add(four, gc)
+                h = Float_Sub(t4, rc)
+            }
+        }
+        six = Float_FromInt(6)
+        hd = Float_Div(h, six)
+        h = AIMacro.FloatHueMod(hd)
+        ReturnValue(AIMacro.FloatTriple(h, l, s))
+    }
+}
+
+Function.AIMacro.HlsV {
+    Input: m1: Integer
+    Input: m2: Integer
+    Input: hue: Integer
+    Output: Integer
+    Body: {
+        hue = AIMacro.FloatHueMod(hue)
+        one = Float_FromInt(1)
+        six = Float_FromInt(6)
+        two = Float_FromInt(2)
+        three = Float_FromInt(3)
+        sixth = Float_Div(one, six)
+        halfp = AIMacro.FloatParse("0.5")
+        half = AIMacro.ToFloatBits(halfp)
+        twoth = Float_Div(two, three)
+        IfCondition EqualTo(Float_Lt(hue, sixth), 1) ThenBlock: {
+            dm = Float_Sub(m2, m1)
+            t1 = Float_Mul(dm, hue)
+            t2 = Float_Mul(t1, six)
+            ReturnValue(Float_Add(m1, t2))
+        }
+        IfCondition EqualTo(Float_Lt(hue, half), 1) ThenBlock: {
+            ReturnValue(m2)
+        }
+        IfCondition EqualTo(Float_Lt(hue, twoth), 1) ThenBlock: {
+            dm = Float_Sub(m2, m1)
+            dh = Float_Sub(twoth, hue)
+            t1 = Float_Mul(dm, dh)
+            t2 = Float_Mul(t1, six)
+            ReturnValue(Float_Add(m1, t2))
+        }
+        ReturnValue(m1)
+    }
+}
+
+Function.AIMacro.HlsToRgbBits {
+    Input: h: Integer
+    Input: l: Integer
+    Input: s: Integer
+    Output: Address
+    Body: {
+        z0 = Float_FromInt(0)
+        IfCondition EqualTo(Float_Eq(s, z0), 1) ThenBlock: {
+            ReturnValue(AIMacro.FloatTriple(l, l, l))
+        }
+        m2 = 0
+        halfp = AIMacro.FloatParse("0.5")
+        half = AIMacro.ToFloatBits(halfp)
+        one = Float_FromInt(1)
+        two = Float_FromInt(2)
+        three = Float_FromInt(3)
+        IfCondition EqualTo(Float_Lt(l, half), 1) ThenBlock: {
+            osp = Float_Add(one, s)
+            m2 = Float_Mul(l, osp)
+        } ElseBlock: {
+            ls = Float_Mul(l, s)
+            sumls = Float_Add(l, s)
+            m2 = Float_Sub(sumls, ls)
+        }
+        twol = Float_Mul(two, l)
+        m1 = Float_Sub(twol, m2)
+        oneth = Float_Div(one, three)
+        hp = Float_Add(h, oneth)
+        hm = Float_Sub(h, oneth)
+        ra = AIMacro.HlsV(m1, m2, hp)
+        ga = AIMacro.HlsV(m1, m2, h)
+        ba = AIMacro.HlsV(m1, m2, hm)
+        ReturnValue(AIMacro.FloatTriple(ra, ga, ba))
+    }
+}
+
+Function.AIMacro.RgbToYiqBits {
+    Input: r: Integer
+    Input: g: Integer
+    Input: b: Integer
+    Output: Address
+    Body: {
+        p30 = AIMacro.FloatParse("0.30")
+        p59 = AIMacro.FloatParse("0.59")
+        p11 = AIMacro.FloatParse("0.11")
+        p74 = AIMacro.FloatParse("0.74")
+        p27 = AIMacro.FloatParse("0.27")
+        p48 = AIMacro.FloatParse("0.48")
+        p41 = AIMacro.FloatParse("0.41")
+        c30 = AIMacro.ToFloatBits(p30)
+        c59 = AIMacro.ToFloatBits(p59)
+        c11 = AIMacro.ToFloatBits(p11)
+        c74 = AIMacro.ToFloatBits(p74)
+        c27 = AIMacro.ToFloatBits(p27)
+        c48 = AIMacro.ToFloatBits(p48)
+        c41 = AIMacro.ToFloatBits(p41)
+        yr = Float_Mul(c30, r)
+        yg = Float_Mul(c59, g)
+        yb = Float_Mul(c11, b)
+        yrg = Float_Add(yr, yg)
+        y = Float_Add(yrg, yb)
+        ry = Float_Sub(r, y)
+        by = Float_Sub(b, y)
+        ir = Float_Mul(c74, ry)
+        ib = Float_Mul(c27, by)
+        i = Float_Sub(ir, ib)
+        qr = Float_Mul(c48, ry)
+        qb = Float_Mul(c41, by)
+        q = Float_Add(qr, qb)
+        ReturnValue(AIMacro.FloatTriple(y, i, q))
+    }
+}
+
+Function.AIMacro.YiqToRgbBits {
+    Input: y: Integer
+    Input: i: Integer
+    Input: q: Integer
+    Output: Address
+    Body: {
+        pci = AIMacro.FloatParse("0.9468822170900693")
+        pcq = AIMacro.FloatParse("0.6235565819861433")
+        pgi = AIMacro.FloatParse("0.27478764629897834")
+        pgq = AIMacro.FloatParse("0.6356910791873801")
+        pbi = AIMacro.FloatParse("1.1085450346420322")
+        pbq = AIMacro.FloatParse("1.7090069284064666")
+        ci = AIMacro.ToFloatBits(pci)
+        cq = AIMacro.ToFloatBits(pcq)
+        gi = AIMacro.ToFloatBits(pgi)
+        gq = AIMacro.ToFloatBits(pgq)
+        bi = AIMacro.ToFloatBits(pbi)
+        bq = AIMacro.ToFloatBits(pbq)
+        ri = Float_Mul(ci, i)
+        rq = Float_Mul(cq, q)
+        rsum = Float_Add(ri, rq)
+        r = Float_Add(y, rsum)
+        gi2 = Float_Mul(gi, i)
+        gq2 = Float_Mul(gq, q)
+        gsum = Float_Add(gi2, gq2)
+        g = Float_Sub(y, gsum)
+        bq2 = Float_Mul(bq, q)
+        bi2 = Float_Mul(bi, i)
+        bdiff = Float_Sub(bq2, bi2)
+        b = Float_Add(y, bdiff)
+        zero = Float_FromInt(0)
+        one = Float_FromInt(1)
+        IfCondition EqualTo(Float_Lt(r, zero), 1) ThenBlock: { r = zero }
+        IfCondition EqualTo(Float_Lt(g, zero), 1) ThenBlock: { g = zero }
+        IfCondition EqualTo(Float_Lt(b, zero), 1) ThenBlock: { b = zero }
+        IfCondition EqualTo(Float_Lt(one, r), 1) ThenBlock: { r = one }
+        IfCondition EqualTo(Float_Lt(one, g), 1) ThenBlock: { g = one }
+        IfCondition EqualTo(Float_Lt(one, b), 1) ThenBlock: { b = one }
+        ReturnValue(AIMacro.FloatTriple(r, g, b))
+    }
+}
+
+Function.AIMacro.ColorsysDispatch {
+    Input: kind: Address
+    Input: args: Address
+    Input: n: Integer
+    Output: Address
+    Body: {
+        tri = AIMacro.TripleFromArgs(args, n)
+        x = AIMacro.ToFloatBits(Array.Get(tri, 0))
+        y = AIMacro.ToFloatBits(Array.Get(tri, 1))
+        z = AIMacro.ToFloatBits(Array.Get(tri, 2))
+        IfCondition EqualTo(StringCompare(kind, "hsv"), 0) ThenBlock: {
+            ReturnValue(AIMacro.RgbToHsvBits(x, y, z))
+        }
+        IfCondition EqualTo(StringCompare(kind, "hsvr"), 0) ThenBlock: {
+            ReturnValue(AIMacro.HsvToRgbBits(x, y, z))
+        }
+        IfCondition EqualTo(StringCompare(kind, "hls"), 0) ThenBlock: {
+            ReturnValue(AIMacro.RgbToHlsBits(x, y, z))
+        }
+        IfCondition EqualTo(StringCompare(kind, "hlsr"), 0) ThenBlock: {
+            ReturnValue(AIMacro.HlsToRgbBits(x, y, z))
+        }
+        IfCondition EqualTo(StringCompare(kind, "yiq"), 0) ThenBlock: {
+            ReturnValue(AIMacro.RgbToYiqBits(x, y, z))
+        }
+        ReturnValue(AIMacro.YiqToRgbBits(x, y, z))
+    }
+}
+
+Function.AIMacro.CopyRegPickle {
+    Input: ob_type: Address
+    Input: pickle_function: Address
+    Input: n: Integer
+    Input: args: Address
+    Output: Address
+    Body: {
+        IfCondition EqualTo(AIMacro.IsCallableVal(pickle_function), 0) ThenBlock: {
+            AIMacro.RaiseKind(5, "reduction functions must be callable")
+            ReturnValue(0)
+        }
+        IfCondition GreaterEqual(n, 3) ThenBlock: {
+            ctor = Array.Get(args, 2)
+            IfCondition And(NotEqual(ctor, 0), EqualTo(AIMacro.IsNone(ctor), 0)) ThenBlock: {
+                IfCondition EqualTo(AIMacro.IsCallableVal(ctor), 0) ThenBlock: {
+                    AIMacro.RaiseKind(5, "constructors must be callable")
+                    ReturnValue(0)
+                }
+            }
+        }
+        ReturnValue(Types.GetNone())
+    }
+}
+
+Function.AIMacro.CopyRegAddExt {
+    Input: args: Address
+    Input: n: Integer
+    Output: Address
+    Body: {
+        AIMacro.CopyRegEnsure()
+        IfCondition LessThan(n, 3) ThenBlock: {
+            AIMacro.RaiseKind(5, "add_extension")
+            ReturnValue(0)
+        }
+        mod = Array.Get(args, 0)
+        func = Array.Get(args, 1)
+        code = AIMacro.UnboxIntZero(Array.Get(args, 2))
+        IfCondition Or(LessThan(code, 1), GreaterThan(code, 2147483647)) ThenBlock: {
+            AIMacro.RaiseKind(2, "code out of range")
+            ReturnValue(0)
+        }
+        tlst = AIMacro.EmptyList()
+        Array.Push(tlst, mod)
+        Array.Push(tlst, func)
+        key = AIMacro.TupleKeyString(tlst)
+        ck = NumberToString(code)
+        havek = Hash.Contains(CopyRegState.registry, key)
+        havec = Hash.Contains(CopyRegState.inverted, ck)
+        IfCondition EqualTo(havek, 1) ThenBlock: {
+            IfCondition And(EqualTo(Hash.Get(CopyRegState.registry, key), code), EqualTo(havec, 1)) ThenBlock: {
+                ReturnValue(Types.GetNone())
+            }
+            AIMacro.RaiseKind(2, "already registered")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(havec, 1) ThenBlock: {
+            AIMacro.RaiseKind(2, "code already in use")
+            ReturnValue(0)
+        }
+        Hash.Set(CopyRegState.registry, key, code)
+        pair = AIMacro.WrapSeq(tlst, "tuple")
+        Hash.Set(CopyRegState.inverted, ck, pair)
+        ReturnValue(Types.GetNone())
+    }
+}
+
+Function.AIMacro.CopyRegRemoveExt {
+    Input: args: Address
+    Input: n: Integer
+    Output: Address
+    Body: {
+        AIMacro.CopyRegEnsure()
+        IfCondition LessThan(n, 3) ThenBlock: {
+            AIMacro.RaiseKind(2, "remove_extension")
+            ReturnValue(0)
+        }
+        mod = Array.Get(args, 0)
+        func = Array.Get(args, 1)
+        code = AIMacro.UnboxIntZero(Array.Get(args, 2))
+        tlst = AIMacro.EmptyList()
+        Array.Push(tlst, mod)
+        Array.Push(tlst, func)
+        key = AIMacro.TupleKeyString(tlst)
+        ck = NumberToString(code)
+        IfCondition EqualTo(Hash.Contains(CopyRegState.registry, key), 0) ThenBlock: {
+            AIMacro.RaiseKind(2, "not registered")
+            ReturnValue(0)
+        }
+        IfCondition NotEqual(Hash.Get(CopyRegState.registry, key), code) ThenBlock: {
+            AIMacro.RaiseKind(2, "not registered")
+            ReturnValue(0)
+        }
+        Hash.Delete(CopyRegState.registry, key)
+        Hash.Delete(CopyRegState.inverted, ck)
+        ReturnValue(Types.GetNone())
+    }
+}
+
+Function.AIMacro.CopyRegPushSlot {
+    Input: names: Address
+    Input: name: Address
+    Input: cls: Address
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(AIMacro.LooksLikeString(name), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(name, "__dict__"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(name, "__weakref__"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition And(EqualTo(GetByte(name, 0), 95), EqualTo(GetByte(name, 1), 95)) ThenBlock: {
+            ln = StringLength(name)
+            IfCondition And(GreaterThan(ln, 2), NotEqual(GetByte(name, Subtract(ln, 1)), 95)) ThenBlock: {
+                stripped = cls
+                IfCondition EqualTo(AIMacro.LooksLikeString(cls), 1) ThenBlock: {
+                    si = 0
+                    WhileLoop EqualTo(GetByte(cls, si), 95) {
+                        si = Add(si, 1)
+                    }
+                    IfCondition GreaterThan(si, 0) ThenBlock: {
+                        stripped = Allocate(Add(StringLength(cls), 1))
+                        pi = 0
+                        WhileLoop NotEqual(GetByte(cls, Add(si, pi)), 0) {
+                            SetByte(stripped, pi, GetByte(cls, Add(si, pi)))
+                            pi = Add(pi, 1)
+                        }
+                        SetByte(stripped, pi, 0)
+                    }
+                }
+                IfCondition NotEqual(GetByte(stripped, 0), 0) ThenBlock: {
+                    mangled = StringConcat("_", stripped)
+                    mangled = StringConcat(mangled, name)
+                    Array.Push(names, mangled)
+                    ReturnValue(1)
+                }
+            }
+        }
+        Array.Push(names, name)
+        ReturnValue(1)
+    }
+}
+
+Function.AIMacro.CopyRegSlotnames {
+    Input: cls: Address
+    Output: Address
+    Body: {
+        names = AIMacro.EmptyList()
+        current = cls
+        IfCondition EqualTo(AIMacro.SafeIsHash(cls), 1) ThenBlock: {
+            current = Hash.Get(cls, "__class__")
+        }
+        hops = 0
+        WhileLoop And(NotEqual(current, 0), LessThan(hops, 16)) {
+            slots = AIMacro.ClassAttrGet(current, "__slots__")
+            IfCondition NotEqual(slots, 0) ThenBlock: {
+                IfCondition EqualTo(AIMacro.LooksLikeString(slots), 1) ThenBlock: {
+                    IfCondition EqualTo(AIMacro.SafeIsHash(slots), 0) ThenBlock: {
+                        AIMacro.CopyRegPushSlot(names, slots, current)
+                    }
+                }
+                stor = AIMacro.ListStorage(slots)
+                IfCondition EqualTo(Array.IsArray(stor), 1) ThenBlock: {
+                    si = 0
+                    WhileLoop LessThan(si, Array.Size(stor)) {
+                        AIMacro.CopyRegPushSlot(names, Array.Get(stor, si), current)
+                        si = Add(si, 1)
+                    }
+                }
+            }
+            current = OOP.ClassGetParent(current)
+            hops = Add(hops, 1)
+        }
+        ReturnValue(names)
+    }
+}
+
+Function.AIMacro.FillCopyRegModule {
+    Input: h: Address
+    Output: Integer
+    Body: {
+        AIMacro.CopyRegEnsure()
+        Hash.Set(h, "_extension_registry", CopyRegState.registry)
+        Hash.Set(h, "_inverted_registry", CopyRegState.inverted)
+        Hash.Set(h, "_extension_cache", CopyRegState.cache)
+        ReturnValue(1)
+    }
+}
+
+Function.AIMacro.FillColorsysModule {
+    Input: h: Address
+    Output: Integer
+    Body: {
+        ReturnValue(1)
+    }
+}
+
+Function.AIMacro.FillCopyModule {
+    Input: h: Address
+    Output: Integer
+    Body: {
+        ReturnValue(1)
+    }
+}
+
+Function.AIMacro.FillCollectionsModule {
+    Input: h: Address
+    Output: Integer
+    Body: {
+        Hash.Set(h, "UserList", AddressOf(AIMacro.UserListNew))
+        ReturnValue(1)
     }
 }

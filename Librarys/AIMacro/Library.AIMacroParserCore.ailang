@@ -4406,7 +4406,7 @@ Function.Parse_Primary {
             IfCondition EqualTo(is_rp, 1) ThenBlock: {
                 Parse_Advance()
                 elems = Array.Create(1)
-                node = AST_Create(Node.LIST_LIT, 1)
+                node = AST_Create(Node.TUPLE_LIT, 1)
                 ArraySet(node, 1, line)
                 ArraySet(node, 2, col)
                 ArraySet(node, 3, elems)
@@ -4446,7 +4446,7 @@ Function.Parse_Primary {
                 }
                 Parse_SkipNoise()
                 Parse_Consume(Token.RPAREN)
-                node = AST_Create(Node.LIST_LIT, 1)
+                node = AST_Create(Node.TUPLE_LIT, 1)
                 ArraySet(node, 1, line)
                 ArraySet(node, 2, col)
                 ArraySet(node, 3, elems)

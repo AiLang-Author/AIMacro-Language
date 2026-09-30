@@ -737,6 +737,16 @@ Function.Gen_BindShimModule {
             line = StringConcat(line, ")\n")
             Array.Push(OOPGen.class_init_code, line)
         }
+        IfCondition EqualTo(StringCompare(module_name, "copyreg"), 0) ThenBlock: {
+            line = StringConcat("    AIMacro.FillCopyRegModule(PyMod.", module_name)
+            line = StringConcat(line, ")\n")
+            Array.Push(OOPGen.class_init_code, line)
+        }
+        IfCondition EqualTo(StringCompare(module_name, "collections"), 0) ThenBlock: {
+            line = StringConcat("    AIMacro.FillCollectionsModule(PyMod.", module_name)
+            line = StringConcat(line, ")\n")
+            Array.Push(OOPGen.class_init_code, line)
+        }
         OOPGen.has_classes = 1
     }
 }
@@ -924,6 +934,42 @@ Function.Gen_FromImport {
                             IfCondition GreaterThan(Gen.indent, 0) ThenBlock: {
                                 Gen_EmitIndent()
                                 Gen_Emit("PyMod.NEVER_EQ = AIMacro.NeverEq()\n")
+                            } ElseBlock: {
+                                OOPGen_Init()
+                                Array.Push(OOPGen.class_init_code, bind)
+                                OOPGen.has_classes = 1
+                            }
+                        }
+                        IfCondition EqualTo(StringCompare(sym, "Fraction"), 0) ThenBlock: {
+                            Gen_MarkModuleVar(sym)
+                            bind = "    PyMod.Fraction = AddressOf(AIMacro.FractionNew)\n"
+                            IfCondition GreaterThan(Gen.indent, 0) ThenBlock: {
+                                Gen_EmitIndent()
+                                Gen_Emit("PyMod.Fraction = AddressOf(AIMacro.FractionNew)\n")
+                            } ElseBlock: {
+                                OOPGen_Init()
+                                Array.Push(OOPGen.class_init_code, bind)
+                                OOPGen.has_classes = 1
+                            }
+                        }
+                        IfCondition EqualTo(StringCompare(sym, "Decimal"), 0) ThenBlock: {
+                            Gen_MarkModuleVar(sym)
+                            bind = "    PyMod.Decimal = AddressOf(AIMacro.DecimalNew)\n"
+                            IfCondition GreaterThan(Gen.indent, 0) ThenBlock: {
+                                Gen_EmitIndent()
+                                Gen_Emit("PyMod.Decimal = AddressOf(AIMacro.DecimalNew)\n")
+                            } ElseBlock: {
+                                OOPGen_Init()
+                                Array.Push(OOPGen.class_init_code, bind)
+                                OOPGen.has_classes = 1
+                            }
+                        }
+                        IfCondition EqualTo(StringCompare(sym, "UserList"), 0) ThenBlock: {
+                            Gen_MarkModuleVar(sym)
+                            bind = "    PyMod.UserList = AddressOf(AIMacro.UserListNew)\n"
+                            IfCondition GreaterThan(Gen.indent, 0) ThenBlock: {
+                                Gen_EmitIndent()
+                                Gen_Emit("PyMod.UserList = AddressOf(AIMacro.UserListNew)\n")
                             } ElseBlock: {
                                 OOPGen_Init()
                                 Array.Push(OOPGen.class_init_code, bind)
@@ -3041,7 +3087,7 @@ Function.Gen_Assignment {
         }
         
         // List literal - special handling
-        IfCondition EqualTo(value_type, Node.LIST_LIT) ThenBlock: {
+        IfCondition Or(EqualTo(value_type, Node.LIST_LIT), EqualTo(value_type, Node.TUPLE_LIT)) ThenBlock: {
             Gen_MarkListVar(target_name)
             Gen_ListAssignment(target, value)
             ReturnValue(0)
@@ -3591,6 +3637,19 @@ Function.Gen_ListAssignment {
                 Gen_Emit(")\n")
             }
             i = Add(i, 1)
+        }
+        is_tup = EqualTo(AST_Type(list_node), Node.TUPLE_LIT)
+        IfCondition EqualTo(is_tup, 0) ThenBlock: {
+            IfCondition GreaterEqual(Array.Size(list_node), 5) ThenBlock: {
+                is_tup = ArrayGet(list_node, 4)
+            }
+        }
+        IfCondition EqualTo(is_tup, 1) ThenBlock: {
+            Gen_EmitIndent()
+            Gen_EmitIdentLhs(target_name)
+            Gen_Emit(" = AIMacro.WrapSeq(")
+            Gen_EmitIdentLhs(target_name)
+            Gen_Emit(", \"tuple\")\n")
         }
     }
 }

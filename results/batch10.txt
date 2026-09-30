@@ -1,10 +1,10 @@
 test_compare.py
-test_binop.py
 test_index.py
-test_enumerate.py
 test_string.py
-test_operator.py
-test_openpty.py
-test_list.py
-test_generator_stop.py
-test_tools/test_gprof2html.py
+test_unpack.py
+test_flufl.py
+test_typechecks.py
+test_userlist.py
+test_copyreg.py
+test_colorsys.py
+test_eof.py
