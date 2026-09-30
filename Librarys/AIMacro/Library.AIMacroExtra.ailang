@@ -1053,6 +1053,101 @@ Function.AIMacro.FsPath {
     }
 }
 
+Function.AIMacro.PathArg {
+    Input: obj: Address
+    Input: a0: Address
+    Output: Address
+    Body: {
+        ls0 = AIMacro.LooksLikeString(a0)
+        IfCondition EqualTo(ls0, 1) ThenBlock: {
+            ReturnValue(a0)
+        }
+        lso = AIMacro.LooksLikeString(obj)
+        IfCondition EqualTo(lso, 1) ThenBlock: {
+            ReturnValue(obj)
+        }
+        IfCondition EqualTo(Hash.IsHash(obj), 1) ThenBlock: {
+            pth = Hash.Get(obj, "path")
+            lsp = AIMacro.LooksLikeString(pth)
+            IfCondition EqualTo(lsp, 1) ThenBlock: {
+                ReturnValue(pth)
+            }
+            pth2 = Hash.Get(obj, "__str__")
+            ls2 = AIMacro.LooksLikeString(pth2)
+            IfCondition EqualTo(ls2, 1) ThenBlock: {
+                ReturnValue(pth2)
+            }
+        }
+        ReturnValue(a0)
+    }
+}
+
+Function.AIMacro.Unlink {
+    Input: path: Address
+    Output: Address
+    Body: {
+        lsp = AIMacro.LooksLikeString(path)
+        IfCondition EqualTo(lsp, 0) ThenBlock: {
+            ReturnValue(Types.GetNone())
+        }
+        urc = SystemCall(87, path)
+        IfCondition LessThan(urc, 0) ThenBlock: {
+            AIMacro.RaiseKind(4, "No such file")
+            ReturnValue(0)
+        }
+        ReturnValue(Types.GetNone())
+    }
+}
+
+Function.AIMacro.Mkdir {
+    Input: path: Address
+    Input: mode: Address
+    Output: Address
+    Body: {
+        lsp = AIMacro.LooksLikeString(path)
+        IfCondition EqualTo(lsp, 0) ThenBlock: {
+            ReturnValue(Types.GetNone())
+        }
+        md = 511
+        IfCondition NotEqual(mode, 0) ThenBlock: {
+            md = AIMacro.UnboxIntZero(mode)
+        }
+        mrc = SystemCall(83, path, md)
+        IfCondition LessThan(mrc, 0) ThenBlock: {
+            AIMacro.RaiseKind(4, "mkdir")
+            ReturnValue(0)
+        }
+        ReturnValue(Types.GetNone())
+    }
+}
+
+Function.AIMacro.Rmdir {
+    Input: path: Address
+    Output: Address
+    Body: {
+        lsp = AIMacro.LooksLikeString(path)
+        IfCondition EqualTo(lsp, 0) ThenBlock: {
+            ReturnValue(Types.GetNone())
+        }
+        rrc = SystemCall(84, path)
+        IfCondition LessThan(rrc, 0) ThenBlock: {
+            AIMacro.RaiseKind(4, "rmdir")
+            ReturnValue(0)
+        }
+        ReturnValue(Types.GetNone())
+    }
+}
+
+Function.AIMacro.AllocateLock {
+    Output: Address
+    Body: {
+        lk = Hash.Create(4)
+        Hash.Set(lk, "__class__", "lock")
+        Hash.Set(lk, "locked", 0)
+        ReturnValue(lk)
+    }
+}
+
 // getopt.getopt(args, ...) — compile/run stub: ( [], args )
 Function.AIMacro.MakeIdentityDict {
     Input: seq: Address
@@ -2203,6 +2298,48 @@ Function.AIMacro.InitMethodSkip {
         Hash.Set(h, "clear_history", 1)
         Hash.Set(h, "add_history", 1)
         Hash.Set(h, "get_history_item", 1)
+        Hash.Set(h, "Mock", 1)
+        Hash.Set(h, "get_child_details", 1)
+        Hash.Set(h, "bisect_right", 1)
+        Hash.Set(h, "bisect_left", 1)
+        Hash.Set(h, "start_new_thread", 1)
+        Hash.Set(h, "load_teststring", 1)
+        Hash.Set(h, "uncache", 1)
+        Hash.Set(h, "stack_size", 1)
+        Hash.Set(h, "load_dynamic", 1)
+        Hash.Set(h, "patch", 1)
+        Hash.Set(h, "enter_context", 1)
+        Hash.Set(h, "ModuleType", 1)
+        Hash.Set(h, "threading_setup", 1)
+        Hash.Set(h, "interact", 1)
+        Hash.Set(h, "get_tag", 1)
+        Hash.Set(h, "get_data", 1)
+        Hash.Set(h, "FakePath", 1)
+        Hash.Set(h, "fsencode", 1)
+        Hash.Set(h, "getsockname", 1)
+        Hash.Set(h, "communicate", 1)
+        Hash.Set(h, "search", 1)
+        Hash.Set(h, "CleanImport", 1)
+        Hash.Set(h, "temp_cwd", 1)
+        Hash.Set(h, "get_all_start_methods", 1)
+        Hash.Set(h, "skip_if_missing", 1)
+        Hash.Set(h, "missing_compiler_executable", 1)
+        Hash.Set(h, "skipUnless", 1)
+        Hash.Set(h, "task_done", 1)
+        Hash.Set(h, "simplefilter", 1)
+        Hash.Set(h, "wait_threads_exit", 1)
+        Hash.Set(h, "Event", 1)
+        Hash.Set(h, "start_threads", 1)
+        Hash.Set(h, "Shelf", 1)
+        Hash.Set(h, "raw", 1)
+        Hash.Set(h, "load_module", 1)
+        Hash.Set(h, "skip_if_broken_multiprocessing_synchronize", 1)
+        Hash.Set(h, "get_expected_details", 1)
+        Hash.Set(h, "rmtree", 1)
+        Hash.Set(h, "insort_left", 1)
+        Hash.Set(h, "insort_right", 1)
+        Hash.Set(h, "set_event_loop", 1)
+        Hash.Set(h, "sleep", 1)
         ReturnValue(h)
     }
 }
@@ -3655,6 +3792,46 @@ Function.AIMacro.MethodShim {
         }
         IfCondition EqualTo(StringCompare(method_name, "map_table_b3"), 0) ThenBlock: {
             ReturnValue(1)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "unlink"), 0) ThenBlock: {
+            up = AIMacro.PathArg(obj, a0)
+            ReturnValue(AIMacro.Unlink(up))
+        }
+        IfCondition EqualTo(StringCompare(method_name, "mkdir"), 0) ThenBlock: {
+            mp = AIMacro.PathArg(obj, a0)
+            ReturnValue(AIMacro.Mkdir(mp, a1))
+        }
+        IfCondition EqualTo(StringCompare(method_name, "rmdir"), 0) ThenBlock: {
+            rp = AIMacro.PathArg(obj, a0)
+            ReturnValue(AIMacro.Rmdir(rp))
+        }
+        IfCondition EqualTo(StringCompare(method_name, "put"), 0) ThenBlock: {
+            pstor = AIMacro.ListStorage(obj)
+            IfCondition EqualTo(Array.IsArray(pstor), 1) ThenBlock: {
+                Array.Push(pstor, a0)
+                ReturnValue(Types.GetNone())
+            }
+            IfCondition EqualTo(Array.IsArray(obj), 1) ThenBlock: {
+                Array.Push(obj, a0)
+                ReturnValue(Types.GetNone())
+            }
+            ReturnValue(Types.GetNone())
+        }
+        IfCondition EqualTo(StringCompare(method_name, "allocate_lock"), 0) ThenBlock: {
+            ReturnValue(AIMacro.AllocateLock())
+        }
+        IfCondition EqualTo(StringCompare(method_name, "acquire"), 0) ThenBlock: {
+            IfCondition EqualTo(Hash.IsHash(obj), 1) ThenBlock: {
+                Hash.Set(obj, "locked", 1)
+                ReturnValue(1)
+            }
+            ReturnValue(1)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "release"), 0) ThenBlock: {
+            IfCondition EqualTo(Hash.IsHash(obj), 1) ThenBlock: {
+                Hash.Set(obj, "locked", 0)
+            }
+            ReturnValue(Types.GetNone())
         }
         IfCondition EqualTo(StringCompare(method_name, "import_tool"), 0) ThenBlock: {
             itl = Types.GetNone()

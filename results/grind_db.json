@@ -6,7 +6,7 @@
       "status": "fail",
       "stage": "compile",
       "rc": -11,
-      "err": "RT] Loaded: AIMacro.AIMacroOperator\n[IMPORT] Loaded: AIMacro.AIMacroDict\n[IMPORT] Loaded: AIMacro.AIMacroUnittest\n[IMPORT] Loaded: AIMacro.AIMacroFormat\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT ERROR] Cannot read: types\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 903 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 29033, col 36: Unexpected token in statement\n  In:",
+      "err": "RT] Loaded: AIMacro.AIMacroOperator\n[IMPORT] Loaded: AIMacro.AIMacroDict\n[IMPORT] Loaded: AIMacro.AIMacroUnittest\n[IMPORT] Loaded: AIMacro.AIMacroFormat\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT ERROR] Cannot read: types\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 908 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 29168, col 36: Unexpected token in statement\n  In:",
       "out": "",
       "tags": [],
       "key": "test___all__.py",
@@ -42,22 +42,24 @@
     "test__xxsubinterpreters.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test__xxsubinterpreters.py",
       "status": "fail",
-      "stage": "compile",
+      "stage": "transpile",
       "rc": 1,
-      "err": " arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 0 arguments\n[COMPILE] ERROR: Unknown function: setUp\nCOMPILE ERROR at line 18370: Unknown function\nCompilation Failed: Unknown function\n[AST] Freeing 65253 node child-lists...\n[AST] Freed 25434 child-lists (node slots stay in pool)",
+      "err": "transpile: \nParse Error: Unexpected token in expression\n token=23\nParse Error: expected token 85 got 3\nerror: compilation failed",
       "out": "",
       "tags": [],
-      "key": "test__xxsubinterpreters.py"
+      "key": "test__xxsubinterpreters.py",
+      "updated": "2026-09-30"
     },
     "test_abc.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_abc.py",
       "status": "fail",
-      "stage": "compile",
+      "stage": "transpile",
       "rc": 1,
-      "err": "s\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\nERROR: Variable not found: foo\nCompilation Failed: \n[AST] Freeing 44131 node child-lists...\n[AST] Freed 18397 child-lists (node slots stay in pool)",
+      "err": "transpile: \nParse Error: Expected '(' after super method name\nParse Error: expected token 85 got 3\nParse Error: Expected '}' after class body\nParse Error: expected token 85 got 89\nerror: compilation failed",
       "out": "",
       "tags": [],
-      "key": "test_abc.py"
+      "key": "test_abc.py",
+      "updated": "2026-09-30"
     },
     "test_abstract_numbers.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_abstract_numbers.py",
@@ -84,15 +86,16 @@
       "stage": "py2aim",
       "err": "timeout",
       "tags": [],
-      "key": "test_argparse.py"
+      "key": "test_argparse.py",
+      "updated": "2026-09-30"
     },
     "test_array.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_array.py",
       "status": "fail",
-      "stage": "compile",
-      "rc": 124,
-      "err": "ments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 4 arguments\n\ntimeout",
-      "out": "",
+      "stage": "run",
+      "rc": 1,
+      "err": "",
+      "out": "ERROR: Method not found: array\nunittest: ran 0 tests, 0 failed\nunittest: TestCase scheduled but 0 tests ran\n",
       "tags": [],
       "key": "test_array.py",
       "updated": "2026-09-30"
@@ -102,7 +105,7 @@
       "status": "fail",
       "stage": "compile",
       "rc": -11,
-      "err": "] Loaded: AIMacro.AIMacroUnittest\n[IMPORT] Loaded: AIMacro.AIMacroFormat\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT ERROR] Cannot read: importlib\n[IMPORT ERROR] Cannot read: importlib\n[IMPORT ERROR] Cannot read: sysconfig\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 912 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 28821, col 32: Unexpected token in statement\n  In:",
+      "err": "] Loaded: AIMacro.AIMacroUnittest\n[IMPORT] Loaded: AIMacro.AIMacroFormat\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT ERROR] Cannot read: importlib\n[IMPORT ERROR] Cannot read: importlib\n[IMPORT ERROR] Cannot read: sysconfig\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 917 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 28956, col 32: Unexpected token in statement\n  In:",
       "out": "",
       "tags": [],
       "key": "test_asdl_parser.py",
@@ -114,7 +117,8 @@
       "stage": "py2aim",
       "err": "timeout",
       "tags": [],
-      "key": "test_ast.py"
+      "key": "test_ast.py",
+      "updated": "2026-09-30"
     },
     "test_asyncgen.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_asyncgen.py",
@@ -124,7 +128,8 @@
       "err": "transpile: \nParse Error: expected token 83 got 3\nParse Error: expected token 85 got 3\nParse Error: expected token 85 got 3\nParse Error: Expected '}' after class body\nerror: compilation failed",
       "out": "",
       "tags": [],
-      "key": "test_asyncgen.py"
+      "key": "test_asyncgen.py",
+      "updated": "2026-09-30"
     },
     "test_asynchat.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_asynchat.py",
@@ -149,21 +154,23 @@
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_asyncio/test_base_events.py",
       "status": "fail",
       "stage": "compile",
-      "rc": 1,
-      "err": "INDIRECT] 1 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 0 arguments\n[COMPILE] ERROR: Unknown function: set_exception_handler\nCOMPILE ERROR at line 17831: Unknown function\nCompilation Failed: Unknown function\n[AST] Freeing 64262 node child-lists...\n[AST] Freed 24894 child-lists (node slots stay in pool)",
+      "rc": -11,
+      "err": "[IMPORT ERROR] Cannot read: socket\n[IMPORT ERROR] Cannot read: threading\n[IMPORT ERROR] Cannot read: asyncio\n[IMPORT ERROR] Cannot read: asyncio\n[IMPORT ERROR] Cannot read: asyncio\n[IMPORT ERROR] Cannot read: warnings\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 1140 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 31021, col 32: Unexpected token in statement\n  In:",
       "out": "",
       "tags": [],
-      "key": "test_asyncio/test_base_events.py"
+      "key": "test_asyncio/test_base_events.py",
+      "updated": "2026-09-30"
     },
     "test_asyncio/test_buffered_proto.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_asyncio/test_buffered_proto.py",
       "status": "fail",
       "stage": "compile",
       "rc": 1,
-      "err": "ts\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 1 arguments\nERROR: Variable not found: tr\nCompilation Failed: \n[AST] Freeing 38022 node child-lists...\n[AST] Freed 16450 child-lists (node slots stay in pool)",
+      "err": "ts\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\nERROR: Variable not found: tr\nCompilation Failed: \n[AST] Freeing 82234 node child-lists...\n[AST] Freed 36297 child-lists (node slots stay in pool)",
       "out": "",
       "tags": [],
-      "key": "test_asyncio/test_buffered_proto.py"
+      "key": "test_asyncio/test_buffered_proto.py",
+      "updated": "2026-09-30"
     },
     "test_asyncio/test_context.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_asyncio/test_context.py",
@@ -176,12 +183,11 @@
     "test_asyncio/test_events.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_asyncio/test_events.py",
       "status": "fail",
-      "stage": "compile",
-      "rc": 1,
-      "err": "ments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 0 arguments\n[COMPILE] ERROR: Unknown function: set_result\nCOMPILE ERROR at line 16806: Unknown function\nCompilation Failed: Unknown function\n[AST] Freeing 75285 node child-lists...\n[AST] Freed 28396 child-lists (node slots stay in pool)",
-      "out": "",
+      "stage": "py2aim",
+      "err": "timeout",
       "tags": [],
-      "key": "test_asyncio/test_events.py"
+      "key": "test_asyncio/test_events.py",
+      "updated": "2026-09-30"
     },
     "test_asyncio/test_futures.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_asyncio/test_futures.py",
@@ -206,11 +212,12 @@
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_asyncio/test_locks.py",
       "status": "fail",
       "stage": "compile",
-      "rc": 1,
-      "err": "5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[COMPILE] ERROR: Unknown function: done\nCOMPILE ERROR at line 16325: Unknown function\nCompilation Failed: Unknown function\n[AST] Freeing 57865 node child-lists...\n[AST] Freed 22846 child-lists (node slots stay in pool)",
+      "rc": -11,
+      "err": "r\n[IMPORT] Loaded: AIMacro.AIMacroDict\n[IMPORT] Loaded: AIMacro.AIMacroUnittest\n[IMPORT] Loaded: AIMacro.AIMacroFormat\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT ERROR] Cannot read: re\n[IMPORT ERROR] Cannot read: asyncio\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 1036 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 29384, col 32: Unexpected token in statement\n  In:",
       "out": "",
       "tags": [],
-      "key": "test_asyncio/test_locks.py"
+      "key": "test_asyncio/test_locks.py",
+      "updated": "2026-09-30"
     },
     "test_asyncio/test_pep492.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_asyncio/test_pep492.py",
@@ -224,11 +231,12 @@
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_asyncio/test_proactor_events.py",
       "status": "fail",
       "stage": "compile",
-      "rc": 1,
-      "err": "arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\nERROR: Variable not found: ConnectionRefusedError\nCompilation Failed: \n[AST] Freeing 51775 node child-lists...\n[AST] Freed 20755 child-lists (node slots stay in pool)",
+      "rc": -11,
+      "err": "t\n[IMPORT ERROR] Cannot read: asyncio\n[IMPORT ERROR] Cannot read: asyncio\n[IMPORT ERROR] Cannot read: asyncio\n[IMPORT ERROR] Cannot read: asyncio\n[IMPORT ERROR] Cannot read: asyncio\n[IMPORT ERROR] Cannot read: asyncio\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 1009 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 31818, col 32: Unexpected token in statement\n  In:",
       "out": "",
       "tags": [],
-      "key": "test_asyncio/test_proactor_events.py"
+      "key": "test_asyncio/test_proactor_events.py",
+      "updated": "2026-09-30"
     },
     "test_asyncio/test_protocols.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_asyncio/test_protocols.py",
@@ -251,7 +259,7 @@
       "status": "fail",
       "stage": "compile",
       "rc": -11,
-      "err": "ig\n[IMPORT ERROR] Cannot read: _thread\n[IMPORT ERROR] Cannot read: asyncio\n[IMPORT ERROR] Cannot read: contextvars\n[IMPORT ERROR] Cannot read: re\n[IMPORT ERROR] Cannot read: signal\n[IMPORT ERROR] Cannot read: threading\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 974 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 29310, col 36: Unexpected token in statement\n  In:",
+      "err": "ig\n[IMPORT ERROR] Cannot read: _thread\n[IMPORT ERROR] Cannot read: asyncio\n[IMPORT ERROR] Cannot read: contextvars\n[IMPORT ERROR] Cannot read: re\n[IMPORT ERROR] Cannot read: signal\n[IMPORT ERROR] Cannot read: threading\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 979 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 29445, col 36: Unexpected token in statement\n  In:",
       "out": "",
       "tags": [],
       "key": "test_asyncio/test_runners.py",
@@ -260,22 +268,24 @@
     "test_asyncio/test_selector_events.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_asyncio/test_selector_events.py",
       "status": "fail",
-      "stage": "compile",
-      "rc": 1,
-      "err": "CT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 0 arguments\nERROR: Variable not found: InterruptedError\nCompilation Failed: \n[AST] Freeing 55945 node child-lists...\n[AST] Freed 22042 child-lists (node slots stay in pool)",
-      "out": "",
+      "stage": "run",
+      "rc": -11,
+      "err": "",
+      "out": "Method not found: sock_connect\nERROR: Method not found: create_task\nERROR: Method not found: run_until_complete\nERROR: Method not found: assert_called_with\nERROR: Method not found: run_until_complete\nERROR: Method not found: assert_called_with\nERROR: Method not found: mock_nonblocking_socket\nERROR: Method not found: sock_connect\nERROR: Method not found: create_task\nERROR: Method not found: run_until_complete\nERROR: Method not found: assert_called_with\nERROR: Method not found: run_until_complete\nERROR: Method not found: assert_called_with\nERROR: Method not found: Mock\nERROR: Method not found: set_event_loop\n  BaseSelectorEventLoopTests.test_add_reader\nERROR: Method not found: add_reader\nFAIL: assertTrue\nERROR: Method not found: Mock\nERROR: Method not found: set_event_loop\n  BaseSelectorEventLoopTests.test_add_reader_existing\nERROR: Method not found: SelectorKey\nERROR: Method not found: add_reader\nERROR: Method not found: Mock\nERROR: Method not found: set_event_loop\n  BaseSelectorEventLoopTests.test_add_reader_existing_writer\nERROR: Method not found: SelectorKey\nERROR: Method not found: add_reader\nERROR: Method not found: Mock\nERROR: Method not found: set_event_loop\n  BaseSelectorEventLoopTests.test_remove_reader\nERROR: Method not found: SelectorKey\nERROR: Method not found: remove_reader\nFAIL: assertTrue\nERROR: Method not found: Mock\nERROR: Method not found: set_event_loop\n  BaseSelectorEventLoopTests.test_remove_reader_read_write\nERROR: Method not found: SelectorKey\nERROR: Method not found: remove_reader\nERROR: Method not found: Mock\nERROR: Method not found: set_event_loop\n  BaseSelectorEventLoopTests.test_remove_reader_unknown\nERROR: Method not found: remove_reader\nERROR: Method not found: Mock\nERROR: Method not found: set_event_loop\n  BaseSelectorEventLoopTests.test_add_writer\nERROR: Method not found: add_writer\nFAIL: assertTrue\nERROR: Method not found: Mock\nERROR: Method not found: set_event_loop\n  BaseSelectorEventLoopTests.test_add_writer_existing\nERROR: Method not found: SelectorKey\nERROR: Method not found: add_writer\nERROR: Method not found: Mock\nERROR: Method not found: set_event_loop\n  BaseSelectorEventLoopTests.test_remove_writer\nERROR: Method not found: SelectorKey\nERROR: Method not found: remove_writer\nFAIL: assertTrue\nERROR: Method not found: Mock\nERROR: Method not found: set_event_loop\n  BaseSelectorEventLoopTests.test_remove_writer_read_write\nERROR: Method not found: SelectorKey\nERROR: Method not found: remove_writer\nERROR: Method not found: Mock\nERROR: Method not found: set_event_loop\n  BaseSelectorEventLoopTests.test_remove_writer_unknown\nERROR: Method not found: remove_writer\nERROR: Method not found: Mock\nERROR: Method not found: set_event_loop\n  BaseSelectorEventLoopTests.test_process_events_read\nERROR: Method not found: SelectorKey\nERROR: Method not found: _process_events\nERROR: Method not found: assert_called_with\nERROR: Method not found: Mock\nERROR: Method not found: set_event_loop\n  BaseSelectorEventLoopTests.test_process_events_read_cancelled\nERROR: Method not found: SelectorKey\nERROR: Method not found: _process_events\nERROR: Method not found: assert_called_with\nERROR: Method not found: Mock\nERROR: Method not found: set_event_loop\n  BaseSelectorEventLoopTests.test_process_events_write\nERROR: Method not found: SelectorKey\nERROR: Method not found: _process_events\nERROR: Method not found: assert_called_with\nERROR: Method not found: Mock\nERROR: Method not found: set_event_loop\n  BaseSelectorEventLoopTests.test_process_events_write_cancelled\nERROR: Method not found: SelectorKey\nERROR: Method not found: _process_events\nERROR: Method not found: assert_called_with\nERROR: Method not found: Mock\nERROR: Method not found: set_event_loop\n  BaseSelectorEventLoopTests.test_accept_connection_multiple\nERROR: Method not found: sleep\nERROR: Method not found: run_until_complete\nERROR: Method not found: new_test_loop\nERROR: Method not found: make_test_protocol\nERROR: Method not found: Mock\n  SelectorTransportTests.test_ctor\n",
       "tags": [],
-      "key": "test_asyncio/test_selector_events.py"
+      "key": "test_asyncio/test_selector_events.py",
+      "updated": "2026-09-30"
     },
     "test_asyncio/test_sendfile.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_asyncio/test_sendfile.py",
       "status": "fail",
       "stage": "compile",
-      "rc": 1,
-      "err": "ts\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[COMPILE] ERROR: Unknown function: create_server\nCOMPILE ERROR at line 16489: Unknown function\nCompilation Failed: Unknown function\n[AST] Freeing 45422 node child-lists...\n[AST] Freed 18821 child-lists (node slots stay in pool)",
+      "rc": -11,
+      "err": "croFormat\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT ERROR] Cannot read: asyncio\n[IMPORT ERROR] Cannot read: errno\n[IMPORT ERROR] Cannot read: socket\n[IMPORT ERROR] Cannot read: asyncio\n[IMPORT ERROR] Cannot read: asyncio\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 965 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 29436, col 32: Unexpected token in statement\n  In:",
       "out": "",
       "tags": [],
-      "key": "test_asyncio/test_sendfile.py"
+      "key": "test_asyncio/test_sendfile.py",
+      "updated": "2026-09-30"
     },
     "test_asyncio/test_server.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_asyncio/test_server.py",
@@ -292,51 +302,56 @@
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_asyncio/test_sock_lowlevel.py",
       "status": "fail",
       "stage": "compile",
-      "rc": 1,
-      "err": "nts\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[COMPILE] ERROR: Unknown function: sock_connect\nCOMPILE ERROR at line 16239: Unknown function\nCompilation Failed: Unknown function\n[AST] Freeing 45495 node child-lists...\n[AST] Freed 18923 child-lists (node slots stay in pool)",
+      "rc": -11,
+      "err": "st\n[IMPORT] Loaded: AIMacro.AIMacroFormat\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT ERROR] Cannot read: socket\n[IMPORT ERROR] Cannot read: asyncio\n[IMPORT ERROR] Cannot read: asyncio\n[IMPORT ERROR] Cannot read: itertools\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 947 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 29176, col 40: Unexpected token in statement\n  In:",
       "out": "",
       "tags": [],
-      "key": "test_asyncio/test_sock_lowlevel.py"
+      "key": "test_asyncio/test_sock_lowlevel.py",
+      "updated": "2026-09-30"
     },
     "test_asyncio/test_ssl.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_asyncio/test_ssl.py",
       "status": "fail",
-      "stage": "compile",
+      "stage": "transpile",
       "rc": 1,
-      "err": "arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\nERROR: Variable not found: ConnectionAbortedError\nCompilation Failed: \n[AST] Freeing 55796 node child-lists...\n[AST] Freed 22213 child-lists (node slots stay in pool)",
+      "err": "transpile: \nParse Error: Expected '.method' after 'super()'\nParse Error: expected token 85 got 3\nParse Error: Expected '}' after class body\nParse Error: expected token 85 got 89\nParse Error: Expected '}' after class body\nerror: compilation failed",
       "out": "",
       "tags": [],
-      "key": "test_asyncio/test_ssl.py"
+      "key": "test_asyncio/test_ssl.py",
+      "updated": "2026-09-30"
     },
     "test_asyncio/test_sslproto.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_asyncio/test_sslproto.py",
       "status": "fail",
       "stage": "compile",
       "rc": 1,
-      "err": "1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\nERROR: Variable not found: ConnectionResetError\nCompilation Failed: \n[AST] Freeing 45996 node child-lists...\n[AST] Freed 18965 child-lists (node slots stay in pool)",
+      "err": "T] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\nERROR: Variable not found: ClientProtoSecond\nCompilation Failed: \n[AST] Freeing 91393 node child-lists...\n[AST] Freed 39154 child-lists (node slots stay in pool)",
       "out": "",
       "tags": [],
-      "key": "test_asyncio/test_sslproto.py"
+      "key": "test_asyncio/test_sslproto.py",
+      "updated": "2026-09-30"
     },
     "test_asyncio/test_streams.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_asyncio/test_streams.py",
       "status": "fail",
       "stage": "compile",
-      "rc": 1,
-      "err": "ALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[COMPILE] ERROR: Unknown function: run_until_complete\nCOMPILE ERROR at line 16127: Unknown function\nCompilation Failed: Unknown function\n[AST] Freeing 51777 node child-lists...\n[AST] Freed 20889 child-lists (node slots stay in pool)",
+      "rc": -11,
+      "err": "est\n[IMPORT] Loaded: AIMacro.AIMacroFormat\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT ERROR] Cannot read: queue\n[IMPORT ERROR] Cannot read: socket\n[IMPORT ERROR] Cannot read: threading\n[IMPORT ERROR] Cannot read: asyncio\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 1021 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 29040, col 32: Unexpected token in statement\n  In:",
       "out": "",
       "tags": [],
-      "key": "test_asyncio/test_streams.py"
+      "key": "test_asyncio/test_streams.py",
+      "updated": "2026-09-30"
     },
     "test_asyncio/test_subprocess.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_asyncio/test_subprocess.py",
       "status": "fail",
       "stage": "compile",
-      "rc": 1,
-      "err": "] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\nERROR: Variable not found: ProcessLookupError\nCompilation Failed: \n[AST] Freeing 45966 node child-lists...\n[AST] Freed 19055 child-lists (node slots stay in pool)",
+      "rc": -11,
+      "err": "l\n[IMPORT ERROR] Cannot read: signal\n[IMPORT ERROR] Cannot read: textwrap\n[IMPORT ERROR] Cannot read: warnings\n[IMPORT ERROR] Cannot read: asyncio\n[IMPORT ERROR] Cannot read: asyncio\n[IMPORT ERROR] Cannot read: asyncio\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 975 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 29384, col 32: Unexpected token in statement\n  In:",
       "out": "",
       "tags": [],
-      "key": "test_asyncio/test_subprocess.py"
+      "key": "test_asyncio/test_subprocess.py",
+      "updated": "2026-09-30"
     },
     "test_asyncio/test_taskgroups.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_asyncio/test_taskgroups.py",
@@ -346,17 +361,17 @@
       "err": "transpile: \nParse Error: expected token 84 got 52\nParse Error: Expected '{' to start block\nParse Error: expected token 85 got 52\nParse Error: expected token 85 got 52\nParse Error: Expected '}' after class body\nerror: compilation failed",
       "out": "",
       "tags": [],
-      "key": "test_asyncio/test_taskgroups.py"
+      "key": "test_asyncio/test_taskgroups.py",
+      "updated": "2026-09-30"
     },
     "test_asyncio/test_tasks.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_asyncio/test_tasks.py",
       "status": "fail",
-      "stage": "compile",
-      "rc": 1,
-      "err": "ALLINDIRECT] 0 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 0 arguments\n[COMPILE] ERROR: Unknown function: run_until_complete\nCOMPILE ERROR at line 18778: Unknown function\nCompilation Failed: Unknown function\n[AST] Freeing 80982 node child-lists...\n[AST] Freed 30492 child-lists (node slots stay in pool)",
-      "out": "",
+      "stage": "py2aim",
+      "err": "timeout",
       "tags": [],
-      "key": "test_asyncio/test_tasks.py"
+      "key": "test_asyncio/test_tasks.py",
+      "updated": "2026-09-30"
     },
     "test_asyncio/test_threads.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_asyncio/test_threads.py",
@@ -390,7 +405,8 @@
       "err": "transpile: \nParse Error: expected token 84 got 89\nParse Error: Expected '{' to start block\nParse Error: expected token 85 got 89\nParse Error: Expected '}' after class body\nerror: compilation failed",
       "out": "",
       "tags": [],
-      "key": "test_asyncio/test_unix_events.py"
+      "key": "test_asyncio/test_unix_events.py",
+      "updated": "2026-09-30"
     },
     "test_asyncio/test_waitfor.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_asyncio/test_waitfor.py",
@@ -404,11 +420,12 @@
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_asyncio/test_windows_events.py",
       "status": "fail",
       "stage": "compile",
-      "rc": 1,
-      "err": "NDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[COMPILE] ERROR: Unknown function: _make_socket_transport\nCOMPILE ERROR at line 16210: Unknown function\nCompilation Failed: Unknown function\n[AST] Freeing 41054 node child-lists...\n[AST] Freed 17439 child-lists (node slots stay in pool)",
+      "rc": -11,
+      "err": "MPORT ERROR] Cannot read: socket\n[IMPORT ERROR] Cannot read: threading\n[IMPORT ERROR] Cannot read: _overlapped\n[IMPORT ERROR] Cannot read: _winapi\n[IMPORT ERROR] Cannot read: asyncio\n[IMPORT ERROR] Cannot read: asyncio\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 932 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 29128, col 32: Unexpected token in statement\n  In:",
       "out": "",
       "tags": [],
-      "key": "test_asyncio/test_windows_events.py"
+      "key": "test_asyncio/test_windows_events.py",
+      "updated": "2026-09-30"
     },
     "test_asyncio/test_windows_utils.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_asyncio/test_windows_utils.py",
@@ -425,11 +442,12 @@
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_asyncore.py",
       "status": "fail",
       "stage": "compile",
-      "rc": 1,
-      "err": "guments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[COMPILE] ERROR: Unknown function: __init__\nCOMPILE ERROR at line 17227: Unknown function\nCompilation Failed: Unknown function\n[AST] Freeing 45675 node child-lists...\n[AST] Freed 18927 child-lists (node slots stay in pool)",
+      "rc": -11,
+      "err": "roFormat\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT ERROR] Cannot read: select\n[IMPORT ERROR] Cannot read: socket\n[IMPORT ERROR] Cannot read: errno\n[IMPORT ERROR] Cannot read: struct\n[IMPORT ERROR] Cannot read: threading\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 1011 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 30384, col 32: Unexpected token in statement\n  In:",
       "out": "",
       "tags": [],
-      "key": "test_asyncore.py"
+      "key": "test_asyncore.py",
+      "updated": "2026-09-30"
     },
     "test_atexit.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_atexit.py",
@@ -454,21 +472,23 @@
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_audit.py",
       "status": "fail",
       "stage": "compile",
-      "rc": 1,
-      "err": "uments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[COMPILE] ERROR: Unknown function: partition\nCOMPILE ERROR at line 16128: Unknown function\nCompilation Failed: Unknown function\n[AST] Freeing 40384 node child-lists...\n[AST] Freed 17240 child-lists (node slots stay in pool)",
+      "rc": -11,
+      "err": "oaded: AIMacro.AIMacroOperator\n[IMPORT] Loaded: AIMacro.AIMacroDict\n[IMPORT] Loaded: AIMacro.AIMacroUnittest\n[IMPORT] Loaded: AIMacro.AIMacroFormat\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT ERROR] Cannot read: subprocess\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 925 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 29040, col 40: Unexpected token in statement\n  In:",
       "out": "",
       "tags": [],
-      "key": "test_audit.py"
+      "key": "test_audit.py",
+      "updated": "2026-09-30"
     },
     "test_augassign.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_augassign.py",
       "status": "fail",
       "stage": "compile",
       "rc": 1,
-      "err": "ALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\nERROR: Variable not found: compile\nCompilation Failed: \n[AST] Freeing 39505 node child-lists...\n[AST] Freed 16917 child-lists (node slots stay in pool)",
+      "err": "LLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\nERROR: Variable not found: aug_test\nCompilation Failed: \n[AST] Freeing 84653 node child-lists...\n[AST] Freed 37010 child-lists (node slots stay in pool)",
       "out": "",
       "tags": [],
-      "key": "test_augassign.py"
+      "key": "test_augassign.py",
+      "updated": "2026-09-30"
     },
     "test_base64.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_base64.py",
@@ -481,22 +501,24 @@
     "test_baseexception.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_baseexception.py",
       "status": "fail",
-      "stage": "compile",
-      "rc": 1,
-      "err": "guments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 0 arguments\n[COMPILE] ERROR: Unknown function: __hash__\nCOMPILE ERROR at line 16783: Unknown function\nCompilation Failed: Unknown function\n[AST] Freeing 39914 node child-lists...\n[AST] Freed 17110 child-lists (node slots stay in pool)",
-      "out": "",
+      "stage": "run",
+      "rc": -11,
+      "err": "",
+      "out": "  ExceptionClassTests.test_builtins_new_style\nFAIL: assertTrue\n  ExceptionClassTests.test_inheritance\nERROR: Method not found: values\nERROR: Method not found: split\n",
       "tags": [],
-      "key": "test_baseexception.py"
+      "key": "test_baseexception.py",
+      "updated": "2026-09-30"
     },
     "test_bdb.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_bdb.py",
       "status": "fail",
-      "stage": "compile",
+      "stage": "transpile",
       "rc": 1,
-      "err": "2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[COMPILE] ERROR: Unknown function: fail\nCOMPILE ERROR at line 17263: Unknown function\nCompilation Failed: Unknown function\n[AST] Freeing 53609 node child-lists...\n[AST] Freed 21503 child-lists (node slots stay in pool)",
+      "err": "transpile: \nParse Error: Expected ')' after super method arguments\nParse Error: expected token 85 got 60\nParse Error: Expected '}' after class body\nerror: compilation failed",
       "out": "",
       "tags": [],
-      "key": "test_bdb.py"
+      "key": "test_bdb.py",
+      "updated": "2026-09-30"
     },
     "test_bigaddrspace.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_bigaddrspace.py",
@@ -513,11 +535,12 @@
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_bigmem.py",
       "status": "fail",
       "stage": "compile",
-      "rc": 1,
-      "err": " arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[COMPILE] ERROR: Unknown function: title\nCOMPILE ERROR at line 17570: Unknown function\nCompilation Failed: Unknown function\n[AST] Freeing 55680 node child-lists...\n[AST] Freed 22033 child-lists (node slots stay in pool)",
+      "rc": -11,
+      "err": "aded: AIMacro.AIMacroString\n[IMPORT] Loaded: AIMacro.AIMacroOperator\n[IMPORT] Loaded: AIMacro.AIMacroDict\n[IMPORT] Loaded: AIMacro.AIMacroUnittest\n[IMPORT] Loaded: AIMacro.AIMacroFormat\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 1018 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 30518, col 32: Unexpected token in statement\n  In:",
       "out": "",
       "tags": [],
-      "key": "test_bigmem.py"
+      "key": "test_bigmem.py",
+      "updated": "2026-09-30"
     },
     "test_binascii.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_binascii.py",
@@ -538,12 +561,13 @@
     "test_bisect.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_bisect.py",
       "status": "fail",
-      "stage": "compile",
-      "rc": 1,
-      "err": "ents\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 0 arguments\n[COMPILE] ERROR: Unknown function: insort_left\nCOMPILE ERROR at line 17789: Unknown function\nCompilation Failed: Unknown function\n[AST] Freeing 46608 node child-lists...\n[AST] Freed 19079 child-lists (node slots stay in pool)",
-      "out": "",
+      "stage": "run",
+      "rc": -11,
+      "err": "",
+      "out": "  TestBisectPython.test_precomputed\n  TestBisectC.test_precomputed\n  TestBisectC.test_negative_lo\n  TestBisectC.test_large_range\n  TestBisectC.test_large_pyrange\n  TestBisectC.test_random\n  TestBisectC.test_optionalSlicing\n",
       "tags": [],
-      "key": "test_bisect.py"
+      "key": "test_bisect.py",
+      "updated": "2026-09-30"
     },
     "test_bool.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_bool.py",
@@ -559,15 +583,16 @@
       "stage": "py2aim",
       "err": "timeout",
       "tags": [],
-      "key": "test_buffer.py"
+      "key": "test_buffer.py",
+      "updated": "2026-09-30"
     },
     "test_bufio.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_bufio.py",
       "status": "fail",
       "stage": "run",
-      "rc": 1,
+      "rc": -11,
       "err": "",
-      "out": "d not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: open\nERROR: Method not found: unlink\nunittest: ran 1 tests, 1 failed\n",
+      "out": "und: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\nERROR: Method not found: open\n",
       "tags": [],
       "key": "test_bufio.py",
       "updated": "2026-09-30"
@@ -580,14 +605,15 @@
       "err": "transpile: \nParse Error: expected token 3 got 52\nParse Error: expected token 17 got 52\nParse Error: Unexpected token in expression\n token=52\nParse Error: expected token 84 got 3\nParse Error: Expected '{' to start block\nParse Error: expected token 85 got 3\nParse Error: Expected '}' after class body\nerror: compilation failed",
       "out": "",
       "tags": [],
-      "key": "test_builtin.py"
+      "key": "test_builtin.py",
+      "updated": "2026-09-30"
     },
     "test_bytes.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_bytes.py",
       "status": "fail",
       "stage": "compile",
       "rc": -11,
-      "err": "ittest\n[IMPORT] Loaded: AIMacro.AIMacroFormat\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT ERROR] Cannot read: array\n[IMPORT ERROR] Cannot read: re\n[IMPORT ERROR] Cannot read: functools\n[IMPORT ERROR] Cannot read: textwrap\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 1104 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 30766, col 32: Unexpected token in statement\n  In:",
+      "err": "ittest\n[IMPORT] Loaded: AIMacro.AIMacroFormat\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT ERROR] Cannot read: array\n[IMPORT ERROR] Cannot read: re\n[IMPORT ERROR] Cannot read: functools\n[IMPORT ERROR] Cannot read: textwrap\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 1109 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 30901, col 32: Unexpected token in statement\n  In:",
       "out": "",
       "tags": [],
       "key": "test_bytes.py",
@@ -598,7 +624,7 @@
       "status": "fail",
       "stage": "compile",
       "rc": -11,
-      "err": "MPORT ERROR] Cannot read: random\n[IMPORT ERROR] Cannot read: shutil\n[IMPORT ERROR] Cannot read: subprocess\n[IMPORT ERROR] Cannot read: threading\n[IMPORT ERROR] Cannot read: _compression\n[IMPORT ERROR] Cannot read: bz2\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 1003 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 31346, col 32: Unexpected token in statement\n  In:",
+      "err": "MPORT ERROR] Cannot read: random\n[IMPORT ERROR] Cannot read: shutil\n[IMPORT ERROR] Cannot read: subprocess\n[IMPORT ERROR] Cannot read: threading\n[IMPORT ERROR] Cannot read: _compression\n[IMPORT ERROR] Cannot read: bz2\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 1008 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 31481, col 32: Unexpected token in statement\n  In:",
       "out": "",
       "tags": [],
       "key": "test_bz2.py",
@@ -606,12 +632,9 @@
     },
     "test_c_locale_coercion.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_c_locale_coercion.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": 1,
-      "err": "",
-      "out": "  LocaleCoercionTests.test_LC_ALL_set_to_C\nERROR: Method not found: get_child_details\nERROR: Method not found: get_expected_details\nFAIL: assertEqual\nunittest: ran 1 tests, 1 failed\n",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_c_locale_coercion.py",
       "updated": "2026-09-30"
     },
@@ -620,7 +643,7 @@
       "status": "fail",
       "stage": "compile",
       "rc": -11,
-      "err": "MPORT] Loaded: AIMacro.AIMacroUnittest\n[IMPORT] Loaded: AIMacro.AIMacroFormat\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT ERROR] Cannot read: calendar\n[IMPORT ERROR] Cannot read: locale\n[IMPORT ERROR] Cannot read: datetime\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 985 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 29896, col 32: Unexpected token in statement\n  In:",
+      "err": "MPORT] Loaded: AIMacro.AIMacroUnittest\n[IMPORT] Loaded: AIMacro.AIMacroFormat\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT ERROR] Cannot read: calendar\n[IMPORT ERROR] Cannot read: locale\n[IMPORT ERROR] Cannot read: datetime\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 990 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 30031, col 32: Unexpected token in statement\n  In:",
       "out": "",
       "tags": [],
       "key": "test_calendar.py",
@@ -629,12 +652,13 @@
     "test_call.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_call.py",
       "status": "fail",
-      "stage": "compile",
+      "stage": "transpile",
       "rc": 1,
-      "err": "[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\nERROR: Variable not found: input\nCompilation Failed: \n[AST] Freeing 45907 node child-lists...\n[AST] Freed 19022 child-lists (node slots stay in pool)",
+      "err": "transpile: \nParse Error: Unexpected token in expression\n token=52\nParse Error: Expected ')' after super method arguments\nParse Error: expected token 85 got 3\nParse Error: Expected '}' after class body\nParse Error: expected token 85 got 82\nParse Error: Expected '}' after class body\nerror: compilation failed",
       "out": "",
       "tags": [],
-      "key": "test_call.py"
+      "key": "test_call.py",
+      "updated": "2026-09-30"
     },
     "test_capi/__init__.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_capi/__init__.py",
@@ -810,12 +834,9 @@
     },
     "test_code_module.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_code_module.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": 1,
-      "err": "",
-      "out": "ERROR: Method not found: InteractiveConsole\nERROR: Method not found: patch\nERROR: Method not found: enter_context\nERROR: Method not found: patch\nERROR: Method not found: enter_context\nERROR: Method not found: patch\nERROR: Method not found: enter_context\nERROR: Method not found: patch\nERROR: Method not found: enter_context\n  TestInteractiveConsole.test_ps1\nERROR: Method not found: interact\nFAIL: assertEqual\nERROR: Method not found: interact\nunittest: ran 1 tests, 1 failed\n",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_code_module.py",
       "updated": "2026-09-30"
     },
@@ -2257,12 +2278,9 @@
     },
     "test_imp.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_imp.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": -11,
-      "err": "",
-      "out": "ERROR: Method not found: get_tag\nERROR: Method not found: get_tag\n  ImportTests.test_import_encoded_module\n  ImportTests.test_find_module_encoding\n  ImportTests.test_issue1267\nFAIL: assertEqual\n  ImportTests.test_issue3594\nFAIL: assertEqual\nERROR: Method not found: unlink\nERROR: Method not found: unlink\n  ImportTests.test_issue5604\nERROR: Method not found: get\nERROR: Method not found: decode\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: unlink\nERROR: Method not found: rmtree\nERROR: Method not found: rmtree\n  ImportTests.test_issue9319\n  ImportTests.test_load_from_source\nERROR: Method not found: CleanImport\nERROR: Method not found: load_module\nFAIL: assertIs\n  ImportTests.test_issue15828_load_extensions\nERROR: Method not found: load_module\nFAIL: assertEqual\n  ImportTests.test_issue16421_multiple_modules_in_one_dll\nERROR: Method not found: load_dynamic\nERROR: Method not found: load_dynamic\nERROR: Method not found: load_dynamic\nFAIL: assertEqual\n  ImportTests.test_load_dynamic_ImportError_path\nERROR: Method not found: load_dynamic\nERROR: argument is not iterable\n  ImportTests.test_load_module_extension_file_is_None\nERROR: Method not found: load_module\n  ImportTests.test_issue24748_load_module_skips_sys_modules_check\nERROR: Method not found: load_dynamic\nFAIL: assertEqual\n  ImportTests.test_bug7732\nERROR: Method not found: temp_cwd\nERROR: Method not found: mkdir\n  ImportTests.test_multiple_calls_to_get_data\nERROR: Method not found: _LoadSourceCompatibility\nERROR: Method not found: get_data\nERROR: Method not found: get_data\nERROR: No such file\n  ImportTests.test_load_source\n",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_imp.py",
       "updated": "2026-09-30"
     },
@@ -2359,7 +2377,7 @@
       "stage": "run",
       "rc": -11,
       "err": "",
-      "out": "ERROR: Method not found: import_importlib\nERROR: Method not found: test_both\nERROR: Method not found: test_both\nERROR: Method not found: test_both\n  ExecModuleTests.test_lacking_parent\nERROR: Method not found: uncache\nERROR: Method not found: frozen_modules\nERROR: Method not found: split\nERROR: Method not found: ModuleType\nERROR: Method not found: uncache\n  ExecModuleTests.test_module_repr\nERROR: Method not found: frozen_modules\nERROR: Method not found: split\nERROR: Method not found: ModuleType\nERROR: Method not found: uncache\n  ExecModuleTests.test_module_repr_indirect\nERROR: Method not found: frozen_modules\nERROR: Method not found: split\nERROR: Method not found: ModuleType\nERROR: Method not found: uncache\n  ExecModuleTests.test_unloadable\nERROR: Method not found: frozen_modules\nERROR: Method not found: frozen_modules\nERROR: Method not found: split\nERROR: Method not found: ModuleType\nERROR: Method not found: uncache\n",
+      "out": "ERROR: Method not found: import_importlib\nERROR: Method not found: test_both\nERROR: Method not found: test_both\nERROR: Method not found: test_both\n  ExecModuleTests.test_lacking_parent\n  ExecModuleTests.test_module_repr\nERROR: Method not found: frozen_modules\nERROR: Method not found: split\n  ExecModuleTests.test_module_repr_indirect\nERROR: Method not found: frozen_modules\nERROR: Method not found: split\n  ExecModuleTests.test_unloadable\nERROR: Method not found: frozen_modules\nERROR: Method not found: frozen_modules\nERROR: Method not found: split\n",
       "tags": [],
       "key": "test_importlib/frozen/test_loader.py",
       "updated": "2026-09-30"
@@ -2398,12 +2416,9 @@
     },
     "test_importlib/import_/test_caching.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_importlib/import_/test_caching.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": -11,
-      "err": "",
-      "out": "ERROR: Method not found: test_both\n  ImportlibUseCache.test_using_cache\nERROR: Method not found: uncache\n",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_importlib/import_/test_caching.py",
       "updated": "2026-09-30"
     },
@@ -2513,12 +2528,13 @@
     "test_importlib/test_abc.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_importlib/test_abc.py",
       "status": "fail",
-      "stage": "compile",
+      "stage": "transpile",
       "rc": 1,
-      "err": "guments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 0 arguments\n[COMPILE] ERROR: Unknown function: get_data\nCOMPILE ERROR at line 17986: Unknown function\nCompilation Failed: Unknown function\n[AST] Freeing 48827 node child-lists...\n[AST] Freed 19964 child-lists (node slots stay in pool)",
+      "err": "transpile: \nParse Error: Unexpected token in expression\n token=52\nParse Error: Expected ')' after super method arguments\nParse Error: expected token 85 got 3\nParse Error: Expected '}' after class body\nerror: compilation failed",
       "out": "",
       "tags": [],
-      "key": "test_importlib/test_abc.py"
+      "key": "test_importlib/test_abc.py",
+      "updated": "2026-09-30"
     },
     "test_importlib/test_api.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_importlib/test_api.py",
@@ -2630,7 +2646,7 @@
       "stage": "run",
       "rc": 1,
       "err": "",
-      "out": "ERROR: Method not found: mkdtemp\nERROR: Method not found: mkdir\n  TestImport.test_package_import__semantics\nERROR: Method not found: rmtree\nFAIL: assertNotEqual\nException: assertNotEqual\n",
+      "out": "ERROR: Method not found: mkdtemp\n  TestImport.test_package_import__semantics\nERROR: Method not found: rmtree\nFAIL: assertNotEqual\nException: assertNotEqual\n",
       "tags": [],
       "key": "test_importlib/test_pkg_import.py",
       "updated": "2026-09-30"

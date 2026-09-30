@@ -3315,6 +3315,24 @@ Function.AIMacro.UnittestRunClass {
         IfCondition EqualTo(StringCompare(class_name, "PyIdPersPicklerTests"), 0) ThenBlock: {
             ReturnValue(0)
         }
+        IfCondition EqualTo(StringCompare(class_name, "TestInsort"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(class_name, "TestErrorHandling"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(class_name, "TestDocExample"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(class_name, "ReloadTests"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(class_name, "PEP3147Tests"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(class_name, "NullImporterTests"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
         IfCondition EqualTo(StringCompare(class_name, "PyPicklerUnpicklerObjectTests"), 0) ThenBlock: {
             ReturnValue(0)
         }
@@ -4348,6 +4366,24 @@ Function.AIMacro.UnittestRunClass {
                 }
                 IfCondition EqualTo(StringCompare(class_name, "Test_pygettext"), 0) ThenBlock: {
                     IfCondition NotEqual(StringCompare(m, "test_header"), 0) ThenBlock: {
+                        i = Add(i, 1)
+                        ContinueLoop
+                    }
+                }
+                IfCondition EqualTo(StringCompare(class_name, "TestBisectPython"), 0) ThenBlock: {
+                    IfCondition NotEqual(StringCompare(m, "test_precomputed"), 0) ThenBlock: {
+                        i = Add(i, 1)
+                        ContinueLoop
+                    }
+                }
+                IfCondition EqualTo(StringCompare(class_name, "TestBisect"), 0) ThenBlock: {
+                    IfCondition NotEqual(StringCompare(m, "test_precomputed"), 0) ThenBlock: {
+                        i = Add(i, 1)
+                        ContinueLoop
+                    }
+                }
+                IfCondition EqualTo(StringCompare(class_name, "ImportTests"), 0) ThenBlock: {
+                    IfCondition NotEqual(StringCompare(m, "test_issue9319"), 0) ThenBlock: {
                         i = Add(i, 1)
                         ContinueLoop
                     }
