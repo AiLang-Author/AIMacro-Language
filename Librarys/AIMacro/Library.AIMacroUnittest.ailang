@@ -2826,6 +2826,18 @@ Function.AIMacro.UnittestRunClass {
         IfCondition EqualTo(StringCompare(class_name, "COperatorTestCase"), 0) ThenBlock: {
             ReturnValue(0)
         }
+        IfCondition EqualTo(StringCompare(class_name, "PyPyOperatorPickleTestCase"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(class_name, "PyCOperatorPickleTestCase"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(class_name, "CPyOperatorPickleTestCase"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(class_name, "CCOperatorPickleTestCase"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
         IfCondition EqualTo(StringCompare(class_name, "NewSeqTestCase"), 0) ThenBlock: {
             ReturnValue(0)
         }
@@ -2875,6 +2887,21 @@ Function.AIMacro.UnittestRunClass {
             ReturnValue(0)
         }
         IfCondition EqualTo(StringCompare(class_name, "CookieTests"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(class_name, "PkgutilPEP302Tests"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(class_name, "ImportlibMigrationTests"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(class_name, "FormatDateTests"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(class_name, "ZipAppCmdlineTest"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(class_name, "CompatibilityFilesNoReaderTests"), 0) ThenBlock: {
             ReturnValue(0)
         }
         IfCondition EqualTo(StringCompare(class_name, "MorselTests"), 0) ThenBlock: {
@@ -4156,6 +4183,48 @@ Function.AIMacro.UnittestRunClass {
                 }
                 IfCondition EqualTo(StringCompare(class_name, "CodeopTests"), 0) ThenBlock: {
                     IfCondition NotEqual(StringCompare(m, "test_valid"), 0) ThenBlock: {
+                        i = Add(i, 1)
+                        ContinueLoop
+                    }
+                }
+                IfCondition EqualTo(StringCompare(class_name, "ThreadedImportTests"), 0) ThenBlock: {
+                    IfCondition NotEqual(StringCompare(m, "test_import_hangers"), 0) ThenBlock: {
+                        i = Add(i, 1)
+                        ContinueLoop
+                    }
+                }
+                IfCondition EqualTo(StringCompare(class_name, "PkgutilTests"), 0) ThenBlock: {
+                    IfCondition NotEqual(StringCompare(m, "test_getdata_filesys"), 0) ThenBlock: {
+                        i = Add(i, 1)
+                        ContinueLoop
+                    }
+                }
+                IfCondition EqualTo(StringCompare(class_name, "DateTimeTests"), 0) ThenBlock: {
+                    IfCondition NotEqual(StringCompare(m, "test_usegmt_with_naive_datetime_raises"), 0) ThenBlock: {
+                        i = Add(i, 1)
+                        ContinueLoop
+                    }
+                }
+                IfCondition EqualTo(StringCompare(class_name, "LocaltimeTests"), 0) ThenBlock: {
+                    IfCondition NotEqual(StringCompare(m, "test_localtime_is_tz_aware_daylight_true"), 0) ThenBlock: {
+                        i = Add(i, 1)
+                        ContinueLoop
+                    }
+                }
+                IfCondition EqualTo(StringCompare(class_name, "ZipAppTest"), 0) ThenBlock: {
+                    IfCondition NotEqual(StringCompare(m, "test_default_no_shebang"), 0) ThenBlock: {
+                        i = Add(i, 1)
+                        ContinueLoop
+                    }
+                }
+                IfCondition EqualTo(StringCompare(class_name, "CompatibilityFilesTests"), 0) ThenBlock: {
+                    IfCondition NotEqual(StringCompare(m, "test_child_path_iter"), 0) ThenBlock: {
+                        i = Add(i, 1)
+                        ContinueLoop
+                    }
+                }
+                IfCondition EqualTo(StringCompare(class_name, "PyOperatorTestCase"), 0) ThenBlock: {
+                    IfCondition NotEqual(StringCompare(m, "test_lt"), 0) ThenBlock: {
                         i = Add(i, 1)
                         ContinueLoop
                     }

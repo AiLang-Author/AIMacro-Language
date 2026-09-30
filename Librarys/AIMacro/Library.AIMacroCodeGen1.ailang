@@ -50,6 +50,8 @@ FixedPool.Gen {
     "all_nest_from": Initialize=0, CanChange=True
     "all_nest_to": Initialize=0, CanChange=True
     "pending_freevars": Initialize=0, CanChange=True
+    "method_py_names": Initialize=0, CanChange=True
+    "module_funcs": Initialize=0, CanChange=True
 
 }
 
@@ -94,6 +96,8 @@ Function.Gen_Init {
         Gen.all_nest_from = Array.Create(64)
         Gen.all_nest_to = Array.Create(64)
         Gen.pending_freevars = 0
+        Gen.method_py_names = Array.Create(64)
+        Gen.module_funcs = Array.Create(32)
 
     }
 }
@@ -258,6 +262,48 @@ Function.Gen_IsKnownFunc {
         i = 0
         WhileLoop LessThan(i, n) {
             fn = Array.Get(Gen.func_names, i)
+            cmp = StringCompare(fn, name)
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                ReturnValue(1)
+            }
+            i = Add(i, 1)
+        }
+        ReturnValue(0)
+    }
+}
+
+Function.Gen_IsMethodPyName {
+    Input: name: Address
+    Output: Integer
+    Body: {
+        IfCondition Or(EqualTo(name, 0), EqualTo(Gen.method_py_names, 0)) ThenBlock: {
+            ReturnValue(0)
+        }
+        n = Array.Size(Gen.method_py_names)
+        i = 0
+        WhileLoop LessThan(i, n) {
+            fn = Array.Get(Gen.method_py_names, i)
+            cmp = StringCompare(fn, name)
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                ReturnValue(1)
+            }
+            i = Add(i, 1)
+        }
+        ReturnValue(0)
+    }
+}
+
+Function.Gen_IsModuleFunc {
+    Input: name: Address
+    Output: Integer
+    Body: {
+        IfCondition Or(EqualTo(name, 0), EqualTo(Gen.module_funcs, 0)) ThenBlock: {
+            ReturnValue(0)
+        }
+        n = Array.Size(Gen.module_funcs)
+        i = 0
+        WhileLoop LessThan(i, n) {
+            fn = Array.Get(Gen.module_funcs, i)
             cmp = StringCompare(fn, name)
             IfCondition EqualTo(cmp, 0) ThenBlock: {
                 ReturnValue(1)

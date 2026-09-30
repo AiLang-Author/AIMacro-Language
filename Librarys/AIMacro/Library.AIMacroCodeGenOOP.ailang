@@ -828,6 +828,9 @@ Function.OOPGen_MethodImpl {
             di = Add(di, 1)
         }
         Array.Push(Gen.func_names, func_name)
+        IfCondition NotEqual(Gen.method_py_names, 0) ThenBlock: {
+            Array.Push(Gen.method_py_names, method_name)
+        }
         Array.Push(Gen.func_defaults, defs)
         Array.Push(Gen.func_params, params)
         Array.Push(Gen.func_varargs, 0)

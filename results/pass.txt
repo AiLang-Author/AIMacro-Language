@@ -40,6 +40,7 @@ test_defaultdict.py
 test_deque.py
 test_doctest2.py
 test_eintr.py
+test_email/test_utils.py
 test_enumerate.py
 test_eof.py
 test_errno.py
@@ -69,11 +70,13 @@ test_importlib/extension/test_case_sensitivity.py
 test_importlib/frozen/test_finder.py
 test_importlib/import_/test_caching.py
 test_importlib/source/test_case_sensitivity.py
+test_importlib/test_compatibilty_files.py
 test_importlib/test_contents.py
 test_importlib/test_files.py
 test_importlib/test_open.py
 test_importlib/test_path.py
 test_importlib/test_read.py
+test_importlib/test_threaded_import.py
 test_importlib/test_windows.py
 test_importlib/test_zip.py
 test_index.py
@@ -108,6 +111,7 @@ test_osx_env.py
 test_peg_generator/test_first_sets.py
 test_peg_generator/test_grammar_validator.py
 test_pickletools.py
+test_pkgutil.py
 test_pstats.py
 test_pty.py
 test_pwd.py
@@ -168,4 +172,5 @@ test_xml_dom_minicompat.py
 test_xmlrpc_net.py
 test_xxlimited.py
 test_xxtestfuzz.py
+test_zipapp.py
 test_zipimport_support.py

@@ -929,6 +929,62 @@ Function.Gen_FindKw {
 // =============================================================================
 // FUNCTION CALL
 // =============================================================================
+Function.Gen_EmitLeftoverCall {
+    Input: args: Address
+    Body: {
+        n = 0
+        IfCondition NotEqual(args, 0) ThenBlock: {
+            n = Array.Size(args)
+        }
+        IfCondition EqualTo(n, 0) ThenBlock: {
+            Gen_Emit("AIMacro.SmartCall(0)")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(n, 1) ThenBlock: {
+            arg = Array.Get(args, 0)
+            IfCondition EqualTo(Gen_HasCall(arg), 1) ThenBlock: {
+                arg = Gen_FlattenExpr(arg)
+            }
+            Gen_Emit("AIMacro.SmartCall1(0, ")
+            Gen_Expr(arg)
+            Gen_Emit(")")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(n, 2) ThenBlock: {
+            Gen_Emit("AIMacro.SmartCall2(0")
+            i = 0
+            WhileLoop LessThan(i, n) {
+                Gen_Emit(", ")
+                arg = Array.Get(args, i)
+                IfCondition EqualTo(Gen_HasCall(arg), 1) ThenBlock: {
+                    arg = Gen_FlattenExpr(arg)
+                }
+                Gen_Expr(arg)
+                i = Add(i, 1)
+            }
+            Gen_Emit(")")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(n, 3) ThenBlock: {
+            Gen_Emit("AIMacro.SmartCall3(0")
+            i = 0
+            WhileLoop LessThan(i, n) {
+                Gen_Emit(", ")
+                arg = Array.Get(args, i)
+                IfCondition EqualTo(Gen_HasCall(arg), 1) ThenBlock: {
+                    arg = Gen_FlattenExpr(arg)
+                }
+                Gen_Expr(arg)
+                i = Add(i, 1)
+            }
+            Gen_Emit(")")
+            ReturnValue(0)
+        }
+        Gen_Emit("AIMacro.SmartCall(0)")
+        ReturnValue(0)
+    }
+}
+
 Function.Gen_CallExpr {
     Input: node: Address
     Body: {
@@ -1098,9 +1154,9 @@ Function.Gen_CallExpr {
             ReturnValue(0)
         }
 
-        // from-import stubs (quopri binascii): call compiles as None
+        // from-import stubs: leftover CALL → SmartCall(0) (in_test RaiseKind 8)
         IfCondition EqualTo(Gen_IsImportStub(name), 1) ThenBlock: {
-            Gen_Emit("Types.GetNone()")
+            Gen_EmitLeftoverCall(args)
             ReturnValue(0)
         }
 
@@ -1786,11 +1842,21 @@ Function.Gen_CallExpr {
             ReturnValue(0)
         }
         
-        // Unknown non-builtin name → CallIndirect (copy.func / statistics.types_add / types.meta)
+        // Unknown / leftover CALL → SmartCall(0). Method python-names
+        // (setUp, keys, __init__) must not emit Function.name that was never
+        // written; those live as ClassName_methodName. Module-level def stays.
         mcmp_ci = StringCompare(func_name, name)
-        IfCondition And(EqualTo(mcmp_ci, 0), EqualTo(Gen_IsKnownFunc(name), 0)) ThenBlock: {
-            // Unbound callee: CallIndirect(0, ...) is illegal AILang
-            // (literal 0 + args → Expected ')' ). Stub whole call as None.
+        is_known_c = Gen_IsKnownFunc(name)
+        is_leftover_c = 0
+        IfCondition EqualTo(is_known_c, 0) ThenBlock: {
+            is_leftover_c = 1
+        }
+        IfCondition EqualTo(Gen_IsMethodPyName(name), 1) ThenBlock: {
+            IfCondition EqualTo(Gen_IsModuleFunc(name), 0) ThenBlock: {
+                is_leftover_c = 1
+            }
+        }
+        IfCondition And(EqualTo(mcmp_ci, 0), EqualTo(is_leftover_c, 1)) ThenBlock: {
             IfCondition Or(EqualTo(Gen_IsParam(name), 1), Or(EqualTo(Gen_IsCallableVar(name), 1), EqualTo(Gen_IsModuleVar(name), 1))) ThenBlock: {
                 IfCondition EqualTo(n, 0) ThenBlock: {
                     Gen_Emit("AIMacro.SmartCall(")
@@ -1832,7 +1898,7 @@ Function.Gen_CallExpr {
                     }
                 }
             } ElseBlock: {
-                Gen_Emit("Types.GetNone()")
+                Gen_EmitLeftoverCall(args)
             }
             ReturnValue(0)
         }

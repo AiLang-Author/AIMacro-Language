@@ -83,6 +83,7 @@ Function.Gen_Program {
                 fname = ArrayGet(decl, 3)
                 defs = ArrayGet(decl, 7)
                 Array.Push(Gen.func_names, fname)
+                Array.Push(Gen.module_funcs, fname)
                 Array.Push(Gen.func_defaults, defs)
                 Array.Push(Gen.func_params, ArrayGet(decl, 4))
                 star = ArrayGet(decl, 8)

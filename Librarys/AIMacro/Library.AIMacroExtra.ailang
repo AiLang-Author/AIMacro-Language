@@ -3981,7 +3981,7 @@ Function.AIMacro.SmartCall {
             IfCondition EqualTo(UnittestState.in_test, 1) ThenBlock: {
                 AIMacro.RaiseKind(8, "skip")
             }
-            ReturnValue(0)
+            ReturnValue(Types.GetNone())
         }
         IfCondition EqualTo(Hash.IsHash(fn), 1) ThenBlock: {
             empty = AIMacro.EmptyList()
@@ -4072,7 +4072,7 @@ Function.AIMacro.SmartCallN {
             IfCondition EqualTo(UnittestState.in_test, 1) ThenBlock: {
                 AIMacro.RaiseKind(8, "skip")
             }
-            ReturnValue(AIMacro.ListFrom(args))
+            ReturnValue(Types.GetNone())
         }
         IfCondition EqualTo(args, 0) ThenBlock: {
             args = AIMacro.EmptyList()
