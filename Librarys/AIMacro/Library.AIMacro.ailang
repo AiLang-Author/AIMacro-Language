@@ -5786,6 +5786,16 @@ Function.AIMacro.NumNe {
                 }
             }
         }
+        sone = AIMacro.TrySeqOrd(a, b)
+        IfCondition EqualTo(AIMacro.ExcPending(), 1) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition NotEqual(sone, 2) ThenBlock: {
+            IfCondition EqualTo(sone, 0) ThenBlock: {
+                ReturnValue(AIMacro.FalseVal())
+            }
+            ReturnValue(AIMacro.TrueVal())
+        }
         IfCondition Or(EqualTo(AIMacro.SafeIsHash(a), 1), EqualTo(AIMacro.SafeIsHash(b), 1)) ThenBlock: {
             IfCondition EqualTo(a, b) ThenBlock: {
                 ReturnValue(AIMacro.FalseVal())
@@ -5807,6 +5817,44 @@ Function.AIMacro.OrderUnsupported {
     }
 }
 
+// String payload of a str / str-subclass / plain C string. 0 if none.
+Function.AIMacro.SeqStrOf {
+    Input: v: Address
+    Output: Address
+    Body: {
+        IfCondition EqualTo(v, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(AIMacro.SafeIsHash(v), 1) ThenBlock: {
+            payload = Hash.Get(v, "__int__")
+            IfCondition EqualTo(AIMacro.LooksLikeString(payload), 1) ThenBlock: {
+                ReturnValue(payload)
+            }
+            data = Hash.Get(v, "__data__")
+            IfCondition EqualTo(Hash.IsHash(data), 1) ThenBlock: {
+                payload = Hash.Get(data, "__int__")
+                IfCondition EqualTo(AIMacro.LooksLikeString(payload), 1) ThenBlock: {
+                    ReturnValue(payload)
+                }
+            }
+            walk = Hash.Get(v, "__class__")
+            hops = 0
+            WhileLoop And(NotEqual(walk, 0), LessThan(hops, 16)) {
+                IfCondition EqualTo(StringCompare(walk, "str"), 0) ThenBlock: {
+                    ReturnValue(payload)
+                }
+                walk = OOP.ClassGetParent(walk)
+                hops = Add(hops, 1)
+            }
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(AIMacro.LooksLikeString(v), 1) ThenBlock: {
+            ReturnValue(v)
+        }
+        ReturnValue(0)
+    }
+}
+
 // -1 / 0 / 1 when a and b are orderable sequences (str, bytes, list, tuple,
 // set-as-list, bytearray). 2 when they are not sequences.
 Function.AIMacro.TrySeqOrd {
@@ -5825,34 +5873,22 @@ Function.AIMacro.TrySeqOrd {
             IfCondition NotEqual(ca, 0) ThenBlock: {
                 IfCondition EqualTo(StringCompare(ca, "bytearray"), 0) ThenBlock: {
                     aa = Hash.Get(a, "__list__")
-                } ElseBlock: {
-                    walk = ca
-                    hops = 0
-                    WhileLoop And(NotEqual(walk, 0), LessThan(hops, 16)) {
-                        IfCondition EqualTo(StringCompare(walk, "str"), 0) ThenBlock: {
-                            payload = Hash.Get(a, "__int__")
-                            data = Hash.Get(a, "__data__")
-                            IfCondition EqualTo(payload, 0) ThenBlock: {
-                                IfCondition EqualTo(Hash.IsHash(data), 1) ThenBlock: {
-                                    payload = Hash.Get(data, "__int__")
-                                }
-                            }
-                            IfCondition EqualTo(AIMacro.LooksLikeString(payload), 1) ThenBlock: {
-                                a = payload
-                                sa = 1
-                            }
-                            BreakLoop
-                        }
-                        walk = OOP.ClassGetParent(walk)
-                        hops = Add(hops, 1)
-                    }
+                }
+            }
+            IfCondition EqualTo(Array.IsArray(aa), 0) ThenBlock: {
+                astr = AIMacro.SeqStrOf(a)
+                IfCondition NotEqual(astr, 0) ThenBlock: {
+                    a = astr
+                    sa = 1
                 }
             }
         } ElseBlock: {
             IfCondition EqualTo(Array.IsArray(a), 1) ThenBlock: {
                 aa = a
             } ElseBlock: {
-                IfCondition EqualTo(AIMacro.LooksLikeString(a), 1) ThenBlock: {
+                astr = AIMacro.SeqStrOf(a)
+                IfCondition NotEqual(astr, 0) ThenBlock: {
+                    a = astr
                     sa = 1
                 }
             }
@@ -5862,34 +5898,22 @@ Function.AIMacro.TrySeqOrd {
             IfCondition NotEqual(cb, 0) ThenBlock: {
                 IfCondition EqualTo(StringCompare(cb, "bytearray"), 0) ThenBlock: {
                     bb = Hash.Get(b, "__list__")
-                } ElseBlock: {
-                    walk = cb
-                    hops = 0
-                    WhileLoop And(NotEqual(walk, 0), LessThan(hops, 16)) {
-                        IfCondition EqualTo(StringCompare(walk, "str"), 0) ThenBlock: {
-                            payload = Hash.Get(b, "__int__")
-                            data = Hash.Get(b, "__data__")
-                            IfCondition EqualTo(payload, 0) ThenBlock: {
-                                IfCondition EqualTo(Hash.IsHash(data), 1) ThenBlock: {
-                                    payload = Hash.Get(data, "__int__")
-                                }
-                            }
-                            IfCondition EqualTo(AIMacro.LooksLikeString(payload), 1) ThenBlock: {
-                                b = payload
-                                sb = 1
-                            }
-                            BreakLoop
-                        }
-                        walk = OOP.ClassGetParent(walk)
-                        hops = Add(hops, 1)
-                    }
+                }
+            }
+            IfCondition EqualTo(Array.IsArray(bb), 0) ThenBlock: {
+                bstr = AIMacro.SeqStrOf(b)
+                IfCondition NotEqual(bstr, 0) ThenBlock: {
+                    b = bstr
+                    sb = 1
                 }
             }
         } ElseBlock: {
             IfCondition EqualTo(Array.IsArray(b), 1) ThenBlock: {
                 bb = b
             } ElseBlock: {
-                IfCondition EqualTo(AIMacro.LooksLikeString(b), 1) ThenBlock: {
+                bstr = AIMacro.SeqStrOf(b)
+                IfCondition NotEqual(bstr, 0) ThenBlock: {
+                    b = bstr
                     sb = 1
                 }
             }
