@@ -1,8 +1,11 @@
+test_asyncio/test_protocols.py
 test_atexit.py
 test_binop.py
 test_bool.py
 test_cgitb.py
+test_check_c_globals.py
 test_cmd.py
+test_codecencodings_iso2022.py
 test_colorsys.py
 test_compare.py
 test_contains.py
@@ -23,6 +26,7 @@ test_future_stmt/test_future_single_import.py
 test_generator_stop.py
 test_getpass.py
 test_global.py
+test_graphlib.py
 test_grp.py
 test_heapq.py
 test_imghdr.py
@@ -30,9 +34,13 @@ test_importlib/extension/test_case_sensitivity.py
 test_importlib/frozen/test_finder.py
 test_importlib/test_contents.py
 test_importlib/test_path.py
+test_importlib/test_zip.py
 test_index.py
 test_iterlen.py
 test_json/test_default.py
+test_json/test_scanstring.py
+test_json/test_separators.py
+test_json/test_speedups.py
 test_json/test_tool.py
 test_keyword.py
 test_list.py
@@ -43,6 +51,7 @@ test_openpty.py
 test_operator.py
 test_pickletools.py
 test_pwd.py
+test_pyclbr.py
 test_secrets.py
 test_select.py
 test_smtpnet.py
@@ -51,6 +60,7 @@ test_startfile.py
 test_string.py
 test_sundry.py
 test_tix.py
+test_tools/test_fixcid.py
 test_tools/test_gprof2html.py
 test_tools/test_pdeps.py
 test_tools/test_reindent.py

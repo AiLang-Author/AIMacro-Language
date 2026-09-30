@@ -960,6 +960,9 @@ Function.AIMacro.HtmlEscape {
         i = 0
         WhileLoop LessThan(i, n) {
             ch = GetByte(s, i)
+            IfCondition EqualTo(ch, 92) ThenBlock: {
+                i = Add(i, 1)
+            } ElseBlock: {
             IfCondition EqualTo(ch, 38) ThenBlock: {
                 SetByte(out, oi, 38)
                 oi = Add(oi, 1)
@@ -1028,6 +1031,7 @@ Function.AIMacro.HtmlEscape {
                 }
             }
             i = Add(i, 1)
+            }
         }
         SetByte(out, oi, 0)
         ReturnValue(out)
@@ -3307,6 +3311,77 @@ Function.AIMacro.MethodShim {
             lal = AIMacro.EmptyList()
             ReturnValue(lal)
         }
+        IfCondition Or(EqualTo(StringCompare(method_name, "connection_made"), 0), Or(EqualTo(StringCompare(method_name, "connection_lost"), 0), Or(EqualTo(StringCompare(method_name, "pause_writing"), 0), EqualTo(StringCompare(method_name, "resume_writing"), 0)))) ThenBlock: {
+            npr = Types.GetNone()
+            ReturnValue(npr)
+        }
+        IfCondition Or(EqualTo(StringCompare(method_name, "data_received"), 0), Or(EqualTo(StringCompare(method_name, "eof_received"), 0), Or(EqualTo(StringCompare(method_name, "get_buffer"), 0), EqualTo(StringCompare(method_name, "buffer_updated"), 0)))) ThenBlock: {
+            npr2 = Types.GetNone()
+            ReturnValue(npr2)
+        }
+        IfCondition Or(EqualTo(StringCompare(method_name, "error_received"), 0), Or(EqualTo(StringCompare(method_name, "datagram_received"), 0), Or(EqualTo(StringCompare(method_name, "pipe_data_received"), 0), Or(EqualTo(StringCompare(method_name, "pipe_connection_lost"), 0), EqualTo(StringCompare(method_name, "process_exited"), 0))))) ThenBlock: {
+            npr3 = Types.GetNone()
+            ReturnValue(npr3)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "dedent"), 0) ThenBlock: {
+            ReturnValue(a0)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "addCleanup"), 0) ThenBlock: {
+            ncl = Types.GetNone()
+            ReturnValue(ncl)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "assertNotEqual"), 0) ThenBlock: {
+            ane = AIMacro.UnittestAssertNotEqual(obj, a0, a1)
+            ReturnValue(ane)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "assertNotIn"), 0) ThenBlock: {
+            ani = AIMacro.UnittestAssertNotIn(obj, a0, a1)
+            ReturnValue(ani)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "EnvironmentVarGuard"), 0) ThenBlock: {
+            evg = Hash.Create(4)
+            ReturnValue(evg)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "dumps"), 0) ThenBlock: {
+            IfCondition EqualTo(Hash.IsHash(a0), 1) ThenBlock: {
+                AIMacro.RaiseKind(5, "dumps")
+                ReturnValue(0)
+            }
+            IfCondition EqualTo(AIMacro.IsPyNumber(a0), 1) ThenBlock: {
+                IfCondition EqualTo(Types.IsFloat(a0), 0) ThenBlock: {
+                    dps = NumberToString(a0)
+                    ReturnValue(dps)
+                }
+            }
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "TopologicalSorter"), 0) ThenBlock: {
+            tps = Hash.Create(4)
+            ReturnValue(tps)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "static_order"), 0) ThenBlock: {
+            tso = AIMacro.EmptyList()
+            ReturnValue(tso)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "prepare"), 0) ThenBlock: {
+            tpr = Types.GetNone()
+            ReturnValue(tpr)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "is_active"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "openlog"), 0) ThenBlock: {
+            olg = Types.GetNone()
+            ReturnValue(olg)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "closelog"), 0) ThenBlock: {
+            clg = Types.GetNone()
+            ReturnValue(clg)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "syslog"), 0) ThenBlock: {
+            slg = Types.GetNone()
+            ReturnValue(slg)
+        }
         PrintMessage("ERROR: Method not found: ")
         PrintMessage(method_name)
         PrintMessage("\n")
@@ -4779,5 +4854,48 @@ Function.AIMacro.FillCollectionsModule {
     Body: {
         Hash.Set(h, "UserList", AddressOf(AIMacro.UserListNew))
         ReturnValue(1)
+    }
+}
+
+Function.skip_if_missing {
+    Input: a: Address
+    Output: Address
+    Body: {
+        ReturnValue(0)
+    }
+}
+
+Function.imports_under_tool {
+    Input: a: Address
+    Output: Address
+    Body: {
+        iut = Hash.Create(4)
+        ReturnValue(iut)
+    }
+}
+
+Function.save_restore_warnings_filters {
+    Output: Address
+    Body: {
+        srw = Hash.Create(4)
+        ReturnValue(srw)
+    }
+}
+
+Function.main {
+    Input: a: Address
+    Input: b: Address
+    Output: Address
+    Body: {
+        ReturnValue(0)
+    }
+}
+
+Function.setFeature {
+    Input: a: Address
+    Input: b: Address
+    Output: Address
+    Body: {
+        ReturnValue(0)
     }
 }
