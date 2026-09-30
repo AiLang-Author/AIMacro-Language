@@ -1,0 +1,418 @@
+// Library.AIMacroOperator.ailang
+// Python operator module: OpBound, FillOperatorModule, countOf/indexOf,
+// attrgetter/itemgetter. Extra MethodShim/SmartCallN call these helpers.
+//
+// Copyright (c) 2026 Sean Collins, 2 Paws Machine and Engineering. SCSL.
+
+LibraryImport.Array
+LibraryImport.Hash
+LibraryImport.OOP
+LibraryImport.AIMacro.AIMacroTypes
+LibraryImport.AIMacro.AIMacro
+LibraryImport.AIMacro.AIMacroString
+LibraryImport.AIMacro.AIMacroDict
+LibraryImport.AIMacro.AIMacroExtra
+
+Function.AIMacro.IsOpName {
+    Input: name: Address
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(name, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition Or(EqualTo(StringCompare(name, "lt"), 0), EqualTo(StringCompare(name, "le"), 0)) ThenBlock: { ReturnValue(1) }
+        IfCondition Or(EqualTo(StringCompare(name, "eq"), 0), EqualTo(StringCompare(name, "ne"), 0)) ThenBlock: { ReturnValue(1) }
+        IfCondition Or(EqualTo(StringCompare(name, "gt"), 0), EqualTo(StringCompare(name, "ge"), 0)) ThenBlock: { ReturnValue(1) }
+        IfCondition Or(EqualTo(StringCompare(name, "add"), 0), EqualTo(StringCompare(name, "sub"), 0)) ThenBlock: { ReturnValue(1) }
+        IfCondition Or(EqualTo(StringCompare(name, "mul"), 0), EqualTo(StringCompare(name, "pow"), 0)) ThenBlock: { ReturnValue(1) }
+        IfCondition Or(EqualTo(StringCompare(name, "rshift"), 0), EqualTo(StringCompare(name, "lshift"), 0)) ThenBlock: { ReturnValue(1) }
+        IfCondition Or(EqualTo(StringCompare(name, "contains"), 0), EqualTo(StringCompare(name, "setitem"), 0)) ThenBlock: { ReturnValue(1) }
+        IfCondition Or(EqualTo(StringCompare(name, "getitem"), 0), EqualTo(StringCompare(name, "delitem"), 0)) ThenBlock: { ReturnValue(1) }
+        IfCondition Or(EqualTo(StringCompare(name, "abs"), 0), EqualTo(StringCompare(name, "concat"), 0)) ThenBlock: { ReturnValue(1) }
+        IfCondition Or(EqualTo(StringCompare(name, "and_"), 0), EqualTo(StringCompare(name, "or_"), 0)) ThenBlock: { ReturnValue(1) }
+        IfCondition Or(EqualTo(StringCompare(name, "xor"), 0), EqualTo(StringCompare(name, "invert"), 0)) ThenBlock: { ReturnValue(1) }
+        IfCondition Or(EqualTo(StringCompare(name, "inv"), 0), EqualTo(StringCompare(name, "neg"), 0)) ThenBlock: { ReturnValue(1) }
+        IfCondition Or(EqualTo(StringCompare(name, "pos"), 0), EqualTo(StringCompare(name, "truth"), 0)) ThenBlock: { ReturnValue(1) }
+        IfCondition Or(EqualTo(StringCompare(name, "is_"), 0), EqualTo(StringCompare(name, "is_not"), 0)) ThenBlock: { ReturnValue(1) }
+        IfCondition Or(EqualTo(StringCompare(name, "floordiv"), 0), EqualTo(StringCompare(name, "truediv"), 0)) ThenBlock: { ReturnValue(1) }
+        IfCondition Or(EqualTo(StringCompare(name, "mod"), 0), EqualTo(StringCompare(name, "index"), 0)) ThenBlock: { ReturnValue(1) }
+        IfCondition Or(EqualTo(StringCompare(name, "countOf"), 0), EqualTo(StringCompare(name, "indexOf"), 0)) ThenBlock: { ReturnValue(1) }
+        IfCondition Or(EqualTo(StringCompare(name, "attrgetter"), 0), EqualTo(StringCompare(name, "itemgetter"), 0)) ThenBlock: { ReturnValue(1) }
+        IfCondition Or(EqualTo(StringCompare(name, "methodcaller"), 0), EqualTo(StringCompare(name, "length_hint"), 0)) ThenBlock: { ReturnValue(1) }
+        IfCondition Or(EqualTo(StringCompare(name, "iadd"), 0), EqualTo(StringCompare(name, "imul"), 0)) ThenBlock: { ReturnValue(1) }
+        IfCondition Or(EqualTo(StringCompare(name, "iconcat"), 0), EqualTo(StringCompare(name, "call"), 0)) ThenBlock: { ReturnValue(1) }
+        IfCondition Or(EqualTo(StringCompare(name, "ixor"), 0), EqualTo(StringCompare(name, "ior"), 0)) ThenBlock: { ReturnValue(1) }
+        IfCondition Or(EqualTo(StringCompare(name, "iand"), 0), EqualTo(StringCompare(name, "isub"), 0)) ThenBlock: { ReturnValue(1) }
+        IfCondition Or(EqualTo(StringCompare(name, "ipow"), 0), EqualTo(StringCompare(name, "imod"), 0)) ThenBlock: { ReturnValue(1) }
+        IfCondition Or(EqualTo(StringCompare(name, "ilshift"), 0), EqualTo(StringCompare(name, "irshift"), 0)) ThenBlock: { ReturnValue(1) }
+        IfCondition Or(EqualTo(StringCompare(name, "ifloordiv"), 0), EqualTo(StringCompare(name, "itruediv"), 0)) ThenBlock: { ReturnValue(1) }
+        IfCondition EqualTo(StringCompare(name, "imatmul"), 0) ThenBlock: { ReturnValue(1) }
+        IfCondition Or(EqualTo(StringCompare(name, "matmul"), 0), EqualTo(StringCompare(name, "not_"), 0)) ThenBlock: { ReturnValue(1) }
+        ReturnValue(0)
+    }
+}
+
+Function.AIMacro.OpBound {
+    Input: obj: Address
+    Input: name: Address
+    Output: Address
+    Body: {
+        h = Hash.Create(4)
+        Hash.Set(h, "__opshim__", 1)
+        Hash.Set(h, "obj", obj)
+        Hash.Set(h, "name", name)
+        ReturnValue(h)
+    }
+}
+
+Function.AIMacro.OpPut {
+    Input: h: Address
+    Input: name: Address
+    Input: dunder: Address
+    Output: Integer
+    Body: {
+        b = AIMacro.OpBound(h, name)
+        Hash.Set(h, name, b)
+        IfCondition NotEqual(dunder, 0) ThenBlock: {
+            Hash.Set(h, dunder, b)
+        }
+        ReturnValue(1)
+    }
+}
+
+Function.AIMacro.FillOperatorModule {
+    Input: h: Address
+    Output: Integer
+    Body: {
+        AIMacro.OpPut(h, "lt", "__lt__")
+        AIMacro.OpPut(h, "le", "__le__")
+        AIMacro.OpPut(h, "eq", "__eq__")
+        AIMacro.OpPut(h, "ne", "__ne__")
+        AIMacro.OpPut(h, "gt", "__gt__")
+        AIMacro.OpPut(h, "ge", "__ge__")
+        AIMacro.OpPut(h, "add", "__add__")
+        AIMacro.OpPut(h, "sub", "__sub__")
+        AIMacro.OpPut(h, "mul", "__mul__")
+        AIMacro.OpPut(h, "pow", "__pow__")
+        AIMacro.OpPut(h, "mod", "__mod__")
+        AIMacro.OpPut(h, "floordiv", "__floordiv__")
+        AIMacro.OpPut(h, "truediv", "__truediv__")
+        AIMacro.OpPut(h, "matmul", "__matmul__")
+        AIMacro.OpPut(h, "and_", "__and__")
+        AIMacro.OpPut(h, "or_", "__or__")
+        AIMacro.OpPut(h, "xor", "__xor__")
+        AIMacro.OpPut(h, "inv", "__inv__")
+        AIMacro.OpPut(h, "invert", "__invert__")
+        AIMacro.OpPut(h, "neg", "__neg__")
+        AIMacro.OpPut(h, "pos", "__pos__")
+        AIMacro.OpPut(h, "abs", "__abs__")
+        AIMacro.OpPut(h, "lshift", "__lshift__")
+        AIMacro.OpPut(h, "rshift", "__rshift__")
+        AIMacro.OpPut(h, "concat", "__concat__")
+        AIMacro.OpPut(h, "contains", "__contains__")
+        AIMacro.OpPut(h, "getitem", "__getitem__")
+        AIMacro.OpPut(h, "setitem", "__setitem__")
+        AIMacro.OpPut(h, "delitem", "__delitem__")
+        AIMacro.OpPut(h, "iadd", "__iadd__")
+        AIMacro.OpPut(h, "iand", "__iand__")
+        AIMacro.OpPut(h, "iconcat", "__iconcat__")
+        AIMacro.OpPut(h, "ifloordiv", "__ifloordiv__")
+        AIMacro.OpPut(h, "ilshift", "__ilshift__")
+        AIMacro.OpPut(h, "imod", "__imod__")
+        AIMacro.OpPut(h, "imul", "__imul__")
+        AIMacro.OpPut(h, "imatmul", "__imatmul__")
+        AIMacro.OpPut(h, "ior", "__ior__")
+        AIMacro.OpPut(h, "ipow", "__ipow__")
+        AIMacro.OpPut(h, "irshift", "__irshift__")
+        AIMacro.OpPut(h, "isub", "__isub__")
+        AIMacro.OpPut(h, "itruediv", "__itruediv__")
+        AIMacro.OpPut(h, "ixor", "__ixor__")
+        AIMacro.OpPut(h, "index", "__index__")
+        AIMacro.OpPut(h, "truth", "__truth__")
+        AIMacro.OpPut(h, "is_", 0)
+        AIMacro.OpPut(h, "is_not", 0)
+        AIMacro.OpPut(h, "not_", 0)
+        AIMacro.OpPut(h, "countOf", 0)
+        AIMacro.OpPut(h, "indexOf", 0)
+        AIMacro.OpPut(h, "attrgetter", 0)
+        AIMacro.OpPut(h, "itemgetter", 0)
+        AIMacro.OpPut(h, "methodcaller", 0)
+        AIMacro.OpPut(h, "length_hint", 0)
+        AIMacro.OpPut(h, "call", 0)
+        ReturnValue(1)
+    }
+}
+
+Function.AIMacro.AttrGetPath {
+    Input: obj: Address
+    Input: path: Address
+    Output: Address
+    Body: {
+        IfCondition EqualTo(AIMacro.LooksLikeString(path), 0) ThenBlock: {
+            AIMacro.RaiseKind(5, "attrgetter")
+            ReturnValue(0)
+        }
+        parts = String.Split(path, ".")
+        np = 0
+        IfCondition EqualTo(Array.IsArray(parts), 1) ThenBlock: {
+            np = Array.Size(parts)
+        }
+        IfCondition EqualTo(np, 0) ThenBlock: {
+            AIMacro.RaiseKind(14, "attrgetter")
+            ReturnValue(0)
+        }
+        cur = obj
+        pi = 0
+        WhileLoop LessThan(pi, np) {
+            part = Array.Get(parts, pi)
+            IfCondition EqualTo(StringLength(part), 0) ThenBlock: {
+                AIMacro.RaiseKind(14, "attrgetter")
+                ReturnValue(0)
+            }
+            v = AIMacro.ObjectGet(cur, part)
+            IfCondition EqualTo(AIMacro.ExcPending(), 1) ThenBlock: {
+                ReturnValue(0)
+            }
+            IfCondition EqualTo(v, 0) ThenBlock: {
+                AIMacro.RaiseKind(14, "attrgetter")
+                ReturnValue(0)
+            }
+            cur = v
+            pi = Add(pi, 1)
+        }
+        ReturnValue(cur)
+    }
+}
+
+Function.AIMacro.MakeAttrGetter {
+    Input: args: Address
+    Output: Address
+    Body: {
+        n = 0
+        IfCondition NotEqual(args, 0) ThenBlock: {
+            n = Array.Size(args)
+        }
+        IfCondition LessThan(n, 1) ThenBlock: {
+            AIMacro.RaiseKind(5, "attrgetter")
+            ReturnValue(0)
+        }
+        names = AIMacro.EmptyList()
+        ni = 0
+        WhileLoop LessThan(ni, n) {
+            nm = Array.Get(args, ni)
+            IfCondition EqualTo(AIMacro.LooksLikeString(nm), 0) ThenBlock: {
+                AIMacro.RaiseKind(5, "attrgetter")
+                ReturnValue(0)
+            }
+            Array.Push(names, nm)
+            ni = Add(ni, 1)
+        }
+        h = Hash.Create(8)
+        Hash.Set(h, "__attrgetter__", 1)
+        Hash.Set(h, "names", names)
+        ReturnValue(h)
+    }
+}
+
+Function.AIMacro.MakeItemGetter {
+    Input: args: Address
+    Output: Address
+    Body: {
+        n = 0
+        IfCondition NotEqual(args, 0) ThenBlock: {
+            n = Array.Size(args)
+        }
+        IfCondition LessThan(n, 1) ThenBlock: {
+            AIMacro.RaiseKind(5, "itemgetter")
+            ReturnValue(0)
+        }
+        names = AIMacro.EmptyList()
+        ni = 0
+        WhileLoop LessThan(ni, n) {
+            Array.Push(names, Array.Get(args, ni))
+            ni = Add(ni, 1)
+        }
+        h = Hash.Create(8)
+        Hash.Set(h, "__itemgetter__", 1)
+        Hash.Set(h, "names", names)
+        ReturnValue(h)
+    }
+}
+
+Function.AIMacro.ApplyAttrGetter {
+    Input: fn: Address
+    Input: args: Address
+    Output: Address
+    Body: {
+        na = 0
+        IfCondition NotEqual(args, 0) ThenBlock: {
+            na = Array.Size(args)
+        }
+        IfCondition NotEqual(na, 1) ThenBlock: {
+            AIMacro.RaiseKind(5, "attrgetter")
+            ReturnValue(0)
+        }
+        names = Hash.Get(fn, "names")
+        nn = 0
+        IfCondition EqualTo(Array.IsArray(names), 1) ThenBlock: {
+            nn = Array.Size(names)
+        }
+        objg = Array.Get(args, 0)
+        IfCondition EqualTo(nn, 1) ThenBlock: {
+            ReturnValue(AIMacro.AttrGetPath(objg, Array.Get(names, 0)))
+        }
+        outg = AIMacro.EmptyList()
+        gi = 0
+        WhileLoop LessThan(gi, nn) {
+            Array.Push(outg, AIMacro.AttrGetPath(objg, Array.Get(names, gi)))
+            gi = Add(gi, 1)
+        }
+        ReturnValue(outg)
+    }
+}
+
+Function.AIMacro.ApplyItemGetter {
+    Input: fn: Address
+    Input: args: Address
+    Output: Address
+    Body: {
+        na = 0
+        IfCondition NotEqual(args, 0) ThenBlock: {
+            na = Array.Size(args)
+        }
+        IfCondition NotEqual(na, 1) ThenBlock: {
+            AIMacro.RaiseKind(5, "itemgetter")
+            ReturnValue(0)
+        }
+        names = Hash.Get(fn, "names")
+        nn = 0
+        IfCondition EqualTo(Array.IsArray(names), 1) ThenBlock: {
+            nn = Array.Size(names)
+        }
+        objg = Array.Get(args, 0)
+        IfCondition EqualTo(nn, 1) ThenBlock: {
+            key = Array.Get(names, 0)
+            IfCondition And(EqualTo(AIMacro.LooksLikeString(objg), 1), EqualTo(AIMacro.LooksLikeString(key), 1)) ThenBlock: {
+                AIMacro.RaiseKind(5, "itemgetter")
+                ReturnValue(0)
+            }
+            v = DictGen_SmartGet(objg, key)
+            IfCondition EqualTo(AIMacro.ExcPending(), 1) ThenBlock: {
+                ReturnValue(0)
+            }
+            IfCondition EqualTo(Hash.IsHash(objg), 1) ThenBlock: {
+                IfCondition EqualTo(OOP.MethodExists(objg, "__getitem__"), 0) ThenBlock: {
+                    wlst = Hash.Get(objg, "__list__")
+                    IfCondition EqualTo(Array.IsArray(wlst), 0) ThenBlock: {
+                        IfCondition EqualTo(v, 0) ThenBlock: {
+                            AIMacro.RaiseKind(15, "itemgetter")
+                            ReturnValue(0)
+                        }
+                    }
+                }
+            }
+            ReturnValue(v)
+        }
+        outg = AIMacro.EmptyList()
+        gi = 0
+        WhileLoop LessThan(gi, nn) {
+            Array.Push(outg, DictGen_SmartGet(objg, Array.Get(names, gi)))
+            gi = Add(gi, 1)
+        }
+        ReturnValue(outg)
+    }
+}
+
+Function.AIMacro.OpCountOf {
+    Input: args: Address
+    Output: Address
+    Body: {
+        n = 0
+        IfCondition NotEqual(args, 0) ThenBlock: {
+            n = Array.Size(args)
+        }
+        IfCondition LessThan(n, 2) ThenBlock: {
+            AIMacro.RaiseKind(5, "countOf")
+            ReturnValue(0)
+        }
+        a0 = Array.Get(args, 0)
+        a1 = Array.Get(args, 1)
+        itc = AIMacro.Iter(a0)
+        IfCondition EqualTo(AIMacro.ExcPending(), 1) ThenBlock: {
+            ReturnValue(0)
+        }
+        cnt = 0
+        WhileLoop EqualTo(1, 1) {
+            vc = AIMacro.Next(itc)
+            IfCondition EqualTo(AIMacro.ExcPending(), 1) ThenBlock: {
+                IfCondition EqualTo(AIMacro.ExcKind(), 9) ThenBlock: {
+                    AIMacro.ExcClear()
+                }
+                BreakLoop
+            }
+            hit = 0
+            IfCondition EqualTo(vc, a1) ThenBlock: {
+                hit = 1
+            }
+            IfCondition EqualTo(hit, 0) ThenBlock: {
+                IfCondition EqualTo(AIMacro.UnittestEq(vc, a1), 1) ThenBlock: {
+                    hit = 1
+                }
+            }
+            IfCondition EqualTo(hit, 1) ThenBlock: {
+                cnt = Add(cnt, 1)
+            }
+        }
+        ReturnValue(cnt)
+    }
+}
+
+Function.AIMacro.OpIndexOf {
+    Input: args: Address
+    Output: Address
+    Body: {
+        n = 0
+        IfCondition NotEqual(args, 0) ThenBlock: {
+            n = Array.Size(args)
+        }
+        IfCondition LessThan(n, 2) ThenBlock: {
+            AIMacro.RaiseKind(5, "indexOf")
+            ReturnValue(0)
+        }
+        a0 = Array.Get(args, 0)
+        a1 = Array.Get(args, 1)
+        iti = AIMacro.Iter(a0)
+        IfCondition EqualTo(AIMacro.ExcPending(), 1) ThenBlock: {
+            ReturnValue(0)
+        }
+        idi = 0
+        WhileLoop EqualTo(1, 1) {
+            vi = AIMacro.Next(iti)
+            IfCondition EqualTo(AIMacro.ExcPending(), 1) ThenBlock: {
+                IfCondition EqualTo(AIMacro.ExcKind(), 9) ThenBlock: {
+                    AIMacro.ExcClear()
+                    AIMacro.RaiseKind(2, "indexOf")
+                }
+                ReturnValue(0)
+            }
+            hit = 0
+            IfCondition EqualTo(vi, a1) ThenBlock: {
+                hit = 1
+            }
+            IfCondition EqualTo(hit, 0) ThenBlock: {
+                IfCondition EqualTo(AIMacro.UnittestEq(vi, a1), 1) ThenBlock: {
+                    hit = 1
+                }
+            }
+            IfCondition EqualTo(hit, 1) ThenBlock: {
+                IfCondition EqualTo(idi, 0) ThenBlock: {
+                    ReturnValue(AIMacro.IntZero())
+                }
+                ReturnValue(idi)
+            }
+            idi = Add(idi, 1)
+        }
+        AIMacro.RaiseKind(2, "indexOf")
+        ReturnValue(0)
+    }
+}

@@ -1444,11 +1444,11 @@ Function.Gen_CallExpr {
                 type_const = Gen_MapTypeConstant(type_name)
                 cmp_tc = StringCompare(type_const, type_name)
                 IfCondition EqualTo(cmp_tc, 0) ThenBlock: {
-                    Gen_Emit("AIMacro.Bool(OOP.ObjectIsInstance(")
+                    Gen_Emit("AIMacro.IsInstance(")
                     Gen_Expr(arg0)
-                    Gen_Emit(", \"")
-                    Gen_Emit(type_name)
-                    Gen_Emit("\"))")
+                    Gen_Emit(", ")
+                    Gen_EmitIdent(type_name)
+                    Gen_Emit(")")
                     ReturnValue(0)
                 }
                 Gen_Emit("AIMacro.IsInstance(")

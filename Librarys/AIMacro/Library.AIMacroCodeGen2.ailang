@@ -30,6 +30,9 @@ Function.Gen_Program {
         // Standard library imports (always needed)
         Gen_EmitLine("LibraryImport.AIMacro.AIMacro")
         Gen_EmitLine("LibraryImport.AIMacro.AIMacroExtra")
+        Gen_EmitLine("LibraryImport.AIMacro.AIMacroOperator")
+        Gen_EmitLine("LibraryImport.AIMacro.AIMacroUnittest")
+        Gen_EmitLine("LibraryImport.AIMacro.AIMacroFormat")
         Gen_EmitLine("LibraryImport.AIMacro.AIMacroString")
         Gen_EmitLine("LibraryImport.Array")
         Gen_EmitLine("LibraryImport.Hash")
@@ -714,6 +717,30 @@ Function.Gen_MarkTryAssignVars {
 
 // IMPORT CODE GENERATION
 // =============================================================================
+Function.Gen_BindShimModule {
+    Input: module_name: Address
+    Body: {
+        OOPGen_Init()
+        line = StringConcat("    PyMod.", module_name)
+        line = StringConcat(line, " = Hash.Create(8)\n")
+        Array.Push(OOPGen.class_init_code, line)
+        line = StringConcat("    Hash.Set(PyMod.", module_name)
+        line = StringConcat(line, ", \"__class__\", \"module\")\n")
+        Array.Push(OOPGen.class_init_code, line)
+        line = StringConcat("    Hash.Set(PyMod.", module_name)
+        line = StringConcat(line, ", \"__name__\", \"")
+        line = StringConcat(line, module_name)
+        line = StringConcat(line, "\")\n")
+        Array.Push(OOPGen.class_init_code, line)
+        IfCondition EqualTo(StringCompare(module_name, "operator"), 0) ThenBlock: {
+            line = StringConcat("    AIMacro.FillOperatorModule(PyMod.", module_name)
+            line = StringConcat(line, ")\n")
+            Array.Push(OOPGen.class_init_code, line)
+        }
+        OOPGen.has_classes = 1
+    }
+}
+
 Function.Gen_Import {
     Input: node: Address
     Body: {
@@ -746,15 +773,7 @@ Function.Gen_Import {
                 }
                 IfCondition EqualTo(Gen_IsShimModule(module_name), 1) ThenBlock: {
                     Gen_MarkModuleVar(module_name)
-                    cmp_op = StringCompare(module_name, "operator")
-                    cmp_st = StringCompare(module_name, "string")
-                    IfCondition Or(EqualTo(cmp_op, 0), EqualTo(cmp_st, 0)) ThenBlock: {
-                        OOPGen_Init()
-                        line = StringConcat("    PyMod.", module_name)
-                        line = StringConcat(line, " = Hash.Create(8)\n")
-                        Array.Push(OOPGen.class_init_code, line)
-                        OOPGen.has_classes = 1
-                    }
+                    Gen_BindShimModule(module_name)
                     i = Add(i, 1)
                     ContinueLoop
                 }
@@ -786,15 +805,7 @@ Function.Gen_Import {
         }
         IfCondition EqualTo(Gen_IsShimModule(module_name), 1) ThenBlock: {
             Gen_MarkModuleVar(module_name)
-            cmp_op = StringCompare(module_name, "operator")
-            cmp_st = StringCompare(module_name, "string")
-            IfCondition Or(EqualTo(cmp_op, 0), EqualTo(cmp_st, 0)) ThenBlock: {
-                OOPGen_Init()
-                line = StringConcat("    PyMod.", module_name)
-                line = StringConcat(line, " = Hash.Create(8)\n")
-                Array.Push(OOPGen.class_init_code, line)
-                OOPGen.has_classes = 1
-            }
+            Gen_BindShimModule(module_name)
             ReturnValue(0)
         }
         Gen_MarkModuleVar(module_name)
@@ -858,6 +869,67 @@ Function.Gen_FromImport {
                                 OOPGen.has_classes = 1
                             }
                         }
+                        is_op = 0
+                        IfCondition Or(EqualTo(StringCompare(sym, "eq"), 0), EqualTo(StringCompare(sym, "ne"), 0)) ThenBlock: {
+                            is_op = 1
+                        }
+                        IfCondition Or(EqualTo(StringCompare(sym, "le"), 0), EqualTo(StringCompare(sym, "ge"), 0)) ThenBlock: {
+                            is_op = 1
+                        }
+                        IfCondition Or(EqualTo(StringCompare(sym, "lt"), 0), EqualTo(StringCompare(sym, "gt"), 0)) ThenBlock: {
+                            is_op = 1
+                        }
+                        IfCondition EqualTo(is_op, 1) ThenBlock: {
+                            bind = StringConcat("    PyMod.", sym)
+                            bind = StringConcat(bind, " = AIMacro.OpBound(0, \"")
+                            bind = StringConcat(bind, sym)
+                            bind = StringConcat(bind, "\")\n")
+                            IfCondition GreaterThan(Gen.indent, 0) ThenBlock: {
+                                Gen_EmitIndent()
+                                Gen_Emit("PyMod.")
+                                Gen_Emit(sym)
+                                Gen_Emit(" = AIMacro.OpBound(0, \"")
+                                Gen_Emit(sym)
+                                Gen_Emit("\")\n")
+                            } ElseBlock: {
+                                OOPGen_Init()
+                                Array.Push(OOPGen.class_init_code, bind)
+                                OOPGen.has_classes = 1
+                            }
+                        }
+                        IfCondition EqualTo(StringCompare(sym, "ABCMeta"), 0) ThenBlock: {
+                            bind = "    PyMod.ABCMeta = Hash.Create(4)\n"
+                            IfCondition GreaterThan(Gen.indent, 0) ThenBlock: {
+                                Gen_EmitIndent()
+                                Gen_Emit("PyMod.ABCMeta = Hash.Create(4)\n")
+                            } ElseBlock: {
+                                OOPGen_Init()
+                                Array.Push(OOPGen.class_init_code, bind)
+                                OOPGen.has_classes = 1
+                            }
+                        }
+                        IfCondition EqualTo(StringCompare(sym, "ALWAYS_EQ"), 0) ThenBlock: {
+                            bind = "    PyMod.ALWAYS_EQ = AIMacro.AlwaysEq()\n"
+                            IfCondition GreaterThan(Gen.indent, 0) ThenBlock: {
+                                Gen_EmitIndent()
+                                Gen_Emit("PyMod.ALWAYS_EQ = AIMacro.AlwaysEq()\n")
+                            } ElseBlock: {
+                                OOPGen_Init()
+                                Array.Push(OOPGen.class_init_code, bind)
+                                OOPGen.has_classes = 1
+                            }
+                        }
+                        IfCondition EqualTo(StringCompare(sym, "NEVER_EQ"), 0) ThenBlock: {
+                            bind = "    PyMod.NEVER_EQ = AIMacro.NeverEq()\n"
+                            IfCondition GreaterThan(Gen.indent, 0) ThenBlock: {
+                                Gen_EmitIndent()
+                                Gen_Emit("PyMod.NEVER_EQ = AIMacro.NeverEq()\n")
+                            } ElseBlock: {
+                                OOPGen_Init()
+                                Array.Push(OOPGen.class_init_code, bind)
+                                OOPGen.has_classes = 1
+                            }
+                        }
                     }
                     i = Add(i, 1)
                 }
@@ -909,6 +981,47 @@ Function.Gen_Node {
                 Gen_Emit(" = \"")
                 Gen_Emit(uname)
                 Gen_Emit("\"\n")
+                Gen_EmitIndent()
+                Gen_Emit("AIMacro.ClassAttrReset(\"")
+                Gen_Emit(uname)
+                Gen_Emit("\")\n")
+                has_asg = 0
+                cbody = AST_GetField(node, "body")
+                IfCondition NotEqual(cbody, 0) ThenBlock: {
+                    cbi = 0
+                    cbn = Array.Size(cbody)
+                    WhileLoop LessThan(cbi, cbn) {
+                        IfCondition EqualTo(AST_Type(Array.Get(cbody, cbi)), Node.ASSIGNMENT) ThenBlock: {
+                            has_asg = 1
+                        }
+                        cbi = Add(cbi, 1)
+                    }
+                }
+                IfCondition EqualTo(has_asg, 1) ThenBlock: {
+                    cbi = 0
+                    cbn = Array.Size(cbody)
+                    WhileLoop LessThan(cbi, cbn) {
+                        citem = Array.Get(cbody, cbi)
+                        IfCondition EqualTo(AST_Type(citem), Node.ASSIGNMENT) ThenBlock: {
+                            fname = AST_GetField(citem, "name")
+                            fval = AST_GetField(citem, "value")
+                            IfCondition NotEqual(fname, 0) ThenBlock: {
+                                IfCondition EqualTo(Gen_HasCall(fval), 1) ThenBlock: {
+                                    fval = Gen_FlattenExpr(fval)
+                                }
+                                Gen_EmitIndent()
+                                Gen_Emit("AIMacro.ClassAttrSet(\"")
+                                Gen_Emit(uname)
+                                Gen_Emit("\", \"")
+                                Gen_Emit(fname)
+                                Gen_Emit("\", ")
+                                Gen_Expr(fval)
+                                Gen_Emit(")\n")
+                            }
+                        }
+                        cbi = Add(cbi, 1)
+                    }
+                }
                 Gen_MarkCallableVar(orig)
                 ReturnValue(0)
             }
@@ -946,6 +1059,8 @@ Function.Gen_Node {
                 Gen_MarkCallableVar(orig)
                 Array.Push(Gen.nest_bind_names, orig)
                 Array.Push(Gen.nest_bind_funcs, uname)
+                Array.Push(Gen.all_nest_from, orig)
+                Array.Push(Gen.all_nest_to, uname)
                 Gen_Emit(orig)
                 Gen_Emit(" = AddressOf(")
                 Gen_Emit(uname)
@@ -2005,6 +2120,12 @@ Function.Gen_Try {
             Gen.indent = Subtract(Gen.indent, 1)
             Gen_EmitIndent()
             Gen_Emit("} FalseBlock: {\n")
+            else_body = ArrayGet(node, 6)
+            IfCondition NotEqual(else_body, 0) ThenBlock: {
+                Gen.indent = Add(Gen.indent, 1)
+                Gen_Body(else_body)
+                Gen.indent = Subtract(Gen.indent, 1)
+            }
             Gen_EmitIndent()
             Gen_Emit("}\n")
         }

@@ -47,6 +47,8 @@ FixedPool.Gen {
     "deferred_nest_funcs": Initialize=0, CanChange=True
     "nest_bind_names": Initialize=0, CanChange=True
     "nest_bind_funcs": Initialize=0, CanChange=True
+    "all_nest_from": Initialize=0, CanChange=True
+    "all_nest_to": Initialize=0, CanChange=True
     "pending_freevars": Initialize=0, CanChange=True
 
 }
@@ -89,6 +91,8 @@ Function.Gen_Init {
         Gen.deferred_nest_funcs = Array.Create(64)
         Gen.nest_bind_names = Array.Create(64)
         Gen.nest_bind_funcs = Array.Create(64)
+        Gen.all_nest_from = Array.Create(64)
+        Gen.all_nest_to = Array.Create(64)
         Gen.pending_freevars = 0
 
     }
@@ -648,24 +652,8 @@ Function.Gen_TempName {
     Output: Address
     Body: {
         num_str = NumberToString(Gen.temp_counter)
-        num_len = StringLength(num_str)
         Gen.temp_counter = Add(Gen.temp_counter, 1)
-
-        total_len = Add(1, num_len)
-        result = Allocate(Add(total_len, 1))
-
-        SetByte(result, 0, 116)  // 't'
-
-        j = 0
-        WhileLoop LessThan(j, num_len) {
-            c = GetByte(num_str, j)
-            SetByte(result, Add(1, j), c)
-            j = Add(j, 1)
-        }
-
-        SetByte(result, total_len, 0)
-
-        ReturnValue(result)
+        ReturnValue(StringConcat("_aim_t", num_str))
     }
 }
 
@@ -1191,6 +1179,21 @@ Function.Gen_EmitIdent {
                 ni = Subtract(ni, 1)
             }
         }
+        IfCondition NotEqual(Gen.all_nest_from, 0) ThenBlock: {
+            nsz = Array.Size(Gen.all_nest_from)
+            ni = Subtract(nsz, 1)
+            WhileLoop GreaterEqual(ni, 0) {
+                bn = Array.Get(Gen.all_nest_from, ni)
+                cmpn = StringCompare(name, bn)
+                IfCondition EqualTo(cmpn, 0) ThenBlock: {
+                    Gen_Emit("AddressOf(")
+                    Gen_Emit(Array.Get(Gen.all_nest_to, ni))
+                    Gen_Emit(")")
+                    ReturnValue(0)
+                }
+                ni = Subtract(ni, 1)
+            }
+        }
         // AILang keywords used as Python values (ast.Tuple / ast.Add) — PyMod escape
         cmp = StringCompare(name, "Tuple")
         IfCondition EqualTo(cmp, 0) ThenBlock: {
@@ -1677,6 +1680,8 @@ Function.Gen_IsShimModule {
         cmp = StringCompare(name, "string")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
         cmp = StringCompare(name, "operator")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+        cmp = StringCompare(name, "abc")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
         IfCondition EqualTo(Gen_NameStartsWith(name, "unittest"), 1) ThenBlock: {
             ReturnValue(1)

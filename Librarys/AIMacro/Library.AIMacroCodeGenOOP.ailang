@@ -219,7 +219,7 @@ Function.OOPGen_FlattenExpr {
             cmp_glo = StringCompare(attr, "__globals__")
             cmp_tb = StringCompare(attr, "__traceback__")
             cmp_fr = StringCompare(attr, "tb_frame")
-            IfCondition Or(EqualTo(cmp_contains, 0), Or(EqualTo(cmp_copy, 0), Or(EqualTo(cmp_code, 0), Or(EqualTo(cmp_dict, 0), Or(EqualTo(cmp_app, 0), Or(EqualTo(cmp_join, 0), Or(EqualTo(cmp_init, 0), Or(EqualTo(cmp_str, 0), Or(EqualTo(cmp_clo, 0), Or(EqualTo(cmp_glo, 0), Or(EqualTo(cmp_tb, 0), EqualTo(cmp_fr, 0)))))))))))) ThenBlock: {
+            IfCondition Or(EqualTo(cmp_contains, 0), Or(EqualTo(cmp_copy, 0), Or(EqualTo(cmp_code, 0), Or(EqualTo(cmp_dict, 0), Or(EqualTo(cmp_join, 0), Or(EqualTo(cmp_init, 0), Or(EqualTo(cmp_str, 0), Or(EqualTo(cmp_clo, 0), Or(EqualTo(cmp_glo, 0), Or(EqualTo(cmp_tb, 0), EqualTo(cmp_fr, 0))))))))))) ThenBlock: {
                 Gen_Emit(" = 0\n")
             } ElseBlock: {
                 Gen_Emit(" = AIMacro.ObjectGet(")
@@ -291,10 +291,14 @@ Function.OOPGen_FlattenExpr {
                 i = Add(i, 1)
             }
             IfCondition EqualTo(has_kw_f, 1) ThenBlock: {
-                Gen_EmitIndent()
-                Gen_Emit("Array.Push(")
-                Gen_Emit(args_var)
-                Gen_Emit(", AddressOf(AIMacro.KwArgError))\n")
+                IfCondition EqualTo(OOPGen_IsKwMapMethod(method), 1) ThenBlock: {
+                    OOPGen_EmitKwPush(args, args_var)
+                } ElseBlock: {
+                    Gen_EmitIndent()
+                    Gen_Emit("Array.Push(")
+                    Gen_Emit(args_var)
+                    Gen_Emit(", AddressOf(AIMacro.KwArgError))\n")
+                }
             }
             
             // Emit method call to temp
@@ -834,8 +838,8 @@ Function.OOPGen_MethodImpl {
             OOPGen.current_receiver = ArrayGet(bparam, 0)
         }
         
-        // SysV limit: >6 Inputs illegal — pack into p__args like Gen_PackedFunction
-        IfCondition GreaterThan(num_params, 6) ThenBlock: {
+        // Always pack: defaults, *args/**kwargs, and SysV >6 Inputs.
+        IfCondition EqualTo(1, 1) ThenBlock: {
             Array.Push(Gen.packed_funcs, func_name)
             Gen_Emit("Function.")
             Gen_Emit(func_name)
@@ -849,11 +853,32 @@ Function.OOPGen_MethodImpl {
             WhileLoop LessThan(i, num_params) {
                 param = Array.Get(params, i)
                 param_name = ArrayGet(param, 0)
+                pkind = ArrayGet(param, 4)
                 Gen_EmitIndent()
                 Gen_Emit(param_name)
-                Gen_Emit(" = AIMacro.PackedGet(p__args, ")
-                Gen_EmitNumber(i)
-                Gen_Emit(", Types.GetNone())\n")
+                IfCondition EqualTo(pkind, 1) ThenBlock: {
+                    Gen_Emit(" = AIMacro.PackedRest(p__args, ")
+                    Gen_EmitNumber(i)
+                    Gen_Emit(")\n")
+                } ElseBlock: {
+                    IfCondition EqualTo(pkind, 2) ThenBlock: {
+                        Gen_Emit(" = AIMacro.PackedKw(p__args)\n")
+                    } ElseBlock: {
+                        Gen_Emit(" = AIMacro.PackedGet(p__args, ")
+                        Gen_EmitNumber(i)
+                        Gen_Emit(", ")
+                        dnode = ArrayGet(param, 2)
+                        IfCondition EqualTo(dnode, 0) ThenBlock: {
+                            Gen_Emit("Types.GetNone()")
+                        } ElseBlock: {
+                            IfCondition EqualTo(Gen_HasCall(dnode), 1) ThenBlock: {
+                                dnode = Gen_FlattenExpr(dnode)
+                            }
+                            OOPGen_Expr(dnode)
+                        }
+                        Gen_Emit(")\n")
+                    }
+                }
                 i = Add(i, 1)
             }
             enc_names = Array.Create(8)
@@ -1315,7 +1340,7 @@ Function.OOPGen_AttrAccess {
         cmp_glo = StringCompare(attr, "__globals__")
         cmp_tb = StringCompare(attr, "__traceback__")
         cmp_fr = StringCompare(attr, "tb_frame")
-        IfCondition Or(EqualTo(cmp_contains, 0), Or(EqualTo(cmp_copy, 0), Or(EqualTo(cmp_code, 0), Or(EqualTo(cmp_dict, 0), Or(EqualTo(cmp_app, 0), Or(EqualTo(cmp_join, 0), Or(EqualTo(cmp_init, 0), Or(EqualTo(cmp_str, 0), Or(EqualTo(cmp_clo, 0), Or(EqualTo(cmp_glo, 0), Or(EqualTo(cmp_tb, 0), EqualTo(cmp_fr, 0)))))))))))) ThenBlock: {
+        IfCondition Or(EqualTo(cmp_contains, 0), Or(EqualTo(cmp_copy, 0), Or(EqualTo(cmp_code, 0), Or(EqualTo(cmp_dict, 0), Or(EqualTo(cmp_join, 0), Or(EqualTo(cmp_init, 0), Or(EqualTo(cmp_str, 0), Or(EqualTo(cmp_clo, 0), Or(EqualTo(cmp_glo, 0), Or(EqualTo(cmp_tb, 0), EqualTo(cmp_fr, 0))))))))))) ThenBlock: {
             Gen_Emit("0")
         } ElseBlock: {
             Gen_Emit("AIMacro.ObjectGet(")
@@ -1398,11 +1423,6 @@ Function.OOPGen_MethodCall {
                 Gen_Emit("0")
             }
             Gen_Emit(")")
-            ReturnValue(0)
-        }
-        cmp_reg = StringCompare(method, "register")
-        IfCondition EqualTo(cmp_reg, 0) ThenBlock: {
-            Gen_Emit("0")
             ReturnValue(0)
         }
         cmp_comp = StringCompare(method, "compile")
@@ -1632,10 +1652,14 @@ Function.OOPGen_MethodCall {
             i = Add(i, 1)
         }
         IfCondition EqualTo(has_kw_arg, 1) ThenBlock: {
-            Gen_EmitIndent()
-            Gen_Emit("Array.Push(")
-            Gen_Emit(args_var)
-            Gen_Emit(", AddressOf(AIMacro.KwArgError))\n")
+            IfCondition EqualTo(OOPGen_IsKwMapMethod(method), 1) ThenBlock: {
+                OOPGen_EmitKwPush(args, args_var)
+            } ElseBlock: {
+                Gen_EmitIndent()
+                Gen_Emit("Array.Push(")
+                Gen_Emit(args_var)
+                Gen_Emit(", AddressOf(AIMacro.KwArgError))\n")
+            }
         }
         
         // Emit the method call
@@ -1732,24 +1756,40 @@ Function.OOPGen_IsInstance {
             ReturnValue(0)
         }
         
-        // isinstance(obj, Class) -> OOP.ObjectIsInstance(obj, "Class")
         obj_arg = Array.Get(args, 0)
         class_arg = Array.Get(args, 1)
-        
-        Gen_Emit("AIMacro.Bool(OOP.ObjectIsInstance(")
-        OOPGen_Expr(obj_arg)
-        Gen_Emit(", \"")
-        
-        // Class name - could be identifier
         class_type = AST_Type(class_arg)
         IfCondition EqualTo(class_type, Node.IDENT) ThenBlock: {
             class_name = AST_GetField(class_arg, "name")
-            Gen_Emit(class_name)
-        } ElseBlock: {
-            OOPGen_Expr(class_arg)
+            IfCondition EqualTo(OOPGen_IsClassName(class_name), 1) ThenBlock: {
+                Gen_Emit("AIMacro.Bool(OOP.ObjectIsInstance(")
+                OOPGen_Expr(obj_arg)
+                Gen_Emit(", \"")
+                Gen_Emit(class_name)
+                Gen_Emit("\"))")
+                ReturnValue(0)
+            }
+            type_const = Gen_MapTypeConstant(class_name)
+            IfCondition EqualTo(StringCompare(type_const, class_name), 0) ThenBlock: {
+                Gen_Emit("AIMacro.IsInstance(")
+                OOPGen_Expr(obj_arg)
+                Gen_Emit(", ")
+                Gen_EmitIdent(class_name)
+                Gen_Emit(")")
+                ReturnValue(0)
+            }
+            Gen_Emit("AIMacro.IsInstance(")
+            OOPGen_Expr(obj_arg)
+            Gen_Emit(", ")
+            Gen_Emit(type_const)
+            Gen_Emit(")")
+            ReturnValue(0)
         }
-        
-        Gen_Emit("\"))")
+        Gen_Emit("AIMacro.IsInstance(")
+        OOPGen_Expr(obj_arg)
+        Gen_Emit(", ")
+        OOPGen_Expr(class_arg)
+        Gen_Emit(")")
     }
 }
 
@@ -1945,6 +1985,11 @@ Function.OOPGen_EmitClassRegistration {
                 method_code = StringConcat(method_code, func_name)
                 method_code = StringConcat(method_code, "))\n")
                 Array.Push(OOPGen.class_init_code, method_code)
+                packed_code = StringConcat("    OOP.ClassPackedMethod(\"", class_name)
+                packed_code = StringConcat(packed_code, "\", \"")
+                packed_code = StringConcat(packed_code, method_name)
+                packed_code = StringConcat(packed_code, "\")\n")
+                Array.Push(OOPGen.class_init_code, packed_code)
             }
             IfCondition EqualTo(item_type, Node.ASSIGNMENT) ThenBlock: {
                 aname = AST_GetField(item, "name")
@@ -1973,6 +2018,11 @@ Function.OOPGen_EmitClassRegistration {
                         method_code = StringConcat(method_code, src_fn)
                         method_code = StringConcat(method_code, "))\n")
                         Array.Push(OOPGen.class_init_code, method_code)
+                        packed_code = StringConcat("    OOP.ClassPackedMethod(\"", class_name)
+                        packed_code = StringConcat(packed_code, "\", \"")
+                        packed_code = StringConcat(packed_code, aname)
+                        packed_code = StringConcat(packed_code, "\")\n")
+                        Array.Push(OOPGen.class_init_code, packed_code)
                     }
                 }
             }
@@ -1981,6 +2031,77 @@ Function.OOPGen_EmitClassRegistration {
         
         // Blank line after class
         Array.Push(OOPGen.class_init_code, "\n")
+    }
+}
+
+Function.OOPGen_IsKwMapMethod {
+    Input: method: Address
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(method, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(method, "call"), 0) ThenBlock: {
+            ReturnValue(1)
+        }
+        IfCondition EqualTo(StringCompare(method, "substitute"), 0) ThenBlock: {
+            ReturnValue(1)
+        }
+        IfCondition EqualTo(StringCompare(method, "safe_substitute"), 0) ThenBlock: {
+            ReturnValue(1)
+        }
+        IfCondition EqualTo(StringCompare(method, "format"), 0) ThenBlock: {
+            ReturnValue(1)
+        }
+        IfCondition EqualTo(StringCompare(method, "methodcaller"), 0) ThenBlock: {
+            ReturnValue(1)
+        }
+        ReturnValue(0)
+    }
+}
+
+Function.OOPGen_EmitKwPush {
+    Input: args: Address
+    Input: args_var: Address
+    Body: {
+        kw_var = OOPGen_TempVar("kw")
+        Gen_EmitIndent()
+        Gen_Emit(kw_var)
+        Gen_Emit(" = Hash.Create(8)\n")
+        Gen_EmitIndent()
+        Gen_Emit("Hash.Set(")
+        Gen_Emit(kw_var)
+        Gen_Emit(", \"__kwargs__\", 1)\n")
+        num_args = 0
+        IfCondition NotEqual(args, 0) ThenBlock: {
+            num_args = Array.Size(args)
+        }
+        i = 0
+        WhileLoop LessThan(i, num_args) {
+            arg = Array.Get(args, i)
+            IfCondition EqualTo(AST_Type(arg), Node.KW_ARG) ThenBlock: {
+                kn = ArrayGet(arg, 3)
+                kv = ArrayGet(arg, 4)
+                IfCondition EqualTo(Gen_HasCall(kv), 1) ThenBlock: {
+                    kv = OOPGen_FlattenExpr(kv)
+                }
+                Gen_EmitIndent()
+                Gen_Emit("Hash.Set(")
+                Gen_Emit(kw_var)
+                Gen_Emit(", \"")
+                Gen_Emit(kn)
+                Gen_Emit("\", ")
+                OOPGen_Expr(kv)
+                Gen_Emit(")\n")
+            }
+            i = Add(i, 1)
+        }
+        Gen_EmitIndent()
+        Gen_Emit("Array.Push(")
+        Gen_Emit(args_var)
+        Gen_Emit(", ")
+        Gen_Emit(kw_var)
+        Gen_Emit(")\n")
     }
 }
 
@@ -2013,6 +2134,7 @@ Function.OOPGen_InstanceCreation {
         
         // Push positionals. KW_ARG is bound after ObjectNewInit via ObjectSet
         // (nested __init__ param lookup is not a TArray of IDENT nodes).
+        n_pos = 0
         i = 0
         WhileLoop LessThan(i, num_args) {
             arg = Array.Get(args, i)
@@ -2026,8 +2148,30 @@ Function.OOPGen_InstanceCreation {
                 Gen_Emit(", ")
                 OOPGen_Expr(arg)
                 Gen_Emit(")\n")
+                n_pos = Add(n_pos, 1)
             }
             i = Add(i, 1)
+        }
+        init_fn_defs = StringConcat(class_name, "___init__")
+        defs = Gen_LookupDefaults(init_fn_defs)
+        IfCondition NotEqual(defs, 0) ThenBlock: {
+            nd = Array.Size(defs)
+            di = n_pos
+            WhileLoop LessThan(di, nd) {
+                dnode = Array.Get(defs, di)
+                IfCondition NotEqual(dnode, 0) ThenBlock: {
+                    IfCondition EqualTo(Gen_HasCall(dnode), 1) ThenBlock: {
+                        dnode = Gen_FlattenExpr(dnode)
+                    }
+                    Gen_EmitIndent()
+                    Gen_Emit("Array.Push(")
+                    Gen_Emit(args_var)
+                    Gen_Emit(", ")
+                    OOPGen_Expr(dnode)
+                    Gen_Emit(")\n")
+                }
+                di = Add(di, 1)
+            }
         }
         
         // Create instance. Packed __init__ (UUID, >6 params) needs p__args array.

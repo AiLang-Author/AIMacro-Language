@@ -1,0 +1,564 @@
+// Library.AIMacroFormat.ailang
+// string.Template, string.Formatter, capwords.
+//
+// Copyright (c) 2026 Sean Collins, 2 Paws Machine and Engineering. SCSL.
+
+LibraryImport.Array
+LibraryImport.Hash
+LibraryImport.OOP
+LibraryImport.AIMacro.AIMacroTypes
+LibraryImport.AIMacro.AIMacro
+LibraryImport.AIMacro.AIMacroString
+LibraryImport.AIMacro.AIMacroExtra
+
+Function.AIMacro.TemplateNew {
+    Input: tmpl: Address
+    Output: Address
+    Body: {
+        h = Hash.Create(8)
+        Hash.Set(h, "__class__", "Template")
+        Hash.Set(h, "template", tmpl)
+        ReturnValue(h)
+    }
+}
+
+Function.AIMacro.TemplateSub {
+    Input: obj: Address
+    Input: mapping: Address
+    Output: Address
+    Body: {
+        ReturnValue(AIMacro.TemplateSubMode(obj, mapping, 0))
+    }
+}
+
+Function.AIMacro.TemplateSafeSub {
+    Input: obj: Address
+    Input: mapping: Address
+    Output: Address
+    Body: {
+        ReturnValue(AIMacro.TemplateSubMode(obj, mapping, 1))
+    }
+}
+
+Function.AIMacro.TemplateSubMode {
+    Input: obj: Address
+    Input: mapping: Address
+    Input: safe: Integer
+    Output: Address
+    Body: {
+        tmpl = AIMacro.ObjectGet(obj, "template")
+        IfCondition EqualTo(tmpl, 0) ThenBlock: {
+            tmpl = obj
+        }
+        IfCondition EqualTo(AIMacro.LooksLikeString(tmpl), 0) ThenBlock: {
+            ReturnValue(tmpl)
+        }
+        IfCondition EqualTo(Hash.IsHash(mapping), 0) ThenBlock: {
+            IfCondition EqualTo(safe, 0) ThenBlock: {
+                AIMacro.RaiseKind(5, "substitute")
+            }
+            mapping = Hash.Create(4)
+        }
+        n = StringLength(tmpl)
+        out = Allocate(Add(Multiply(n, 8), 1))
+        oi = 0
+        i = 0
+        WhileLoop LessThan(i, n) {
+            ch = GetByte(tmpl, i)
+            IfCondition EqualTo(ch, 36) ThenBlock: {
+                IfCondition GreaterEqual(Add(i, 1), n) ThenBlock: {
+                    IfCondition EqualTo(safe, 0) ThenBlock: {
+                        AIMacro.RaiseKind(2, "invalid placeholder")
+                        ReturnValue(tmpl)
+                    }
+                    SetByte(out, oi, 36)
+                    oi = Add(oi, 1)
+                    i = Add(i, 1)
+                } ElseBlock: {
+                nx = GetByte(tmpl, Add(i, 1))
+                IfCondition EqualTo(nx, 36) ThenBlock: {
+                    SetByte(out, oi, 36)
+                    oi = Add(oi, 1)
+                    i = Add(i, 2)
+                } ElseBlock: {
+                    braced = 0
+                    i = Add(i, 1)
+                    IfCondition EqualTo(nx, 123) ThenBlock: {
+                        braced = 1
+                        i = Add(i, 1)
+                    }
+                    key = Allocate(64)
+                    ki = 0
+                    WhileLoop LessThan(i, n) {
+                        ch = GetByte(tmpl, i)
+                        IfCondition And(EqualTo(braced, 1), EqualTo(ch, 125)) ThenBlock: {
+                            BreakLoop
+                        }
+                        ok = 0
+                        IfCondition And(GreaterEqual(ch, 65), LessEqual(ch, 90)) ThenBlock: {
+                            ok = 1
+                        }
+                        IfCondition And(GreaterEqual(ch, 97), LessEqual(ch, 122)) ThenBlock: {
+                            ok = 1
+                        }
+                        IfCondition And(GreaterEqual(ch, 48), LessEqual(ch, 57)) ThenBlock: {
+                            ok = 1
+                        }
+                        IfCondition EqualTo(ch, 95) ThenBlock: {
+                            ok = 1
+                        }
+                        IfCondition EqualTo(ok, 0) ThenBlock: {
+                            BreakLoop
+                        }
+                        SetByte(key, ki, ch)
+                        ki = Add(ki, 1)
+                        i = Add(i, 1)
+                    }
+                    SetByte(key, ki, 0)
+                    IfCondition EqualTo(braced, 1) ThenBlock: {
+                        IfCondition And(LessThan(i, n), EqualTo(GetByte(tmpl, i), 125)) ThenBlock: {
+                            i = Add(i, 1)
+                        }
+                    }
+                    IfCondition EqualTo(ki, 0) ThenBlock: {
+                        IfCondition EqualTo(safe, 0) ThenBlock: {
+                            AIMacro.RaiseKind(2, "invalid placeholder")
+                            ReturnValue(tmpl)
+                        }
+                        SetByte(out, oi, 36)
+                        oi = Add(oi, 1)
+                    } ElseBlock: {
+                        IfCondition EqualTo(Hash.Contains(mapping, key), 0) ThenBlock: {
+                            IfCondition EqualTo(safe, 0) ThenBlock: {
+                                AIMacro.RaiseKind(15, key)
+                                ReturnValue(tmpl)
+                            }
+                            SetByte(out, oi, 36)
+                            oi = Add(oi, 1)
+                            IfCondition EqualTo(braced, 1) ThenBlock: {
+                                SetByte(out, oi, 123)
+                                oi = Add(oi, 1)
+                            }
+                            vi = 0
+                            WhileLoop LessThan(vi, ki) {
+                                SetByte(out, oi, GetByte(key, vi))
+                                oi = Add(oi, 1)
+                                vi = Add(vi, 1)
+                            }
+                            IfCondition EqualTo(braced, 1) ThenBlock: {
+                                SetByte(out, oi, 125)
+                                oi = Add(oi, 1)
+                            }
+                        } ElseBlock: {
+                            val = Hash.Get(mapping, key)
+                            IfCondition EqualTo(AIMacro.LooksLikeString(val), 0) ThenBlock: {
+                                val = AIMacro.Str(val)
+                            }
+                            vi = 0
+                            vn = StringLength(val)
+                            WhileLoop LessThan(vi, vn) {
+                                SetByte(out, oi, GetByte(val, vi))
+                                oi = Add(oi, 1)
+                                vi = Add(vi, 1)
+                            }
+                        }
+                    }
+                }
+                }
+            } ElseBlock: {
+                SetByte(out, oi, ch)
+                i = Add(i, 1)
+                oi = Add(oi, 1)
+            }
+        }
+        SetByte(out, oi, 0)
+        ReturnValue(out)
+    }
+}
+
+Function.AIMacro.CapitalizeWord {
+    Input: w: Address
+    Output: Address
+    Body: {
+        IfCondition EqualTo(AIMacro.LooksLikeString(w), 0) ThenBlock: {
+            ReturnValue(w)
+        }
+        n = StringLength(w)
+        IfCondition EqualTo(n, 0) ThenBlock: {
+            ReturnValue(w)
+        }
+        out = Allocate(Add(n, 1))
+        ch = GetByte(w, 0)
+        IfCondition And(GreaterEqual(ch, 97), LessEqual(ch, 122)) ThenBlock: {
+            ch = Subtract(ch, 32)
+        }
+        SetByte(out, 0, ch)
+        i = 1
+        WhileLoop LessThan(i, n) {
+            ch = GetByte(w, i)
+            IfCondition And(GreaterEqual(ch, 65), LessEqual(ch, 90)) ThenBlock: {
+                ch = Add(ch, 32)
+            }
+            SetByte(out, i, ch)
+            i = Add(i, 1)
+        }
+        SetByte(out, n, 0)
+        ReturnValue(out)
+    }
+}
+
+Function.AIMacro.CapWords {
+    Input: s: Address
+    Input: sep: Address
+    Output: Address
+    Body: {
+        IfCondition EqualTo(AIMacro.LooksLikeString(s), 0) ThenBlock: {
+            ReturnValue(s)
+        }
+        n = StringLength(s)
+        IfCondition EqualTo(n, 0) ThenBlock: {
+            ReturnValue(s)
+        }
+        use_ws = 1
+        sep_len = 0
+        IfCondition And(NotEqual(sep, 0), EqualTo(AIMacro.IsNone(sep), 0)) ThenBlock: {
+            IfCondition EqualTo(AIMacro.LooksLikeString(sep), 1) ThenBlock: {
+                sep_len = StringLength(sep)
+                IfCondition GreaterThan(sep_len, 0) ThenBlock: {
+                    use_ws = 0
+                }
+            }
+        }
+        parts = Array.Create(8)
+        IfCondition EqualTo(use_ws, 1) ThenBlock: {
+            i = 0
+            WhileLoop LessThan(i, n) {
+                ch = GetByte(s, i)
+                ws = 0
+                IfCondition Or(EqualTo(ch, 32), Or(EqualTo(ch, 9), Or(EqualTo(ch, 10), Or(EqualTo(ch, 11), Or(EqualTo(ch, 12), EqualTo(ch, 13)))))) ThenBlock: {
+                    ws = 1
+                }
+                IfCondition EqualTo(ws, 1) ThenBlock: {
+                    i = Add(i, 1)
+                } ElseBlock: {
+                    start = i
+                    WhileLoop LessThan(i, n) {
+                        ch = GetByte(s, i)
+                        ws = 0
+                        IfCondition Or(EqualTo(ch, 32), Or(EqualTo(ch, 9), Or(EqualTo(ch, 10), Or(EqualTo(ch, 11), Or(EqualTo(ch, 12), EqualTo(ch, 13)))))) ThenBlock: {
+                            ws = 1
+                        }
+                        IfCondition EqualTo(ws, 1) ThenBlock: {
+                            BreakLoop
+                        }
+                        i = Add(i, 1)
+                    }
+                    wlen = Subtract(i, start)
+                    w = Allocate(Add(wlen, 1))
+                    k = 0
+                    WhileLoop LessThan(k, wlen) {
+                        SetByte(w, k, GetByte(s, Add(start, k)))
+                        k = Add(k, 1)
+                    }
+                    SetByte(w, wlen, 0)
+                    Array.Push(parts, AIMacro.CapitalizeWord(w))
+                }
+            }
+            ReturnValue(String.Join(" ", parts))
+        }
+        i = 0
+        last = 0
+        WhileLoop LessThan(i, n) {
+            matched = 1
+            k = 0
+            WhileLoop LessThan(k, sep_len) {
+                IfCondition GreaterEqual(Add(i, k), n) ThenBlock: {
+                    matched = 0
+                } ElseBlock: {
+                    IfCondition NotEqual(GetByte(s, Add(i, k)), GetByte(sep, k)) ThenBlock: {
+                        matched = 0
+                    }
+                }
+                k = Add(k, 1)
+            }
+            IfCondition EqualTo(matched, 1) ThenBlock: {
+                wlen = Subtract(i, last)
+                w = Allocate(Add(wlen, 1))
+                k = 0
+                WhileLoop LessThan(k, wlen) {
+                    SetByte(w, k, GetByte(s, Add(last, k)))
+                    k = Add(k, 1)
+                }
+                SetByte(w, wlen, 0)
+                Array.Push(parts, AIMacro.CapitalizeWord(w))
+                i = Add(i, sep_len)
+                last = i
+            } ElseBlock: {
+                i = Add(i, 1)
+            }
+        }
+        wlen = Subtract(n, last)
+        w = Allocate(Add(wlen, 1))
+        k = 0
+        WhileLoop LessThan(k, wlen) {
+            SetByte(w, k, GetByte(s, Add(last, k)))
+            k = Add(k, 1)
+        }
+        SetByte(w, wlen, 0)
+        Array.Push(parts, AIMacro.CapitalizeWord(w))
+        ReturnValue(String.Join(sep, parts))
+    }
+}
+
+Function.AIMacro.FormatterVFormat {
+    Input: self: Address
+    Input: args: Address
+    Output: Address
+    Body: {
+        n = 0
+        IfCondition NotEqual(args, 0) ThenBlock: {
+            n = Array.Size(args)
+        }
+        IfCondition LessThan(n, 1) ThenBlock: {
+            AIMacro.RaiseKind(5, "format")
+            ReturnValue(0)
+        }
+        fmt = Array.Get(args, 0)
+        pos0 = 1
+        IfCondition EqualTo(Hash.IsHash(self), 0) ThenBlock: {
+            IfCondition EqualTo(AIMacro.LooksLikeString(self), 1) ThenBlock: {
+                fmt = self
+                pos0 = 0
+            }
+        }
+        IfCondition EqualTo(AIMacro.LooksLikeString(fmt), 0) ThenBlock: {
+            AIMacro.RaiseKind(5, "format")
+            ReturnValue(0)
+        }
+        flen = StringLength(fmt)
+        out = Allocate(Add(Multiply(flen, 8), 64))
+        oi = 0
+        i = 0
+        auto_i = 0
+        used_auto = 0
+        used_num = 0
+        WhileLoop LessThan(i, flen) {
+            ch = GetByte(fmt, i)
+            IfCondition EqualTo(ch, 123) ThenBlock: {
+                IfCondition And(LessThan(Add(i, 1), flen), EqualTo(GetByte(fmt, Add(i, 1)), 123)) ThenBlock: {
+                    SetByte(out, oi, 123)
+                    oi = Add(oi, 1)
+                    i = Add(i, 2)
+                } ElseBlock: {
+                    i = Add(i, 1)
+                    field = Allocate(128)
+                    fi = 0
+                    conv = 0
+                    WhileLoop LessThan(i, flen) {
+                        ch = GetByte(fmt, i)
+                        IfCondition EqualTo(ch, 125) ThenBlock: {
+                            BreakLoop
+                        }
+                        IfCondition EqualTo(ch, 33) ThenBlock: {
+                            i = Add(i, 1)
+                            IfCondition LessThan(i, flen) ThenBlock: {
+                                conv = GetByte(fmt, i)
+                                i = Add(i, 1)
+                            }
+                        } ElseBlock: {
+                            IfCondition EqualTo(ch, 58) ThenBlock: {
+                                i = Add(i, 1)
+                                WhileLoop LessThan(i, flen) {
+                                    IfCondition EqualTo(GetByte(fmt, i), 125) ThenBlock: {
+                                        BreakLoop
+                                    }
+                                    i = Add(i, 1)
+                                }
+                                BreakLoop
+                            } ElseBlock: {
+                                SetByte(field, fi, ch)
+                                fi = Add(fi, 1)
+                                i = Add(i, 1)
+                            }
+                        }
+                    }
+                    SetByte(field, fi, 0)
+                    IfCondition And(LessThan(i, flen), EqualTo(GetByte(fmt, i), 125)) ThenBlock: {
+                        i = Add(i, 1)
+                    }
+                    val = 0
+                    IfCondition EqualTo(fi, 0) ThenBlock: {
+                        IfCondition EqualTo(used_num, 1) ThenBlock: {
+                            AIMacro.RaiseKind(2, "format")
+                            ReturnValue(fmt)
+                        }
+                        used_auto = 1
+                        idx = Add(auto_i, pos0)
+                        auto_i = Add(auto_i, 1)
+                        IfCondition GreaterEqual(idx, n) ThenBlock: {
+                            AIMacro.RaiseKind(17, "format")
+                            ReturnValue(fmt)
+                        }
+                        val = Array.Get(args, idx)
+                    } ElseBlock: {
+                        dot_at = Subtract(0, 1)
+                        br_at = Subtract(0, 1)
+                        pi = 0
+                        WhileLoop LessThan(pi, fi) {
+                            c = GetByte(field, pi)
+                            IfCondition And(EqualTo(c, 46), LessThan(dot_at, 0)) ThenBlock: {
+                                dot_at = pi
+                            }
+                            IfCondition And(EqualTo(c, 91), LessThan(br_at, 0)) ThenBlock: {
+                                br_at = pi
+                            }
+                            pi = Add(pi, 1)
+                        }
+                        base_end = fi
+                        IfCondition GreaterEqual(dot_at, 0) ThenBlock: {
+                            base_end = dot_at
+                        }
+                        IfCondition And(GreaterEqual(br_at, 0), LessThan(br_at, base_end)) ThenBlock: {
+                            base_end = br_at
+                        }
+                        is_num = 1
+                        vi = 0
+                        IfCondition EqualTo(base_end, 0) ThenBlock: {
+                            is_num = 0
+                        }
+                        pi = 0
+                        WhileLoop LessThan(pi, base_end) {
+                            c = GetByte(field, pi)
+                            IfCondition Or(LessThan(c, 48), GreaterThan(c, 57)) ThenBlock: {
+                                is_num = 0
+                            }
+                            vi = Add(Multiply(vi, 10), Subtract(c, 48))
+                            pi = Add(pi, 1)
+                        }
+                        IfCondition EqualTo(is_num, 1) ThenBlock: {
+                            IfCondition EqualTo(used_auto, 1) ThenBlock: {
+                                AIMacro.RaiseKind(2, "format")
+                                ReturnValue(fmt)
+                            }
+                            used_num = 1
+                            idx = Add(vi, pos0)
+                            IfCondition GreaterEqual(idx, n) ThenBlock: {
+                                AIMacro.RaiseKind(17, "format")
+                                ReturnValue(fmt)
+                            }
+                            val = Array.Get(args, idx)
+                        } ElseBlock: {
+                            kwmap = 0
+                            wi = 0
+                            WhileLoop LessThan(wi, n) {
+                                elw = Array.Get(args, wi)
+                                IfCondition EqualTo(AIMacro.SafeIsHash(elw), 1) ThenBlock: {
+                                    IfCondition NotEqual(Hash.Get(elw, "__kwargs__"), 0) ThenBlock: {
+                                        kwmap = elw
+                                    }
+                                }
+                                wi = Add(wi, 1)
+                            }
+                            IfCondition EqualTo(kwmap, 0) ThenBlock: {
+                                AIMacro.RaiseKind(15, field)
+                                ReturnValue(fmt)
+                            }
+                            IfCondition EqualTo(Hash.Contains(kwmap, field), 0) ThenBlock: {
+                                AIMacro.RaiseKind(15, field)
+                                ReturnValue(fmt)
+                            }
+                            val = Hash.Get(kwmap, field)
+                        }
+                        IfCondition GreaterEqual(br_at, 0) ThenBlock: {
+                            bi = Add(br_at, 1)
+                            bidx = 0
+                            WhileLoop LessThan(bi, fi) {
+                                c = GetByte(field, bi)
+                                IfCondition EqualTo(c, 93) ThenBlock: {
+                                    BreakLoop
+                                }
+                                IfCondition And(GreaterEqual(c, 48), LessEqual(c, 57)) ThenBlock: {
+                                    bidx = Add(Multiply(bidx, 10), Subtract(c, 48))
+                                }
+                                bi = Add(bi, 1)
+                            }
+                            IfCondition EqualTo(Array.IsArray(val), 1) ThenBlock: {
+                                IfCondition Or(LessThan(bidx, 0), GreaterEqual(bidx, Array.Size(val))) ThenBlock: {
+                                    AIMacro.RaiseKind(17, "format")
+                                    ReturnValue(fmt)
+                                }
+                                val = Array.Get(val, bidx)
+                            }
+                        }
+                        IfCondition GreaterEqual(dot_at, 0) ThenBlock: {
+                            attr = Allocate(64)
+                            ai = 0
+                            pi = Add(dot_at, 1)
+                            WhileLoop LessThan(pi, fi) {
+                                c = GetByte(field, pi)
+                                IfCondition EqualTo(c, 91) ThenBlock: {
+                                    BreakLoop
+                                }
+                                SetByte(attr, ai, c)
+                                ai = Add(ai, 1)
+                                pi = Add(pi, 1)
+                            }
+                            SetByte(attr, ai, 0)
+                            val = AIMacro.ObjectGet(val, attr)
+                        }
+                    }
+                    IfCondition EqualTo(OOP.MethodExists(self, "convert_field"), 1) ThenBlock: {
+                        cargs = Array.Create(2)
+                        Array.Push(cargs, val)
+                        Array.Push(cargs, conv)
+                        val = OOP.MethodCall(self, "convert_field", cargs)
+                    }
+                    sval = 0
+                    IfCondition EqualTo(conv, 114) ThenBlock: {
+                        sval = AIMacro.Repr(val)
+                    } ElseBlock: {
+                        IfCondition EqualTo(conv, 97) ThenBlock: {
+                            sval = AIMacro.Repr(val)
+                        } ElseBlock: {
+                            IfCondition EqualTo(OOP.MethodExists(self, "format_field"), 1) ThenBlock: {
+                                fargs = Array.Create(2)
+                                Array.Push(fargs, val)
+                                Array.Push(fargs, "")
+                                sval = OOP.MethodCall(self, "format_field", fargs)
+                            } ElseBlock: {
+                                sval = AIMacro.Str(val)
+                            }
+                        }
+                    }
+                    IfCondition EqualTo(AIMacro.LooksLikeString(sval), 0) ThenBlock: {
+                        sval = AIMacro.Str(sval)
+                    }
+                    vn = StringLength(sval)
+                    vi = 0
+                    WhileLoop LessThan(vi, vn) {
+                        SetByte(out, oi, GetByte(sval, vi))
+                        oi = Add(oi, 1)
+                        vi = Add(vi, 1)
+                    }
+                }
+            } ElseBlock: {
+                IfCondition EqualTo(ch, 125) ThenBlock: {
+                    IfCondition And(LessThan(Add(i, 1), flen), EqualTo(GetByte(fmt, Add(i, 1)), 125)) ThenBlock: {
+                        SetByte(out, oi, 125)
+                        oi = Add(oi, 1)
+                        i = Add(i, 2)
+                    } ElseBlock: {
+                        AIMacro.RaiseKind(2, "format")
+                        ReturnValue(fmt)
+                    }
+                } ElseBlock: {
+                    SetByte(out, oi, ch)
+                    oi = Add(oi, 1)
+                    i = Add(i, 1)
+                }
+            }
+        }
+        SetByte(out, oi, 0)
+        ReturnValue(out)
+    }
+}

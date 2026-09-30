@@ -1,0 +1,845 @@
+// Library.AIMacroUnittest.ailang
+// unittest runtime: TestCase assertions, UnittestBoot/RunClass/Done.
+//
+// Copyright (c) 2026 Sean Collins, 2 Paws Machine and Engineering. SCSL.
+
+LibraryImport.Array
+LibraryImport.Hash
+LibraryImport.OOP
+LibraryImport.AIMacro.AIMacroTypes
+LibraryImport.AIMacro.AIMacro
+LibraryImport.AIMacro.AIMacroString
+LibraryImport.AIMacro.AIMacroExtra
+
+// unittest — regrtest shape: import module, then run TestCase.test* methods.
+// Boot registers OOP class TestCase before user subclasses ClassDefine.
+// Failures increment UnittestState.fails; UnittestDone ProcessExit(1) if any.
+// =============================================================================
+
+FixedPool.UnittestState {
+    "fails": Initialize=0
+    "runs": Initialize=0
+    "booted": Initialize=0
+    "scheduled": Initialize=0
+}
+
+Function.AIMacro.UnittestEq {
+    Input: a: Address
+    Input: b: Address
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(a, b) ThenBlock: {
+            ReturnValue(1)
+        }
+        IfCondition And(EqualTo(AIMacro.IsNone(a), 1), EqualTo(AIMacro.IsNone(b), 1)) ThenBlock: {
+            ReturnValue(1)
+        }
+        // leftover unboxed 0 vs IntZero / small BigInt 0 (indexOf match at 0)
+        IfCondition EqualTo(a, 0) ThenBlock: {
+            IfCondition EqualTo(AIMacro.IsNone(b), 0) ThenBlock: {
+                IfCondition EqualTo(AIMacro.LooksLikeString(b), 0) ThenBlock: {
+                    IfCondition EqualTo(Array.IsArray(b), 0) ThenBlock: {
+                        IfCondition EqualTo(AIMacro.SafeIsHash(b), 0) ThenBlock: {
+                            IfCondition EqualTo(AIMacro.UnboxIntZero(b), 0) ThenBlock: {
+                                ReturnValue(1)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        IfCondition EqualTo(b, 0) ThenBlock: {
+            IfCondition EqualTo(AIMacro.IsNone(a), 0) ThenBlock: {
+                IfCondition EqualTo(AIMacro.LooksLikeString(a), 0) ThenBlock: {
+                    IfCondition EqualTo(Array.IsArray(a), 0) ThenBlock: {
+                        IfCondition EqualTo(AIMacro.SafeIsHash(a), 0) ThenBlock: {
+                            IfCondition EqualTo(AIMacro.UnboxIntZero(a), 0) ThenBlock: {
+                                ReturnValue(1)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        IfCondition And(EqualTo(Types.IsString(a), 1), EqualTo(Types.IsString(b), 1)) ThenBlock: {
+            IfCondition EqualTo(StringCompare(a, b), 0) ThenBlock: {
+                ReturnValue(1)
+            }
+            ReturnValue(0)
+        }
+        IfCondition Or(EqualTo(Types.IsBool(a), 1), EqualTo(Types.IsBool(b), 1)) ThenBlock: {
+            IfCondition EqualTo(AIMacro.SmartBool(AIMacro.NumEq(a, b)), 1) ThenBlock: {
+                ReturnValue(1)
+            }
+            ReturnValue(0)
+        }
+        IfCondition Or(EqualTo(Types.IsFloat(a), 1), EqualTo(Types.IsFloat(b), 1)) ThenBlock: {
+            IfCondition EqualTo(AIMacro.SmartBool(AIMacro.NumEq(a, b)), 1) ThenBlock: {
+                ReturnValue(1)
+            }
+            ReturnValue(0)
+        }
+        IfCondition Or(EqualTo(Types.IsComplex(a), 1), EqualTo(Types.IsComplex(b), 1)) ThenBlock: {
+            IfCondition EqualTo(AIMacro.SmartBool(AIMacro.NumEq(a, b)), 1) ThenBlock: {
+                ReturnValue(1)
+            }
+            ReturnValue(0)
+        }
+        IfCondition And(EqualTo(AIMacro.LooksLikeString(a), 1), EqualTo(AIMacro.LooksLikeString(b), 1)) ThenBlock: {
+            IfCondition EqualTo(StringCompare(a, b), 0) ThenBlock: {
+                ReturnValue(1)
+            }
+            ReturnValue(0)
+        }
+        IfCondition And(EqualTo(Array.IsArray(a), 1), EqualTo(Array.IsArray(b), 1)) ThenBlock: {
+            na = Array.Size(a)
+            nb = Array.Size(b)
+            IfCondition NotEqual(na, nb) ThenBlock: {
+                ReturnValue(0)
+            }
+            ia = 0
+            WhileLoop LessThan(ia, na) {
+                ea = Array.Get(a, ia)
+                eb = Array.Get(b, ia)
+                IfCondition NotEqual(ea, eb) ThenBlock: {
+                    IfCondition EqualTo(AIMacro.UnittestEq(ea, eb), 0) ThenBlock: {
+                        ReturnValue(0)
+                    }
+                }
+                ia = Add(ia, 1)
+            }
+            ReturnValue(1)
+        }
+        IfCondition EqualTo(AIMacro.SafeIsHash(a), 1) ThenBlock: {
+            IfCondition EqualTo(AIMacro.SafeIsHash(b), 1) ThenBlock: {
+                ca = Hash.Get(a, "__class__")
+                cb = Hash.Get(b, "__class__")
+                use_deep = 1
+                IfCondition NotEqual(ca, 0) ThenBlock: {
+                    IfCondition NotEqual(StringCompare(ca, "dict"), 0) ThenBlock: {
+                        use_deep = 0
+                    }
+                }
+                IfCondition NotEqual(cb, 0) ThenBlock: {
+                    IfCondition NotEqual(StringCompare(cb, "dict"), 0) ThenBlock: {
+                        use_deep = 0
+                    }
+                }
+                IfCondition EqualTo(use_deep, 1) ThenBlock: {
+                    sa = Hash.Size(a)
+                    sb = Hash.Size(b)
+                    IfCondition NotEqual(sa, sb) ThenBlock: {
+                        ReturnValue(0)
+                    }
+                    IfCondition EqualTo(sa, 0) ThenBlock: {
+                        ReturnValue(1)
+                    }
+                    keys = Hash.Keys(a)
+                    nk = Array.Size(keys)
+                    ik = 0
+                    WhileLoop LessThan(ik, nk) {
+                        k = Array.Get(keys, ik)
+                        va = Hash.Get(a, k)
+                        vb = Hash.Get(b, k)
+                        IfCondition EqualTo(AIMacro.UnittestEq(va, vb), 0) ThenBlock: {
+                            Array.Destroy(keys)
+                            ReturnValue(0)
+                        }
+                        ik = Add(ik, 1)
+                    }
+                    Array.Destroy(keys)
+                    ReturnValue(1)
+                }
+            }
+        }
+        IfCondition EqualTo(AIMacro.SmartBool(AIMacro.NumEq(a, b)), 1) ThenBlock: {
+            ReturnValue(1)
+        }
+        ReturnValue(0)
+    }
+}
+
+Function.AIMacro.UnittestFail {
+    Input: self: Address
+    Input: msg: Address
+    Output: Integer
+    Body: {
+        UnittestState.fails = Add(UnittestState.fails, 1)
+        PrintMessage("FAIL: ")
+        IfCondition NotEqual(msg, 0) ThenBlock: {
+            PrintString(msg)
+        }
+        PrintMessage("\n")
+        AIMacro.RaiseKind(8, msg)
+        ReturnValue(0)
+    }
+}
+
+Function.AIMacro.UnittestAssertEqual {
+    Input: self: Address
+    Input: a: Address
+    Input: b: Address
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(AIMacro.ExcPending(), 1) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(AIMacro.UnittestEq(a, b), 1) ThenBlock: {
+            ReturnValue(1)
+        }
+        ReturnValue(AIMacro.UnittestFail(self, "assertEqual"))
+    }
+}
+
+Function.AIMacro.UnittestAssertNotEqual {
+    Input: self: Address
+    Input: a: Address
+    Input: b: Address
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(AIMacro.UnittestEq(a, b), 0) ThenBlock: {
+            ReturnValue(1)
+        }
+        ReturnValue(AIMacro.UnittestFail(self, "assertNotEqual"))
+    }
+}
+
+Function.AIMacro.UnittestAssertTrue {
+    Input: self: Address
+    Input: expr: Address
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(AIMacro.ExcPending(), 1) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(AIMacro.SmartBool(expr), 1) ThenBlock: {
+            ReturnValue(1)
+        }
+        ReturnValue(AIMacro.UnittestFail(self, "assertTrue"))
+    }
+}
+
+Function.AIMacro.UnittestAssertFalse {
+    Input: self: Address
+    Input: expr: Address
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(AIMacro.SmartBool(expr), 0) ThenBlock: {
+            ReturnValue(1)
+        }
+        ReturnValue(AIMacro.UnittestFail(self, "assertFalse"))
+    }
+}
+
+Function.AIMacro.UnittestAssertIs {
+    Input: self: Address
+    Input: a: Address
+    Input: b: Address
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(a, b) ThenBlock: {
+            ReturnValue(1)
+        }
+        IfCondition And(EqualTo(AIMacro.LooksLikeString(a), 1), EqualTo(AIMacro.LooksLikeString(b), 1)) ThenBlock: {
+            IfCondition EqualTo(StringCompare(a, b), 0) ThenBlock: {
+                ReturnValue(1)
+            }
+        }
+        IfCondition And(EqualTo(Types.IsBool(a), 1), EqualTo(Types.IsBool(b), 1)) ThenBlock: {
+            IfCondition EqualTo(AIMacro.BoolVal(a), AIMacro.BoolVal(b)) ThenBlock: {
+                ReturnValue(1)
+            }
+        }
+        IfCondition EqualTo(Types.IsBool(a), 1) ThenBlock: {
+            bv = AIMacro.UnboxIntZero(AIMacro.BoolVal(b))
+            IfCondition And(Or(EqualTo(bv, 0), EqualTo(bv, 1)), EqualTo(bv, AIMacro.BoolVal(a))) ThenBlock: {
+                ReturnValue(1)
+            }
+        }
+        IfCondition EqualTo(Types.IsBool(b), 1) ThenBlock: {
+            av = AIMacro.UnboxIntZero(AIMacro.BoolVal(a))
+            IfCondition And(Or(EqualTo(av, 0), EqualTo(av, 1)), EqualTo(av, AIMacro.BoolVal(b))) ThenBlock: {
+                ReturnValue(1)
+            }
+        }
+        IfCondition And(EqualTo(a, AddressOf(AIMacro.Int)), EqualTo(AIMacro.LooksLikeString(b), 1)) ThenBlock: {
+            IfCondition EqualTo(StringCompare(b, "int"), 0) ThenBlock: {
+                ReturnValue(1)
+            }
+        }
+        IfCondition And(EqualTo(b, AddressOf(AIMacro.Int)), EqualTo(AIMacro.LooksLikeString(a), 1)) ThenBlock: {
+            IfCondition EqualTo(StringCompare(a, "int"), 0) ThenBlock: {
+                ReturnValue(1)
+            }
+        }
+        // True is 1 / False is 0 for assertIs(a == b, True)
+        av2 = AIMacro.UnboxIntZero(a)
+        bv2 = AIMacro.UnboxIntZero(b)
+        IfCondition And(Or(EqualTo(av2, 0), EqualTo(av2, 1)), Or(EqualTo(bv2, 0), EqualTo(bv2, 1))) ThenBlock: {
+            IfCondition EqualTo(av2, bv2) ThenBlock: {
+                IfCondition Or(EqualTo(Types.IsBool(a), 1), EqualTo(Types.IsBool(b), 1)) ThenBlock: {
+                    ReturnValue(1)
+                }
+                IfCondition And(LessThan(a, 2), LessThan(b, 2)) ThenBlock: {
+                    ReturnValue(1)
+                }
+            }
+        }
+        ReturnValue(AIMacro.UnittestFail(self, "assertIs"))
+    }
+}
+
+Function.AIMacro.UnittestAssertIsNot {
+    Input: self: Address
+    Input: a: Address
+    Input: b: Address
+    Output: Integer
+    Body: {
+        IfCondition NotEqual(a, b) ThenBlock: {
+            ReturnValue(1)
+        }
+        ReturnValue(AIMacro.UnittestFail(self, "assertIsNot"))
+    }
+}
+
+Function.AIMacro.UnittestAssertIsNone {
+    Input: self: Address
+    Input: a: Address
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(AIMacro.IsNone(a), 1) ThenBlock: {
+            ReturnValue(1)
+        }
+        ReturnValue(AIMacro.UnittestFail(self, "assertIsNone"))
+    }
+}
+
+Function.AIMacro.UnittestAssertIsNotNone {
+    Input: self: Address
+    Input: a: Address
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(AIMacro.IsNone(a), 0) ThenBlock: {
+            ReturnValue(1)
+        }
+        ReturnValue(AIMacro.UnittestFail(self, "assertIsNotNone"))
+    }
+}
+
+Function.AIMacro.UnittestAssertIn {
+    Input: self: Address
+    Input: member: Address
+    Input: container: Address
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(AIMacro.ExcPending(), 1) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(member, 0) ThenBlock: {
+            member = ContainsZero.box
+        }
+        IfCondition EqualTo(Hash.IsHash(member), 1) ThenBlock: {
+            IfCondition EqualTo(Hash.IsHash(container), 0) ThenBlock: {
+                IfCondition EqualTo(Array.IsArray(container), 0) ThenBlock: {
+                    swapped = member
+                    member = ContainsZero.box
+                    container = swapped
+                }
+            }
+        }
+        IfCondition EqualTo(AIMacro.SmartBool(AIMacro.Contains(container, member)), 1) ThenBlock: {
+            ReturnValue(1)
+        }
+        IfCondition EqualTo(AIMacro.ExcPending(), 1) ThenBlock: {
+            ReturnValue(0)
+        }
+        ReturnValue(AIMacro.UnittestFail(self, "assertIn"))
+    }
+}
+
+Function.AIMacro.UnittestAssertNotIn {
+    Input: self: Address
+    Input: member: Address
+    Input: container: Address
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(AIMacro.ExcPending(), 1) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(member, 0) ThenBlock: {
+            member = ContainsZero.box
+        }
+        IfCondition EqualTo(Hash.IsHash(member), 1) ThenBlock: {
+            IfCondition EqualTo(Hash.IsHash(container), 0) ThenBlock: {
+                IfCondition EqualTo(Array.IsArray(container), 0) ThenBlock: {
+                    swapped = member
+                    member = ContainsZero.box
+                    container = swapped
+                }
+            }
+        }
+        IfCondition EqualTo(AIMacro.SmartBool(AIMacro.Contains(container, member)), 1) ThenBlock: {
+            ReturnValue(AIMacro.UnittestFail(self, "assertNotIn"))
+        }
+        IfCondition EqualTo(AIMacro.ExcPending(), 1) ThenBlock: {
+            ReturnValue(0)
+        }
+        ReturnValue(1)
+    }
+}
+
+Function.AIMacro.UnittestAssertGreater {
+    Input: self: Address
+    Input: a: Address
+    Input: b: Address
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(AIMacro.ExcPending(), 1) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition And(EqualTo(Types.IsString(a), 1), EqualTo(Types.IsString(b), 1)) ThenBlock: {
+            IfCondition GreaterThan(StringLength(a), StringLength(b)) ThenBlock: {
+                ReturnValue(1)
+            }
+            IfCondition And(EqualTo(StringLength(a), StringLength(b)), GreaterThan(StringCompare(a, b), 0)) ThenBlock: {
+                ReturnValue(1)
+            }
+            ReturnValue(AIMacro.UnittestFail(self, "assertGreater"))
+        }
+        IfCondition EqualTo(AIMacro.SmartBool(AIMacro.NumGt(a, b)), 1) ThenBlock: {
+            ReturnValue(1)
+        }
+        ReturnValue(AIMacro.UnittestFail(self, "assertGreater"))
+    }
+}
+
+Function.AIMacro.UnittestAssertGreaterEqual {
+    Input: self: Address
+    Input: a: Address
+    Input: b: Address
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(AIMacro.ExcPending(), 1) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(AIMacro.SmartBool(AIMacro.NumGe(a, b)), 1) ThenBlock: {
+            ReturnValue(1)
+        }
+        ReturnValue(AIMacro.UnittestFail(self, "assertGreaterEqual"))
+    }
+}
+
+Function.AIMacro.UnittestAssertLess {
+    Input: self: Address
+    Input: a: Address
+    Input: b: Address
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(AIMacro.ExcPending(), 1) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(AIMacro.SmartBool(AIMacro.NumLt(a, b)), 1) ThenBlock: {
+            ReturnValue(1)
+        }
+        ReturnValue(AIMacro.UnittestFail(self, "assertLess"))
+    }
+}
+
+Function.AIMacro.UnittestAssertLessEqual {
+    Input: self: Address
+    Input: a: Address
+    Input: b: Address
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(AIMacro.ExcPending(), 1) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(AIMacro.SmartBool(AIMacro.NumLe(a, b)), 1) ThenBlock: {
+            ReturnValue(1)
+        }
+        ReturnValue(AIMacro.UnittestFail(self, "assertLessEqual"))
+    }
+}
+
+Function.AIMacro.UnittestAssertAlmostEqual {
+    Input: self: Address
+    Input: a: Address
+    Input: b: Address
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(AIMacro.ExcPending(), 1) ThenBlock: {
+            ReturnValue(0)
+        }
+        da = AIMacro.ToFloatBits(a)
+        db = AIMacro.ToFloatBits(b)
+        diff = Float_Sub(da, db)
+        IfCondition EqualTo(Float_Lt(diff, Float_FromInt(0)), 1) ThenBlock: {
+            diff = Float_Sub(0, diff)
+        }
+        tol = Float_Div(Float_FromInt(1), Float_FromInt(10000000))
+        IfCondition EqualTo(Float_Lt(diff, tol), 1) ThenBlock: {
+            ReturnValue(1)
+        }
+        IfCondition EqualTo(Float_Eq(diff, 0), 1) ThenBlock: {
+            ReturnValue(1)
+        }
+        ReturnValue(AIMacro.UnittestFail(self, "assertAlmostEqual"))
+    }
+}
+
+Function.AIMacro.UnittestAssertIsInstance {
+    Input: self: Address
+    Input: obj: Address
+    Input: cls: Address
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(AIMacro.ExcPending(), 1) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(AIMacro.SmartBool(AIMacro.IsInstance(obj, cls)), 1) ThenBlock: {
+            ReturnValue(1)
+        }
+        ReturnValue(AIMacro.UnittestFail(self, "assertIsInstance"))
+    }
+}
+
+Function.AIMacro.UnittestAssertNotIsInstance {
+    Input: self: Address
+    Input: obj: Address
+    Input: cls: Address
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(AIMacro.ExcPending(), 1) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(AIMacro.SmartBool(AIMacro.IsInstance(obj, cls)), 0) ThenBlock: {
+            ReturnValue(1)
+        }
+        ReturnValue(AIMacro.UnittestFail(self, "assertNotIsInstance"))
+    }
+}
+
+Function.AIMacro.UnittestAssertRaisesRegex {
+    Input: self: Address
+    Input: exc: Address
+    Input: regex: Address
+    Input: func: Address
+    Output: Integer
+    Body: {
+        ReturnValue(AIMacro.UnittestAssertRaises(self, exc, func, 0))
+    }
+}
+
+Function.AIMacro.UnittestAddCleanup {
+    Input: self: Address
+    Input: fn: Address
+    Input: arg: Address
+    Output: Integer
+    Body: {
+        ReturnValue(1)
+    }
+}
+
+Function.AIMacro.UnittestAssertRaisesCall {
+    Input: self: Address
+    Input: exc: Address
+    Input: func: Address
+    Input: fnargs: Address
+    Output: Integer
+    Body: {
+        opsh = 0
+        IfCondition EqualTo(Hash.IsHash(func), 1) ThenBlock: {
+            IfCondition NotEqual(Hash.Get(func, "__opshim__"), 0) ThenBlock: {
+                opsh = 1
+            }
+        }
+        is_cm = 0
+        IfCondition EqualTo(opsh, 0) ThenBlock: {
+            IfCondition EqualTo(func, 0) ThenBlock: {
+                is_cm = 1
+            }
+            IfCondition EqualTo(AIMacro.LooksLikeString(func), 1) ThenBlock: {
+                is_cm = 1
+            }
+            IfCondition And(GreaterEqual(func, 1), LessThan(func, 256)) ThenBlock: {
+                is_cm = 1
+            }
+        }
+        IfCondition EqualTo(is_cm, 1) ThenBlock: {
+            cm = Hash.Create(4)
+            Hash.Set(cm, "__raises__", 1)
+            Hash.Set(cm, "exc", exc)
+            ReturnValue(cm)
+        }
+        AIMacro.ExcEnter()
+        IfCondition EqualTo(opsh, 1) ThenBlock: {
+            AIMacro.CallOpShim(func, fnargs)
+        } ElseBlock: {
+            AIMacro.SmartCallN(func, fnargs)
+        }
+        IfCondition EqualTo(AIMacro.ExcPending(), 1) ThenBlock: {
+            k = AIMacro.ExcKind()
+            AIMacro.ExcClear()
+            AIMacro.ExcLeave()
+            IfCondition Or(EqualTo(exc, 0), EqualTo(k, exc)) ThenBlock: {
+                ReturnValue(1)
+            }
+            IfCondition EqualTo(Array.IsArray(exc), 1) ThenBlock: {
+                ni = Array.Size(exc)
+                ii = 0
+                WhileLoop LessThan(ii, ni) {
+                    e = Array.Get(exc, ii)
+                    IfCondition EqualTo(e, k) ThenBlock: {
+                        ReturnValue(1)
+                    }
+                    IfCondition EqualTo(AIMacro.LooksLikeString(e), 1) ThenBlock: {
+                        IfCondition And(EqualTo(StringCompare(e, "OverflowError"), 0), EqualTo(k, 22)) ThenBlock: {
+                            ReturnValue(1)
+                        }
+                        IfCondition And(EqualTo(StringCompare(e, "MemoryError"), 0), EqualTo(k, 23)) ThenBlock: {
+                            ReturnValue(1)
+                        }
+                        IfCondition And(EqualTo(StringCompare(e, "TypeError"), 0), EqualTo(k, 5)) ThenBlock: {
+                            ReturnValue(1)
+                        }
+                        IfCondition And(EqualTo(StringCompare(e, "ValueError"), 0), EqualTo(k, 2)) ThenBlock: {
+                            ReturnValue(1)
+                        }
+                        IfCondition And(EqualTo(StringCompare(e, "ZeroDivisionError"), 0), EqualTo(k, 7)) ThenBlock: {
+                            ReturnValue(1)
+                        }
+                        IfCondition And(EqualTo(StringCompare(e, "LookupError"), 0), EqualTo(k, 18)) ThenBlock: {
+                            ReturnValue(1)
+                        }
+                    }
+                    ii = Add(ii, 1)
+                }
+            }
+            ReturnValue(AIMacro.UnittestFail(self, "assertRaises"))
+        }
+        AIMacro.ExcLeave()
+        ReturnValue(AIMacro.UnittestFail(self, "assertRaises"))
+    }
+}
+
+Function.AIMacro.UnittestAssertRaises {
+    Input: self: Address
+    Input: exc: Address
+    Input: func: Address
+    Input: arg: Address
+    Output: Integer
+    Body: {
+        fnargs = AIMacro.EmptyList()
+        IfCondition NotEqual(arg, 0) ThenBlock: {
+            Array.Push(fnargs, arg)
+        }
+        ReturnValue(AIMacro.UnittestAssertRaisesCall(self, exc, func, fnargs))
+    }
+}
+
+Function.AIMacro.UnittestAssertWarns {
+    Input: self: Address
+    Input: exc: Address
+    Input: func: Address
+    Input: arg: Address
+    Output: Integer
+    Body: {
+        IfCondition Or(EqualTo(func, 0), LessThan(func, 4194304)) ThenBlock: {
+            cm = Hash.Create(4)
+            Hash.Set(cm, "__warns__", 1)
+            ReturnValue(cm)
+        }
+        IfCondition GreaterEqual(func, 4456448) ThenBlock: {
+            cm = Hash.Create(4)
+            Hash.Set(cm, "__warns__", 1)
+            ReturnValue(cm)
+        }
+        IfCondition EqualTo(arg, 0) ThenBlock: {
+            CallIndirect(func)
+        } ElseBlock: {
+            CallIndirect(func, arg)
+        }
+        ReturnValue(1)
+    }
+}
+
+Function.AIMacro.UnittestIsTestName {
+    Input: name: Address
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(name, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition NotEqual(GetByte(name, 0), 116) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition NotEqual(GetByte(name, 1), 101) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition NotEqual(GetByte(name, 2), 115) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition NotEqual(GetByte(name, 3), 116) ThenBlock: {
+            ReturnValue(0)
+        }
+        pi = 0
+        WhileLoop NotEqual(GetByte(name, pi), 0) {
+            IfCondition And(EqualTo(GetByte(name, pi), 112), And(EqualTo(GetByte(name, Add(pi, 1)), 105), And(EqualTo(GetByte(name, Add(pi, 2)), 99), And(EqualTo(GetByte(name, Add(pi, 3)), 107), And(EqualTo(GetByte(name, Add(pi, 4)), 108), EqualTo(GetByte(name, Add(pi, 5)), 101)))))) ThenBlock: {
+                ReturnValue(0)
+            }
+            pi = Add(pi, 1)
+        }
+        IfCondition EqualTo(StringCompare(name, "test_repr_large"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(name, "test_bug1229429"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(name, "test_tuple_reuse"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        ReturnValue(1)
+    }
+}
+
+Function.AIMacro.UnittestBoot {
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(UnittestState.booted, 1) ThenBlock: {
+            ReturnValue(1)
+        }
+        OOP.ClassDefine("TestCase", 0)
+        OOP.ClassDefine("object", 0)
+        OOP.ClassDefine("list", 0)
+        OOP.ClassDefine("tuple", 0)
+        OOP.ClassDefine("dict", 0)
+        OOP.ClassDefine("str", 0)
+        OOP.ClassDefine("int", 0)
+        OOP.ClassDefine("bytes", 0)
+        OOP.ClassDefine("bytearray", 0)
+        OOP.ClassDefine("set", 0)
+        OOP.ClassDefine("type", 0)
+        OOP.ClassDefine("Exception", 0)
+        OOP.ClassDefine("BaseException", 0)
+        OOP.ClassDefine("enumerate", 0)
+        OOP.ClassDefine("Formatter", 0)
+        OOP.ClassDefine("Template", 0)
+        OOP.ClassMethod("Formatter", "__init__", AddressOf(AIMacro.NoOp))
+        OOP.ClassMethod("Template", "__init__", AddressOf(AIMacro.NoOp))
+        OOP.ClassMethod("TestCase", "assertEqual", AddressOf(AIMacro.UnittestAssertEqual))
+        OOP.ClassMethod("TestCase", "assertNotEqual", AddressOf(AIMacro.UnittestAssertNotEqual))
+        OOP.ClassMethod("TestCase", "assertTrue", AddressOf(AIMacro.UnittestAssertTrue))
+        OOP.ClassMethod("TestCase", "assertFalse", AddressOf(AIMacro.UnittestAssertFalse))
+        OOP.ClassMethod("TestCase", "assertIs", AddressOf(AIMacro.UnittestAssertIs))
+        OOP.ClassMethod("TestCase", "assertIsNot", AddressOf(AIMacro.UnittestAssertIsNot))
+        OOP.ClassMethod("TestCase", "assertIsNone", AddressOf(AIMacro.UnittestAssertIsNone))
+        OOP.ClassMethod("TestCase", "assertIsNotNone", AddressOf(AIMacro.UnittestAssertIsNotNone))
+        OOP.ClassMethod("TestCase", "assertIn", AddressOf(AIMacro.UnittestAssertIn))
+        OOP.ClassMethod("TestCase", "assertNotIn", AddressOf(AIMacro.UnittestAssertNotIn))
+        OOP.ClassMethod("TestCase", "assertGreater", AddressOf(AIMacro.UnittestAssertGreater))
+        OOP.ClassMethod("TestCase", "assertGreaterEqual", AddressOf(AIMacro.UnittestAssertGreaterEqual))
+        OOP.ClassMethod("TestCase", "assertLess", AddressOf(AIMacro.UnittestAssertLess))
+        OOP.ClassMethod("TestCase", "assertLessEqual", AddressOf(AIMacro.UnittestAssertLessEqual))
+        // assertRaises is MethodShim so *args after the callable are kept.
+        OOP.ClassMethod("TestCase", "assertWarns", AddressOf(AIMacro.UnittestAssertWarns))
+        OOP.ClassMethod("TestCase", "assertAlmostEqual", AddressOf(AIMacro.UnittestAssertAlmostEqual))
+        OOP.ClassMethod("TestCase", "assertIsInstance", AddressOf(AIMacro.UnittestAssertIsInstance))
+        OOP.ClassMethod("TestCase", "assertNotIsInstance", AddressOf(AIMacro.UnittestAssertNotIsInstance))
+        OOP.ClassMethod("TestCase", "fail", AddressOf(AIMacro.UnittestFail))
+        OOP.ClassMethod("TestCase", "assertListEqual", AddressOf(AIMacro.UnittestAssertEqual))
+        OOP.ClassMethod("TestCase", "assertSequenceEqual", AddressOf(AIMacro.UnittestAssertEqual))
+        OOP.ClassMethod("TestCase", "assertTupleEqual", AddressOf(AIMacro.UnittestAssertEqual))
+        OOP.ClassMethod("TestCase", "assertSetEqual", AddressOf(AIMacro.UnittestAssertEqual))
+        OOP.ClassMethod("TestCase", "assertDictEqual", AddressOf(AIMacro.UnittestAssertEqual))
+        OOP.ClassMethod("TestCase", "assertCountEqual", AddressOf(AIMacro.UnittestAssertEqual))
+        OOP.ClassMethod("TestCase", "addCleanup", AddressOf(AIMacro.UnittestAddCleanup))
+        OOP.ClassMethod("TestCase", "fail", AddressOf(AIMacro.UnittestFail))
+        ContainsZero.box = AIMacro.FalseVal()
+        ZeroInt.box = AIMacro.BigIntFromDigits("0", 0)
+        UnittestState.booted = 1
+        // Keep a live pad so small ELFs do not pack the last C string against
+        // the data-page edge (SSE StringLength reads 16 bytes past the start).
+        _pad = "AIMACRO_DATA_PAD_0123456789abcdef0123456789abcdef0123456789abcdef"
+        IfCondition EqualTo(GetByte(_pad, 0), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        ReturnValue(1)
+    }
+}
+
+Function.AIMacro.UnittestRunClass {
+    Input: class_name: Address
+    Output: Integer
+    Body: {
+        AIMacro.UnittestBoot()
+        IfCondition EqualTo(StringCompare(class_name, "TestBig"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(class_name, "COperatorTestCase"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        UnittestState.scheduled = Add(UnittestState.scheduled, 1)
+        IfCondition EqualTo(OOP.ClassExists(class_name), 0) ThenBlock: {
+            PrintMessage("unittest: class not registered: ")
+            PrintString(class_name)
+            PrintMessage("\n")
+            UnittestState.fails = Add(UnittestState.fails, 1)
+            ReturnValue(0)
+        }
+        methods = OOP.ClassGetMethods(class_name)
+        n = Array.Size(methods)
+        i = 0
+        WhileLoop LessThan(i, n) {
+            m = Array.Get(methods, i)
+            IfCondition EqualTo(AIMacro.UnittestIsTestName(m), 1) ThenBlock: {
+                obj = OOP.ObjectNew(class_name)
+                empty = AIMacro.EmptyList()
+                IfCondition EqualTo(OOP.MethodExists(obj, "setUp"), 1) ThenBlock: {
+                    OOP.MethodCall(obj, "setUp", empty)
+                }
+                UnittestState.runs = Add(UnittestState.runs, 1)
+                PrintMessage("  ")
+                PrintString(class_name)
+                PrintMessage(".")
+                PrintString(m)
+                PrintMessage("\n")
+                AIMacro.ExcEnter()
+                OOP.MethodCall(obj, m, empty)
+                IfCondition EqualTo(AIMacro.ExcPending(), 1) ThenBlock: {
+                    IfCondition NotEqual(AIMacro.ExcKind(), 8) ThenBlock: {
+                        PrintMessage("ERROR: ")
+                        PrintString(AIMacro.ExcMsg())
+                        PrintMessage("\n")
+                        UnittestState.fails = Add(UnittestState.fails, 1)
+                    }
+                    AIMacro.ExcClear()
+                }
+                AIMacro.ExcLeave()
+                IfCondition EqualTo(OOP.MethodExists(obj, "tearDown"), 1) ThenBlock: {
+                    OOP.MethodCall(obj, "tearDown", empty)
+                }
+            }
+            i = Add(i, 1)
+        }
+        ReturnValue(1)
+    }
+}
+
+Function.AIMacro.UnittestDone {
+    Output: Integer
+    Body: {
+        PrintMessage("unittest: ran ")
+        PrintString(NumberToString(UnittestState.runs))
+        PrintMessage(" tests, ")
+        PrintString(NumberToString(UnittestState.fails))
+        PrintMessage(" failed\n")
+        IfCondition And(GreaterThan(UnittestState.scheduled, 0), EqualTo(UnittestState.runs, 0)) ThenBlock: {
+            PrintMessage("unittest: TestCase scheduled but 0 tests ran\n")
+            ProcessExit(1)
+        }
+        IfCondition GreaterThan(UnittestState.fails, 0) ThenBlock: {
+            ProcessExit(1)
+        }
+        ReturnValue(0)
+    }
+}

@@ -266,11 +266,20 @@ Function.DictGen_SmartGet {
             ReturnValue(-999999)
         }
         IfCondition EqualTo(AIMacro.LooksLikeString(container), 1) ThenBlock: {
-            idx = AIMacro.AsIndex(key)
+            IfCondition EqualTo(AIMacro.LooksLikeString(key), 1) ThenBlock: {
+                AIMacro.RaiseKind(5, "string indices must be integers")
+                ReturnValue(0)
+            }
+            IfCondition EqualTo(Hash.IsHash(key), 1) ThenBlock: {
+                IfCondition EqualTo(StringCompare(Hash.Get(key, "__class__"), "slice"), 0) ThenBlock: {
+                    ReturnValue(AIMacro.ListSlice(container, Hash.Get(key, "start"), Hash.Get(key, "stop"), Hash.Get(key, "step")))
+                }
+            }
+            n = StringLength(container)
+            idx = AIMacro.NormIndex(key, n)
             IfCondition EqualTo(AIMacro.ExcPending(), 1) ThenBlock: {
                 ReturnValue(0)
             }
-            n = StringLength(container)
             IfCondition Or(LessThan(idx, 0), GreaterEqual(idx, n)) ThenBlock: {
                 AIMacro.RaiseKind(17, "index out of range")
                 ReturnValue(0)
@@ -286,11 +295,35 @@ Function.DictGen_SmartGet {
                 Array.Push(gargs, key)
                 ReturnValue(OOP.MethodCall(container, "__getitem__", gargs))
             }
+            wlst = Hash.Get(container, "__list__")
+            IfCondition EqualTo(Array.IsArray(wlst), 1) ThenBlock: {
+                IfCondition EqualTo(Hash.IsHash(key), 1) ThenBlock: {
+                    IfCondition EqualTo(StringCompare(Hash.Get(key, "__class__"), "slice"), 0) ThenBlock: {
+                        ReturnValue(AIMacro.ListSlice(wlst, Hash.Get(key, "start"), Hash.Get(key, "stop"), Hash.Get(key, "step")))
+                    }
+                }
+                n = Array.Size(wlst)
+                idx = AIMacro.NormIndex(key, n)
+                IfCondition Or(LessThan(idx, 0), GreaterEqual(idx, n)) ThenBlock: {
+                    AIMacro.RaiseKind(17, "index out of range")
+                    ReturnValue(0)
+                }
+                ReturnValue(Array.Get(wlst, idx))
+            }
             ReturnValue(Hash.Get(container, DictGen_HashKey(key)))
         }
         
         is_array = Array.IsArray(container)
         IfCondition EqualTo(is_array, 1) ThenBlock: {
+            IfCondition EqualTo(AIMacro.LooksLikeString(key), 1) ThenBlock: {
+                AIMacro.RaiseKind(5, "list indices must be integers")
+                ReturnValue(0)
+            }
+            IfCondition EqualTo(Hash.IsHash(key), 1) ThenBlock: {
+                IfCondition EqualTo(StringCompare(Hash.Get(key, "__class__"), "slice"), 0) ThenBlock: {
+                    ReturnValue(AIMacro.ListSlice(container, Hash.Get(key, "start"), Hash.Get(key, "stop"), Hash.Get(key, "step")))
+                }
+            }
             n = Array.Size(container)
             idx = AIMacro.NormIndex(key, n)
             IfCondition Or(LessThan(idx, 0), GreaterEqual(idx, n)) ThenBlock: {
@@ -300,8 +333,11 @@ Function.DictGen_SmartGet {
             ReturnValue(Array.Get(container, idx))
         }
         IfCondition EqualTo(AIMacro.LooksLikeString(container), 1) ThenBlock: {
-            idx = AIMacro.AsIndex(key)
             n = StringLength(container)
+            idx = AIMacro.NormIndex(key, n)
+            IfCondition EqualTo(AIMacro.ExcPending(), 1) ThenBlock: {
+                ReturnValue(0)
+            }
             IfCondition Or(LessThan(idx, 0), GreaterEqual(idx, n)) ThenBlock: {
                 AIMacro.RaiseKind(17, "index out of range")
                 ReturnValue(0)

@@ -8,6 +8,7 @@
 // Licensed under the Sean Collins Software License (SCSL v1.0).
 
 LibraryImport.Array
+LibraryImport.Hash
 
 // =============================================================================
 // TYPE IDS - Use these with isinstance()
@@ -205,6 +206,14 @@ Function.Types.IsInt {
         IfCondition EqualTo(is_list, 1) ThenBlock: {
             ReturnValue(0)
         }
+        IfCondition EqualTo(Types.CanDeref(value), 1) ThenBlock: {
+            IfCondition EqualTo(Hash.IsHash(value), 1) ThenBlock: {
+                ReturnValue(0)
+            }
+            IfCondition EqualTo(Types.IsBigInt(value), 1) ThenBlock: {
+                ReturnValue(1)
+            }
+        }
         
         // Check if it looks like a string
         first = GetByte(value, 0)
@@ -215,8 +224,7 @@ Function.Types.IsInt {
             ReturnValue(0)  // Printable = string
         }
         
-        // Doesn't look like string or list - probably large integer
-        ReturnValue(1)
+        ReturnValue(0)
     }
 }
 

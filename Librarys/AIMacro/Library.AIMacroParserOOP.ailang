@@ -517,6 +517,7 @@ Function.Parse_MethodParams {
             Parse_Advance()
             param = Parse_MethodParam()
             IfCondition NotEqual(param, 0) ThenBlock: {
+                ArraySet(param, 4, 2)
                 Array.Push(params, param)
             }
         } ElseBlock: {
@@ -525,6 +526,7 @@ Function.Parse_MethodParams {
             IfCondition EqualTo(Parse_Check(Token.IDENTIFIER), 1) ThenBlock: {
                 param = Parse_MethodParam()
                 IfCondition NotEqual(param, 0) ThenBlock: {
+                    ArraySet(param, 4, 1)
                     Array.Push(params, param)
                 }
             }
@@ -557,6 +559,7 @@ Function.Parse_MethodParams {
                 Parse_Advance()
                 param = Parse_MethodParam()
                 IfCondition NotEqual(param, 0) ThenBlock: {
+                    ArraySet(param, 4, 2)
                     Array.Push(params, param)
                 }
                 ContinueLoop
@@ -572,6 +575,7 @@ Function.Parse_MethodParams {
                 IfCondition EqualTo(Parse_Check(Token.IDENTIFIER), 1) ThenBlock: {
                     param = Parse_MethodParam()
                     IfCondition NotEqual(param, 0) ThenBlock: {
+                        ArraySet(param, 4, 1)
                         Array.Push(params, param)
                     }
                     ContinueLoop
@@ -613,13 +617,15 @@ Function.Parse_MethodParam {
             default_val = Parse_Expr()
         }
         
-        // Build param node [name, type, default]
-        param = ArrayCreate(4)
+        // Build param node [name, type, default, name, kind]
+        // kind: 0=positional, 1=*args, 2=**kwargs
+        param = ArrayCreate(5)
         ArraySet(param, 0, name)
         ArraySet(param, 1, param_type)
         ArraySet(param, 2, default_val)
         // Slot 3 reserved for "name" field access in AST_GetField
         ArraySet(param, 3, name)
+        ArraySet(param, 4, 0)
         
         ReturnValue(param)
     }

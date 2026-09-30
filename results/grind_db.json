@@ -549,12 +549,9 @@
     },
     "test_binop.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_binop.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": -11,
-      "err": "",
-      "out": "  RatTestCase.test_gcd\n  RatTestCase.test_constructor\nERROR: zero denominator\n  RatTestCase.test_add\n",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_binop.py",
       "updated": "2026-09-29"
     },
@@ -1005,9 +1002,9 @@
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_compare.py",
       "status": "fail",
       "stage": "run",
-      "rc": -11,
+      "rc": 1,
       "err": "",
-      "out": "risons\n  ComparisonSimpleTest.test_id_comparisons\n  ComparisonSimpleTest.test_ne_defaults_to_not_eq\nFAIL: assertIs\nFAIL: assertIs\n  ComparisonSimpleTest.test_ne_high_priority\nFAIL: assertEqual\n  ComparisonSimpleTest.test_ne_low_priority\nFAIL: assertEqual\n  ComparisonSimpleTest.test_other_delegation\n",
+      "out": "  ComparisonSimpleTest.test_comparisons\n  ComparisonSimpleTest.test_id_comparisons\n  ComparisonSimpleTest.test_ne_defaults_to_not_eq\n  ComparisonSimpleTest.test_ne_high_priority\n  ComparisonSimpleTest.test_ne_low_priority\n  ComparisonSimpleTest.test_other_delegation\n  ComparisonSimpleTest.test_issue_1393\n  ComparisonFullTest.test_objects\n  ComparisonFullTest.test_comp_classes_same\nFAIL: assertEqual\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\n  ComparisonFullTest.test_comp_classes_different\nFAIL: assertEqual\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\n  ComparisonFullTest.test_str_subclass\nERROR: not supported\n  ComparisonFullTest.test_numbers\nFAIL: assertEqual\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\n  ComparisonFullTest.test_sequences\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\n  ComparisonFullTest.test_bytes\nFAIL: assertEqual\n  ComparisonFullTest.test_sets\n  ComparisonFullTest.test_mappings\nFAIL: assertEqual\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\nunittest: ran 16 tests, 100 failed\n",
       "tags": [],
       "key": "test_compare.py",
       "updated": "2026-09-29"
@@ -2737,7 +2734,7 @@
       "stage": "run",
       "rc": -11,
       "err": "",
-      "out": "istTestCase.test_setdelitem\n  ListTestCase.test_inplace_repeat\n  TupleTestCase.test_index\n  TupleTestCase.test_slice\n  TupleTestCase.test_slice_bug7532\n  TupleTestCase.test_repeat\n  TupleTestCase.test_wrappers\n  TupleTestCase.test_subclasses\n  TupleTestCase.test_error\n  ByteArrayTestCase.test_index\n",
+      "out": "  BaseTestCase.test_basic\n  BaseTestCase.test_slice\n  BaseTestCase.test_wrappers\n  BaseTestCase.test_subclasses\nFAIL: assertEqual\n  BaseTestCase.test_error\n  BaseTestCase.test_int_subclass_with_index\nFAIL: assertEqual\nFAIL: assertIs\n  BaseTestCase.test_index_returns_int_subclass\nFAIL: assertEqual\n  ListTestCase.test_index\n  ListTestCase.test_slice\n  ListTestCase.test_slice_bug7532\n  ListTestCase.test_repeat\n  ListTestCase.test_wrappers\n  ListTestCase.test_subclasses\n  ListTestCase.test_error\n  ListTestCase.test_setdelitem\n  ListTestCase.test_inplace_repeat\n  TupleTestCase.test_index\n  TupleTestCase.test_slice\n  TupleTestCase.test_slice_bug7532\n  TupleTestCase.test_repeat\n  TupleTestCase.test_wrappers\n  TupleTestCase.test_subclasses\n  TupleTestCase.test_error\n  ByteArrayTestCase.test_index\nFAIL: assertEqual\n  ByteArrayTestCase.test_slice\n  ByteArrayTestCase.test_slice_bug7532\nFAIL: assertEqual\n  ByteArrayTestCase.test_repeat\nFAIL: assertEqual\n  ByteArrayTestCase.test_wrappers\nFAIL: assertEqual\n  ByteArrayTestCase.test_subclasses\n  ByteArrayTestCase.test_error\n  BytesTestCase.test_index\n",
       "tags": [],
       "key": "test_index.py",
       "updated": "2026-09-29"
@@ -3406,12 +3403,9 @@
     },
     "test_operator.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_operator.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": 1,
-      "err": "",
-      "out": "RROR: index out of range\n  PyOperatorTestCase.test_inplace\n  PyOperatorTestCase.test_length_hint\nFAIL: assertEqual\nFAIL: assertRaises\nFAIL: assertRaises\nFAIL: assertRaises\n  PyOperatorTestCase.test_call\nFAIL: assertEqual\n  PyOperatorTestCase.test_dunder_is_original\nunittest: ran 41 tests, 57 failed\n",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_operator.py",
       "updated": "2026-09-29"
     },
@@ -4371,10 +4365,10 @@
     "test_string.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_string.py",
       "status": "fail",
-      "stage": "run",
+      "stage": "compile",
       "rc": -11,
-      "err": "",
-      "out": "nversion_specifiers\nERROR: arg\n  ModuleTest.test_name_lookup\nFAIL: assertEqual\nFAIL: assertRaises\n  ModuleTest.test_index_lookup\nFAIL: assertRaises\n  ModuleTest.test_override_get_value\nERROR: greeting\n  ModuleTest.test_override_format_field\nFAIL: assertEqual\n  ModuleTest.test_override_convert_field\n",
+      "err": "Loaded: AIMacro.AIMacroString\n[IMPORT] Loaded: AIMacro.AIMacroOperator\n[IMPORT] Loaded: AIMacro.AIMacroDict\n[IMPORT] Loaded: AIMacro.AIMacroUnittest\n[IMPORT] Loaded: AIMacro.AIMacroFormat\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 864 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 24138, col 67: Expected ')' after arguments\n  In:",
+      "out": "",
       "tags": [],
       "key": "test_string.py",
       "updated": "2026-09-29"

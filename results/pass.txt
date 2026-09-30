@@ -1,3 +1,4 @@
+test_binop.py
 test_bool.py
 test_cmd.py
 test_contains.py
@@ -19,6 +20,7 @@ test_keyword.py
 test_list.py
 test_longexp.py
 test_openpty.py
+test_operator.py
 test_smtpnet.py
 test_startfile.py
 test_sundry.py

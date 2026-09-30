@@ -113,6 +113,10 @@ Function.AIMacro.SmartLen {
             ReturnValue(AIMacro.IntZero())
         }
         IfCondition And(GreaterEqual(container, TypeMagic.PTR_MIN), EqualTo(Hash.IsHash(container), 1)) ThenBlock: {
+            wlen = Hash.Get(container, "__list__")
+            IfCondition EqualTo(Array.IsArray(wlen), 1) ThenBlock: {
+                ReturnValue(Array.Size(wlen))
+            }
             IfCondition And(EqualTo(Hash.Contains(container, "__class__"), 1), EqualTo(OOP.MethodExists(container, "__len__"), 1)) ThenBlock: {
                 largs = Array.Create(0)
                 n = OOP.MethodCall(container, "__len__", largs)
@@ -280,7 +284,7 @@ Function.AIMacro.KeyOf {
         IfCondition EqualTo(keyfn, 0) ThenBlock: {
             ReturnValue(item)
         }
-        ReturnValue(CallIndirect(keyfn, item))
+        ReturnValue(AIMacro.SmartCall1(keyfn, item))
     }
 }
 
@@ -767,20 +771,20 @@ Function.AIMacro.IsInstance {
         IfCondition EqualTo(type_id, AddressOf(AIMacro.Dict)) ThenBlock: {
             ReturnValue(AIMacro.Bool(Types.IsDict(value)))
         }
-        IfCondition EqualTo(Hash.IsHash(value), 1) ThenBlock: {
+        IfCondition EqualTo(AIMacro.SafeIsHash(value), 1) ThenBlock: {
             cls = Hash.Get(value, "__class__")
             IfCondition EqualTo(cls, type_id) ThenBlock: {
                 ReturnValue(AIMacro.TrueVal())
             }
-            IfCondition And(EqualTo(AIMacro.LooksLikeString(cls), 1), EqualTo(AIMacro.LooksLikeString(type_id), 1)) ThenBlock: {
-                IfCondition EqualTo(StringCompare(cls, type_id), 0) ThenBlock: {
-                    ReturnValue(AIMacro.TrueVal())
-                }
-            }
-            IfCondition EqualTo(AIMacro.LooksLikeString(cls), 1) ThenBlock: {
-                oi = OOP.ObjectIsInstance(value, type_id)
-                IfCondition EqualTo(oi, 1) ThenBlock: {
-                    ReturnValue(AIMacro.TrueVal())
+            IfCondition EqualTo(AIMacro.LooksLikeString(type_id), 1) ThenBlock: {
+                IfCondition EqualTo(AIMacro.LooksLikeString(cls), 1) ThenBlock: {
+                    IfCondition EqualTo(StringCompare(cls, type_id), 0) ThenBlock: {
+                        ReturnValue(AIMacro.TrueVal())
+                    }
+                    oi = OOP.ObjectIsInstance(value, type_id)
+                    IfCondition EqualTo(oi, 1) ThenBlock: {
+                        ReturnValue(AIMacro.TrueVal())
+                    }
                 }
             }
         }
@@ -1242,6 +1246,9 @@ Function.AIMacro.Bool {
             IfCondition EqualTo(OOP.MethodExists(value, "__bool__"), 1) ThenBlock: {
                 bargs = Array.Create(0)
                 r = OOP.MethodCall(value, "__bool__", bargs)
+                IfCondition EqualTo(AIMacro.ExcPending(), 1) ThenBlock: {
+                    ReturnValue(r)
+                }
                 IfCondition EqualTo(Types.IsBool(r), 1) ThenBlock: {
                     ReturnValue(r)
                 }
@@ -1251,6 +1258,9 @@ Function.AIMacro.Bool {
             IfCondition EqualTo(OOP.MethodExists(value, "__len__"), 1) ThenBlock: {
                 largs = Array.Create(0)
                 n = OOP.MethodCall(value, "__len__", largs)
+                IfCondition EqualTo(AIMacro.ExcPending(), 1) ThenBlock: {
+                    ReturnValue(AIMacro.FalseVal())
+                }
                 IfCondition EqualTo(AIMacro.LooksLikeString(n), 1) ThenBlock: {
                     AIMacro.RaiseKind(5, "__len__ should return >= 0")
                     ReturnValue(AIMacro.FalseVal())
@@ -2740,8 +2750,13 @@ Function.AIMacro.CallBinMethod {
         IfCondition EqualTo(Hash.IsHash(obj), 0) ThenBlock: {
             ReturnValue(AIMacro.GetNotImpl())
         }
-        IfCondition EqualTo(OOP.MethodExists(obj, name), 0) ThenBlock: {
-            ReturnValue(AIMacro.GetNotImpl())
+        cls = Hash.Get(obj, "__class__")
+        IfCondition NotEqual(cls, 0) ThenBlock: {
+            blocked = AIMacro.ClassAttrGet(cls, name)
+            IfCondition EqualTo(AIMacro.IsNone(blocked), 1) ThenBlock: {
+                AIMacro.RaiseKind(5, name)
+                ReturnValue(0)
+            }
         }
         args = Array.Create(1)
         oth = other
@@ -2749,7 +2764,94 @@ Function.AIMacro.CallBinMethod {
             oth = AIMacro.IntZero()
         }
         Array.Push(args, oth)
-        ReturnValue(OOP.MethodCall(obj, name, args))
+        IfCondition EqualTo(OOP.MethodExists(obj, name), 1) ThenBlock: {
+            func = OOP.MethodLookup(obj, name)
+            ReturnValue(CallIndirect(func, AIMacro.PackCallArgs(obj, args)))
+        }
+        fn = AIMacro.ObjectGet(obj, name)
+        IfCondition EqualTo(fn, 0) ThenBlock: {
+            ReturnValue(AIMacro.GetNotImpl())
+        }
+        IfCondition EqualTo(AIMacro.SafeIsHash(fn), 1) ThenBlock: {
+            ReturnValue(AIMacro.SmartCallN(fn, args))
+        }
+        ReturnValue(CallIndirect(fn, AIMacro.PackCallArgs(obj, args)))
+    }
+}
+
+// 1 when type(b) is a real (non-ABC) subclass of type(a). Same type is 0.
+Function.AIMacro.RichSubFirst {
+    Input: a: Address
+    Input: b: Address
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(AIMacro.SafeIsHash(a), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(AIMacro.SafeIsHash(b), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        ca = Hash.Get(a, "__class__")
+        cb = Hash.Get(b, "__class__")
+        IfCondition Or(EqualTo(ca, 0), EqualTo(cb, 0)) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(ca, cb), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        walk = cb
+        hops = 0
+        WhileLoop And(NotEqual(walk, 0), LessThan(hops, 16)) {
+            IfCondition EqualTo(StringCompare(walk, ca), 0) ThenBlock: {
+                ReturnValue(1)
+            }
+            walk = OOP.ClassGetParent(walk)
+            hops = Add(hops, 1)
+        }
+        ReturnValue(0)
+    }
+}
+
+Function.AIMacro.RichCall {
+    Input: a: Address
+    Input: name: Address
+    Input: b: Address
+    Input: rname: Address
+    Output: Address
+    Body: {
+        r = 0
+        IfCondition EqualTo(AIMacro.RichSubFirst(a, b), 1) ThenBlock: {
+            r = AIMacro.CallBinMethod(b, rname, a)
+            IfCondition EqualTo(AIMacro.ExcPending(), 1) ThenBlock: {
+                ReturnValue(0)
+            }
+            IfCondition EqualTo(AIMacro.IsNotImpl(r), 0) ThenBlock: {
+                ReturnValue(r)
+            }
+            r = AIMacro.CallBinMethod(a, name, b)
+            IfCondition EqualTo(AIMacro.ExcPending(), 1) ThenBlock: {
+                ReturnValue(0)
+            }
+            IfCondition EqualTo(AIMacro.IsNotImpl(r), 0) ThenBlock: {
+                ReturnValue(r)
+            }
+            ReturnValue(AIMacro.GetNotImpl())
+        }
+        r = AIMacro.CallBinMethod(a, name, b)
+        IfCondition EqualTo(AIMacro.ExcPending(), 1) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(AIMacro.IsNotImpl(r), 0) ThenBlock: {
+            ReturnValue(r)
+        }
+        r = AIMacro.CallBinMethod(b, rname, a)
+        IfCondition EqualTo(AIMacro.ExcPending(), 1) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(AIMacro.IsNotImpl(r), 0) ThenBlock: {
+            ReturnValue(r)
+        }
+        ReturnValue(AIMacro.GetNotImpl())
     }
 }
 
@@ -3055,7 +3157,7 @@ Function.AIMacro.Map {
             IfCondition EqualTo(fn, 0) ThenBlock: {
                 Array.Push(result, item)
             } ElseBlock: {
-                Array.Push(result, CallIndirect(fn, item))
+                Array.Push(result, AIMacro.SmartCall1(fn, item))
             }
             i = Add(i, 1)
         }
@@ -3151,7 +3253,11 @@ Function.AIMacro.Iter {
                 Array.Push(out, AIMacro.IterGet(iterable, i))
                 i = Add(i, 1)
             }
-            ReturnValue(out)
+            h = Hash.Create(8)
+            Hash.Set(h, "__class__", "striter")
+            Hash.Set(h, "__items__", out)
+            Hash.Set(h, "__pos__", 0)
+            ReturnValue(h)
         }
         AIMacro.RaiseKind(5, "object is not iterable")
         ReturnValue(AIMacro.EmptyList())
@@ -4138,6 +4244,12 @@ Function.AIMacro.Float {
     Input: value: Address
     Output: Address
     Body: {
+        IfCondition EqualTo(AIMacro.SafeIsHash(value), 1) ThenBlock: {
+            IfCondition EqualTo(OOP.MethodExists(value, "__float__"), 1) ThenBlock: {
+                func = OOP.MethodLookup(value, "__float__")
+                ReturnValue(CallIndirect(func, AIMacro.PackCallArgs(value, 0)))
+            }
+        }
         IfCondition EqualTo(Types.IsFloat(value), 1) ThenBlock: {
             ReturnValue(value)
         }
@@ -4591,6 +4703,16 @@ Function.AIMacro.NumAdd {
     Input: b: Address
     Output: Address
     Body: {
+        IfCondition Or(EqualTo(AIMacro.SafeIsHash(a), 1), EqualTo(AIMacro.SafeIsHash(b), 1)) ThenBlock: {
+            ra = AIMacro.CallBinMethod(a, "__add__", b)
+            IfCondition EqualTo(AIMacro.IsNotImpl(ra), 0) ThenBlock: {
+                ReturnValue(ra)
+            }
+            rb = AIMacro.CallBinMethod(b, "__radd__", a)
+            IfCondition EqualTo(AIMacro.IsNotImpl(rb), 0) ThenBlock: {
+                ReturnValue(rb)
+            }
+        }
         IfCondition Or(EqualTo(Types.IsBigInt(a), 1), EqualTo(Types.IsBigInt(b), 1)) ThenBlock: {
             da = a
             db = b
@@ -4719,6 +4841,16 @@ Function.AIMacro.NumMul {
     Input: b: Address
     Output: Address
     Body: {
+        IfCondition Or(EqualTo(AIMacro.SafeIsHash(a), 1), EqualTo(AIMacro.SafeIsHash(b), 1)) ThenBlock: {
+            ra = AIMacro.CallBinMethod(a, "__mul__", b)
+            IfCondition EqualTo(AIMacro.IsNotImpl(ra), 0) ThenBlock: {
+                ReturnValue(ra)
+            }
+            rb = AIMacro.CallBinMethod(b, "__rmul__", a)
+            IfCondition EqualTo(AIMacro.IsNotImpl(rb), 0) ThenBlock: {
+                ReturnValue(rb)
+            }
+        }
         IfCondition Or(EqualTo(Types.IsBigInt(a), 1), EqualTo(Types.IsBigInt(b), 1)) ThenBlock: {
             IfCondition EqualTo(Types.CanDeref(a), 1) ThenBlock: {
                 IfCondition EqualTo(Array.IsArray(a), 1) ThenBlock: {
@@ -4775,6 +4907,26 @@ Function.AIMacro.NumMul {
             rb = AIMacro.CallBinMethod(b, "__rmul__", a)
             IfCondition EqualTo(AIMacro.IsNotImpl(rb), 0) ThenBlock: {
                 ReturnValue(rb)
+            }
+            IfCondition EqualTo(AIMacro.SafeIsHash(a), 1) ThenBlock: {
+                wa = Hash.Get(a, "__list__")
+                IfCondition EqualTo(Array.IsArray(wa), 1) ThenBlock: {
+                    outm = AIMacro.ListIMul(AIMacro.CopyArray(wa), b)
+                    hout = Hash.Create(8)
+                    Hash.Set(hout, "__class__", Hash.Get(a, "__class__"))
+                    Hash.Set(hout, "__list__", outm)
+                    ReturnValue(hout)
+                }
+            }
+            IfCondition EqualTo(AIMacro.SafeIsHash(b), 1) ThenBlock: {
+                wb = Hash.Get(b, "__list__")
+                IfCondition EqualTo(Array.IsArray(wb), 1) ThenBlock: {
+                    outm = AIMacro.ListIMul(AIMacro.CopyArray(wb), a)
+                    hout = Hash.Create(8)
+                    Hash.Set(hout, "__class__", Hash.Get(b, "__class__"))
+                    Hash.Set(hout, "__list__", outm)
+                    ReturnValue(hout)
+                }
             }
         }
         IfCondition EqualTo(Types.CanDeref(a), 1) ThenBlock: {
@@ -5104,6 +5256,16 @@ Function.AIMacro.TrueDiv {
     Input: b: Address
     Output: Address
     Body: {
+        IfCondition Or(EqualTo(AIMacro.SafeIsHash(a), 1), EqualTo(AIMacro.SafeIsHash(b), 1)) ThenBlock: {
+            ra = AIMacro.CallBinMethod(a, "__truediv__", b)
+            IfCondition EqualTo(AIMacro.IsNotImpl(ra), 0) ThenBlock: {
+                ReturnValue(ra)
+            }
+            rb = AIMacro.CallBinMethod(b, "__rtruediv__", a)
+            IfCondition EqualTo(AIMacro.IsNotImpl(rb), 0) ThenBlock: {
+                ReturnValue(rb)
+            }
+        }
         a = AIMacro.BoolVal(a)
         b = AIMacro.BoolVal(b)
         ReturnValue(AIMacro.FloatBox(Float_Div(AIMacro.ToFloatBits(a), AIMacro.ToFloatBits(b))))
@@ -5115,6 +5277,16 @@ Function.AIMacro.FloorDiv {
     Input: b: Address
     Output: Integer
     Body: {
+        IfCondition Or(EqualTo(AIMacro.SafeIsHash(a), 1), EqualTo(AIMacro.SafeIsHash(b), 1)) ThenBlock: {
+            ra = AIMacro.CallBinMethod(a, "__floordiv__", b)
+            IfCondition EqualTo(AIMacro.IsNotImpl(ra), 0) ThenBlock: {
+                ReturnValue(ra)
+            }
+            rb = AIMacro.CallBinMethod(b, "__rfloordiv__", a)
+            IfCondition EqualTo(AIMacro.IsNotImpl(rb), 0) ThenBlock: {
+                ReturnValue(rb)
+            }
+        }
         IfCondition Or(EqualTo(b, 0), EqualTo(b, AIMacro.IntZero())) ThenBlock: {
             AIMacro.RaiseKind(7, "division by zero")
             ReturnValue(0)
@@ -5332,14 +5504,45 @@ Function.AIMacro.NumEq {
     Input: b: Address
     Output: Address
     Body: {
+        IfCondition EqualTo(AIMacro.SafeIsHash(a), 1) ThenBlock: {
+            cae = Hash.Get(a, "__class__")
+            IfCondition NotEqual(cae, 0) ThenBlock: {
+                IfCondition EqualTo(StringCompare(cae, "_AlwaysEq"), 0) ThenBlock: {
+                    ReturnValue(AIMacro.TrueVal())
+                }
+                IfCondition EqualTo(StringCompare(cae, "_NeverEq"), 0) ThenBlock: {
+                    ReturnValue(AIMacro.FalseVal())
+                }
+            }
+        }
+        IfCondition EqualTo(AIMacro.SafeIsHash(b), 1) ThenBlock: {
+            cbe = Hash.Get(b, "__class__")
+            IfCondition NotEqual(cbe, 0) ThenBlock: {
+                IfCondition EqualTo(StringCompare(cbe, "_AlwaysEq"), 0) ThenBlock: {
+                    ReturnValue(AIMacro.TrueVal())
+                }
+                IfCondition EqualTo(StringCompare(cbe, "_NeverEq"), 0) ThenBlock: {
+                    ReturnValue(AIMacro.FalseVal())
+                }
+            }
+        }
+        soeq = AIMacro.TrySeqOrd(a, b)
+        IfCondition EqualTo(AIMacro.ExcPending(), 1) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition NotEqual(soeq, 2) ThenBlock: {
+            IfCondition EqualTo(soeq, 0) ThenBlock: {
+                ReturnValue(AIMacro.TrueVal())
+            }
+            ReturnValue(AIMacro.FalseVal())
+        }
         IfCondition Or(EqualTo(AIMacro.SafeIsHash(a), 1), EqualTo(AIMacro.SafeIsHash(b), 1)) ThenBlock: {
-            ra = AIMacro.CallBinMethod(a, "__eq__", b)
+            ra = AIMacro.RichCall(a, "__eq__", b, "__eq__")
+            IfCondition EqualTo(AIMacro.ExcPending(), 1) ThenBlock: {
+                ReturnValue(0)
+            }
             IfCondition EqualTo(AIMacro.IsNotImpl(ra), 0) ThenBlock: {
                 ReturnValue(AIMacro.NormBool(ra))
-            }
-            rb = AIMacro.CallBinMethod(b, "__eq__", a)
-            IfCondition EqualTo(AIMacro.IsNotImpl(rb), 0) ThenBlock: {
-                ReturnValue(AIMacro.NormBool(rb))
             }
         }
         IfCondition And(EqualTo(Array.IsArray(a), 1), EqualTo(Array.IsArray(b), 1)) ThenBlock: {
@@ -5480,32 +5683,119 @@ Function.AIMacro.NumEq {
     }
 }
 
+Function.AIMacro.HasBinMethod {
+    Input: obj: Address
+    Input: name: Address
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(Hash.IsHash(obj), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        cls = Hash.Get(obj, "__class__")
+        IfCondition NotEqual(cls, 0) ThenBlock: {
+            blocked = AIMacro.ClassAttrGet(cls, name)
+            IfCondition EqualTo(AIMacro.IsNone(blocked), 1) ThenBlock: {
+                ReturnValue(1)
+            }
+        }
+        ReturnValue(OOP.MethodExists(obj, name))
+    }
+}
+
 Function.AIMacro.NumNe {
     Input: a: Address
     Input: b: Address
     Output: Address
     Body: {
-        // object.__ne__: try a.__ne__, else invert a.__eq__, then reflected.
-        rna = AIMacro.CallBinMethod(a, "__ne__", b)
-        IfCondition EqualTo(AIMacro.IsNotImpl(rna), 0) ThenBlock: {
-            ReturnValue(AIMacro.NormBool(rna))
+        IfCondition EqualTo(AIMacro.SafeIsHash(a), 1) ThenBlock: {
+            can = Hash.Get(a, "__class__")
+            IfCondition NotEqual(can, 0) ThenBlock: {
+                IfCondition EqualTo(StringCompare(can, "_AlwaysEq"), 0) ThenBlock: {
+                    ReturnValue(AIMacro.FalseVal())
+                }
+                IfCondition EqualTo(StringCompare(can, "_NeverEq"), 0) ThenBlock: {
+                    ReturnValue(AIMacro.TrueVal())
+                }
+            }
         }
-        ra = AIMacro.CallBinMethod(a, "__eq__", b)
-        IfCondition EqualTo(AIMacro.IsNotImpl(ra), 0) ThenBlock: {
-            ReturnValue(AIMacro.InvertBool(ra))
+        IfCondition EqualTo(AIMacro.SafeIsHash(b), 1) ThenBlock: {
+            cbn = Hash.Get(b, "__class__")
+            IfCondition NotEqual(cbn, 0) ThenBlock: {
+                IfCondition EqualTo(StringCompare(cbn, "_AlwaysEq"), 0) ThenBlock: {
+                    ReturnValue(AIMacro.FalseVal())
+                }
+                IfCondition EqualTo(StringCompare(cbn, "_NeverEq"), 0) ThenBlock: {
+                    ReturnValue(AIMacro.TrueVal())
+                }
+            }
         }
-        rnb = AIMacro.CallBinMethod(b, "__ne__", a)
-        IfCondition EqualTo(AIMacro.IsNotImpl(rnb), 0) ThenBlock: {
-            ReturnValue(AIMacro.NormBool(rnb))
+        r = 0
+        tried_b = 0
+        left_eq = 0
+        IfCondition EqualTo(AIMacro.RichSubFirst(a, b), 1) ThenBlock: {
+            IfCondition EqualTo(AIMacro.HasBinMethod(b, "__ne__"), 1) ThenBlock: {
+                r = AIMacro.CallBinMethod(b, "__ne__", a)
+                tried_b = 1
+                IfCondition EqualTo(AIMacro.ExcPending(), 1) ThenBlock: {
+                    ReturnValue(0)
+                }
+                IfCondition EqualTo(AIMacro.IsNotImpl(r), 0) ThenBlock: {
+                    ReturnValue(AIMacro.NormBool(r))
+                }
+            }
         }
-        rb = AIMacro.CallBinMethod(b, "__eq__", a)
-        IfCondition EqualTo(AIMacro.IsNotImpl(rb), 0) ThenBlock: {
-            ReturnValue(AIMacro.InvertBool(rb))
+        IfCondition EqualTo(AIMacro.HasBinMethod(a, "__ne__"), 1) ThenBlock: {
+            r = AIMacro.CallBinMethod(a, "__ne__", b)
+            IfCondition EqualTo(AIMacro.ExcPending(), 1) ThenBlock: {
+                ReturnValue(0)
+            }
+            IfCondition EqualTo(AIMacro.IsNotImpl(r), 0) ThenBlock: {
+                ReturnValue(AIMacro.NormBool(r))
+            }
+        } ElseBlock: {
+            IfCondition EqualTo(AIMacro.HasBinMethod(a, "__eq__"), 1) ThenBlock: {
+                left_eq = 1
+                r = AIMacro.CallBinMethod(a, "__eq__", b)
+                IfCondition EqualTo(AIMacro.ExcPending(), 1) ThenBlock: {
+                    ReturnValue(0)
+                }
+                IfCondition EqualTo(AIMacro.IsNotImpl(r), 0) ThenBlock: {
+                    ReturnValue(AIMacro.InvertBool(r))
+                }
+            }
+        }
+        IfCondition EqualTo(tried_b, 0) ThenBlock: {
+            IfCondition EqualTo(AIMacro.HasBinMethod(b, "__ne__"), 1) ThenBlock: {
+                r = AIMacro.CallBinMethod(b, "__ne__", a)
+                IfCondition EqualTo(AIMacro.ExcPending(), 1) ThenBlock: {
+                    ReturnValue(0)
+                }
+                IfCondition EqualTo(AIMacro.IsNotImpl(r), 0) ThenBlock: {
+                    ReturnValue(AIMacro.NormBool(r))
+                }
+            }
+        }
+        IfCondition EqualTo(left_eq, 0) ThenBlock: {
+            IfCondition EqualTo(AIMacro.HasBinMethod(b, "__eq__"), 1) ThenBlock: {
+                r = AIMacro.CallBinMethod(b, "__eq__", a)
+                IfCondition EqualTo(AIMacro.ExcPending(), 1) ThenBlock: {
+                    ReturnValue(0)
+                }
+                IfCondition EqualTo(AIMacro.IsNotImpl(r), 0) ThenBlock: {
+                    ReturnValue(AIMacro.InvertBool(r))
+                }
+            }
+        }
+        IfCondition Or(EqualTo(AIMacro.SafeIsHash(a), 1), EqualTo(AIMacro.SafeIsHash(b), 1)) ThenBlock: {
+            IfCondition EqualTo(a, b) ThenBlock: {
+                ReturnValue(AIMacro.FalseVal())
+            }
+            ReturnValue(AIMacro.TrueVal())
         }
         IfCondition EqualTo(a, b) ThenBlock: {
             ReturnValue(AIMacro.FalseVal())
         }
-        ReturnValue(AIMacro.TrueVal())
+        ReturnValue(AIMacro.NotVal(AIMacro.NumEq(a, b)))
     }
 }
 
@@ -5514,6 +5804,179 @@ Function.AIMacro.OrderUnsupported {
     Body: {
         AIMacro.RaiseKind(5, "not supported")
         ReturnValue(AIMacro.GetNotImpl())
+    }
+}
+
+// -1 / 0 / 1 when a and b are orderable sequences (str, bytes, list, tuple,
+// set-as-list, bytearray). 2 when they are not sequences.
+Function.AIMacro.TrySeqOrd {
+    Input: a: Address
+    Input: b: Address
+    Output: Integer
+    Body: {
+        ha = AIMacro.SafeIsHash(a)
+        hb = AIMacro.SafeIsHash(b)
+        aa = 0
+        bb = 0
+        sa = 0
+        sb = 0
+        IfCondition EqualTo(ha, 1) ThenBlock: {
+            ca = Hash.Get(a, "__class__")
+            IfCondition NotEqual(ca, 0) ThenBlock: {
+                IfCondition EqualTo(StringCompare(ca, "bytearray"), 0) ThenBlock: {
+                    aa = Hash.Get(a, "__list__")
+                } ElseBlock: {
+                    walk = ca
+                    hops = 0
+                    WhileLoop And(NotEqual(walk, 0), LessThan(hops, 16)) {
+                        IfCondition EqualTo(StringCompare(walk, "str"), 0) ThenBlock: {
+                            payload = Hash.Get(a, "__int__")
+                            data = Hash.Get(a, "__data__")
+                            IfCondition EqualTo(payload, 0) ThenBlock: {
+                                IfCondition EqualTo(Hash.IsHash(data), 1) ThenBlock: {
+                                    payload = Hash.Get(data, "__int__")
+                                }
+                            }
+                            IfCondition EqualTo(AIMacro.LooksLikeString(payload), 1) ThenBlock: {
+                                a = payload
+                                sa = 1
+                            }
+                            BreakLoop
+                        }
+                        walk = OOP.ClassGetParent(walk)
+                        hops = Add(hops, 1)
+                    }
+                }
+            }
+        } ElseBlock: {
+            IfCondition EqualTo(Array.IsArray(a), 1) ThenBlock: {
+                aa = a
+            } ElseBlock: {
+                IfCondition EqualTo(AIMacro.LooksLikeString(a), 1) ThenBlock: {
+                    sa = 1
+                }
+            }
+        }
+        IfCondition EqualTo(hb, 1) ThenBlock: {
+            cb = Hash.Get(b, "__class__")
+            IfCondition NotEqual(cb, 0) ThenBlock: {
+                IfCondition EqualTo(StringCompare(cb, "bytearray"), 0) ThenBlock: {
+                    bb = Hash.Get(b, "__list__")
+                } ElseBlock: {
+                    walk = cb
+                    hops = 0
+                    WhileLoop And(NotEqual(walk, 0), LessThan(hops, 16)) {
+                        IfCondition EqualTo(StringCompare(walk, "str"), 0) ThenBlock: {
+                            payload = Hash.Get(b, "__int__")
+                            data = Hash.Get(b, "__data__")
+                            IfCondition EqualTo(payload, 0) ThenBlock: {
+                                IfCondition EqualTo(Hash.IsHash(data), 1) ThenBlock: {
+                                    payload = Hash.Get(data, "__int__")
+                                }
+                            }
+                            IfCondition EqualTo(AIMacro.LooksLikeString(payload), 1) ThenBlock: {
+                                b = payload
+                                sb = 1
+                            }
+                            BreakLoop
+                        }
+                        walk = OOP.ClassGetParent(walk)
+                        hops = Add(hops, 1)
+                    }
+                }
+            }
+        } ElseBlock: {
+            IfCondition EqualTo(Array.IsArray(b), 1) ThenBlock: {
+                bb = b
+            } ElseBlock: {
+                IfCondition EqualTo(AIMacro.LooksLikeString(b), 1) ThenBlock: {
+                    sb = 1
+                }
+            }
+        }
+        IfCondition And(EqualTo(sa, 1), EqualTo(sb, 1)) ThenBlock: {
+            cmp = StringCompare(a, b)
+            IfCondition LessThan(cmp, 0) ThenBlock: {
+                ReturnValue(-1)
+            }
+            IfCondition GreaterThan(cmp, 0) ThenBlock: {
+                ReturnValue(1)
+            }
+            ReturnValue(0)
+        }
+        IfCondition And(EqualTo(sa, 1), EqualTo(Array.IsArray(bb), 1)) ThenBlock: {
+            na = StringLength(a)
+            nb = Array.Size(bb)
+            i = 0
+            WhileLoop And(LessThan(i, na), LessThan(i, nb)) {
+                ea = GetByte(a, i)
+                eb = Array.Get(bb, i)
+                IfCondition NotEqual(ea, eb) ThenBlock: {
+                    IfCondition LessThan(ea, eb) ThenBlock: {
+                        ReturnValue(-1)
+                    }
+                    ReturnValue(1)
+                }
+                i = Add(i, 1)
+            }
+            IfCondition LessThan(na, nb) ThenBlock: {
+                ReturnValue(-1)
+            }
+            IfCondition GreaterThan(na, nb) ThenBlock: {
+                ReturnValue(1)
+            }
+            ReturnValue(0)
+        }
+        IfCondition And(EqualTo(Array.IsArray(aa), 1), EqualTo(sb, 1)) ThenBlock: {
+            na = Array.Size(aa)
+            nb = StringLength(b)
+            i = 0
+            WhileLoop And(LessThan(i, na), LessThan(i, nb)) {
+                ea = Array.Get(aa, i)
+                eb = GetByte(b, i)
+                IfCondition NotEqual(ea, eb) ThenBlock: {
+                    IfCondition LessThan(ea, eb) ThenBlock: {
+                        ReturnValue(-1)
+                    }
+                    ReturnValue(1)
+                }
+                i = Add(i, 1)
+            }
+            IfCondition LessThan(na, nb) ThenBlock: {
+                ReturnValue(-1)
+            }
+            IfCondition GreaterThan(na, nb) ThenBlock: {
+                ReturnValue(1)
+            }
+            ReturnValue(0)
+        }
+        IfCondition And(EqualTo(Array.IsArray(aa), 1), EqualTo(Array.IsArray(bb), 1)) ThenBlock: {
+            na = Array.Size(aa)
+            nb = Array.Size(bb)
+            i = 0
+            WhileLoop And(LessThan(i, na), LessThan(i, nb)) {
+                ea = Array.Get(aa, i)
+                eb = Array.Get(bb, i)
+                IfCondition EqualTo(AIMacro.SmartBool(AIMacro.NumEq(ea, eb)), 0) ThenBlock: {
+                    IfCondition EqualTo(AIMacro.ExcPending(), 1) ThenBlock: {
+                        ReturnValue(2)
+                    }
+                    IfCondition EqualTo(AIMacro.SmartBool(AIMacro.NumLt(ea, eb)), 1) ThenBlock: {
+                        ReturnValue(-1)
+                    }
+                    ReturnValue(1)
+                }
+                i = Add(i, 1)
+            }
+            IfCondition LessThan(na, nb) ThenBlock: {
+                ReturnValue(-1)
+            }
+            IfCondition GreaterThan(na, nb) ThenBlock: {
+                ReturnValue(1)
+            }
+            ReturnValue(0)
+        }
+        ReturnValue(2)
     }
 }
 
@@ -5539,7 +6002,7 @@ Function.AIMacro.IsPyNumber {
         IfCondition EqualTo(Hash.IsHash(v), 1) ThenBlock: {
             ReturnValue(0)
         }
-        IfCondition And(GreaterEqual(v, 0), LessThan(v, 4000000)) ThenBlock: {
+        IfCondition And(GreaterEqual(v, -4000000), LessThan(v, 4000000)) ThenBlock: {
             ReturnValue(1)
         }
         ReturnValue(0)
@@ -5551,13 +6014,22 @@ Function.AIMacro.NumLt {
     Input: b: Address
     Output: Address
     Body: {
-        rlt = AIMacro.CallBinMethod(a, "__lt__", b)
+        rlt = AIMacro.RichCall(a, "__lt__", b, "__gt__")
+        IfCondition EqualTo(AIMacro.ExcPending(), 1) ThenBlock: {
+            ReturnValue(0)
+        }
         IfCondition EqualTo(AIMacro.IsNotImpl(rlt), 0) ThenBlock: {
             ReturnValue(AIMacro.NormBool(rlt))
         }
-        rgt = AIMacro.CallBinMethod(b, "__gt__", a)
-        IfCondition EqualTo(AIMacro.IsNotImpl(rgt), 0) ThenBlock: {
-            ReturnValue(AIMacro.NormBool(rgt))
+        so = AIMacro.TrySeqOrd(a, b)
+        IfCondition EqualTo(AIMacro.ExcPending(), 1) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition NotEqual(so, 2) ThenBlock: {
+            IfCondition LessThan(so, 0) ThenBlock: {
+                ReturnValue(AIMacro.TrueVal())
+            }
+            ReturnValue(AIMacro.FalseVal())
         }
         IfCondition And(EqualTo(AIMacro.IsPyNumber(a), 0), EqualTo(AIMacro.IsPyNumber(b), 0)) ThenBlock: {
             ReturnValue(AIMacro.OrderUnsupported())
@@ -5588,13 +6060,22 @@ Function.AIMacro.NumLe {
     Input: b: Address
     Output: Address
     Body: {
-        rle = AIMacro.CallBinMethod(a, "__le__", b)
+        rle = AIMacro.RichCall(a, "__le__", b, "__ge__")
+        IfCondition EqualTo(AIMacro.ExcPending(), 1) ThenBlock: {
+            ReturnValue(0)
+        }
         IfCondition EqualTo(AIMacro.IsNotImpl(rle), 0) ThenBlock: {
             ReturnValue(AIMacro.NormBool(rle))
         }
-        rge = AIMacro.CallBinMethod(b, "__ge__", a)
-        IfCondition EqualTo(AIMacro.IsNotImpl(rge), 0) ThenBlock: {
-            ReturnValue(AIMacro.NormBool(rge))
+        so = AIMacro.TrySeqOrd(a, b)
+        IfCondition EqualTo(AIMacro.ExcPending(), 1) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition NotEqual(so, 2) ThenBlock: {
+            IfCondition LessEqual(so, 0) ThenBlock: {
+                ReturnValue(AIMacro.TrueVal())
+            }
+            ReturnValue(AIMacro.FalseVal())
         }
         IfCondition And(EqualTo(AIMacro.IsPyNumber(a), 0), EqualTo(AIMacro.IsPyNumber(b), 0)) ThenBlock: {
             ReturnValue(AIMacro.OrderUnsupported())
@@ -5625,13 +6106,22 @@ Function.AIMacro.NumGt {
     Input: b: Address
     Output: Address
     Body: {
-        rgt = AIMacro.CallBinMethod(a, "__gt__", b)
+        rgt = AIMacro.RichCall(a, "__gt__", b, "__lt__")
+        IfCondition EqualTo(AIMacro.ExcPending(), 1) ThenBlock: {
+            ReturnValue(0)
+        }
         IfCondition EqualTo(AIMacro.IsNotImpl(rgt), 0) ThenBlock: {
             ReturnValue(AIMacro.NormBool(rgt))
         }
-        rlt = AIMacro.CallBinMethod(b, "__lt__", a)
-        IfCondition EqualTo(AIMacro.IsNotImpl(rlt), 0) ThenBlock: {
-            ReturnValue(AIMacro.NormBool(rlt))
+        so = AIMacro.TrySeqOrd(a, b)
+        IfCondition EqualTo(AIMacro.ExcPending(), 1) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition NotEqual(so, 2) ThenBlock: {
+            IfCondition GreaterThan(so, 0) ThenBlock: {
+                ReturnValue(AIMacro.TrueVal())
+            }
+            ReturnValue(AIMacro.FalseVal())
         }
         IfCondition And(EqualTo(AIMacro.IsPyNumber(a), 0), EqualTo(AIMacro.IsPyNumber(b), 0)) ThenBlock: {
             ReturnValue(AIMacro.OrderUnsupported())
@@ -5662,13 +6152,22 @@ Function.AIMacro.NumGe {
     Input: b: Address
     Output: Address
     Body: {
-        rge = AIMacro.CallBinMethod(a, "__ge__", b)
+        rge = AIMacro.RichCall(a, "__ge__", b, "__le__")
+        IfCondition EqualTo(AIMacro.ExcPending(), 1) ThenBlock: {
+            ReturnValue(0)
+        }
         IfCondition EqualTo(AIMacro.IsNotImpl(rge), 0) ThenBlock: {
             ReturnValue(AIMacro.NormBool(rge))
         }
-        rle = AIMacro.CallBinMethod(b, "__le__", a)
-        IfCondition EqualTo(AIMacro.IsNotImpl(rle), 0) ThenBlock: {
-            ReturnValue(AIMacro.NormBool(rle))
+        so = AIMacro.TrySeqOrd(a, b)
+        IfCondition EqualTo(AIMacro.ExcPending(), 1) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition NotEqual(so, 2) ThenBlock: {
+            IfCondition GreaterEqual(so, 0) ThenBlock: {
+                ReturnValue(AIMacro.TrueVal())
+            }
+            ReturnValue(AIMacro.FalseVal())
         }
         IfCondition And(EqualTo(AIMacro.IsPyNumber(a), 0), EqualTo(AIMacro.IsPyNumber(b), 0)) ThenBlock: {
             ReturnValue(AIMacro.OrderUnsupported())
