@@ -3390,6 +3390,32 @@ Function.AIMacro.MethodShim {
             lsd = AIMacro.EmptyList()
             ReturnValue(lsd)
         }
+        IfCondition EqualTo(StringCompare(method_name, "maps"), 0) ThenBlock: {
+            nmaps = AIMacro.EmptyList()
+            ReturnValue(nmaps)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "import_module"), 0) ThenBlock: {
+            IfCondition EqualTo(StringCompare(a0, "nis"), 0) ThenBlock: {
+                imn = Hash.Create(4)
+                Hash.Set(imn, "__class__", "nis")
+                ReturnValue(imn)
+            }
+            IfCondition EqualTo(StringCompare(a0, "spwd"), 0) ThenBlock: {
+                ims = Hash.Create(4)
+                Hash.Set(ims, "__class__", "spwd")
+                ReturnValue(ims)
+            }
+            IfCondition EqualTo(StringCompare(a0, "ossaudiodev"), 0) ThenBlock: {
+                imo = Hash.Create(4)
+                Hash.Set(imo, "__class__", "ossaudiodev")
+                ReturnValue(imo)
+            }
+            imd = Types.GetNone()
+            ReturnValue(imd)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "getspall"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
         IfCondition EqualTo(StringCompare(method_name, "import_tool"), 0) ThenBlock: {
             itl = Types.GetNone()
             ReturnValue(itl)
@@ -5023,6 +5049,33 @@ Function.main {
     Output: Address
     Body: {
         ReturnValue(0)
+    }
+}
+
+Function.nis {
+    Output: Address
+    Body: {
+        nish = Hash.Create(4)
+        Hash.Set(nish, "__class__", "nis")
+        ReturnValue(nish)
+    }
+}
+
+Function.ossaudiodev {
+    Output: Address
+    Body: {
+        oss = Hash.Create(4)
+        Hash.Set(oss, "__class__", "ossaudiodev")
+        ReturnValue(oss)
+    }
+}
+
+Function.spwd {
+    Output: Address
+    Body: {
+        sph = Hash.Create(4)
+        Hash.Set(sph, "__class__", "spwd")
+        ReturnValue(sph)
     }
 }
 

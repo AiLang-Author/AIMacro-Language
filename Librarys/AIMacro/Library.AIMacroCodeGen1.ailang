@@ -1228,6 +1228,21 @@ Function.Gen_EmitIdent {
             Gen_Emit("AddressOf(hash)")
             ReturnValue(0)
         }
+        cmp = StringCompare(name, "nis")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_Emit("AddressOf(nis)")
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "ossaudiodev")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_Emit("AddressOf(ossaudiodev)")
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "spwd")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_Emit("AddressOf(spwd)")
+            ReturnValue(0)
+        }
         cmp = StringCompare(name, "NEXT")
         IfCondition EqualTo(cmp, 0) ThenBlock: {
             Gen_EmitNumber(0)
