@@ -2237,6 +2237,15 @@ Function.Gen_MapBuiltin {
         cmp = StringCompare(name, "assert_python_ok")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.AssertPythonOk") }
 
+        cmp = StringCompare(name, "divmod")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("divmod") }
+
+        cmp = StringCompare(name, "delattr")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("delattr") }
+
+        cmp = StringCompare(name, "hash")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("hash") }
+
         ReturnValue(name)
     }
 }

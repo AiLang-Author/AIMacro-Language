@@ -1103,6 +1103,76 @@ Function.Gen_EmitIdent {
             Gen_EmitNumber(5)
             ReturnValue(0)
         }
+        cmp = StringCompare(name, "UnicodeError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(2)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "UnicodeEncodeError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(2)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "UnicodeDecodeError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(2)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "UnicodeTranslateError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(2)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "SystemError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(6)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "ReferenceError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(1)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "BufferError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(1)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "EnvironmentError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(3)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "ConnectionRefusedError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(3)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "ConnectionAbortedError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(3)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "ConnectionResetError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(3)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "InterruptedError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(3)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "ProcessLookupError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(3)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "ValidationError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(2)
+            ReturnValue(0)
+        }
         cmp = StringCompare(name, "RuntimeWarning")
         IfCondition EqualTo(cmp, 0) ThenBlock: {
             Gen_EmitNumber(5)
@@ -1141,6 +1211,21 @@ Function.Gen_EmitIdent {
         cmp = StringCompare(name, "property")
         IfCondition EqualTo(cmp, 0) ThenBlock: {
             Gen_Emit("AddressOf(AIMacro.Property)")
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "divmod")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_Emit("AddressOf(divmod)")
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "delattr")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_Emit("AddressOf(delattr)")
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "hash")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_Emit("AddressOf(hash)")
             ReturnValue(0)
         }
         cmp = StringCompare(name, "NEXT")
@@ -2119,6 +2204,34 @@ Function.Gen_MapExcKind {
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(3) }
         cmp = StringCompare(name, "BlockingIOError")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(3) }
+        cmp = StringCompare(name, "UnicodeError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(2) }
+        cmp = StringCompare(name, "UnicodeEncodeError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(2) }
+        cmp = StringCompare(name, "UnicodeDecodeError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(2) }
+        cmp = StringCompare(name, "UnicodeTranslateError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(2) }
+        cmp = StringCompare(name, "SystemError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(6) }
+        cmp = StringCompare(name, "ReferenceError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+        cmp = StringCompare(name, "BufferError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+        cmp = StringCompare(name, "EnvironmentError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(3) }
+        cmp = StringCompare(name, "ConnectionRefusedError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(3) }
+        cmp = StringCompare(name, "ConnectionAbortedError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(3) }
+        cmp = StringCompare(name, "ConnectionResetError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(3) }
+        cmp = StringCompare(name, "InterruptedError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(3) }
+        cmp = StringCompare(name, "ProcessLookupError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(3) }
+        cmp = StringCompare(name, "ValidationError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(2) }
         ReturnValue(1)
     }
 }

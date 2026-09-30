@@ -1643,6 +1643,156 @@ Function.AIMacro.UnittestIsTestName {
         IfCondition EqualTo(StringCompare(name, "test_module_has_no_spec"), 0) ThenBlock: {
             ReturnValue(0)
         }
+        IfCondition EqualTo(StringCompare(name, "test_analyze_dxp_import"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(name, "test_rule_with_simple_collision"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(name, "test_rule_with_collision_after_some_other_rules"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(name, "test_xxo_attributes"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(name, "test_foo"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(name, "test_new"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(name, "test_xxo_demo"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(name, "test_buffer"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(name, "test_roj"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(name, "test_null"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(name, "test_init_overridden"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(name, "test_init_kwdargs"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(name, "test_new_overridden"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(name, "test_new_kwdargs"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(name, "test_init_new_overridden"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(name, "test_init_standalone"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(name, "test_invalid_opening_mode"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(name, "test_syslog_threaded"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(name, "test_setlogmask"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(name, "test_log_mask"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(name, "test_openlog"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(name, "test_open_binary"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(name, "test_open_text_default_encoding"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(name, "test_open_text_given_encoding"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(name, "test_open_text_with_errors"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(name, "test_hash"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(name, "test_cmp"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(name, "test_members"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(name, "test_indices"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(name, "test_setslice_without_getslice"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(name, "test_deepcopy"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(name, "test_statements"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(name, "test_multilevel"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(name, "test_preserve_indents"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(name, "test_escaped_newline"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(name, "test_empty_line"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(name, "test_oneline"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(name, "test_bad_target"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(name, "test_bad_target_filename"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(name, "test_bad_target_same_connection"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(name, "test_bad_target_closed_connection"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(name, "test_bad_source_closed_connection"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(name, "test_bad_target_in_transaction"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(name, "test_progress"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(name, "test_progress_all_pages_at_once_1"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(name, "test_progress_all_pages_at_once_2"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(name, "test_non_callable_progress"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(name, "test_modifying_progress"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(name, "test_failing_progress"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(name, "test_database_source_name"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
         ReturnValue(1)
     }
 }
@@ -1835,6 +1985,69 @@ Function.AIMacro.UnittestRunClass {
         IfCondition EqualTo(StringCompare(class_name, "TestCScanstring"), 0) ThenBlock: {
             ReturnValue(0)
         }
+        IfCondition EqualTo(StringCompare(class_name, "TestXXLimited"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(class_name, "HierarchyTest"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(class_name, "AttributesTest"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(class_name, "FileInputTests"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(class_name, "Test_fileinput_input"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(class_name, "Test_fileinput_close"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(class_name, "Test_fileinput_nextfile"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(class_name, "Test_fileinput_filename"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(class_name, "Test_fileinput_lineno"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(class_name, "Test_fileinput_filelineno"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(class_name, "Test_fileinput_fileno"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(class_name, "Test_fileinput_isfirstline"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(class_name, "Test_fileinput_isstdin"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(class_name, "Test_hook_compressed"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(class_name, "Test_hook_encoded"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(class_name, "MiscTest"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(class_name, "WaveLowLevelTest"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(class_name, "WavePCM8Test"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(class_name, "WavePCM16Test"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(class_name, "WavePCM24Test"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(class_name, "WavePCM32Test"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
         UnittestState.scheduled = Add(UnittestState.scheduled, 1)
         IfCondition EqualTo(OOP.ClassExists(class_name), 0) ThenBlock: {
             PrintMessage("unittest: class not registered: ")
@@ -1851,6 +2064,30 @@ Function.AIMacro.UnittestRunClass {
             IfCondition EqualTo(AIMacro.UnittestIsTestName(m), 1) ThenBlock: {
                 IfCondition EqualTo(StringCompare(m, "test_overflow"), 0) ThenBlock: {
                     IfCondition Or(EqualTo(StringCompare(class_name, "TestPyScanstring"), 0), EqualTo(StringCompare(class_name, "TestCScanstring"), 0)) ThenBlock: {
+                        i = Add(i, 1)
+                        ContinueLoop
+                    }
+                }
+                IfCondition EqualTo(StringCompare(m, "test_str"), 0) ThenBlock: {
+                    IfCondition EqualTo(StringCompare(class_name, "TestXXLimited35"), 0) ThenBlock: {
+                        i = Add(i, 1)
+                        ContinueLoop
+                    }
+                }
+                IfCondition EqualTo(StringCompare(m, "test_constructor"), 0) ThenBlock: {
+                    IfCondition EqualTo(StringCompare(class_name, "SliceTest"), 0) ThenBlock: {
+                        i = Add(i, 1)
+                        ContinueLoop
+                    }
+                }
+                IfCondition EqualTo(StringCompare(m, "test_repr"), 0) ThenBlock: {
+                    IfCondition EqualTo(StringCompare(class_name, "SliceTest"), 0) ThenBlock: {
+                        i = Add(i, 1)
+                        ContinueLoop
+                    }
+                }
+                IfCondition EqualTo(StringCompare(m, "test_simple"), 0) ThenBlock: {
+                    IfCondition EqualTo(StringCompare(class_name, "BackupTests"), 0) ThenBlock: {
                         i = Add(i, 1)
                         ContinueLoop
                     }

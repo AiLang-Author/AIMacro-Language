@@ -3382,6 +3382,22 @@ Function.AIMacro.MethodShim {
             slg = Types.GetNone()
             ReturnValue(slg)
         }
+        IfCondition EqualTo(StringCompare(method_name, "items"), 0) ThenBlock: {
+            itm = AIMacro.EmptyList()
+            ReturnValue(itm)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "listdir"), 0) ThenBlock: {
+            lsd = AIMacro.EmptyList()
+            ReturnValue(lsd)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "import_tool"), 0) ThenBlock: {
+            itl = Types.GetNone()
+            ReturnValue(itl)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "imports_under_tool"), 0) ThenBlock: {
+            iut2 = Hash.Create(4)
+            ReturnValue(iut2)
+        }
         PrintMessage("ERROR: Method not found: ")
         PrintMessage(method_name)
         PrintMessage("\n")
@@ -4867,10 +4883,129 @@ Function.skip_if_missing {
 
 Function.imports_under_tool {
     Input: a: Address
+    Input: b: Address
     Output: Address
     Body: {
         iut = Hash.Create(4)
         ReturnValue(iut)
+    }
+}
+
+Function.ValidationError {
+    Output: Address
+    Body: {
+        ve = Hash.Create(4)
+        Hash.Set(ve, "__class__", "ValidationError")
+        ReturnValue(ve)
+    }
+}
+
+Function.SubRuleValidator {
+    Input: a: Address
+    Output: Address
+    Body: {
+        srv = Hash.Create(4)
+        ReturnValue(srv)
+    }
+}
+
+Function.GeneratedParser {
+    Output: Address
+    Body: {
+        gp = Hash.Create(4)
+        ReturnValue(gp)
+    }
+}
+
+Function.parse_string {
+    Input: a: Address
+    Input: b: Address
+    Output: Address
+    Body: {
+        psr = Hash.Create(4)
+        rls = Hash.Create(4)
+        Hash.Set(psr, "rules", rls)
+        ReturnValue(psr)
+    }
+}
+
+Function.Grammar {
+    Output: Address
+    Body: {
+        gr = Hash.Create(4)
+        ReturnValue(gr)
+    }
+}
+
+Function.FirstSetCalculator {
+    Input: a: Address
+    Output: Address
+    Body: {
+        fsc = Hash.Create(4)
+        ReturnValue(fsc)
+    }
+}
+
+Function.divmod {
+    Input: a: Address
+    Input: b: Address
+    Output: Address
+    Body: {
+        dv = AIMacro.EmptyList()
+        Array.Push(dv, 0)
+        Array.Push(dv, 0)
+        ReturnValue(dv)
+    }
+}
+
+Function.delattr {
+    Input: a: Address
+    Input: b: Address
+    Output: Address
+    Body: {
+        ReturnValue(0)
+    }
+}
+
+Function.hash {
+    Input: a: Address
+    Output: Address
+    Body: {
+        ReturnValue(0)
+    }
+}
+
+Function.UnicodeError {
+    Output: Address
+    Body: {
+        ue = Hash.Create(4)
+        Hash.Set(ue, "__class__", "UnicodeError")
+        ReturnValue(ue)
+    }
+}
+
+Function.SystemError {
+    Output: Address
+    Body: {
+        se = Hash.Create(4)
+        Hash.Set(se, "__class__", "SystemError")
+        ReturnValue(se)
+    }
+}
+
+Function.UnicodeEncodeError {
+    Output: Address
+    Body: {
+        uee = Hash.Create(4)
+        ReturnValue(uee)
+    }
+}
+
+Function.UnicodeDecodeError {
+    Output: Address
+    Body: {
+        ude = Hash.Create(4)
+        ReturnValue(ude)
     }
 }
 
