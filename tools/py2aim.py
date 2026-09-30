@@ -657,8 +657,9 @@ def desugar_yield(src: str) -> str:
         indent, rest = m.group(1), m.group(2).strip()
         if rest.startswith("from "):
             expr = rest[5:].strip()
+            kind = "from"
         elif rest == "" or rest.startswith("#"):
-            out.append(f"{indent}_ = None  # yield stub\n")
+            out.append(f"{indent}yield\n")
             i += 1
             continue
         else:
@@ -667,13 +668,17 @@ def desugar_yield(src: str) -> str:
             #          start, (n, end), line)
             # would lose the comma after a[:end] and parse as IDENT after RPAREN.
             expr = rest
+            kind = "yield"
         buf = _strip_physical_comment(expr)
         depth, in_s = _scan_depth_and_string(buf)
         while (depth > 0 or in_s) and i + 1 < len(lines):
             i += 1
             buf += " " + _strip_physical_comment(lines[i].strip())
             depth, in_s = _scan_depth_and_string(buf)
-        out.append(f"{indent}_ = ({buf})  # yield stub\n")
+        if kind == "from":
+            out.append(f"{indent}yield from ({buf})\n")
+        else:
+            out.append(f"{indent}yield ({buf})\n")
         i += 1
     return "".join(out)
 
@@ -751,6 +756,7 @@ def desugar_nested_class_cells(src: str) -> str:
                 assigned.add(node.args.kwarg.arg)
 
             new_body: list[ast.stmt] = []
+            cell_maps: list[tuple[str, str]] = []
             for stmt in node.body:
                 if isinstance(stmt, ast.ClassDef):
                     used: set[str] = set()
@@ -780,6 +786,7 @@ def desugar_nested_class_cells(src: str) -> str:
                         need_dict[0] = True
                         mapping = {v: f"{cid}_{v}" for v in sorted(used)}
                         for v, key in mapping.items():
+                            cell_maps.append((v, key))
                             new_body.append(
                                 ast.Assign(
                                     targets=[
@@ -825,6 +832,34 @@ def desugar_nested_class_cells(src: str) -> str:
                             type_params=getattr(stmt, "type_params", []),
                         )
                 new_body.append(stmt)
+            if cell_maps:
+                patched: list[ast.stmt] = []
+                for stmt in new_body:
+                    patched.append(stmt)
+                    names: list[str] = []
+                    if isinstance(stmt, ast.Assign):
+                        for t in stmt.targets:
+                            if isinstance(t, ast.Name):
+                                names.append(t.id)
+                    elif isinstance(stmt, ast.AnnAssign) and isinstance(stmt.target, ast.Name):
+                        names.append(stmt.target.id)
+                    elif isinstance(stmt, ast.AugAssign) and isinstance(stmt.target, ast.Name):
+                        names.append(stmt.target.id)
+                    for v, key in cell_maps:
+                        if v in names:
+                            patched.append(
+                                ast.Assign(
+                                    targets=[
+                                        ast.Subscript(
+                                            value=ast.Name(id="_aim_ncells", ctx=ast.Load()),
+                                            slice=ast.Constant(value=key),
+                                            ctx=ast.Store(),
+                                        )
+                                    ],
+                                    value=ast.Name(id=v, ctx=ast.Load()),
+                                )
+                            )
+                new_body = patched
             node.body = new_body
             return node
 
@@ -844,6 +879,35 @@ def desugar_nested_class_cells(src: str) -> str:
 
 
 
+def desugar_dict_call(src: str) -> str:
+    """dict(a=1, b=2) → {'a': 1, 'b': 2} so keyword args survive AIMacro CALL."""
+    try:
+        tree = ast.parse(src)
+    except SyntaxError:
+        return src
+
+    class _DictKw(ast.NodeTransformer):
+        def visit_Call(self, node):
+            self.generic_visit(node)
+            if not isinstance(node.func, ast.Name) or node.func.id != "dict":
+                return node
+            if node.args or not node.keywords:
+                return node
+            keys = []
+            vals = []
+            for kw in node.keywords:
+                if kw.arg is None:
+                    return node
+                keys.append(ast.Constant(kw.arg))
+                vals.append(kw.value)
+            return ast.copy_location(ast.Dict(keys=keys, values=vals), node)
+
+    try:
+        return ast.unparse(_DictKw().visit(tree)) + "\n"
+    except Exception:
+        return src
+
+
 def convert(src: str) -> str:
     # Empty / whitespace-only modules (e.g. empty __init__.py): aimacro.x
     # rejects zero-byte input. Emit a bare `pass` so transpile succeeds.
@@ -861,6 +925,7 @@ def convert(src: str) -> str:
     src = desugar_tuple_unpack(src)
     src = desugar_for_unpack(src)
     src = desugar_nested_class_cells(src)
+    src = desugar_dict_call(src)
     """Insert `{` / `}` from indentation. Preserve comments."""
     raw_lines = src.splitlines()
     if src.endswith("\n"):

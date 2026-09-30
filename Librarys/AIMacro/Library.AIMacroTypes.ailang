@@ -116,14 +116,28 @@ Function.Types.IsString {
 // =============================================================================
 // ISINT - Check if value is an integer (not a heap address)
 // =============================================================================
+Function.Types.CanDeref {
+    Input: value: Address
+    Output: Integer
+    Body: {
+        IfCondition LessThan(value, 4000000) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition And(GreaterEqual(value, 500000000), LessThan(value, 1099511627776)) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition GreaterEqual(value, 140737488355328) ThenBlock: {
+            ReturnValue(0)
+        }
+        ReturnValue(1)
+    }
+}
+
 Function.Types.IsFloat {
     Input: value: Address
     Output: Integer
     Body: {
-        IfCondition LessThan(value, TypeMagic.PTR_MIN) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition GreaterEqual(value, 140737488355328) ThenBlock: {
+        IfCondition EqualTo(Types.CanDeref(value), 0) ThenBlock: {
             ReturnValue(0)
         }
         mag = Dereference(value)
@@ -138,10 +152,7 @@ Function.Types.IsComplex {
     Input: value: Address
     Output: Integer
     Body: {
-        IfCondition LessThan(value, TypeMagic.PTR_MIN) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition GreaterEqual(value, 140737488355328) ThenBlock: {
+        IfCondition EqualTo(Types.CanDeref(value), 0) ThenBlock: {
             ReturnValue(0)
         }
         mag = Dereference(value)
@@ -156,10 +167,7 @@ Function.Types.IsBigInt {
     Input: value: Address
     Output: Integer
     Body: {
-        IfCondition LessThan(value, TypeMagic.PTR_MIN) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition GreaterEqual(value, 140737488355328) ThenBlock: {
+        IfCondition EqualTo(Types.CanDeref(value), 0) ThenBlock: {
             ReturnValue(0)
         }
         mag = Dereference(value)

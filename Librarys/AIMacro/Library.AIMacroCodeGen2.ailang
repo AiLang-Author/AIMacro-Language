@@ -234,11 +234,17 @@ Function.Gen_Program {
             }
             pending = Gen.deferred_functions
             pending_fv = Gen.deferred_freevars
+            pending_nn = Gen.deferred_nest_names
+            pending_nf = Gen.deferred_nest_funcs
             Gen.deferred_functions = Array.Create(64)
             Gen.deferred_freevars = Array.Create(64)
+            Gen.deferred_nest_names = Array.Create(64)
+            Gen.deferred_nest_funcs = Array.Create(64)
             i = 0
             WhileLoop LessThan(i, n_def) {
                 Gen.pending_freevars = Array.Get(pending_fv, i)
+                Gen.nest_bind_names = Array.Get(pending_nn, i)
+                Gen.nest_bind_funcs = Array.Get(pending_nf, i)
                 Gen_Function(Array.Get(pending, i))
                 Gen.pending_freevars = 0
                 i = Add(i, 1)
@@ -289,6 +295,17 @@ Function.Gen_Program {
                 i = Add(i, 1)
             }
             Gen.indent = saved_indent
+            nca = 0
+            IfCondition NotEqual(OOPGen.classattrs_fns, 0) ThenBlock: {
+                nca = Array.Size(OOPGen.classattrs_fns)
+            }
+            ci = 0
+            WhileLoop LessThan(ci, nca) {
+                Gen_Emit("    ")
+                Gen_Emit(Array.Get(OOPGen.classattrs_fns, ci))
+                Gen_Emit("()\n")
+                ci = Add(ci, 1)
+            }
             ntc = 0
             IfCondition NotEqual(OOPGen.test_classes, 0) ThenBlock: {
                 ntc = Array.Size(OOPGen.test_classes)
@@ -315,11 +332,17 @@ Function.Gen_Program {
                 }
                 pending = Gen.deferred_functions
                 pending_fv = Gen.deferred_freevars
+                pending_nn = Gen.deferred_nest_names
+                pending_nf = Gen.deferred_nest_funcs
                 Gen.deferred_functions = Array.Create(64)
                 Gen.deferred_freevars = Array.Create(64)
+                Gen.deferred_nest_names = Array.Create(64)
+                Gen.deferred_nest_funcs = Array.Create(64)
                 i = 0
                 WhileLoop LessThan(i, n_def) {
                     Gen.pending_freevars = Array.Get(pending_fv, i)
+                    Gen.nest_bind_names = Array.Get(pending_nn, i)
+                    Gen.nest_bind_funcs = Array.Get(pending_nf, i)
                     Gen_Function(Array.Get(pending, i))
                     Gen.pending_freevars = 0
                     i = Add(i, 1)
@@ -723,6 +746,15 @@ Function.Gen_Import {
                 }
                 IfCondition EqualTo(Gen_IsShimModule(module_name), 1) ThenBlock: {
                     Gen_MarkModuleVar(module_name)
+                    cmp_op = StringCompare(module_name, "operator")
+                    cmp_st = StringCompare(module_name, "string")
+                    IfCondition Or(EqualTo(cmp_op, 0), EqualTo(cmp_st, 0)) ThenBlock: {
+                        OOPGen_Init()
+                        line = StringConcat("    PyMod.", module_name)
+                        line = StringConcat(line, " = Hash.Create(8)\n")
+                        Array.Push(OOPGen.class_init_code, line)
+                        OOPGen.has_classes = 1
+                    }
                     i = Add(i, 1)
                     ContinueLoop
                 }
@@ -754,6 +786,15 @@ Function.Gen_Import {
         }
         IfCondition EqualTo(Gen_IsShimModule(module_name), 1) ThenBlock: {
             Gen_MarkModuleVar(module_name)
+            cmp_op = StringCompare(module_name, "operator")
+            cmp_st = StringCompare(module_name, "string")
+            IfCondition Or(EqualTo(cmp_op, 0), EqualTo(cmp_st, 0)) ThenBlock: {
+                OOPGen_Init()
+                line = StringConcat("    PyMod.", module_name)
+                line = StringConcat(line, " = Hash.Create(8)\n")
+                Array.Push(OOPGen.class_init_code, line)
+                OOPGen.has_classes = 1
+            }
             ReturnValue(0)
         }
         Gen_MarkModuleVar(module_name)
@@ -805,6 +846,18 @@ Function.Gen_FromImport {
                     cmp = StringCompare(sym, "*")
                     IfCondition NotEqual(cmp, 0) ThenBlock: {
                         Gen_MarkModuleVar(sym)
+                        cmp_t = StringCompare(sym, "Template")
+                        IfCondition EqualTo(cmp_t, 0) ThenBlock: {
+                            bind = "    PyMod.Template = AddressOf(AIMacro.TemplateNew)\n"
+                            IfCondition GreaterThan(Gen.indent, 0) ThenBlock: {
+                                Gen_EmitIndent()
+                                Gen_Emit("PyMod.Template = AddressOf(AIMacro.TemplateNew)\n")
+                            } ElseBlock: {
+                                OOPGen_Init()
+                                Array.Push(OOPGen.class_init_code, bind)
+                                OOPGen.has_classes = 1
+                            }
+                        }
                     }
                     i = Add(i, 1)
                 }
@@ -947,6 +1000,10 @@ Function.Gen_Node {
             Gen_Raise(node)
             ReturnValue(0)
         }
+        IfCondition EqualTo(t, Node.YIELD_STMT) ThenBlock: {
+            Gen_Yield(node)
+            ReturnValue(0)
+        }
         IfCondition EqualTo(t, Node.FROM_IMPORT) ThenBlock: {
             Gen_FromImport(node)
             ReturnValue(0)
@@ -1079,6 +1136,14 @@ Function.Gen_Function {
         Gen.temp_counter = 0
         OOPGen.temp_counter = 0
         Gen.loop_depth = 0
+        IfCondition EqualTo(Gen.pending_freevars, 0) ThenBlock: {
+            IfCondition NotEqual(Gen.nest_bind_names, 0) ThenBlock: {
+                Array.Clear(Gen.nest_bind_names)
+            }
+            IfCondition NotEqual(Gen.nest_bind_funcs, 0) ThenBlock: {
+                Array.Clear(Gen.nest_bind_funcs)
+            }
+        }
         Array.Clear(Gen.param_names)
         Array.Clear(Gen.string_vars)
         Array.Clear(Gen.list_vars)
@@ -1143,7 +1208,16 @@ Function.Gen_Function {
         enc_saved = Gen_PushEnclosingParams(params)
         Gen.indent = Add(Gen.indent, 2)
         Gen_EmitFreevarLocals()
+        has_yield = Gen_StmtsHaveYield(body)
+        IfCondition EqualTo(has_yield, 1) ThenBlock: {
+            Gen_EmitIndent()
+            Gen_Emit("__yields = AIMacro.EmptyList()\n")
+        }
         Gen_Body(body)
+        IfCondition EqualTo(has_yield, 1) ThenBlock: {
+            Gen_EmitIndent()
+            Gen_Emit("ReturnValue(__yields)\n")
+        }
         Gen.indent = Subtract(Gen.indent, 2)
         Gen_TruncateEnclosing(enc_saved)
         
@@ -1676,7 +1750,6 @@ Function.Gen_Del {
         WhileLoop LessThan(i, n) {
             tgt = Array.Get(targets, i)
             tt = AST_Type(tgt)
-            // del d[k] / del a[i] -> Hash.Delete (already linked)
             IfCondition EqualTo(tt, Node.INDEX_ACCESS) ThenBlock: {
                 container = ArrayGet(tgt, 3)
                 index = ArrayGet(tgt, 4)
@@ -1687,15 +1760,77 @@ Function.Gen_Del {
                     index = Gen_FlattenExpr(index)
                 }
                 Gen_EmitIndent()
-                Gen_Emit("Hash.Delete(")
+                Gen_Emit("DictGen_SmartDel(")
                 Gen_Expr(container)
                 Gen_Emit(", ")
                 Gen_Expr(index)
                 Gen_Emit(")\n")
             }
+            IfCondition EqualTo(tt, Node.SLICE_ACCESS) ThenBlock: {
+                container = ArrayGet(tgt, 3)
+                start_expr = ArrayGet(tgt, 4)
+                end_expr = ArrayGet(tgt, 5)
+                step_expr = ArrayGet(tgt, 6)
+                IfCondition EqualTo(Gen_HasCall(container), 1) ThenBlock: {
+                    container = Gen_FlattenExpr(container)
+                }
+                IfCondition And(NotEqual(start_expr, 0), EqualTo(Gen_HasCall(start_expr), 1)) ThenBlock: {
+                    start_expr = Gen_FlattenExpr(start_expr)
+                }
+                IfCondition And(NotEqual(end_expr, 0), EqualTo(Gen_HasCall(end_expr), 1)) ThenBlock: {
+                    end_expr = Gen_FlattenExpr(end_expr)
+                }
+                IfCondition And(NotEqual(step_expr, 0), EqualTo(Gen_HasCall(step_expr), 1)) ThenBlock: {
+                    step_expr = Gen_FlattenExpr(step_expr)
+                }
+                Gen_EmitIndent()
+                Gen_Emit("DictGen_SmartDel(")
+                Gen_Expr(container)
+                Gen_Emit(", AIMacro.Slice(")
+                IfCondition EqualTo(start_expr, 0) ThenBlock: {
+                    Gen_Emit("0")
+                } ElseBlock: {
+                    Gen_Expr(start_expr)
+                }
+                Gen_Emit(", ")
+                IfCondition EqualTo(end_expr, 0) ThenBlock: {
+                    Gen_Emit("Array.Size(")
+                    Gen_Expr(container)
+                    Gen_Emit(")")
+                } ElseBlock: {
+                    Gen_Expr(end_expr)
+                }
+                Gen_Emit(", ")
+                IfCondition EqualTo(step_expr, 0) ThenBlock: {
+                    Gen_Emit("1")
+                } ElseBlock: {
+                    Gen_Expr(step_expr)
+                }
+                Gen_Emit("))\n")
+            }
             // del name / del obj.attr: no-op in static AILang locals
             i = Add(i, 1)
         }
+    }
+}
+
+Function.Gen_Yield {
+    Input: node: Address
+    Body: {
+        value = ArrayGet(node, 3)
+        IfCondition And(NotEqual(value, 0), EqualTo(Gen_HasCall(value), 1)) ThenBlock: {
+            value = Gen_FlattenExpr(value)
+        }
+        Gen_EmitIndent()
+        Gen_Emit("Array.Push(__yields, ")
+        IfCondition EqualTo(value, 0) ThenBlock: {
+            Gen_Emit("Types.GetNone()")
+        } ElseBlock: {
+            Gen_Expr(value)
+        }
+        Gen_Emit(")\n")
+        Gen_EmitIndent()
+        Gen_Emit("AIMacro.WrapGenStop()\n")
     }
 }
 
@@ -1738,6 +1873,12 @@ Function.Gen_Raise {
             Gen_Expr(msg_node)
         }
         Gen_Emit(")\n")
+        // Outside try, stop the function so Rat.__init__ does not keep running
+        // after raise ZeroDivisionError (gcd/modulo of a zero denominator).
+        IfCondition EqualTo(Gen.try_depth, 0) ThenBlock: {
+            Gen_EmitIndent()
+            Gen_Emit("ReturnValue(0)\n")
+        }
     }
 }
 
@@ -3261,6 +3402,9 @@ Function.Gen_AugAssignment {
         }
         
         op_name = Gen_OpName(op)
+        IfCondition EqualTo(op, Token.STAR) ThenBlock: {
+            op_name = "AIMacro.NumIMul"
+        }
         
         Gen_EmitIndent()
         Gen_EmitIdentLhs(name)
@@ -3431,9 +3575,10 @@ Function.Gen_DictAssignment {
 Function.Gen_SliceAssign {
     Input: node: Address
     Body: {
-        // a[start:end] = seq  — insert seq items at start (covers a[:0] = ['']).
         expr = ArrayGet(node, 3)
         start_expr = ArrayGet(node, 4)
+        end_expr = ArrayGet(node, 5)
+        step_expr = ArrayGet(node, 6)
         value = ArrayGet(node, 7)
         value = Gen_ResolveChainValue(value)
         IfCondition EqualTo(Gen_HasCall(expr), 1) ThenBlock: {
@@ -3442,66 +3587,39 @@ Function.Gen_SliceAssign {
         IfCondition And(NotEqual(start_expr, 0), EqualTo(Gen_HasCall(start_expr), 1)) ThenBlock: {
             start_expr = Gen_FlattenExpr(start_expr)
         }
+        IfCondition And(NotEqual(end_expr, 0), EqualTo(Gen_HasCall(end_expr), 1)) ThenBlock: {
+            end_expr = Gen_FlattenExpr(end_expr)
+        }
+        IfCondition And(NotEqual(step_expr, 0), EqualTo(Gen_HasCall(step_expr), 1)) ThenBlock: {
+            step_expr = Gen_FlattenExpr(step_expr)
+        }
         IfCondition EqualTo(Gen_HasCall(value), 1) ThenBlock: {
             value = Gen_FlattenExpr(value)
         }
-        seq = Gen_TempName()
-        st = Gen_TempName()
-        n = Gen_TempName()
-        i = Gen_TempName()
-        item = Gen_TempName()
         Gen_EmitIndent()
-        Gen_Emit(seq)
-        Gen_Emit(" = ")
-        Gen_Expr(value)
-        Gen_Emit("\n")
-        Gen_EmitIndent()
-        Gen_Emit(st)
-        Gen_Emit(" = ")
+        Gen_Emit("AIMacro.ListSliceAssign(")
+        Gen_Expr(expr)
+        Gen_Emit(", ")
         IfCondition EqualTo(start_expr, 0) ThenBlock: {
             Gen_Emit("0")
         } ElseBlock: {
             Gen_Expr(start_expr)
         }
-        Gen_Emit("\n")
-        Gen_EmitIndent()
-        Gen_Emit(n)
-        Gen_Emit(" = AIMacro.SmartSize(")
-        Gen_Emit(seq)
-        Gen_Emit(")\n")
-        Gen_EmitIndent()
-        Gen_Emit(i)
-        Gen_Emit(" = ")
-        Gen_Emit(n)
-        Gen_Emit("\n")
-        Gen_EmitIndent()
-        Gen_Emit("WhileLoop GreaterThan(")
-        Gen_Emit(i)
-        Gen_Emit(", 0) {\n")
-        Gen.indent = Add(Gen.indent, 1)
-        Gen_EmitIndent()
-        Gen_Emit(i)
-        Gen_Emit(" = Subtract(")
-        Gen_Emit(i)
-        Gen_Emit(", 1)\n")
-        Gen_EmitIndent()
-        Gen_Emit(item)
-        Gen_Emit(" = DictGen_SmartGet(")
-        Gen_Emit(seq)
         Gen_Emit(", ")
-        Gen_Emit(i)
-        Gen_Emit(")\n")
-        Gen_EmitIndent()
-        Gen_Emit("AIMacro.ListInsert(")
-        Gen_Expr(expr)
+        IfCondition EqualTo(end_expr, 0) ThenBlock: {
+            Gen_Emit("0")
+        } ElseBlock: {
+            Gen_Expr(end_expr)
+        }
         Gen_Emit(", ")
-        Gen_Emit(st)
+        IfCondition EqualTo(step_expr, 0) ThenBlock: {
+            Gen_Emit("1")
+        } ElseBlock: {
+            Gen_Expr(step_expr)
+        }
         Gen_Emit(", ")
-        Gen_Emit(item)
+        Gen_Expr(value)
         Gen_Emit(")\n")
-        Gen.indent = Subtract(Gen.indent, 1)
-        Gen_EmitIndent()
-        Gen_Emit("}\n")
         ReturnValue(0)
     }
 }

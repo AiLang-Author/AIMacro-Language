@@ -793,6 +793,48 @@ Function.Gen_FlattenExpr {
         IfCondition EqualTo(t, Node.INDIRECT_CALL) ThenBlock: {
             ReturnValue(Gen_FlattenIndirectCall(node))
         }
+        IfCondition EqualTo(t, Node.SUPER_CALL) ThenBlock: {
+            method = AST_GetField(node, "method")
+            args = AST_GetField(node, "args")
+            num_args = 0
+            IfCondition NotEqual(args, 0) ThenBlock: {
+                num_args = Array.Size(args)
+            }
+            args_var = OOPGen_TempVar("super_args")
+            Gen_EmitIndent()
+            Gen_Emit(args_var)
+            Gen_Emit(" = Array.Create(")
+            Gen_EmitNumber(num_args)
+            Gen_Emit(")\n")
+            i = 0
+            WhileLoop LessThan(i, num_args) {
+                arg = Array.Get(args, i)
+                IfCondition EqualTo(Gen_HasCall(arg), 1) ThenBlock: {
+                    arg = Gen_FlattenExpr(arg)
+                }
+                Gen_EmitIndent()
+                Gen_Emit("Array.Push(")
+                Gen_Emit(args_var)
+                Gen_Emit(", ")
+                OOPGen_Expr(arg)
+                Gen_Emit(")\n")
+                i = Add(i, 1)
+            }
+            temp = Gen_TempName()
+            recv = OOPGen_ReceiverIdent()
+            Gen_EmitIndent()
+            Gen_Emit(temp)
+            Gen_Emit(" = OOP.SuperCall(")
+            Gen_Emit(recv)
+            Gen_Emit(", \"")
+            Gen_Emit(OOPGen.current_class)
+            Gen_Emit("\", \"")
+            Gen_Emit(method)
+            Gen_Emit("\", ")
+            Gen_Emit(args_var)
+            Gen_Emit(")\n")
+            ReturnValue(Gen_MakeIdent(temp))
+        }
         IfCondition EqualTo(t, Node.TERNARY) ThenBlock: {
             ReturnValue(Gen_FlattenTernary(node))
         }
@@ -1814,6 +1856,14 @@ Function.Gen_FlattenMethodArgs {
         WhileLoop LessThan(idx, n) {
             arg = Array.Get(args, idx)
             arg_type = AST_Type(arg)
+            IfCondition EqualTo(arg_type, Node.KW_ARG) ThenBlock: {
+                kv = ArrayGet(arg, 4)
+                IfCondition EqualTo(Gen_HasCall(kv), 1) ThenBlock: {
+                    ArraySet(arg, 4, Gen_FlattenExpr(kv))
+                }
+                idx = Add(idx, 1)
+                ContinueLoop
+            }
             
             // Handle inline list literals
             IfCondition EqualTo(arg_type, Node.LIST_LIT) ThenBlock: {

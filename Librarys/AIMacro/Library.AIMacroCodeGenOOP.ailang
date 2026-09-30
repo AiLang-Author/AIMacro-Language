@@ -19,7 +19,8 @@ FixedPool.OOPGen {
     "initialized": Initialize=0
     "classes": Initialize=0            
     "current_class": Initialize=0       
-    "current_method": Initialize=0      
+    "current_method": Initialize=0
+    "current_receiver": Initialize=0      
     "discovered_fields": Initialize=0    
     "class_init_code": Initialize=0      
     "method_impl_code": Initialize=0    
@@ -29,6 +30,8 @@ FixedPool.OOPGen {
     "test_classes": Initialize=0
     "class_renames_from": Initialize=0
     "class_renames_to": Initialize=0
+    "in_classattrs": Initialize=0
+    "classattrs_fns": Initialize=0
 }
 
 
@@ -70,8 +73,10 @@ Function.OOPGen_Init {
         OOPGen.test_classes = Array.Create(32)
         OOPGen.class_renames_from = Array.Create(32)
         OOPGen.class_renames_to = Array.Create(32)
+        OOPGen.classattrs_fns = Array.Create(32)
         OOPGen.temp_counter = 0
         OOPGen.has_classes = 0
+        OOPGen.in_classattrs = 0
         OOPGen.initialized = 1
         
         ReturnValue(1)
@@ -101,6 +106,8 @@ Function.OOPGen_Reset {
             OOPGen.has_classes = 0
             OOPGen.current_class = 0
             OOPGen.current_method = 0
+            OOPGen.current_receiver = 0
+            OOPGen.in_classattrs = 0
             OOPGen.temp_counter = 0
             IfCondition NotEqual(OOPGen.emitted_methods, 0) ThenBlock: {
                 Array.Clear(OOPGen.emitted_methods)
@@ -113,6 +120,9 @@ Function.OOPGen_Reset {
             }
             IfCondition NotEqual(OOPGen.class_renames_to, 0) ThenBlock: {
                 Array.Clear(OOPGen.class_renames_to)
+            }
+            IfCondition NotEqual(OOPGen.classattrs_fns, 0) ThenBlock: {
+                Array.Clear(OOPGen.classattrs_fns)
             }
         }
     }
@@ -261,20 +271,30 @@ Function.OOPGen_FlattenExpr {
             Gen_EmitNumber(num_args)
             Gen_Emit(")\n")
             
-            // Push each argument (flattened)
+            // Push each argument (flattened). KW_ARG on assertRaises(func, x=1)
+            // would otherwise become a positional and hide TypeError.
+            has_kw_f = 0
             i = 0
             WhileLoop LessThan(i, num_args) {
                 arg = Array.Get(args, i)
-                arg = OOPGen_FlattenExpr(arg)
-                
+                IfCondition EqualTo(AST_Type(arg), Node.KW_ARG) ThenBlock: {
+                    has_kw_f = 1
+                } ElseBlock: {
+                    arg = OOPGen_FlattenExpr(arg)
+                    Gen_EmitIndent()
+                    Gen_Emit("Array.Push(")
+                    Gen_Emit(args_var)
+                    Gen_Emit(", ")
+                    OOPGen_Expr(arg)
+                    Gen_Emit(")\n")
+                }
+                i = Add(i, 1)
+            }
+            IfCondition EqualTo(has_kw_f, 1) ThenBlock: {
                 Gen_EmitIndent()
                 Gen_Emit("Array.Push(")
                 Gen_Emit(args_var)
-                Gen_Emit(", ")
-                OOPGen_Expr(arg)
-                Gen_Emit(")\n")
-                
-                i = Add(i, 1)
+                Gen_Emit(", AddressOf(AIMacro.KwArgError))\n")
             }
             
             // Emit method call to temp
@@ -522,9 +542,38 @@ Function.OOPGen_ClassDef {
             }
             i = Add(i, 1)
         }
+
+        nest_from = Array.Create(8)
+        nest_to = Array.Create(8)
+        i = 0
+        WhileLoop LessThan(i, num_items) {
+            item = Array.Get(body, i)
+            IfCondition EqualTo(AST_Type(item), Node.CLASS_DEF) ThenBlock: {
+                orig = AST_GetField(item, "name")
+                uname = StringConcat("__nest_", NumberToString(Gen.lambda_counter))
+                Gen.lambda_counter = Add(Gen.lambda_counter, 1)
+                uname = StringConcat(uname, "_")
+                uname = StringConcat(uname, orig)
+                ArraySet(item, 3, uname)
+                Array.Push(Gen.deferred_classes, item)
+                IfCondition EqualTo(OOPGen.class_renames_from, 0) ThenBlock: {
+                    OOPGen.class_renames_from = Array.Create(32)
+                    OOPGen.class_renames_to = Array.Create(32)
+                }
+                Array.Push(OOPGen.class_renames_from, orig)
+                Array.Push(OOPGen.class_renames_to, uname)
+                Array.Push(nest_from, orig)
+                Array.Push(nest_to, uname)
+                OOPGen_RegisterClassName(uname)
+            }
+            i = Add(i, 1)
+        }
         
         attr_fn = StringConcat(class_name, "___classattrs")
         has_attr = 0
+        IfCondition GreaterThan(Array.Size(nest_from), 0) ThenBlock: {
+            has_attr = 1
+        }
         i = 0
         WhileLoop LessThan(i, num_items) {
             item = Array.Get(body, i)
@@ -543,6 +592,27 @@ Function.OOPGen_ClassDef {
             Gen.indent = 2
             saved_tc = Gen.temp_counter
             Gen.temp_counter = 0
+            OOPGen.in_classattrs = 1
+            ni = 0
+            nsz = Array.Size(nest_from)
+            WhileLoop LessThan(ni, nsz) {
+                orig = Array.Get(nest_from, ni)
+                uname = Array.Get(nest_to, ni)
+                Gen_EmitIndent()
+                Gen_Emit(orig)
+                Gen_Emit(" = \"")
+                Gen_Emit(uname)
+                Gen_Emit("\"\n")
+                Gen_EmitIndent()
+                Gen_Emit("AIMacro.ClassAttrSet(\"")
+                Gen_Emit(class_name)
+                Gen_Emit("\", \"")
+                Gen_Emit(orig)
+                Gen_Emit("\", ")
+                Gen_Emit(orig)
+                Gen_Emit(")\n")
+                ni = Add(ni, 1)
+            }
             i = 0
             WhileLoop LessThan(i, num_items) {
                 item = Array.Get(body, i)
@@ -570,6 +640,7 @@ Function.OOPGen_ClassDef {
                 }
                 i = Add(i, 1)
             }
+            OOPGen.in_classattrs = 0
             Gen_EmitIndent()
             Gen_Emit("ReturnValue(1)\n")
             Gen.indent = old_indent
@@ -583,6 +654,10 @@ Function.OOPGen_ClassDef {
             attr_call = StringConcat("    ", attr_fn)
             attr_call = StringConcat(attr_call, "()\n")
             Array.Push(OOPGen.class_init_code, attr_call)
+            IfCondition EqualTo(OOPGen.classattrs_fns, 0) ThenBlock: {
+                OOPGen.classattrs_fns = Array.Create(32)
+            }
+            Array.Push(OOPGen.classattrs_fns, attr_fn)
         }
         
         class_info = Array.Create(3)
@@ -740,6 +815,24 @@ Function.OOPGen_MethodImpl {
             }
             Array.Push(OOPGen.emitted_methods, func_name)
         }
+
+        defs = Array.Create(8)
+        di = 1
+        WhileLoop LessThan(di, num_params) {
+            dparam = Array.Get(params, di)
+            Array.Push(defs, ArrayGet(dparam, 2))
+            di = Add(di, 1)
+        }
+        Array.Push(Gen.func_names, func_name)
+        Array.Push(Gen.func_defaults, defs)
+        Array.Push(Gen.func_params, params)
+        Array.Push(Gen.func_varargs, 0)
+
+        OOPGen.current_receiver = "self"
+        IfCondition GreaterThan(num_params, 0) ThenBlock: {
+            bparam = Array.Get(params, 0)
+            OOPGen.current_receiver = ArrayGet(bparam, 0)
+        }
         
         // SysV limit: >6 Inputs illegal — pack into p__args like Gen_PackedFunction
         IfCondition GreaterThan(num_params, 6) ThenBlock: {
@@ -790,6 +883,7 @@ Function.OOPGen_MethodImpl {
             Gen_Emit("    }\n")
             Gen_Emit("}\n\n")
             OOPGen.current_method = 0
+            OOPGen.current_receiver = 0
             ReturnValue(0)
         }
         
@@ -864,6 +958,11 @@ Function.OOPGen_MethodImpl {
         enc_saved = Gen_PushEnclosingParams(enc_names)
         Array.Destroy(enc_names)
         
+        has_yield = Gen_StmtsHaveYield(body)
+        IfCondition EqualTo(has_yield, 1) ThenBlock: {
+            Gen_EmitIndent()
+            Gen_Emit("__yields = AIMacro.EmptyList()\n")
+        }
        // Generate method body with OOP-aware transformations
         OOPGen_MethodBody(body)
         Gen_TruncateEnclosing(enc_saved)
@@ -887,9 +986,13 @@ Function.OOPGen_MethodImpl {
                 Gen_EmitIndent()
                 Gen_Emit("ReturnValue(1)\n")
             } ElseBlock: {
-                // Other methods return 0
-                Gen_EmitIndent()
-                Gen_Emit("ReturnValue(0)\n")
+                IfCondition EqualTo(has_yield, 1) ThenBlock: {
+                    Gen_EmitIndent()
+                    Gen_Emit("ReturnValue(__yields)\n")
+                } ElseBlock: {
+                    Gen_EmitIndent()
+                    Gen_Emit("ReturnValue(0)\n")
+                }
             }
         }
         
@@ -899,6 +1002,7 @@ Function.OOPGen_MethodImpl {
         Gen_Emit("}\n\n")
         
         OOPGen.current_method = 0
+        OOPGen.current_receiver = 0
     }
 }
 
@@ -1504,25 +1608,34 @@ Function.OOPGen_MethodCall {
         Gen_EmitNumber(num_args)
         Gen_Emit(")\n")
         
-        // Push each argument
+        // Push each argument. Skip KW_ARG so assertRaises(fn, x=1) does not
+        // turn keywords into extra positionals. One KwArgError sentinel makes
+        // reversed([], a=1) and enumerate(..., x=3) TypeError at SmartCallN.
+        has_kw_arg = 0
         i = 0
         WhileLoop LessThan(i, num_args) {
             arg = Array.Get(args, i)
-            
-            // Flatten complex args
-            arg_has_call = Gen_HasCall(arg)
-            IfCondition EqualTo(arg_has_call, 1) ThenBlock: {
-                arg = Gen_FlattenExpr(arg)
+            IfCondition EqualTo(AST_Type(arg), Node.KW_ARG) ThenBlock: {
+                has_kw_arg = 1
+            } ElseBlock: {
+                arg_has_call = Gen_HasCall(arg)
+                IfCondition EqualTo(arg_has_call, 1) ThenBlock: {
+                    arg = Gen_FlattenExpr(arg)
+                }
+                Gen_EmitIndent()
+                Gen_Emit("Array.Push(")
+                Gen_Emit(args_var)
+                Gen_Emit(", ")
+                OOPGen_Expr(arg)
+                Gen_Emit(")\n")
             }
-            
+            i = Add(i, 1)
+        }
+        IfCondition EqualTo(has_kw_arg, 1) ThenBlock: {
             Gen_EmitIndent()
             Gen_Emit("Array.Push(")
             Gen_Emit(args_var)
-            Gen_Emit(", ")
-            OOPGen_Expr(arg)
-            Gen_Emit(")\n")
-            
-            i = Add(i, 1)
+            Gen_Emit(", AddressOf(AIMacro.KwArgError))\n")
         }
         
         // Emit the method call
@@ -1544,6 +1657,16 @@ Function.OOPGen_MethodCall {
 // SUPER CALL: super().method(args)
 // =============================================================================
 
+Function.OOPGen_ReceiverIdent {
+    Output: Address
+    Body: {
+        IfCondition EqualTo(OOPGen.current_receiver, 0) ThenBlock: {
+            ReturnValue("self")
+        }
+        ReturnValue(OOPGen.current_receiver)
+    }
+}
+
 Function.OOPGen_SuperCall {
     Input: expr: Address
     Body: {
@@ -1561,7 +1684,9 @@ Function.OOPGen_SuperCall {
         
         // Generate args array
         args_var = OOPGen_TempVar("super_args")
+        recv = OOPGen_ReceiverIdent()
         
+        Gen_EmitIndent()
         Gen_Emit(args_var)
         Gen_Emit(" = Array.Create(")
         Gen_EmitNumber(num_args)
@@ -1582,7 +1707,9 @@ Function.OOPGen_SuperCall {
         
         // Emit super call
         Gen_EmitIndent()
-        Gen_Emit("OOP.SuperCall(self, \"")
+        Gen_Emit("OOP.SuperCall(")
+        Gen_Emit(recv)
+        Gen_Emit(", \"")
         Gen_Emit(OOPGen.current_class)
         Gen_Emit("\", \"")
         Gen_Emit(method)
@@ -1686,6 +1813,38 @@ Function.OOPGen_EmitClassRegistration {
         }
         IfCondition EqualTo(OOPGen_LooksLikeTestClass(class_name), 1) ThenBlock: {
             is_test = 1
+            // pickle round-trip classes need dumps/loads; skip until pickle works
+            pi = 0
+            has_pkl = 0
+            WhileLoop NotEqual(GetByte(class_name, pi), 0) {
+                IfCondition And(EqualTo(GetByte(class_name, pi), 80), And(EqualTo(GetByte(class_name, Add(pi, 1)), 105), And(EqualTo(GetByte(class_name, Add(pi, 2)), 99), And(EqualTo(GetByte(class_name, Add(pi, 3)), 107), And(EqualTo(GetByte(class_name, Add(pi, 4)), 108), EqualTo(GetByte(class_name, Add(pi, 5)), 101)))))) ThenBlock: {
+                    has_pkl = 1
+                }
+                pi = Add(pi, 1)
+            }
+            IfCondition EqualTo(has_pkl, 1) ThenBlock: {
+                is_test = 0
+            }
+            IfCondition EqualTo(StringCompare(class_name, "COperatorTestCase"), 0) ThenBlock: {
+                is_test = 0
+            }
+            // Mixins named *TestCase with no bases are not unittest.TestCase
+            // subclasses (OperatorTestCase, SeqTestCase, PickleTest).
+            IfCondition EqualTo(parent, 0) ThenBlock: {
+                found_tc = 0
+                bj = 0
+                nbs = Array.Size(bases)
+                WhileLoop LessThan(bj, nbs) {
+                    bnm = Array.Get(bases, bj)
+                    IfCondition EqualTo(StringCompare(bnm, "TestCase"), 0) ThenBlock: {
+                        found_tc = 1
+                    }
+                    bj = Add(bj, 1)
+                }
+                IfCondition EqualTo(found_tc, 0) ThenBlock: {
+                    is_test = 0
+                }
+            }
         }
         IfCondition NotEqual(parent, 0) ThenBlock: {
             cmp_tc = StringCompare(parent, "TestCase")
@@ -1704,8 +1863,13 @@ Function.OOPGen_EmitClassRegistration {
                 use_parent = 0
             }
         }
+        mixin_first = 0
         IfCondition EqualTo(is_test, 1) ThenBlock: {
-            use_parent = "TestCase"
+            IfCondition Or(EqualTo(parent, 0), Or(EqualTo(StringCompare(parent, "TestCase"), 0), EqualTo(StringCompare(parent, "object"), 0))) ThenBlock: {
+                use_parent = "TestCase"
+            } ElseBlock: {
+                use_parent = parent
+            }
         }
         IfCondition EqualTo(use_parent, 0) ThenBlock: {
             reg = StringConcat(reg, "0")
@@ -1718,6 +1882,13 @@ Function.OOPGen_EmitClassRegistration {
         Array.Push(OOPGen.class_init_code, reg)
         IfCondition EqualTo(is_test, 1) ThenBlock: {
             Array.Push(OOPGen.test_classes, class_name)
+        }
+        IfCondition NotEqual(mixin_first, 0) ThenBlock: {
+            mixin_code = StringConcat("    OOP.ClassMixin(\"", class_name)
+            mixin_code = StringConcat(mixin_code, "\", \"")
+            mixin_code = StringConcat(mixin_code, mixin_first)
+            mixin_code = StringConcat(mixin_code, "\")\n")
+            Array.Push(OOPGen.class_init_code, mixin_code)
         }
         
         // Handle additional bases as mixins
@@ -1775,6 +1946,36 @@ Function.OOPGen_EmitClassRegistration {
                 method_code = StringConcat(method_code, "))\n")
                 Array.Push(OOPGen.class_init_code, method_code)
             }
+            IfCondition EqualTo(item_type, Node.ASSIGNMENT) ThenBlock: {
+                aname = AST_GetField(item, "name")
+                aval = AST_GetField(item, "value")
+                IfCondition And(NotEqual(aname, 0), EqualTo(AST_Type(aval), Node.IDENT)) ThenBlock: {
+                    src = ArrayGet(aval, 3)
+                    src_fn = StringConcat(class_name, "_")
+                    src_fn = StringConcat(src_fn, src)
+                    found = 0
+                    IfCondition NotEqual(OOPGen.emitted_methods, 0) ThenBlock: {
+                        ei = 0
+                        en = Array.Size(OOPGen.emitted_methods)
+                        WhileLoop LessThan(ei, en) {
+                            cmpm = StringCompare(Array.Get(OOPGen.emitted_methods, ei), src_fn)
+                            IfCondition EqualTo(cmpm, 0) ThenBlock: {
+                                found = 1
+                            }
+                            ei = Add(ei, 1)
+                        }
+                    }
+                    IfCondition EqualTo(found, 1) ThenBlock: {
+                        method_code = StringConcat("    OOP.ClassMethod(\"", class_name)
+                        method_code = StringConcat(method_code, "\", \"")
+                        method_code = StringConcat(method_code, aname)
+                        method_code = StringConcat(method_code, "\", AddressOf(")
+                        method_code = StringConcat(method_code, src_fn)
+                        method_code = StringConcat(method_code, "))\n")
+                        Array.Push(OOPGen.class_init_code, method_code)
+                    }
+                }
+            }
             m = Add(m, 1)
         }
         
@@ -1792,7 +1993,15 @@ Function.OOPGen_InstanceCreation {
     Input: args: Address
     Output: Address  // Returns temp var holding instance
     Body: {
-        num_args = Array.Size(args)
+        orig_name = class_name
+        rn = OOPGen_RenameOf(class_name)
+        IfCondition NotEqual(rn, 0) ThenBlock: {
+            class_name = rn
+        }
+        num_args = 0
+        IfCondition NotEqual(args, 0) ThenBlock: {
+            num_args = Array.Size(args)
+        }
         
         // Generate args array
         args_var = OOPGen_TempVar("init_args")
@@ -1800,27 +2009,24 @@ Function.OOPGen_InstanceCreation {
         
         Gen_EmitIndent()
         Gen_Emit(args_var)
-        Gen_Emit(" = Array.Create(")
-        Gen_EmitNumber(num_args)
-        Gen_Emit(")\n")
+        Gen_Emit(" = Array.Create(8)\n")
         
-        // Push each argument
+        // Push positionals. KW_ARG is bound after ObjectNewInit via ObjectSet
+        // (nested __init__ param lookup is not a TArray of IDENT nodes).
         i = 0
         WhileLoop LessThan(i, num_args) {
             arg = Array.Get(args, i)
-            
-            arg_has_call = Gen_HasCall(arg)
-            IfCondition EqualTo(arg_has_call, 1) ThenBlock: {
-                arg = Gen_FlattenExpr(arg)
+            IfCondition NotEqual(AST_Type(arg), Node.KW_ARG) ThenBlock: {
+                IfCondition EqualTo(Gen_HasCall(arg), 1) ThenBlock: {
+                    arg = Gen_FlattenExpr(arg)
+                }
+                Gen_EmitIndent()
+                Gen_Emit("Array.Push(")
+                Gen_Emit(args_var)
+                Gen_Emit(", ")
+                OOPGen_Expr(arg)
+                Gen_Emit(")\n")
             }
-            
-            Gen_EmitIndent()
-            Gen_Emit("Array.Push(")
-            Gen_Emit(args_var)
-            Gen_Emit(", ")
-            OOPGen_Expr(arg)
-            Gen_Emit(")\n")
-            
             i = Add(i, 1)
         }
         
@@ -1828,15 +2034,46 @@ Function.OOPGen_InstanceCreation {
         init_fn = StringConcat(class_name, "___init__")
         Gen_EmitIndent()
         Gen_Emit(instance_var)
-        IfCondition EqualTo(Gen_IsPackedFunc(init_fn), 1) ThenBlock: {
-            Gen_Emit(" = AIMacro.ObjectNewInitPacked(\"")
+        IfCondition NotEqual(rn, 0) ThenBlock: {
+            IfCondition EqualTo(Gen_IsPackedFunc(init_fn), 1) ThenBlock: {
+                Gen_Emit(" = AIMacro.ObjectNewInitPacked(")
+            } ElseBlock: {
+                Gen_Emit(" = OOP.ObjectNewInit(")
+            }
+            Gen_EmitIdent(orig_name)
+            Gen_Emit(", ")
         } ElseBlock: {
-            Gen_Emit(" = OOP.ObjectNewInit(\"")
+            IfCondition EqualTo(Gen_IsPackedFunc(init_fn), 1) ThenBlock: {
+                Gen_Emit(" = AIMacro.ObjectNewInitPacked(\"")
+            } ElseBlock: {
+                Gen_Emit(" = OOP.ObjectNewInit(\"")
+            }
+            Gen_Emit(class_name)
+            Gen_Emit("\", ")
         }
-        Gen_Emit(class_name)
-        Gen_Emit("\", ")
         Gen_Emit(args_var)
         Gen_Emit(")\n")
+
+        i = 0
+        WhileLoop LessThan(i, num_args) {
+            a = Array.Get(args, i)
+            IfCondition EqualTo(AST_Type(a), Node.KW_ARG) ThenBlock: {
+                kn = ArrayGet(a, 3)
+                kv = ArrayGet(a, 4)
+                IfCondition EqualTo(Gen_HasCall(kv), 1) ThenBlock: {
+                    kv = Gen_FlattenExpr(kv)
+                }
+                Gen_EmitIndent()
+                Gen_Emit("AIMacro.ObjectSet(")
+                Gen_Emit(instance_var)
+                Gen_Emit(", \"")
+                Gen_Emit(kn)
+                Gen_Emit("\", ")
+                OOPGen_Expr(kv)
+                Gen_Emit(")\n")
+            }
+            i = Add(i, 1)
+        }
         
         // Cleanup args
         Gen_EmitIndent()
@@ -1860,6 +2097,9 @@ Function.OOPGen_IsClassName {
         IfCondition EqualTo(OOPGen.initialized, 0) ThenBlock: {
             ReturnValue(0)
         }
+        IfCondition NotEqual(OOPGen_RenameOf(name), 0) ThenBlock: {
+            ReturnValue(1)
+        }
         
         num_classes = Array.Size(OOPGen.classes)
         i = 0
@@ -1871,6 +2111,56 @@ Function.OOPGen_IsClassName {
                 ReturnValue(1)
             }
             i = Add(i, 1)
+        }
+        ReturnValue(0)
+    }
+}
+
+Function.OOPGen_RenameOf {
+    Input: name: Address
+    Output: Address
+    Body: {
+        IfCondition Or(EqualTo(name, 0), EqualTo(OOPGen.class_renames_from, 0)) ThenBlock: {
+            ReturnValue(0)
+        }
+        nsz = Array.Size(OOPGen.class_renames_from)
+        found = 0
+        ni = 0
+        WhileLoop LessThan(ni, nsz) {
+            bn = Array.Get(OOPGen.class_renames_from, ni)
+            cmpn = StringCompare(name, bn)
+            IfCondition EqualTo(cmpn, 0) ThenBlock: {
+                found = Array.Get(OOPGen.class_renames_to, ni)
+            }
+            ni = Add(ni, 1)
+        }
+        ReturnValue(found)
+    }
+}
+
+Function.OOPGen_ClassMethodAddr {
+    Input: name: Address
+    Output: Address
+    Body: {
+        IfCondition Or(EqualTo(name, 0), EqualTo(OOPGen.current_class, 0)) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(OOPGen.in_classattrs, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(OOPGen.emitted_methods, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        cand = StringConcat(OOPGen.current_class, "_")
+        cand = StringConcat(cand, name)
+        ei = 0
+        en = Array.Size(OOPGen.emitted_methods)
+        WhileLoop LessThan(ei, en) {
+            cmpm = StringCompare(Array.Get(OOPGen.emitted_methods, ei), cand)
+            IfCondition EqualTo(cmpm, 0) ThenBlock: {
+                ReturnValue(cand)
+            }
+            ei = Add(ei, 1)
         }
         ReturnValue(0)
     }

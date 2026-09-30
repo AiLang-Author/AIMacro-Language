@@ -2359,7 +2359,12 @@ Function.Parse_Yield {
         IfCondition EqualTo(is_from, 1) ThenBlock: {
             Parse_Advance()
             Parse_SkipNoise()
-            ReturnValue(Parse_Expr())
+            yfrom = Parse_Expr()
+            ynode = AST_Create(Node.YIELD_STMT, 1)
+            ArraySet(ynode, 1, line)
+            ArraySet(ynode, 2, col)
+            ArraySet(ynode, 3, yfrom)
+            ReturnValue(ynode)
         }
 
         // Bare yield? Terminators include ) ] , so (yield) / [(yield), x] parse.
@@ -2396,7 +2401,11 @@ Function.Parse_Yield {
             ArraySet(tup, 3, elems)
             value = tup
         }
-        ReturnValue(value)
+        ynode = AST_Create(Node.YIELD_STMT, 1)
+        ArraySet(ynode, 1, line)
+        ArraySet(ynode, 2, col)
+        ArraySet(ynode, 3, value)
+        ReturnValue(ynode)
     }
 }
 
@@ -4320,6 +4329,13 @@ Function.Parse_Primary {
                 Parse_Advance()
                 node = Parse_Primary()
                 ReturnValue(node)
+            }
+            IfCondition EqualTo(StringCompare(name_ptr, "super"), 0) ThenBlock: {
+                next_t = Lex_GetType(Add(Parse.pos, 1))
+                IfCondition EqualTo(next_t, Token.LPAREN) ThenBlock: {
+                    node = Parse_SuperCall()
+                    ReturnValue(node)
+                }
             }
             // Merge prefix + adjacent STRING/FSTRING; keep concat through further prefixed pieces.
             next_t = Lex_GetType(Add(Parse.pos, 1))

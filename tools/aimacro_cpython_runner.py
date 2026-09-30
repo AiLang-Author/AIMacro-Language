@@ -385,7 +385,7 @@ def run_suite(
                 "stage": fail_stage or "aimacro",
                 "rc": rc,
                 "err": (am_err or "")[-500:],
-                "out": (am_out or "")[-300:],
+                "out": (am_out or "")[-4000:],
                 "tags": tags,
             }
             store(rec)
@@ -400,7 +400,7 @@ def run_suite(
                 "stage": "run",
                 "rc": 0,
                 "err": "no tests ran",
-                "out": (am_out or "")[-300:],
+                "out": (am_out or "")[-4000:],
                 "tags": tags,
             }
             store(rec)

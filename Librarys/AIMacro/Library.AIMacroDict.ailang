@@ -265,22 +265,48 @@ Function.DictGen_SmartGet {
         IfCondition EqualTo(container, 0) ThenBlock: {
             ReturnValue(-999999)
         }
+        IfCondition EqualTo(AIMacro.LooksLikeString(container), 1) ThenBlock: {
+            idx = AIMacro.AsIndex(key)
+            IfCondition EqualTo(AIMacro.ExcPending(), 1) ThenBlock: {
+                ReturnValue(0)
+            }
+            n = StringLength(container)
+            IfCondition Or(LessThan(idx, 0), GreaterEqual(idx, n)) ThenBlock: {
+                AIMacro.RaiseKind(17, "index out of range")
+                ReturnValue(0)
+            }
+            ReturnValue(AIMacro.IterGet(container, idx))
+        }
         
-        // Check if it's a THash (dict)
+        // Check if it's a THash (dict) or an object with __getitem__
         is_hash = Hash.IsHash(container)
         IfCondition EqualTo(is_hash, 1) ThenBlock: {
+            IfCondition EqualTo(OOP.MethodExists(container, "__getitem__"), 1) ThenBlock: {
+                gargs = Array.Create(1)
+                Array.Push(gargs, key)
+                ReturnValue(OOP.MethodCall(container, "__getitem__", gargs))
+            }
             ReturnValue(Hash.Get(container, DictGen_HashKey(key)))
         }
         
         is_array = Array.IsArray(container)
         IfCondition EqualTo(is_array, 1) ThenBlock: {
-            idx = AIMacro.BoolVal(key)
             n = Array.Size(container)
+            idx = AIMacro.NormIndex(key, n)
             IfCondition Or(LessThan(idx, 0), GreaterEqual(idx, n)) ThenBlock: {
                 AIMacro.RaiseKind(17, "index out of range")
                 ReturnValue(0)
             }
             ReturnValue(Array.Get(container, idx))
+        }
+        IfCondition EqualTo(AIMacro.LooksLikeString(container), 1) ThenBlock: {
+            idx = AIMacro.AsIndex(key)
+            n = StringLength(container)
+            IfCondition Or(LessThan(idx, 0), GreaterEqual(idx, n)) ThenBlock: {
+                AIMacro.RaiseKind(17, "index out of range")
+                ReturnValue(0)
+            }
+            ReturnValue(AIMacro.IterGet(container, idx))
         }
         // String/int/other — do not Array.Get (SIGSEGV on enum FlagBoundary unpack)
         ReturnValue(0)
@@ -300,9 +326,16 @@ Function.DictGen_SmartSet {
             ReturnValue(0)
         }
         
-        // Check if it's a THash (dict)
+        // Check if it's a THash (dict) or an object with __setitem__
         is_hash = Hash.IsHash(container)
         IfCondition EqualTo(is_hash, 1) ThenBlock: {
+            IfCondition EqualTo(OOP.MethodExists(container, "__setitem__"), 1) ThenBlock: {
+                sargs = Array.Create(2)
+                Array.Push(sargs, key)
+                Array.Push(sargs, value)
+                OOP.MethodCall(container, "__setitem__", sargs)
+                ReturnValue(0)
+            }
             Hash.Set(container, DictGen_HashKey(key), value)
             ReturnValue(0)
         }
@@ -310,11 +343,58 @@ Function.DictGen_SmartSet {
         // Check if it's a TArray (list)
         is_array = Array.IsArray(container)
         IfCondition EqualTo(is_array, 1) ThenBlock: {
-            Array.Set(container, key, value)
+            n = Array.Size(container)
+            idx = AIMacro.NormIndex(key, n)
+            IfCondition Or(LessThan(idx, 0), GreaterEqual(idx, n)) ThenBlock: {
+                AIMacro.RaiseKind(17, "index out of range")
+                ReturnValue(0)
+            }
+            Array.Set(container, idx, value)
             ReturnValue(0)
         }
         
-        // Fallback: try XArray
-        Array.Set(container, key, value)
+        ReturnValue(0)
+    }
+}
+
+Function.DictGen_SmartDel {
+    Input: container: Address
+    Input: key: Address
+    Output: Address
+    Body: {
+        IfCondition EqualTo(container, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(AIMacro.SafeIsHash(container), 1) ThenBlock: {
+            IfCondition EqualTo(OOP.MethodExists(container, "__delitem__"), 1) ThenBlock: {
+                dargs = Array.Create(1)
+                Array.Push(dargs, key)
+                ReturnValue(OOP.MethodCall(container, "__delitem__", dargs))
+            }
+            Hash.Delete(container, DictGen_HashKey(key))
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(Array.IsArray(container), 1) ThenBlock: {
+            IfCondition EqualTo(AIMacro.SafeIsHash(key), 1) ThenBlock: {
+                IfCondition EqualTo(StringCompare(Hash.Get(key, "__class__"), "slice"), 0) ThenBlock: {
+                    ReturnValue(AIMacro.ListDelSlice(container, Hash.Get(key, "start"), Hash.Get(key, "stop"), Hash.Get(key, "step")))
+                }
+            }
+            nsz = Array.Size(container)
+            i = AIMacro.NormIndex(key, nsz)
+            IfCondition Or(LessThan(i, 0), GreaterEqual(i, nsz)) ThenBlock: {
+                AIMacro.RaiseKind(17, "index out of range")
+                ReturnValue(0)
+            }
+            j = i
+            WhileLoop LessThan(j, Subtract(nsz, 1)) {
+                Array.Set(container, j, Array.Get(container, Add(j, 1)))
+                j = Add(j, 1)
+            }
+            Array.Pop(container)
+            ReturnValue(Types.GetNone())
+        }
+        AIMacro.RaiseKind(5, "delitem")
+        ReturnValue(0)
     }
 }

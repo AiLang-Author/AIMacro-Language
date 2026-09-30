@@ -43,6 +43,8 @@ FixedPool.Gen {
     "enclosing_params": Initialize=0, CanChange=True
     "enclosing_locals": Initialize=0, CanChange=True
     "deferred_freevars": Initialize=0, CanChange=True
+    "deferred_nest_names": Initialize=0, CanChange=True
+    "deferred_nest_funcs": Initialize=0, CanChange=True
     "nest_bind_names": Initialize=0, CanChange=True
     "nest_bind_funcs": Initialize=0, CanChange=True
     "pending_freevars": Initialize=0, CanChange=True
@@ -83,6 +85,8 @@ Function.Gen_Init {
         Gen.enclosing_params = Array.Create(32)
         Gen.enclosing_locals = Array.Create(32)
         Gen.deferred_freevars = Array.Create(64)
+        Gen.deferred_nest_names = Array.Create(64)
+        Gen.deferred_nest_funcs = Array.Create(64)
         Gen.nest_bind_names = Array.Create(64)
         Gen.nest_bind_funcs = Array.Create(64)
         Gen.pending_freevars = 0
@@ -1174,8 +1178,8 @@ Function.Gen_EmitIdent {
         // Nested-def hoist: use AddressOf(__nest_N_name) across functions
         IfCondition NotEqual(Gen.nest_bind_names, 0) ThenBlock: {
             nsz = Array.Size(Gen.nest_bind_names)
-            ni = 0
-            WhileLoop LessThan(ni, nsz) {
+            ni = Subtract(nsz, 1)
+            WhileLoop GreaterEqual(ni, 0) {
                 bn = Array.Get(Gen.nest_bind_names, ni)
                 cmpn = StringCompare(name, bn)
                 IfCondition EqualTo(cmpn, 0) ThenBlock: {
@@ -1184,7 +1188,7 @@ Function.Gen_EmitIdent {
                     Gen_Emit(")")
                     ReturnValue(0)
                 }
-                ni = Add(ni, 1)
+                ni = Subtract(ni, 1)
             }
         }
         // AILang keywords used as Python values (ast.Tuple / ast.Add) — PyMod escape
@@ -1310,6 +1314,67 @@ Function.Gen_OpName {
     }
 }
 
+Function.Gen_StmtsHaveYield {
+    Input: stmts: Address
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(stmts, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(Array.IsArray(stmts), 0) ThenBlock: {
+            ReturnValue(Gen_NodeHasYield(stmts))
+        }
+        n = Array.Size(stmts)
+        i = 0
+        WhileLoop LessThan(i, n) {
+            IfCondition EqualTo(Gen_NodeHasYield(Array.Get(stmts, i)), 1) ThenBlock: {
+                ReturnValue(1)
+            }
+            i = Add(i, 1)
+        }
+        ReturnValue(0)
+    }
+}
+
+Function.Gen_NodeHasYield {
+    Input: node: Address
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(node, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        t = AST_Type(node)
+        IfCondition EqualTo(t, Node.YIELD_STMT) ThenBlock: {
+            ReturnValue(1)
+        }
+        IfCondition EqualTo(t, Node.IF_STMT) ThenBlock: {
+            IfCondition EqualTo(Gen_StmtsHaveYield(ArrayGet(node, 4)), 1) ThenBlock: {
+                ReturnValue(1)
+            }
+            ReturnValue(Gen_StmtsHaveYield(ArrayGet(node, 5)))
+        }
+        IfCondition EqualTo(t, Node.WHILE_STMT) ThenBlock: {
+            IfCondition EqualTo(Gen_StmtsHaveYield(ArrayGet(node, 4)), 1) ThenBlock: {
+                ReturnValue(1)
+            }
+            ReturnValue(Gen_StmtsHaveYield(ArrayGet(node, 5)))
+        }
+        IfCondition EqualTo(t, Node.FOR_STMT) ThenBlock: {
+            IfCondition EqualTo(Gen_StmtsHaveYield(ArrayGet(node, 5)), 1) ThenBlock: {
+                ReturnValue(1)
+            }
+            ReturnValue(Gen_StmtsHaveYield(ArrayGet(node, 6)))
+        }
+        IfCondition EqualTo(t, Node.TRY_STMT) ThenBlock: {
+            IfCondition EqualTo(Gen_StmtsHaveYield(ArrayGet(node, 3)), 1) ThenBlock: {
+                ReturnValue(1)
+            }
+            ReturnValue(Gen_StmtsHaveYield(ArrayGet(node, 5)))
+        }
+        ReturnValue(0)
+    }
+}
+
 // =============================================================================
 // CHECK IF EXPRESSION CONTAINS A FUNCTION CALL
 // INDEX_ACCESS counts because it generates Array.Get() which is a call
@@ -1355,6 +1420,9 @@ Function.Gen_HasCall {
             ReturnValue(1)
         }
         IfCondition EqualTo(t, Node.INDIRECT_CALL) ThenBlock: {
+            ReturnValue(1)
+        }
+        IfCondition EqualTo(t, Node.SUPER_CALL) ThenBlock: {
             ReturnValue(1)
         }
         IfCondition EqualTo(t, Node.TERNARY) ThenBlock: {
@@ -1600,6 +1668,16 @@ Function.Gen_IsShimModule {
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
         cmp = StringCompare(name, "test")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+        cmp = StringCompare(name, "tempfile")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+        cmp = StringCompare(name, "pickle")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+        cmp = StringCompare(name, "gc")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+        cmp = StringCompare(name, "string")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+        cmp = StringCompare(name, "operator")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
         IfCondition EqualTo(Gen_NameStartsWith(name, "unittest"), 1) ThenBlock: {
             ReturnValue(1)
         }
@@ -1702,6 +1780,16 @@ Function.Gen_IsStdlibMethod {
                 ReturnValue(1)
             }
             cmp = StringCompare(method, "listdir")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+            cmp = StringCompare(method, "openpty")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+            cmp = StringCompare(method, "close")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+            cmp = StringCompare(method, "write")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+            cmp = StringCompare(method, "read")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+            cmp = StringCompare(method, "isatty")
             IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
             ReturnValue(0)
         }
@@ -2386,6 +2474,24 @@ Function.Gen_SnapshotFreevars {
     }
 }
 
+Function.Gen_CopyAddrArray {
+    Input: src: Address
+    Output: Address
+    Body: {
+        out = Array.Create(8)
+        IfCondition EqualTo(src, 0) ThenBlock: {
+            ReturnValue(out)
+        }
+        n = Array.Size(src)
+        i = 0
+        WhileLoop LessThan(i, n) {
+            Array.Push(out, Array.Get(src, i))
+            i = Add(i, 1)
+        }
+        ReturnValue(out)
+    }
+}
+
 Function.Gen_PushDeferredFunction {
     Input: node: Address
     Body: {
@@ -2393,6 +2499,8 @@ Function.Gen_PushDeferredFunction {
         fv = Gen_SnapshotFreevarsAll(nest_params)
         Array.Push(Gen.deferred_functions, node)
         Array.Push(Gen.deferred_freevars, fv)
+        Array.Push(Gen.deferred_nest_names, Gen_CopyAddrArray(Gen.nest_bind_names))
+        Array.Push(Gen.deferred_nest_funcs, Gen_CopyAddrArray(Gen.nest_bind_funcs))
     }
 }
 
