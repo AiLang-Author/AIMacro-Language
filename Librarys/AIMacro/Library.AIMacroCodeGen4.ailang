@@ -1353,6 +1353,42 @@ Function.Gen_CallExpr {
             ReturnValue(0)
         }
 
+        cmp = StringCompare(name, "slice")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            sa0 = Gen_NthPosArg(args, 0)
+            sa1 = Gen_NthPosArg(args, 1)
+            sa2 = Gen_NthPosArg(args, 2)
+            IfCondition EqualTo(sa0, 0) ThenBlock: {
+                Gen_Emit("AIMacro.Slice(Types.GetNone(), Types.GetNone(), Types.GetNone())")
+                ReturnValue(0)
+            }
+            IfCondition EqualTo(Gen_HasCall(sa0), 1) ThenBlock: {
+                sa0 = Gen_FlattenExpr(sa0)
+            }
+            IfCondition And(NotEqual(sa1, 0), EqualTo(Gen_HasCall(sa1), 1)) ThenBlock: {
+                sa1 = Gen_FlattenExpr(sa1)
+            }
+            IfCondition And(NotEqual(sa2, 0), EqualTo(Gen_HasCall(sa2), 1)) ThenBlock: {
+                sa2 = Gen_FlattenExpr(sa2)
+            }
+            Gen_Emit("AIMacro.Slice(")
+            Gen_Expr(sa0)
+            Gen_Emit(", ")
+            IfCondition EqualTo(sa1, 0) ThenBlock: {
+                Gen_Emit("Types.GetNone()")
+            } ElseBlock: {
+                Gen_Expr(sa1)
+            }
+            Gen_Emit(", ")
+            IfCondition EqualTo(sa2, 0) ThenBlock: {
+                Gen_Emit("Types.GetNone()")
+            } ElseBlock: {
+                Gen_Expr(sa2)
+            }
+            Gen_Emit(")")
+            ReturnValue(0)
+        }
+
         cmp = StringCompare(name, "list")
         IfCondition EqualTo(cmp, 0) ThenBlock: {
             has_kw = 0
@@ -1435,11 +1471,11 @@ Function.Gen_CallExpr {
                 type_name = ArrayGet(arg1, 3)
                 is_class = OOPGen_IsClassName(type_name)
                 IfCondition EqualTo(is_class, 1) ThenBlock: {
-                    Gen_Emit("AIMacro.Bool(OOP.ObjectIsInstance(")
+                    Gen_Emit("AIMacro.IsInstance(")
                     Gen_Expr(arg0)
                     Gen_Emit(", \"")
                     Gen_Emit(type_name)
-                    Gen_Emit("\"))")
+                    Gen_Emit("\")")
                     ReturnValue(0)
                 }
                 type_const = Gen_MapTypeConstant(type_name)
@@ -2165,6 +2201,9 @@ Function.Gen_MapBuiltin {
         cmp = StringCompare(name, "callable")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.Callable") }
 
+        cmp = StringCompare(name, "__init__")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.InitSink") }
+
         cmp = StringCompare(name, "range")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.Range") }
 
@@ -2628,6 +2667,24 @@ Function.Gen_MethodCallExpr {
         obj = ArrayGet(node, 3)
         method = ArrayGet(node, 4)
         args = ArrayGet(node, 5)
+        // string.Formatter.__init__(self) / super-style: never emit bare __init__(
+        cmp_initm = StringCompare(method, "__init__")
+        IfCondition EqualTo(cmp_initm, 0) ThenBlock: {
+            Gen_Emit("AIMacro.InitSink(")
+            Gen_Expr(obj)
+            Gen_Emit(", ")
+            n_init = 0
+            IfCondition NotEqual(args, 0) ThenBlock: {
+                n_init = Array.Size(args)
+            }
+            IfCondition GreaterThan(n_init, 0) ThenBlock: {
+                Gen_Expr(Array.Get(args, 0))
+            } ElseBlock: {
+                Gen_Emit("0")
+            }
+            Gen_Emit(")")
+            ReturnValue(0)
+        }
         IfCondition EqualTo(Gen_IsDropRecvMethod(method), 1) ThenBlock: {
             Gen_EmitDropRecvMethod(method, args)
             ReturnValue(0)
@@ -3035,6 +3092,13 @@ Function.Gen_MethodCallExpr {
 
         // Normal method dispatch for non-ambiguous methods
         func = Gen_MapMethod(method)
+        // Unmapped names are Python methods, not AILANG functions.
+        // string.Formatter.get_value(...) used to emit get_value(_aim_t0, ...).
+        mcmp_raw = StringCompare(func, method)
+        IfCondition EqualTo(mcmp_raw, 0) ThenBlock: {
+            OOPGen_MethodCall(node)
+            ReturnValue(0)
+        }
         is_pred = 0
         cmp = StringCompare(method, "islower")
         IfCondition EqualTo(cmp, 0) ThenBlock: { is_pred = 1 }
@@ -3237,6 +3301,9 @@ Function.Gen_MapMethod {
 
         cmp = StringCompare(method, "isdisjoint")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.SetIsdisjoint") }
+
+        cmp = StringCompare(method, "__init__")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.InitSink") }
                 
         ReturnValue(method)
     }
@@ -3298,22 +3365,20 @@ Function.Gen_IndexAccess {
             }
         }
         
-        // STRING INDEXING
+        // STRING INDEXING — DictGen_SmartGet so __index__ objects work
         IfCondition EqualTo(is_string_access, 1) ThenBlock: {
             IfCondition EqualTo(is_negative, 1) ThenBlock: {
-                Gen_Emit("AIMacro.Chr(GetByte(")
+                Gen_Emit("DictGen_SmartGet(")
                 Gen_Expr(expr)
-                Gen_Emit(", Subtract(StringLength(")
-                Gen_Expr(expr)
-                Gen_Emit("), ")
+                Gen_Emit(", Subtract(0, ")
                 Gen_EmitNumber(neg_value)
-                Gen_Emit(")))")
+                Gen_Emit("))")
             } ElseBlock: {
-                Gen_Emit("AIMacro.Chr(GetByte(")
+                Gen_Emit("DictGen_SmartGet(")
                 Gen_Expr(expr)
                 Gen_Emit(", ")
                 Gen_Expr(index)
-                Gen_Emit("))")
+                Gen_Emit(")")
             }
             ReturnValue(0)
         }

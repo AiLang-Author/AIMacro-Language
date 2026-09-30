@@ -9,8 +9,10 @@ test_cppext/__init__.py
 test_crashers.py
 test_eintr.py
 test_enumerate.py
+test_eof.py
 test_errno.py
 test_fileutils.py
+test_flufl.py
 test_future_stmt/test_future_flags.py
 test_future_stmt/test_future_multiple_features.py
 test_future_stmt/test_future_multiple_imports.py
@@ -19,6 +21,7 @@ test_generator_stop.py
 test_global.py
 test_importlib/extension/test_case_sensitivity.py
 test_importlib/test_contents.py
+test_index.py
 test_keyword.py
 test_list.py
 test_longexp.py
@@ -26,11 +29,15 @@ test_openpty.py
 test_operator.py
 test_smtpnet.py
 test_startfile.py
+test_string.py
 test_sundry.py
 test_tix.py
 test_tools/test_gprof2html.py
 test_tools/test_pdeps.py
 test_tools/test_reindent.py
+test_typechecks.py
 test_unary.py
+test_unpack.py
+test_userlist.py
 test_utf8source.py
 test_xxtestfuzz.py

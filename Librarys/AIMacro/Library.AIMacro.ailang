@@ -531,13 +531,27 @@ Function.AIMacro.SmartSize {
         IfCondition EqualTo(list, 0) ThenBlock: {
             ReturnValue(0)
         }
-        
-        is_tarray = Array.IsArray(list)
-        IfCondition EqualTo(is_tarray, 1) ThenBlock: {
+        IfCondition EqualTo(Array.IsArray(list), 1) ThenBlock: {
             ReturnValue(Array.Size(list))
         }
-        
-        ReturnValue(Array.Size(list))
+        IfCondition EqualTo(AIMacro.LooksLikeString(list), 1) ThenBlock: {
+            ReturnValue(StringLength(list))
+        }
+        IfCondition EqualTo(Hash.IsHash(list), 1) ThenBlock: {
+            ca = Hash.Get(list, "__class__")
+            IfCondition NotEqual(ca, 0) ThenBlock: {
+                IfCondition EqualTo(StringCompare(ca, "range"), 0) ThenBlock: {
+                    rl = AIMacro.RangeLen(list)
+                    ReturnValue(rl)
+                }
+            }
+            wlst = Hash.Get(list, "__list__")
+            IfCondition EqualTo(Array.IsArray(wlst), 1) ThenBlock: {
+                ReturnValue(Array.Size(wlst))
+            }
+            ReturnValue(Hash.Size(list))
+        }
+        ReturnValue(0)
     }
 }
 
@@ -796,7 +810,20 @@ Function.AIMacro.IsInstance {
         }
         IfCondition EqualTo(AIMacro.LooksLikeString(type_id), 1) ThenBlock: {
             oi2 = OOP.ObjectIsInstance(value, type_id)
-            ReturnValue(AIMacro.Bool(oi2))
+            IfCondition EqualTo(oi2, 1) ThenBlock: {
+                ReturnValue(AIMacro.TrueVal())
+            }
+        }
+        IfCondition And(GreaterEqual(value, 0), LessThan(value, 4000000)) ThenBlock: {
+            subn = AIMacro.IsSubclass(AddressOf(AIMacro.Int), type_id)
+            IfCondition EqualTo(AIMacro.SmartBool(subn), 1) ThenBlock: {
+                ReturnValue(AIMacro.TrueVal())
+            }
+        }
+        pt = AIMacro.PyType(value)
+        subok = AIMacro.IsSubclass(pt, type_id)
+        IfCondition EqualTo(AIMacro.SmartBool(subok), 1) ThenBlock: {
+            ReturnValue(AIMacro.TrueVal())
         }
         ReturnValue(AIMacro.Bool(Types.IsInstance(value, type_id)))
     }
@@ -1177,6 +1204,10 @@ Function.AIMacro.Str {
                 ReturnValue(AIMacro.Repr(value))
             }
             IfCondition EqualTo(Hash.IsHash(value), 1) ThenBlock: {
+                ea = Hash.Get(value, "args")
+                IfCondition EqualTo(AIMacro.LooksLikeString(ea), 1) ThenBlock: {
+                    ReturnValue(ea)
+                }
                 ReturnValue(AIMacro.Repr(value))
             }
         }
@@ -2733,6 +2764,68 @@ Function.AIMacro.RangeItems {
     }
 }
 
+Function.AIMacro.IsSliceObj {
+    Input: v: Address
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(Hash.IsHash(v), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        ca = Hash.Get(v, "__class__")
+        IfCondition EqualTo(ca, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(ca, "slice"), 0) ThenBlock: {
+            ReturnValue(1)
+        }
+        ReturnValue(0)
+    }
+}
+
+Function.AIMacro.SliceWrap {
+    Input: container: Address
+    Input: sliced: Address
+    Output: Address
+    Body: {
+        IfCondition EqualTo(Hash.IsHash(container), 0) ThenBlock: {
+            ReturnValue(sliced)
+        }
+        ca = Hash.Get(container, "__class__")
+        IfCondition EqualTo(ca, 0) ThenBlock: {
+            ReturnValue(sliced)
+        }
+        IfCondition Or(EqualTo(StringCompare(ca, "tuple"), 0), EqualTo(StringCompare(ca, "bytearray"), 0)) ThenBlock: {
+            w = AIMacro.WrapSeq(sliced, ca)
+            ReturnValue(w)
+        }
+        ReturnValue(sliced)
+    }
+}
+
+Function.AIMacro.RangeGet {
+    Input: rng: Address
+    Input: idx: Address
+    Output: Address
+    Body: {
+        nlen = AIMacro.RangeLen(rng)
+        i = AIMacro.NormIndex(idx, nlen)
+        IfCondition Or(LessThan(i, 0), GreaterEqual(i, nlen)) ThenBlock: {
+            AIMacro.RaiseKind(17, "range index out of range")
+            ReturnValue(0)
+        }
+        start = AIMacro.UnboxIntZero(Hash.Get(rng, "start"))
+        step = AIMacro.UnboxIntZero(Hash.Get(rng, "step"))
+        IfCondition EqualTo(step, 0) ThenBlock: {
+            step = 1
+        }
+        r = Add(start, Multiply(i, step))
+        IfCondition EqualTo(r, 0) ThenBlock: {
+            ReturnValue(AIMacro.IntZero())
+        }
+        ReturnValue(r)
+    }
+}
+
 Function.AIMacro.AsIndex {
     Input: v: Address
     Output: Integer
@@ -2753,7 +2846,7 @@ Function.AIMacro.AsIndex {
             }
             ReturnValue(StringToNumber(digs))
         }
-        IfCondition EqualTo(AIMacro.SafeIsHash(v), 1) ThenBlock: {
+        IfCondition EqualTo(Hash.IsHash(v), 1) ThenBlock: {
             IfCondition EqualTo(OOP.MethodExists(v, "__index__"), 1) ThenBlock: {
                 empty = AIMacro.EmptyList()
                 r = OOP.MethodCall(v, "__index__", empty)
@@ -2761,7 +2854,7 @@ Function.AIMacro.AsIndex {
                     AIMacro.RaiseKind(5, "TypeError")
                     ReturnValue(0)
                 }
-                IfCondition EqualTo(AIMacro.SafeIsHash(r), 1) ThenBlock: {
+                IfCondition EqualTo(Hash.IsHash(r), 1) ThenBlock: {
                     IfCondition EqualTo(OOP.MethodExists(r, "__index__"), 0) ThenBlock: {
                         AIMacro.RaiseKind(5, "TypeError")
                         ReturnValue(0)
@@ -6570,6 +6663,26 @@ Function.AIMacro.RaiseKind {
         AIMacroExc.value = h
         IfCondition EqualTo(AIMacroExc.depth, 0) ThenBlock: {
             AIMacro.ExcAbort()
+        }
+    }
+}
+
+Function.AIMacro.RaiseSyntax {
+    Input: msg: Address
+    Input: filename: Address
+    Input: lineno: Integer
+    Input: offset: Integer
+    Input: text: Address
+    Body: {
+        AIMacro.RaiseKind(24, msg)
+        ev = AIMacro.ExcValue()
+        IfCondition EqualTo(Hash.IsHash(ev), 1) ThenBlock: {
+            Hash.Set(ev, "filename", filename)
+            Hash.Set(ev, "lineno", lineno)
+            Hash.Set(ev, "offset", offset)
+            Hash.Set(ev, "text", text)
+            Hash.Set(ev, "msg", msg)
+            Hash.Set(ev, "args", msg)
         }
     }
 }

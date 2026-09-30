@@ -293,22 +293,20 @@ Function.Gen_EmitSmartIndexAccess {
             }
         }
         
-        // STRING INDEXING
+        // STRING INDEXING — DictGen_SmartGet so __index__ objects work
         IfCondition EqualTo(is_string_access, 1) ThenBlock: {
             IfCondition EqualTo(is_negative, 1) ThenBlock: {
-                Gen_Emit("AIMacro.Chr(GetByte(")
+                Gen_Emit("DictGen_SmartGet(")
                 Gen_Expr(expr)
-                Gen_Emit(", Subtract(StringLength(")
-                Gen_Expr(expr)
-                Gen_Emit("), ")
+                Gen_Emit(", Subtract(0, ")
                 Gen_EmitNumber(neg_value)
-                Gen_Emit(")))")
+                Gen_Emit("))")
             } ElseBlock: {
-                Gen_Emit("AIMacro.Chr(GetByte(")
+                Gen_Emit("DictGen_SmartGet(")
                 Gen_Expr(expr)
                 Gen_Emit(", ")
                 Gen_Expr(index)
-                Gen_Emit("))")
+                Gen_Emit(")")
             }
             ReturnValue(0)
         }
@@ -1321,6 +1319,8 @@ Function.Gen_FlattenExpr {
             IfCondition EqualTo(cmp, 0) ThenBlock: { is_known = 1 }
             cmp = StringCompare(method, "__setattr__")
             IfCondition EqualTo(cmp, 0) ThenBlock: { is_known = 1 }
+            cmp = StringCompare(method, "__init__")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { is_known = 1 }
             IfCondition EqualTo(Gen_IsDropRecvMethod(method), 1) ThenBlock: {
                 Gen_EmitIndent()
                 Gen_Emit(temp)
@@ -1468,51 +1468,18 @@ Function.Gen_FlattenExpr {
             
             flat_expr = Gen_FlattenExpr(expr)
             
-            // STRING INDEXING WITH NEGATIVE INDEX
-            IfCondition And(EqualTo(is_string_index, 1), EqualTo(is_negative, 1)) ThenBlock: {
-                len_temp = Gen_TempName()
-                Gen_EmitIndent()
-                Gen_Emit(len_temp)
-                Gen_Emit(" = StringLength(")
-                Gen_Expr(flat_expr)
-                Gen_Emit(")\n")
-                
-                idx_temp = Gen_TempName()
-                Gen_EmitIndent()
-                Gen_Emit(idx_temp)
-                Gen_Emit(" = Subtract(")
-                Gen_Emit(len_temp)
-                Gen_Emit(", ")
-                Gen_EmitNumber(neg_value)
-                Gen_Emit(")\n")
-                
-                result_temp = Gen_TempName()
-                Gen_MarkStringVar(result_temp)
-                Gen_EmitIndent()
-                Gen_Emit(result_temp)
-                Gen_Emit(" = AIMacro.Chr(GetByte(")
-                Gen_Expr(flat_expr)
-                Gen_Emit(", ")
-                Gen_Emit(idx_temp)
-                Gen_Emit("))\n")
-                
-                ReturnValue(Gen_MakeIdent(result_temp))
-            }
-            
-            // STRING INDEXING WITH POSITIVE INDEX
-            IfCondition And(EqualTo(is_string_index, 1), EqualTo(is_negative, 0)) ThenBlock: {
+            // STRING INDEXING — DictGen_SmartGet so __index__ objects work
+            IfCondition EqualTo(is_string_index, 1) ThenBlock: {
                 flat_index = Gen_FlattenExpr(index)
-                
                 result_temp = Gen_TempName()
                 Gen_MarkStringVar(result_temp)
                 Gen_EmitIndent()
                 Gen_Emit(result_temp)
-                Gen_Emit(" = AIMacro.Chr(GetByte(")
+                Gen_Emit(" = DictGen_SmartGet(")
                 Gen_Expr(flat_expr)
                 Gen_Emit(", ")
                 Gen_Expr(flat_index)
-                Gen_Emit("))\n")
-                
+                Gen_Emit(")\n")
                 ReturnValue(Gen_MakeIdent(result_temp))
             }
             

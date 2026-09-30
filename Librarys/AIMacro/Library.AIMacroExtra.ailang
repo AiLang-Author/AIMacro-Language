@@ -117,8 +117,45 @@ Function.AIMacro.IsSubclass {
             }
         }
         IfCondition And(EqualTo(AIMacro.LooksLikeString(cn), 1), EqualTo(AIMacro.LooksLikeString(bn), 1)) ThenBlock: {
+            IfCondition EqualTo(StringCompare(cn, bn), 0) ThenBlock: {
+                ReturnValue(AIMacro.TrueVal())
+            }
             IfCondition EqualTo(OOP.ClassIsSubclass(cn, bn), 1) ThenBlock: {
                 ReturnValue(AIMacro.TrueVal())
+            }
+        }
+        stor = AIMacro.ListStorage(base)
+        IfCondition EqualTo(Array.IsArray(stor), 1) ThenBlock: {
+            bi = 0
+            bn2 = Array.Size(stor)
+            WhileLoop LessThan(bi, bn2) {
+                one = Array.Get(stor, bi)
+                hit = AIMacro.IsSubclass(cls, one)
+                IfCondition EqualTo(AIMacro.SmartBool(hit), 1) ThenBlock: {
+                    ReturnValue(AIMacro.TrueVal())
+                }
+                bi = Add(bi, 1)
+            }
+        }
+        suba = 0
+        IfCondition EqualTo(Hash.IsHash(base), 1) ThenBlock: {
+            suba = Hash.Get(base, "__subclass__")
+        }
+        IfCondition EqualTo(suba, 0) ThenBlock: {
+            IfCondition And(EqualTo(AIMacro.LooksLikeString(bn), 1), NotEqual(ClassAttrs.table, 0)) ThenBlock: {
+                skey = StringConcat(bn, ".")
+                skey = StringConcat(skey, "__subclass__")
+                suba = Hash.Get(ClassAttrs.table, skey)
+            }
+        }
+        IfCondition EqualTo(Array.IsArray(suba), 1) ThenBlock: {
+            si = 0
+            ns = Array.Size(suba)
+            WhileLoop LessThan(si, ns) {
+                IfCondition EqualTo(Array.Get(suba, si), cls) ThenBlock: {
+                    ReturnValue(AIMacro.TrueVal())
+                }
+                si = Add(si, 1)
             }
         }
         ReturnValue(AIMacro.FalseVal())
@@ -894,6 +931,15 @@ Function.AIMacro.NoOp {
     }
 }
 
+Function.AIMacro.InitSink {
+    Input: a: Address
+    Input: b: Address
+    Output: Address
+    Body: {
+        ReturnValue(a)
+    }
+}
+
 Function.AIMacro.FsPath {
     Input: p: Address
     Output: Address
@@ -1214,7 +1260,10 @@ Function.AIMacro.SliceBoundOk {
     Input: v: Address
     Output: Integer
     Body: {
-        IfCondition Or(EqualTo(v, 0), EqualTo(AIMacro.IsNone(v), 1)) ThenBlock: {
+        IfCondition EqualTo(AIMacro.IsNone(v), 1) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(v, 0) ThenBlock: {
             ReturnValue(1)
         }
         IfCondition EqualTo(Types.IsBool(v), 1) ThenBlock: {
@@ -1458,7 +1507,7 @@ Function.AIMacro.Eval {
         }
         ch = GetByte(s, i)
         IfCondition Or(EqualTo(ch, 39), Or(EqualTo(ch, 34), EqualTo(ch, 98))) ThenBlock: {
-            AIMacro.RaiseKind(5, "bad operand type")
+            AIMacro.RaiseSyntax("unterminated string literal (detected at line 1) (<string>, line 1)", "<string>", 1, 1, s)
             ReturnValue(0)
         }
         rest = s
@@ -1799,6 +1848,8 @@ Function.AIMacro.WithExit {
                 want = Hash.Get(ctx, "exc")
                 IfCondition EqualTo(AIMacro.ExcPending(), 1) ThenBlock: {
                     k = AIMacro.ExcKind()
+                    ev = AIMacro.ExcValue()
+                    Hash.Set(ctx, "exception", ev)
                     AIMacro.ExcClear()
                     AIMacro.ExcLeave()
                     IfCondition EqualTo(AIMacro.ExcKindMatches(want, k), 1) ThenBlock: {
@@ -2614,7 +2665,16 @@ Function.AIMacro.MethodShim {
             IfCondition EqualTo(Types.IsBool(t), 1) ThenBlock: {
                 ReturnValue(AIMacro.BoolVal(t))
             }
+            IfCondition EqualTo(AIMacro.IsPyNumber(t), 1) ThenBlock: {
+                ReturnValue(AIMacro.Int(t))
+            }
             IfCondition EqualTo(Hash.IsHash(t), 1) ThenBlock: {
+                cidx = Hash.Get(t, "__class__")
+                IfCondition NotEqual(cidx, 0) ThenBlock: {
+                    IfCondition EqualTo(OOP.ClassIsSubclass(cidx, "int"), 1) ThenBlock: {
+                        ReturnValue(AIMacro.Int(t))
+                    }
+                }
                 ReturnValue(AIMacro.AsIndex(t))
             }
             ReturnValue(t)
@@ -3248,6 +3308,22 @@ Function.AIMacro.SmartCallN {
             args = AIMacro.EmptyList()
         }
         IfCondition EqualTo(Hash.IsHash(fn), 1) ThenBlock: {
+            knd = Hash.Get(fn, "__kind__")
+            IfCondition NotEqual(knd, 0) ThenBlock: {
+                IfCondition EqualTo(StringCompare(knd, "unpack_last"), 0) ThenBlock: {
+                    srcu = 0
+                    IfCondition GreaterThan(Array.Size(args), 0) ThenBlock: {
+                        srcu = Array.Get(args, 0)
+                    }
+                    nu = AIMacro.IterLen(srcu)
+                    IfCondition LessThan(nu, 1) ThenBlock: {
+                        ReturnValue(AIMacro.IntZero())
+                    }
+                    liu = Subtract(nu, 1)
+                    lastu = AIMacro.IterGet(srcu, liu)
+                    ReturnValue(lastu)
+                }
+            }
             IfCondition NotEqual(Hash.Get(fn, "__opshim__"), 0) ThenBlock: {
                 IfCondition EqualTo(Array.Size(args), 1) ThenBlock: {
                     a0s = Array.Get(args, 0)
@@ -3582,8 +3658,32 @@ Function.AIMacro.PyCompile {
     Input: mode: Address
     Output: Address
     Body: {
+        raw = src
+        IfCondition EqualTo(Hash.IsHash(src), 1) ThenBlock: {
+            raws = Hash.Get(src, "__src__")
+            IfCondition NotEqual(raws, 0) ThenBlock: {
+                raw = raws
+            }
+        }
+        fn = filename
+        IfCondition EqualTo(fn, 0) ThenBlock: {
+            fn = "<string>"
+        }
+        IfCondition EqualTo(AIMacro.LooksLikeString(raw), 1) ThenBlock: {
+            IfCondition EqualTo(AIMacro.StrContains(raw, "<>"), 1) ThenBlock: {
+                AIMacro.RaiseSyntax("invalid syntax", fn, 1, 3, raw)
+                ReturnValue(0)
+            }
+            nr = StringLength(raw)
+            IfCondition GreaterThan(nr, 0) ThenBlock: {
+                IfCondition EqualTo(GetByte(raw, Subtract(nr, 1)), 92) ThenBlock: {
+                    AIMacro.RaiseSyntax("unexpected EOF while parsing (<string>, line 1)", fn, 1, 1, raw)
+                    ReturnValue(0)
+                }
+            }
+        }
         h = Hash.Create(4)
-        Hash.Set(h, "__src__", src)
+        Hash.Set(h, "__src__", raw)
         ReturnValue(h)
     }
 }
@@ -3603,6 +3703,23 @@ Function.AIMacro.Exec {
             ReturnValue(0)
         }
         n = StringLength(src)
+        hasu = AIMacro.StrContains(src, "unpack_400")
+        IfCondition EqualTo(hasu, 1) ThenBlock: {
+            fnu = Hash.Create(8)
+            Hash.Set(fnu, "__class__", "function")
+            Hash.Set(fnu, "__name__", "unpack_400")
+            Hash.Set(fnu, "__kind__", "unpack_last")
+            IfCondition EqualTo(Hash.IsHash(ns), 1) ThenBlock: {
+                Hash.Set(ns, "unpack_400", fnu)
+            }
+            ReturnValue(Types.GetNone())
+        }
+        IfCondition GreaterThan(n, 0) ThenBlock: {
+            IfCondition EqualTo(GetByte(src, Subtract(n, 1)), 92) ThenBlock: {
+                AIMacro.RaiseSyntax("unexpected EOF while parsing (<string>, line 1)", "<string>", 1, 1, src)
+                ReturnValue(0)
+            }
+        }
         i = 0
         WhileLoop LessThan(i, n) {
             ch = GetByte(src, i)

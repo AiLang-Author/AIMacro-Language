@@ -266,12 +266,22 @@ Function.DictGen_SmartGet {
                 Array.Push(gargs, key)
                 ReturnValue(OOP.MethodCall(container, "__getitem__", gargs))
             }
+            ca0 = Hash.Get(container, "__class__")
+            IfCondition NotEqual(ca0, 0) ThenBlock: {
+                IfCondition EqualTo(StringCompare(ca0, "range"), 0) ThenBlock: {
+                    rg0 = AIMacro.RangeGet(container, key)
+                    ReturnValue(rg0)
+                }
+            }
             wlst = Hash.Get(container, "__list__")
             IfCondition EqualTo(Array.IsArray(wlst), 1) ThenBlock: {
-                IfCondition EqualTo(Hash.IsHash(key), 1) ThenBlock: {
-                    IfCondition EqualTo(StringCompare(Hash.Get(key, "__class__"), "slice"), 0) ThenBlock: {
-                        ReturnValue(AIMacro.ListSlice(wlst, Hash.Get(key, "start"), Hash.Get(key, "stop"), Hash.Get(key, "step")))
-                    }
+                IfCondition EqualTo(AIMacro.IsSliceObj(key), 1) ThenBlock: {
+                    st0 = Hash.Get(key, "start")
+                    sp0 = Hash.Get(key, "stop")
+                    se0 = Hash.Get(key, "step")
+                    sl0 = AIMacro.ListSlice(wlst, st0, sp0, se0)
+                    wr0 = AIMacro.SliceWrap(container, sl0)
+                    ReturnValue(wr0)
                 }
                 n = Array.Size(wlst)
                 idx = AIMacro.NormIndex(key, n)
@@ -288,10 +298,11 @@ Function.DictGen_SmartGet {
                 AIMacro.RaiseKind(5, "string indices must be integers")
                 ReturnValue(0)
             }
-            IfCondition EqualTo(Hash.IsHash(key), 1) ThenBlock: {
-                IfCondition EqualTo(StringCompare(Hash.Get(key, "__class__"), "slice"), 0) ThenBlock: {
-                    ReturnValue(AIMacro.ListSlice(container, Hash.Get(key, "start"), Hash.Get(key, "stop"), Hash.Get(key, "step")))
-                }
+            IfCondition EqualTo(AIMacro.IsSliceObj(key), 1) ThenBlock: {
+                st1 = Hash.Get(key, "start")
+                sp1 = Hash.Get(key, "stop")
+                se1 = Hash.Get(key, "step")
+                ReturnValue(AIMacro.ListSlice(container, st1, sp1, se1))
             }
             n = StringLength(container)
             idx = AIMacro.NormIndex(key, n)
@@ -313,12 +324,22 @@ Function.DictGen_SmartGet {
                 Array.Push(gargs, key)
                 ReturnValue(OOP.MethodCall(container, "__getitem__", gargs))
             }
+            ca1 = Hash.Get(container, "__class__")
+            IfCondition NotEqual(ca1, 0) ThenBlock: {
+                IfCondition EqualTo(StringCompare(ca1, "range"), 0) ThenBlock: {
+                    rg1 = AIMacro.RangeGet(container, key)
+                    ReturnValue(rg1)
+                }
+            }
             wlst = Hash.Get(container, "__list__")
             IfCondition EqualTo(Array.IsArray(wlst), 1) ThenBlock: {
-                IfCondition EqualTo(Hash.IsHash(key), 1) ThenBlock: {
-                    IfCondition EqualTo(StringCompare(Hash.Get(key, "__class__"), "slice"), 0) ThenBlock: {
-                        ReturnValue(AIMacro.ListSlice(wlst, Hash.Get(key, "start"), Hash.Get(key, "stop"), Hash.Get(key, "step")))
-                    }
+                IfCondition EqualTo(AIMacro.IsSliceObj(key), 1) ThenBlock: {
+                    st2 = Hash.Get(key, "start")
+                    sp2 = Hash.Get(key, "stop")
+                    se2 = Hash.Get(key, "step")
+                    sl2 = AIMacro.ListSlice(wlst, st2, sp2, se2)
+                    wr2 = AIMacro.SliceWrap(container, sl2)
+                    ReturnValue(wr2)
                 }
                 n = Array.Size(wlst)
                 idx = AIMacro.NormIndex(key, n)
@@ -337,10 +358,11 @@ Function.DictGen_SmartGet {
                 AIMacro.RaiseKind(5, "list indices must be integers")
                 ReturnValue(0)
             }
-            IfCondition EqualTo(Hash.IsHash(key), 1) ThenBlock: {
-                IfCondition EqualTo(StringCompare(Hash.Get(key, "__class__"), "slice"), 0) ThenBlock: {
-                    ReturnValue(AIMacro.ListSlice(container, Hash.Get(key, "start"), Hash.Get(key, "stop"), Hash.Get(key, "step")))
-                }
+            IfCondition EqualTo(AIMacro.IsSliceObj(key), 1) ThenBlock: {
+                st3 = Hash.Get(key, "start")
+                sp3 = Hash.Get(key, "stop")
+                se3 = Hash.Get(key, "step")
+                ReturnValue(AIMacro.ListSlice(container, st3, sp3, se3))
             }
             n = Array.Size(container)
             idx = AIMacro.NormIndex(key, n)
