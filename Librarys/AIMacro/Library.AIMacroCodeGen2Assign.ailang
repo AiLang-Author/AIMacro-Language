@@ -1,0 +1,894 @@
+// Library.AIMacroCodeGen2Assign.ailang
+// assignment / index / slice (split from CodeGen2).
+//
+// Copyright (c) 2025-2026 Sean Collins, 2 Paws Machine and Engineering. All rights reserved.
+// Licensed under the Sean Collins Software License (SCSL v1.0).
+
+LibraryImport.Array
+LibraryImport.AIMacro.AIMacroCore
+LibraryImport.AIMacro.AIMacroParserCore
+LibraryImport.AIMacro.AIMacroCodeGen1
+LibraryImport.AIMacro.AIMacroCodeGen3
+LibraryImport.AIMacro.AIMacroCodeGen4
+LibraryImport.AIMacro.AIMacroTypeAnnotations
+LibraryImport.AIMacro.AIMacroCodeGenDict
+LibraryImport.AIMacro.AIMacroCodeGenOOP
+LibraryImport.AIMacro.AIMacroCodeGen2
+LibraryImport.AIMacro.AIMacroCodeGen2Stmt
+
+
+
+// =============================================================================
+// CHAINED ASSIGN: a = b = expr  /  a, b = c = expr
+// Nested ASSIGNMENT / ATTR_ASSIGN / INDEX_ASSIGN as values: emit inner, return
+// an expression that reads the stored value (name / attr / index).
+// =============================================================================
+Function.Gen_ResolveChainValue {
+    Input: value: Address
+    Output: Address
+    Body: {
+        IfCondition EqualTo(value, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        vt = AST_Type(value)
+        IfCondition EqualTo(vt, Node.ASSIGNMENT) ThenBlock: {
+            Gen_Assignment(value)
+            name = ArrayGet(value, 3)
+            ReturnValue(Gen_MakeIdent(name))
+        }
+        IfCondition EqualTo(vt, Node.ATTR_ASSIGN) ThenBlock: {
+            OOPGen_AttrAssign(value)
+            // Re-read attribute: ATTRIBUTE [type,line,col,obj,attr]
+            anode = ArrayCreate(5)
+            ArraySet(anode, 0, Node.ATTRIBUTE)
+            ArraySet(anode, 1, 0)
+            ArraySet(anode, 2, 0)
+            ArraySet(anode, 3, ArrayGet(value, 3))
+            ArraySet(anode, 4, ArrayGet(value, 4))
+            ReturnValue(anode)
+        }
+        IfCondition EqualTo(vt, Node.INDEX_ASSIGN) ThenBlock: {
+            Gen_IndexAssign(value)
+            inode = AST_Create(Node.INDEX_ACCESS, 2)
+            ArraySet(inode, 3, ArrayGet(value, 3))
+            ArraySet(inode, 4, ArrayGet(value, 4))
+            ReturnValue(inode)
+        }
+        ReturnValue(value)
+    }
+}
+
+Function.Gen_Assignment {
+    Input: node: Address
+    Body: {
+        target = ArrayGet(node, 3)
+        value = ArrayGet(node, 4)
+        value = Gen_ResolveChainValue(value)
+        
+        value_type = AST_Type(value)
+        
+        // Extract target name from AST node for type tracking
+        target_type = AST_Type(target)
+        target_name = target
+        IfCondition EqualTo(target_type, Node.IDENT) ThenBlock: {
+            target_name = ArrayGet(target, 3)
+        }
+        // Locals closed over by nested defs
+        Gen_MarkEnclosingLocal(target_name)
+        IfCondition EqualTo(value_type, Node.LAMBDA) ThenBlock: {
+            Gen_MarkCallableVar(target_name)
+        }
+        IfCondition EqualTo(value_type, Node.IDENT) ThenBlock: {
+            vname = ArrayGet(value, 3)
+            mapped_b = Gen_MapBuiltin(vname)
+            IfCondition NotEqual(StringCompare(mapped_b, vname), 0) ThenBlock: {
+                Gen_MarkCallableVar(target_name)
+            }
+        }
+        // getattr may return a callable (copy.replace: func = getattr(cls, "__replace__", None))
+        IfCondition EqualTo(value_type, Node.CALL) ThenBlock: {
+            call_name = ArrayGet(value, 3)
+            cmp_ga = StringCompare(call_name, "getattr")
+            IfCondition EqualTo(cmp_ga, 0) ThenBlock: {
+                Gen_MarkCallableVar(target_name)
+            }
+        }
+        
+        // List literal - special handling
+        IfCondition Or(EqualTo(value_type, Node.LIST_LIT), EqualTo(value_type, Node.TUPLE_LIT)) ThenBlock: {
+            Gen_MarkListVar(target_name)
+            Gen_ListAssignment(target, value)
+            ReturnValue(0)
+        }
+        
+        // Dict literal - special handling
+        IfCondition EqualTo(value_type, Node.DICT_LIT) ThenBlock: {
+            Gen_DictAssignment(target, value)
+            ReturnValue(0)
+        }
+        
+        // =========== PACKED FUNCTION CALL (>6 params) ===========
+        IfCondition EqualTo(value_type, Node.CALL) ThenBlock: {
+            call_name = ArrayGet(value, 3)
+            is_packed = Gen_IsPackedFunc(call_name)
+            IfCondition EqualTo(is_packed, 1) ThenBlock: {
+                call_args = ArrayGet(value, 4)
+                Gen_PackedCallAssignment(target, call_name, call_args)
+                ReturnValue(0)
+            }
+        }
+        // =========== END PACKED FUNCTION CALL ===========
+        
+        // =========== OOP CLASS INSTANTIATION ===========
+        IfCondition EqualTo(value_type, Node.CALL) ThenBlock: {
+            call_name = ArrayGet(value, 3)
+            call_args = ArrayGet(value, 4)
+            is_class = OOPGen_IsClassName(call_name)
+            IfCondition EqualTo(is_class, 1) ThenBlock: {
+                instance_var = OOPGen_InstanceCreation(call_name, call_args)
+                
+                Gen_EmitIndent()
+                Gen_EmitIdentLhs(target)
+                Gen_Emit(" = ")
+                Gen_Emit(instance_var)
+                Gen_Emit("\n")
+                ReturnValue(0)
+            }
+        }
+        // =========== END OOP CLASS INSTANTIATION ===========
+
+        // =========== METHOD CALL ASSIGNMENT ===========
+        IfCondition EqualTo(value_type, Node.METHOD_CALL) ThenBlock: {
+            obj = AST_GetField(value, "object")
+            method = AST_GetField(value, "method")
+            args = AST_GetField(value, "args")
+            IfCondition EqualTo(Gen_IsDropRecvMethod(method), 1) ThenBlock: {
+                Gen_EmitIndent()
+                Gen_EmitIdentLhs(target)
+                Gen_Emit(" = ")
+                Gen_EmitDropRecvMethod(method, args)
+                Gen_Emit("\n")
+                ReturnValue(0)
+            }
+            
+            // First check if object is a known container type
+            obj_type = AST_Type(obj)
+            is_known_dict = 0
+            is_known_list = 0
+            is_known_str = 0
+            IfCondition EqualTo(obj_type, Node.IDENT) ThenBlock: {
+                obj_name = ArrayGet(obj, 3)
+                is_known_dict = Gen_IsDictVar(obj_name)
+                is_known_list = Gen_IsListVar(obj_name)
+                is_known_str = Gen_IsStringVar(obj_name)
+            }
+            IfCondition EqualTo(obj_type, Node.STR_LIT) ThenBlock: {
+                is_known_str = 1
+            }
+            
+            is_builtin = 0
+            IfCondition EqualTo(Gen_IsStdlibMethod(obj, method), 1) ThenBlock: { is_builtin = 1 }
+            cmp = StringCompare(method, "read")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+            cmp = StringCompare(method, "readline")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+            cmp = StringCompare(method, "write")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+            cmp = StringCompare(method, "close")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+            cmp = StringCompare(method, "getopt")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+            cmp = StringCompare(method, "maketrans")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+            cmp = StringCompare(method, "make_identity_dict")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+            cmp = StringCompare(method, "update")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+            cmp = StringCompare(method, "fspath")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+            cmp = StringCompare(method, "register")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+            cmp = StringCompare(method, "compile")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+            cmp = StringCompare(method, "replace")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+            cmp = StringCompare(method, "startswith")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+            cmp = StringCompare(method, "islower")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+            cmp = StringCompare(method, "isupper")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+            cmp = StringCompare(method, "isdecimal")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+            cmp = StringCompare(method, "isnumeric")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+            cmp = StringCompare(method, "istitle")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+            cmp = StringCompare(method, "strip")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+            cmp = StringCompare(method, "count")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+            cmp = StringCompare(method, "union")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+            cmp = StringCompare(method, "__setattr__")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+            
+            // List methods - only if object is known list
+            IfCondition EqualTo(is_known_list, 1) ThenBlock: {
+                cmp = StringCompare(method, "pop")
+                IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+                cmp = StringCompare(method, "append")
+                IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+                cmp = StringCompare(method, "copy")
+                IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+                cmp = StringCompare(method, "clear")
+                IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+                cmp = StringCompare(method, "extend")
+                IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+                cmp = StringCompare(method, "insert")
+                IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+                cmp = StringCompare(method, "remove")
+                IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+                cmp = StringCompare(method, "reverse")
+                IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+                cmp = StringCompare(method, "sort")
+                IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+                cmp = StringCompare(method, "index")
+                IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+                cmp = StringCompare(method, "count")
+                IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+            }
+            
+            // Dict methods - only if object is known dict
+            IfCondition EqualTo(is_known_dict, 1) ThenBlock: {
+                cmp = StringCompare(method, "get")
+                IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+                cmp = StringCompare(method, "keys")
+                IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+                cmp = StringCompare(method, "values")
+                IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+                cmp = StringCompare(method, "items")
+                IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+                cmp = StringCompare(method, "update")
+                IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+                cmp = StringCompare(method, "setdefault")
+                IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+                cmp = StringCompare(method, "pop")
+                IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+            }
+            
+            // String methods - only if object is known string
+            IfCondition EqualTo(is_known_str, 1) ThenBlock: {
+                cmp = StringCompare(method, "upper")
+                IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+                cmp = StringCompare(method, "lower")
+                IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+                cmp = StringCompare(method, "strip")
+                IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+                cmp = StringCompare(method, "lstrip")
+                IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+                cmp = StringCompare(method, "rstrip")
+                IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+                cmp = StringCompare(method, "split")
+                IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+                cmp = StringCompare(method, "join")
+                IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+                cmp = StringCompare(method, "replace")
+                IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+                cmp = StringCompare(method, "find")
+                IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+                cmp = StringCompare(method, "startswith")
+                IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+                cmp = StringCompare(method, "endswith")
+                IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+                cmp = StringCompare(method, "islower")
+                IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+                cmp = StringCompare(method, "isupper")
+                IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+                cmp = StringCompare(method, "isdecimal")
+                IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+                cmp = StringCompare(method, "isnumeric")
+                IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+                cmp = StringCompare(method, "istitle")
+                IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+                cmp = StringCompare(method, "format")
+                IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+                cmp = StringCompare(method, "count")
+                IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+                cmp = StringCompare(method, "encode")
+                IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+                cmp = StringCompare(method, "decode")
+                IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+                cmp = StringCompare(method, "isspace")
+                IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+                cmp = StringCompare(method, "splitlines")
+                IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+                cmp = StringCompare(method, "translate")
+                IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+            }
+            
+            // If it's a builtin method, use standard method call handling
+            IfCondition EqualTo(is_builtin, 1) ThenBlock: {
+                Gen_FlattenMethodArgs(value)
+                
+                Gen_EmitIndent()
+                Gen_EmitIdentLhs(target)
+                Gen_Emit(" = ")
+                Gen_MethodCallExpr(value)
+                Gen_Emit("\n")
+                cmp = StringCompare(method, "listdir")
+                IfCondition EqualTo(cmp, 0) ThenBlock: {
+                    Gen_MarkListVar(target_name)
+                }
+                cmp = StringCompare(method, "dumps")
+                IfCondition EqualTo(cmp, 0) ThenBlock: { Gen_MarkStringVar(target_name) }
+                cmp = StringCompare(method, "join")
+                IfCondition EqualTo(cmp, 0) ThenBlock: { Gen_MarkStringVar(target_name) }
+                cmp = StringCompare(method, "replace")
+                IfCondition EqualTo(cmp, 0) ThenBlock: { Gen_MarkStringVar(target_name) }
+                cmp = StringCompare(method, "basename")
+                IfCondition EqualTo(cmp, 0) ThenBlock: { Gen_MarkStringVar(target_name) }
+                cmp = StringCompare(method, "dirname")
+                IfCondition EqualTo(cmp, 0) ThenBlock: { Gen_MarkStringVar(target_name) }
+                // dict.get / pop / setdefault may return a callable (copy.py dispatch)
+                cmp = StringCompare(method, "get")
+                IfCondition EqualTo(cmp, 0) ThenBlock: { Gen_MarkCallableVar(target_name) }
+                cmp = StringCompare(method, "pop")
+                IfCondition EqualTo(cmp, 0) ThenBlock: { Gen_MarkCallableVar(target_name) }
+                cmp = StringCompare(method, "setdefault")
+                IfCondition EqualTo(cmp, 0) ThenBlock: { Gen_MarkCallableVar(target_name) }
+                ReturnValue(0)
+            }
+            
+            // =========== OOP METHOD CALL (non-builtin) ===========
+            // Flatten receiver (incl. (files(p)/name).open) before MethodCall(
+            IfCondition EqualTo(Gen_HasCall(obj), 1) ThenBlock: {
+                obj = Gen_FlattenExpr(obj)
+            }
+            IfCondition EqualTo(args, 0) ThenBlock: {
+                num_args = 0
+            } ElseBlock: {
+                num_args = Array.Size(args)
+            }
+            
+            args_var = OOPGen_TempVar("args")
+            
+            Gen_EmitIndent()
+            Gen_Emit(args_var)
+            Gen_Emit(" = Array.Create(")
+            Gen_EmitNumber(num_args)
+            Gen_Emit(")\n")
+            
+            i = 0
+            WhileLoop LessThan(i, num_args) {
+                arg = Array.Get(args, i)
+                
+                arg_has_call = Gen_HasCall(arg)
+                IfCondition EqualTo(arg_has_call, 1) ThenBlock: {
+                    arg = Gen_FlattenExpr(arg)
+                }
+                
+                Gen_EmitIndent()
+                Gen_Emit("Array.Push(")
+                Gen_Emit(args_var)
+                Gen_Emit(", ")
+                Gen_Expr(arg)
+                Gen_Emit(")\n")
+                
+                i = Add(i, 1)
+            }
+            
+            Gen_EmitIndent()
+            Gen_EmitIdentLhs(target)
+            Gen_Emit(" = AIMacro.MethodCall(")
+            Gen_Expr(obj)
+            Gen_Emit(", \"")
+            Gen_Emit(method)
+            Gen_Emit("\", ")
+            Gen_Emit(args_var)
+            Gen_Emit(")\n")
+            
+            Gen_EmitIndent()
+            Gen_Emit("Array.Destroy(")
+            Gen_Emit(args_var)
+            Gen_Emit(")\n")
+            
+            // Method result may be a callable (dispatch.get → copier)
+            cmp = StringCompare(method, "get")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { Gen_MarkCallableVar(target_name) }
+            cmp = StringCompare(method, "pop")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { Gen_MarkCallableVar(target_name) }
+            cmp = StringCompare(method, "setdefault")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { Gen_MarkCallableVar(target_name) }
+            
+            ReturnValue(0)
+        }
+        // =========== END METHOD CALL ASSIGNMENT ===========
+        
+        // =========== STRING / CALLABLE PROPAGATION FROM IDENT ===========
+        IfCondition EqualTo(value_type, Node.IDENT) ThenBlock: {
+            val_name = ArrayGet(value, 3)
+            val_is_str = Gen_IsStringVar(val_name)
+            IfCondition EqualTo(val_is_str, 1) ThenBlock: {
+                Gen_MarkStringVar(target_name)
+            }
+            // f = some_func  → mark f callable so calls use CallIndirect
+            IfCondition EqualTo(Gen_IsKnownFunc(val_name), 1) ThenBlock: {
+                Gen_MarkCallableVar(target_name)
+            }
+            IfCondition EqualTo(Gen_IsCallableVar(val_name), 1) ThenBlock: {
+                Gen_MarkCallableVar(target_name)
+            }
+        }
+        // =========== END STRING / CALLABLE PROPAGATION ===========
+        
+        is_string_value = Gen_InvolvesString(value)
+        
+        IfCondition EqualTo(is_string_value, 1) ThenBlock: {
+            Gen_MarkStringVar(target_name)
+            
+            IfCondition EqualTo(value_type, Node.BINARY_OP) ThenBlock: {
+                op = ArrayGet(value, 4)
+                IfCondition EqualTo(op, Token.PLUS) ThenBlock: {
+                    value = Gen_FlattenExpr(value)
+                    
+                    Gen_EmitIndent()
+                    Gen_EmitIdentLhs(target)
+                    Gen_Emit(" = ")
+                    Gen_Expr(value)
+                    Gen_Emit("\n")
+                    ReturnValue(0)
+                }
+            }
+            
+            IfCondition EqualTo(value_type, Node.CALL) ThenBlock: {
+                Gen_FlattenCallArgs(value)
+                Gen_EmitIndent()
+                Gen_EmitIdentLhs(target)
+                Gen_Emit(" = ")
+                Gen_CallExpr(value)
+                Gen_Emit("\n")
+                ReturnValue(0)
+            }
+            
+            IfCondition EqualTo(value_type, Node.METHOD_CALL) ThenBlock: {
+                Gen_FlattenMethodArgs(value)
+                Gen_EmitIndent()
+                Gen_EmitIdentLhs(target)
+                Gen_Emit(" = ")
+                Gen_MethodCallExpr(value)
+                Gen_Emit("\n")
+                ReturnValue(0)
+            }
+        }
+        
+        // =========== OOP ATTRIBUTE FLATTENING ===========
+        IfCondition EqualTo(value_type, Node.ATTRIBUTE) ThenBlock: {
+            // next = it.__next__  → mark target callable before flatten
+            // h_append = h.append (known list) → AddressOf(SmartPush) + bound self
+            attr_name = AST_GetField(value, "attr")
+            attr_obj = AST_GetField(value, "object")
+            IfCondition NotEqual(attr_name, 0) ThenBlock: {
+                cmp_append = StringCompare(attr_name, "append")
+                IfCondition EqualTo(cmp_append, 0) ThenBlock: {
+                    IfCondition EqualTo(AST_Type(attr_obj), Node.IDENT) ThenBlock: {
+                        obj_name = ArrayGet(attr_obj, 3)
+                        IfCondition EqualTo(Gen_IsListVar(obj_name), 1) ThenBlock: {
+                            Gen_MarkCallableVar(target_name)
+                            Gen_MarkBoundAppend(target_name, obj_name)
+                            Gen_EmitIndent()
+                            Gen_EmitIdentLhs(target)
+                            Gen_Emit(" = AddressOf(AIMacro.SmartPush)\n")
+                            ReturnValue(0)
+                        }
+                    }
+                }
+                cmp_next = StringCompare(attr_name, "__next__")
+                cmp_call = StringCompare(attr_name, "__call__")
+                cmp_add = StringCompare(attr_name, "add")
+                IfCondition Or(EqualTo(cmp_next, 0), Or(EqualTo(cmp_call, 0), EqualTo(cmp_add, 0))) ThenBlock: {
+                    Gen_MarkCallableVar(target_name)
+                }
+            }
+            value = OOPGen_FlattenExpr(value)
+            // Propagate callable from flattened temp (ObjectGet __next__)
+            IfCondition EqualTo(AST_Type(value), Node.IDENT) ThenBlock: {
+                flat_name = ArrayGet(value, 3)
+                IfCondition EqualTo(Gen_IsCallableVar(flat_name), 1) ThenBlock: {
+                    Gen_MarkCallableVar(target_name)
+                }
+            }
+        }
+        // =========== END OOP ATTRIBUTE FLATTENING ===========
+        
+        has_call = Gen_HasCall(value)
+        IfCondition EqualTo(has_call, 1) ThenBlock: {
+            value = Gen_FlattenExpr(value)
+        }
+        
+        Gen_EmitIndent()
+        Gen_EmitIdentLhs(target)
+        Gen_Emit(" = ")
+        Gen_Expr(value)
+        Gen_Emit("\n")
+    }
+}
+
+// =============================================================================
+// PACKED CALL WITH ASSIGNMENT - handles t9 = helper_many_params(1,2,3,4,5,6,7,8)
+// =============================================================================
+Function.Gen_PackedCallAssignment {
+    Input: target: Address
+    Input: name: Address
+    Input: args: Address
+    Body: {
+        n = Array.Size(args)
+        
+        // Create pack array name
+        pack_name = Gen_TempName()
+        
+        // Emit: __packN = Array.Create(n)
+        Gen_EmitIndent()
+        Gen_Emit(pack_name)
+        Gen_Emit(" = Array.Create(")
+        n_str = NumberToString(n)
+        Gen_Emit(n_str)
+        Gen_Emit(")\n")
+        
+        // Emit: Array.Push(__packN, arg) for each arg
+        idx = 0
+        WhileLoop LessThan(idx, n) {
+            Gen_EmitIndent()
+            Gen_Emit("Array.Push(")
+            Gen_Emit(pack_name)
+            Gen_Emit(", ")
+            arg = Array.Get(args, idx)
+            Gen_Expr(arg)
+            Gen_Emit(")\n")
+            idx = Add(idx, 1)
+        }
+        
+        // Emit: target = func(pack)
+        Gen_EmitIndent()
+        Gen_EmitIdentLhs(target)
+        Gen_Emit(" = ")
+        Gen_Emit(name)
+        Gen_Emit("(")
+        Gen_Emit(pack_name)
+        Gen_Emit(")\n")
+    }
+}
+
+// =============================================================================
+// AUGMENTED ASSIGNMENT (x += 1)
+// =============================================================================
+Function.Gen_AugAssignment {
+    Input: node: Address
+    Body: {
+        name = ArrayGet(node, 3)
+        op = ArrayGet(node, 4)
+        value = ArrayGet(node, 5)
+        
+        // FLATTEN THE VALUE EXPRESSION FIRST
+        has_call = Gen_HasCall(value)
+        
+        IfCondition EqualTo(has_call, 1) ThenBlock: {
+            value = Gen_FlattenExpr(value)
+        }
+        
+        op_name = Gen_OpName(op)
+        IfCondition EqualTo(op, Token.STAR) ThenBlock: {
+            op_name = "AIMacro.NumIMul"
+        }
+        
+        Gen_EmitIndent()
+        Gen_EmitIdentLhs(name)
+        Gen_Emit(" = ")
+        Gen_Emit(op_name)
+        Gen_Emit("(")
+        Gen_EmitIdent(name)
+        Gen_Emit(", ")
+        Gen_Expr(value)
+        Gen_Emit(")\n")
+    }
+}
+
+// =============================================================================
+// LIST ASSIGNMENT
+// =============================================================================
+Function.Gen_ListAssignment {
+    Input: target: Address
+    Input: list_node: Address
+    Body: {
+        elems = ArrayGet(list_node, 3)
+        n = Array.Size(elems)
+        
+        // Extract target name if it's an AST node
+        target_type = AST_Type(target)
+        target_name = target
+        IfCondition EqualTo(target_type, Node.IDENT) ThenBlock: {
+            target_name = ArrayGet(target, 3)
+        }
+        
+        Gen_EmitIndent()
+        Gen_EmitIdentLhs(target_name)
+        Gen_Emit(" = Array.Create(")
+        Gen_EmitNumber(n)
+        Gen_Emit(")\n")
+        
+        i = 0
+        WhileLoop LessThan(i, n) {
+            elem = Array.Get(elems, i)
+            // List star: [*a, ...] -> AIMacro.ListExtend(target, a)
+            IfCondition EqualTo(AST_Type(elem), Node.STARRED) ThenBlock: {
+                val = ArrayGet(elem, 3)
+                has_call = Gen_HasCall(val)
+                IfCondition EqualTo(has_call, 1) ThenBlock: {
+                    val = Gen_FlattenExpr(val)
+                }
+                Gen_EmitIndent()
+                Gen_Emit("AIMacro.ListExtend(")
+                Gen_EmitIdentLhs(target_name)
+                Gen_Emit(", ")
+                Gen_Expr(val)
+                Gen_Emit(")\n")
+            } ElseBlock: {
+                has_call = Gen_HasCall(elem)
+                IfCondition EqualTo(has_call, 1) ThenBlock: {
+                    elem = Gen_FlattenExpr(elem)
+                }
+                Gen_EmitIndent()
+                Gen_Emit("Array.Push(")
+                Gen_EmitIdentLhs(target_name)
+                Gen_Emit(", ")
+                Gen_Expr(elem)
+                Gen_Emit(")\n")
+            }
+            i = Add(i, 1)
+        }
+        is_tup = EqualTo(AST_Type(list_node), Node.TUPLE_LIT)
+        IfCondition EqualTo(is_tup, 0) ThenBlock: {
+            IfCondition GreaterEqual(Array.Size(list_node), 5) ThenBlock: {
+                is_tup = ArrayGet(list_node, 4)
+            }
+        }
+        IfCondition EqualTo(is_tup, 1) ThenBlock: {
+            Gen_EmitIndent()
+            Gen_EmitIdentLhs(target_name)
+            Gen_Emit(" = AIMacro.WrapSeq(")
+            Gen_EmitIdentLhs(target_name)
+            Gen_Emit(", \"tuple\")\n")
+        }
+    }
+}
+
+
+// =============================================================================
+// DICT ASSIGNMENT
+// =============================================================================
+Function.Gen_DictAssignment {
+    Input: target: Address
+    Input: dict_node: Address
+    Body: {
+        pairs = ArrayGet(dict_node, 3)
+        n = Array.Size(pairs)
+        num_pairs = Divide(n, 2)
+        
+        // Mark this variable as a dict
+        Gen_MarkDictVar(target)
+        
+        capacity = Multiply(num_pairs, 2)
+        IfCondition LessThan(capacity, 16) ThenBlock: {
+            capacity = 16
+        }
+        
+        Gen_EmitIndent()
+        Gen_EmitIdentLhs(target)
+        Gen_Emit(" = Hash.Create(")
+        Gen_EmitNumber(capacity)
+        Gen_Emit(")\n")
+        
+        i = 0
+        WhileLoop LessThan(i, n) {
+            key = Array.Get(pairs, i)
+            value = Array.Get(pairs, Add(i, 1))
+            // Dict star: {**a, ...} -> DictGen_Update(target, a)
+            IfCondition EqualTo(AST_Type(key), Node.STARRED) ThenBlock: {
+                val = ArrayGet(key, 3)
+                has_call = Gen_HasCall(val)
+                IfCondition EqualTo(has_call, 1) ThenBlock: {
+                    val = Gen_FlattenExpr(val)
+                }
+                Gen_EmitIndent()
+                Gen_Emit("DictGen_Update(")
+                Gen_EmitIdentLhs(target)
+                Gen_Emit(", ")
+                Gen_Expr(val)
+                Gen_Emit(")\n")
+            } ElseBlock: {
+                // Flatten value BEFORE opening Hash.Set (stmts must not land in args)
+                has_call = Gen_HasCall(value)
+                IfCondition EqualTo(has_call, 1) ThenBlock: {
+                    value = Gen_FlattenExpr(value)
+                }
+                Gen_EmitIndent()
+                Gen_Emit("Hash.Set(")
+                Gen_EmitIdentLhs(target)
+                Gen_Emit(", ")
+                // Builtin type names as keys → string ("int") so type(x) matches
+                key_as_str = 0
+                IfCondition EqualTo(AST_Type(key), Node.IDENT) ThenBlock: {
+                    kname = ArrayGet(key, 3)
+                    kcmp = StringCompare(kname, "int")
+                    IfCondition EqualTo(kcmp, 0) ThenBlock: { key_as_str = 1 }
+                    kcmp = StringCompare(kname, "float")
+                    IfCondition EqualTo(kcmp, 0) ThenBlock: { key_as_str = 1 }
+                    kcmp = StringCompare(kname, "str")
+                    IfCondition EqualTo(kcmp, 0) ThenBlock: { key_as_str = 1 }
+                    kcmp = StringCompare(kname, "bool")
+                    IfCondition EqualTo(kcmp, 0) ThenBlock: { key_as_str = 1 }
+                    kcmp = StringCompare(kname, "list")
+                    IfCondition EqualTo(kcmp, 0) ThenBlock: { key_as_str = 1 }
+                    kcmp = StringCompare(kname, "dict")
+                    IfCondition EqualTo(kcmp, 0) ThenBlock: { key_as_str = 1 }
+                    kcmp = StringCompare(kname, "tuple")
+                    IfCondition EqualTo(kcmp, 0) ThenBlock: { key_as_str = 1 }
+                    kcmp = StringCompare(kname, "set")
+                    IfCondition EqualTo(kcmp, 0) ThenBlock: { key_as_str = 1 }
+                    kcmp = StringCompare(kname, "bytes")
+                    IfCondition EqualTo(kcmp, 0) ThenBlock: { key_as_str = 1 }
+                    IfCondition EqualTo(key_as_str, 1) ThenBlock: {
+                        Gen_Emit("\"")
+                        Gen_Emit(kname)
+                        Gen_Emit("\"")
+                    } ElseBlock: {
+                        Gen_Expr(key)
+                    }
+                } ElseBlock: {
+                    DictGen_EmitKey(key)
+                }
+                Gen_Emit(", ")
+                Gen_Expr(value)
+                Gen_Emit(")\n")
+            }
+            i = Add(i, 2)
+        }
+    }
+}
+
+
+// =============================================================================
+// INDEX ASSIGNMENT
+// =============================================================================
+Function.Gen_SliceAssign {
+    Input: node: Address
+    Body: {
+        expr = ArrayGet(node, 3)
+        start_expr = ArrayGet(node, 4)
+        end_expr = ArrayGet(node, 5)
+        step_expr = ArrayGet(node, 6)
+        value = ArrayGet(node, 7)
+        value = Gen_ResolveChainValue(value)
+        IfCondition EqualTo(Gen_HasCall(expr), 1) ThenBlock: {
+            expr = Gen_FlattenExpr(expr)
+        }
+        IfCondition And(NotEqual(start_expr, 0), EqualTo(Gen_HasCall(start_expr), 1)) ThenBlock: {
+            start_expr = Gen_FlattenExpr(start_expr)
+        }
+        IfCondition And(NotEqual(end_expr, 0), EqualTo(Gen_HasCall(end_expr), 1)) ThenBlock: {
+            end_expr = Gen_FlattenExpr(end_expr)
+        }
+        IfCondition And(NotEqual(step_expr, 0), EqualTo(Gen_HasCall(step_expr), 1)) ThenBlock: {
+            step_expr = Gen_FlattenExpr(step_expr)
+        }
+        IfCondition EqualTo(Gen_HasCall(value), 1) ThenBlock: {
+            value = Gen_FlattenExpr(value)
+        }
+        Gen_EmitIndent()
+        Gen_Emit("AIMacro.ListSliceAssign(")
+        Gen_Expr(expr)
+        Gen_Emit(", ")
+        IfCondition EqualTo(start_expr, 0) ThenBlock: {
+            Gen_Emit("0")
+        } ElseBlock: {
+            Gen_Expr(start_expr)
+        }
+        Gen_Emit(", ")
+        IfCondition EqualTo(end_expr, 0) ThenBlock: {
+            Gen_Emit("0")
+        } ElseBlock: {
+            Gen_Expr(end_expr)
+        }
+        Gen_Emit(", ")
+        IfCondition EqualTo(step_expr, 0) ThenBlock: {
+            Gen_Emit("1")
+        } ElseBlock: {
+            Gen_Expr(step_expr)
+        }
+        Gen_Emit(", ")
+        Gen_Expr(value)
+        Gen_Emit(")\n")
+        ReturnValue(0)
+    }
+}
+
+Function.Gen_IndexAssign {
+    Input: node: Address
+    Body: {
+        expr = ArrayGet(node, 3)
+        index = ArrayGet(node, 4)
+        value = ArrayGet(node, 5)
+        value = Gen_ResolveChainValue(value)
+        
+        // Flatten index if it has nested calls
+        index_has_call = Gen_HasCall(index)
+        IfCondition EqualTo(index_has_call, 1) ThenBlock: {
+            index = Gen_FlattenExpr(index)
+        }
+        
+        // Flatten value if it has nested calls
+        value_has_call = Gen_HasCall(value)
+        IfCondition EqualTo(value_has_call, 1) ThenBlock: {
+            value = Gen_FlattenExpr(value)
+        }
+        
+        // Flatten expr (the container itself) if needed
+        expr_has_call = Gen_HasCall(expr)
+        IfCondition EqualTo(expr_has_call, 1) ThenBlock: {
+            expr = Gen_FlattenExpr(expr)
+        }
+        
+        // Check container type
+        expr_type = AST_Type(expr)
+        is_dict = 0
+        is_list = 0
+        
+        IfCondition EqualTo(expr_type, Node.IDENT) ThenBlock: {
+            var_name = ArrayGet(expr, 3)
+            is_dict = Gen_IsDictVar(var_name)
+            is_list = Gen_IsListVar(var_name)
+        }
+        IfCondition EqualTo(expr_type, Node.DICT_LIT) ThenBlock: {
+            is_dict = 1
+        }
+        IfCondition EqualTo(expr_type, Node.LIST_LIT) ThenBlock: {
+            is_list = 1
+        }
+        
+        IfCondition EqualTo(is_dict, 1) ThenBlock: {
+            // Known dict assignment: d["key"] = value
+            Gen_EmitIndent()
+            Gen_Emit("Hash.Set(")
+            Gen_Expr(expr)
+            Gen_Emit(", ")
+            DictGen_EmitKey(index)
+            Gen_Emit(", ")
+            Gen_Expr(value)
+            Gen_Emit(")\n")
+            ReturnValue(0)
+        }
+        
+        IfCondition EqualTo(is_list, 1) ThenBlock: {
+            // Known list assignment - use SmartSet (handles XArray & TArray)
+            Gen_EmitIndent()
+            Gen_Emit("DictGen_SmartSet(")
+            Gen_Expr(expr)
+            Gen_Emit(", ")
+            Gen_Expr(index)
+            Gen_Emit(", ")
+            Gen_Expr(value)
+            Gen_Emit(")\n")
+            ReturnValue(0)
+        }
+        
+        // UNKNOWN TYPE - Use runtime dispatch (handles function parameters)
+        Gen_EmitIndent()
+        Gen_Emit("DictGen_SmartSet(")
+        Gen_Expr(expr)
+        Gen_Emit(", ")
+        Gen_Expr(index)
+        Gen_Emit(", ")
+        Gen_Expr(value)
+        Gen_Emit(")\n")
+    }
+}

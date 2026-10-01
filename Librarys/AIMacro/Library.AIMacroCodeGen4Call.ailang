@@ -1,0 +1,1832 @@
+// Library.AIMacroCodeGen4Call.ailang
+// leftover CALL / Gen_CallExpr (split from CodeGen4).
+//
+// Copyright (c) 2025-2026 Sean Collins, 2 Paws Machine and Engineering. All rights reserved.
+// Licensed under the Sean Collins Software License (SCSL v1.0).
+
+LibraryImport.Array
+LibraryImport.AIMacro.AIMacroTypes
+LibraryImport.AIMacro.AIMacroCore
+LibraryImport.AIMacro.AIMacroParserCore
+LibraryImport.AIMacro.AIMacroTypeAnnotations
+LibraryImport.AIMacro.AIMacroCodeGen1
+LibraryImport.AIMacro.AIMacroCodeGen3
+LibraryImport.AIMacro.AIMacroCodeGenOOP
+LibraryImport.AIMacro.AIMacroCodeGen4
+LibraryImport.AIMacro.AIMacroCodeGen4Method
+
+
+// =============================================================================
+// FUNCTION CALL
+// =============================================================================
+Function.Gen_EmitLeftoverCall {
+    Input: args: Address
+    Body: {
+        n = 0
+        IfCondition NotEqual(args, 0) ThenBlock: {
+            n = Array.Size(args)
+        }
+        IfCondition EqualTo(n, 0) ThenBlock: {
+            Gen_Emit("AIMacro.SmartCall(0)")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(n, 1) ThenBlock: {
+            arg = Array.Get(args, 0)
+            IfCondition EqualTo(Gen_HasCall(arg), 1) ThenBlock: {
+                arg = Gen_FlattenExpr(arg)
+            }
+            Gen_Emit("AIMacro.SmartCall1(0, ")
+            Gen_Expr(arg)
+            Gen_Emit(")")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(n, 2) ThenBlock: {
+            Gen_Emit("AIMacro.SmartCall2(0")
+            i = 0
+            WhileLoop LessThan(i, n) {
+                Gen_Emit(", ")
+                arg = Array.Get(args, i)
+                IfCondition EqualTo(Gen_HasCall(arg), 1) ThenBlock: {
+                    arg = Gen_FlattenExpr(arg)
+                }
+                Gen_Expr(arg)
+                i = Add(i, 1)
+            }
+            Gen_Emit(")")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(n, 3) ThenBlock: {
+            Gen_Emit("AIMacro.SmartCall3(0")
+            i = 0
+            WhileLoop LessThan(i, n) {
+                Gen_Emit(", ")
+                arg = Array.Get(args, i)
+                IfCondition EqualTo(Gen_HasCall(arg), 1) ThenBlock: {
+                    arg = Gen_FlattenExpr(arg)
+                }
+                Gen_Expr(arg)
+                i = Add(i, 1)
+            }
+            Gen_Emit(")")
+            ReturnValue(0)
+        }
+        Gen_Emit("AIMacro.SmartCall(0)")
+        ReturnValue(0)
+    }
+}
+
+Function.Gen_CallExpr {
+    Input: node: Address
+    Body: {
+        name = ArrayGet(node, 3)
+        args = ArrayGet(node, 4)
+
+        // hasattr(os, "O_NOFOLLOW") on Linux — fold known stdlib attrs
+        cmp_ha = StringCompare(name, "hasattr")
+        IfCondition EqualTo(cmp_ha, 0) ThenBlock: {
+            n_ha = 0
+            IfCondition NotEqual(args, 0) ThenBlock: {
+                n_ha = Array.Size(args)
+            }
+            IfCondition GreaterThan(n_ha, 1) ThenBlock: {
+                hobj = Array.Get(args, 0)
+                hattr = Array.Get(args, 1)
+                IfCondition EqualTo(AST_Type(hattr), Node.STR_LIT) ThenBlock: {
+                    hattr_s = ArrayGet(hattr, 3)
+                    IfCondition EqualTo(Gen_IsStdlibAttr(hobj, hattr_s), 1) ThenBlock: {
+                        Gen_Emit("AIMacro.TrueVal()")
+                        ReturnValue(0)
+                    }
+                }
+            }
+        }
+
+        // int(x, base) / uuid int_(hex, 16) — AIMacro.Int is 1-arg
+        n_intb = 0
+        IfCondition NotEqual(args, 0) ThenBlock: {
+            n_intb = Array.Size(args)
+        }
+        IfCondition GreaterThan(n_intb, 1) ThenBlock: {
+            cmp_ib = StringCompare(name, "int")
+            cmp_ib2 = StringCompare(name, "int_")
+            IfCondition Or(EqualTo(cmp_ib, 0), EqualTo(cmp_ib2, 0)) ThenBlock: {
+                Gen_Emit("AIMacro.IntBase(")
+                a0b = Array.Get(args, 0)
+                IfCondition EqualTo(Gen_HasCall(a0b), 1) ThenBlock: {
+                    a0b = Gen_FlattenExpr(a0b)
+                }
+                Gen_Expr(a0b)
+                Gen_Emit(", ")
+                a1b = Array.Get(args, 1)
+                IfCondition EqualTo(Gen_HasCall(a1b), 1) ThenBlock: {
+                    a1b = Gen_FlattenExpr(a1b)
+                }
+                Gen_Expr(a1b)
+                Gen_Emit(")")
+                ReturnValue(0)
+            }
+        }
+
+        // Nested class ctor (CustomStr() inside a lambda) is a class, not a
+        // callable local. MarkCallableVar(orig) would otherwise SmartCall the
+        // bare ident and AILANG reports Variable not found.
+        IfCondition EqualTo(OOPGen_IsClassName(name), 1) ThenBlock: {
+            OOPGen_InstanceCreation(name, args)
+            ReturnValue(0)
+        }
+
+        // Param/local/module var holding a callable (constructor(values)) → CallIndirect
+        // Packed methods store params as enclosing names (not Gen.param_names).
+        IfCondition Or(EqualTo(Gen_IsCallableVar(name), 1), Or(EqualTo(Gen_IsParam(name), 1), Or(EqualTo(Gen_IsModuleVar(name), 1), EqualTo(Gen_IsEnclosingParam(name), 1)))) ThenBlock: {
+            // Bound list.append → AIMacro.SmartPush(self, args...)
+            bound_self = Gen_GetBoundAppendSelf(name)
+            IfCondition NotEqual(bound_self, 0) ThenBlock: {
+                Gen_Emit("AIMacro.SmartPush(")
+                Gen_EmitIdent(bound_self)
+                n = Array.Size(args)
+                i = 0
+                WhileLoop LessThan(i, n) {
+                    Gen_Emit(", ")
+                    arg = Array.Get(args, i)
+                    IfCondition EqualTo(Gen_HasCall(arg), 1) ThenBlock: {
+                        arg = Gen_FlattenExpr(arg)
+                    }
+                    Gen_Expr(arg)
+                    i = Add(i, 1)
+                }
+                Gen_Emit(")")
+                ReturnValue(0)
+            }
+            n = Array.Size(args)
+            has_kw_c = 0
+            ic = 0
+            WhileLoop LessThan(ic, n) {
+                IfCondition EqualTo(AST_Type(Array.Get(args, ic)), Node.KW_ARG) ThenBlock: {
+                    has_kw_c = 1
+                }
+                ic = Add(ic, 1)
+            }
+            IfCondition EqualTo(has_kw_c, 1) ThenBlock: {
+                Gen_Emit("AIMacro.KwArgError()")
+                ReturnValue(0)
+            }
+            IfCondition EqualTo(n, 0) ThenBlock: {
+                Gen_Emit("AIMacro.SmartCall(")
+                Gen_EmitIdent(name)
+                Gen_Emit(")")
+                ReturnValue(0)
+            }
+            IfCondition EqualTo(n, 1) ThenBlock: {
+                Gen_Emit("AIMacro.SmartCall1(")
+                Gen_EmitIdent(name)
+                Gen_Emit(", ")
+                arg = Array.Get(args, 0)
+                IfCondition EqualTo(Gen_HasCall(arg), 1) ThenBlock: {
+                    arg = Gen_FlattenExpr(arg)
+                }
+                Gen_Expr(arg)
+                Gen_Emit(")")
+                ReturnValue(0)
+            }
+            IfCondition EqualTo(n, 2) ThenBlock: {
+                Gen_Emit("AIMacro.SmartCall2(")
+                Gen_EmitIdent(name)
+                i = 0
+                WhileLoop LessThan(i, n) {
+                    Gen_Emit(", ")
+                    arg = Array.Get(args, i)
+                    IfCondition EqualTo(Gen_HasCall(arg), 1) ThenBlock: {
+                        arg = Gen_FlattenExpr(arg)
+                    }
+                    Gen_Expr(arg)
+                    i = Add(i, 1)
+                }
+                Gen_Emit(")")
+                ReturnValue(0)
+            }
+            IfCondition EqualTo(n, 3) ThenBlock: {
+                Gen_Emit("AIMacro.SmartCall3(")
+                Gen_EmitIdent(name)
+                i = 0
+                WhileLoop LessThan(i, n) {
+                    Gen_Emit(", ")
+                    arg = Array.Get(args, i)
+                    IfCondition EqualTo(Gen_HasCall(arg), 1) ThenBlock: {
+                        arg = Gen_FlattenExpr(arg)
+                    }
+                    Gen_Expr(arg)
+                    i = Add(i, 1)
+                }
+                Gen_Emit(")")
+                ReturnValue(0)
+            }
+            Gen_Emit("CallIndirect(")
+            Gen_EmitIdent(name)
+            i = 0
+            WhileLoop LessThan(i, n) {
+                Gen_Emit(", ")
+                arg = Array.Get(args, i)
+                IfCondition EqualTo(Gen_HasCall(arg), 1) ThenBlock: {
+                    arg = Gen_FlattenExpr(arg)
+                }
+                Gen_Expr(arg)
+                i = Add(i, 1)
+            }
+            Gen_Emit(")")
+            ReturnValue(0)
+        }
+
+        cmp_apo = StringCompare(name, "assert_python_ok")
+        IfCondition EqualTo(cmp_apo, 0) ThenBlock: {
+            Gen_Emit("AIMacro.AssertPythonOk(")
+            IfCondition And(NotEqual(args, 0), GreaterThan(Array.Size(args), 0)) ThenBlock: {
+                a_apo = Array.Get(args, 0)
+                IfCondition EqualTo(Gen_HasCall(a_apo), 1) ThenBlock: {
+                    a_apo = Gen_FlattenExpr(a_apo)
+                }
+                Gen_Expr(a_apo)
+            } ElseBlock: {
+                Gen_Emit("0")
+            }
+            Gen_Emit(")")
+            ReturnValue(0)
+        }
+
+        // from-import stubs: leftover CALL → SmartCall(0) (in_test RaiseKind 8)
+        IfCondition EqualTo(Gen_IsImportStub(name), 1) ThenBlock: {
+            Gen_EmitLeftoverCall(args)
+            ReturnValue(0)
+        }
+
+        // object() → unique instance hash (not None / leftover-0)
+        cmp = StringCompare(name, "object")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_Emit("AIMacro.ObjectType()")
+            ReturnValue(0)
+        }
+        
+        cmp = StringCompare(name, "str")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            n = Array.Size(args)
+            IfCondition EqualTo(n, 0) ThenBlock: {
+                Gen_Emit("\"\"")
+                ReturnValue(0)
+            }
+            arg0 = Array.Get(args, 0)
+            a0t = AST_Type(arg0)
+            IfCondition EqualTo(a0t, Node.STR_LIT) ThenBlock: {
+                Gen_Expr(arg0)
+                ReturnValue(0)
+            }
+            IfCondition EqualTo(a0t, Node.NONE_LIT) ThenBlock: {
+                Gen_Emit("\"None\"")
+                ReturnValue(0)
+            }
+            IfCondition EqualTo(a0t, Node.IDENT) ThenBlock: {
+                an = ArrayGet(arg0, 3)
+                IfCondition EqualTo(Gen_IsStringVar(an), 1) ThenBlock: {
+                    Gen_EmitIdent(an)
+                    ReturnValue(0)
+                }
+                IfCondition EqualTo(TypeAnno_IsString(an), 1) ThenBlock: {
+                    Gen_EmitIdent(an)
+                    ReturnValue(0)
+                }
+            }
+            Gen_Emit("AIMacro.Str(")
+            Gen_Expr(arg0)
+            Gen_Emit(")")
+            ReturnValue(0)
+        }
+        
+        cmp = StringCompare(name, "open")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            a0 = Gen_NthPosArg(args, 0)
+            a1 = Gen_NthPosArg(args, 1)
+            IfCondition EqualTo(a0, 0) ThenBlock: {
+                a0 = Gen_FindKw(args, "file")
+            }
+            IfCondition EqualTo(a1, 0) ThenBlock: {
+                a1 = Gen_FindKw(args, "mode")
+            }
+            Gen_Emit("AIMacro.Open(")
+            IfCondition NotEqual(a0, 0) ThenBlock: {
+                IfCondition EqualTo(Gen_HasCall(a0), 1) ThenBlock: {
+                    a0 = Gen_FlattenExpr(a0)
+                }
+                Gen_Expr(a0)
+            } ElseBlock: {
+                Gen_Emit("\"\"")
+            }
+            Gen_Emit(", ")
+            IfCondition NotEqual(a1, 0) ThenBlock: {
+                Gen_Expr(a1)
+            } ElseBlock: {
+                Gen_Emit("\"r\"")
+            }
+            Gen_Emit(")")
+            ReturnValue(0)
+        }
+
+        cmp = StringCompare(name, "sorted")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            iterable = Gen_NthPosArg(args, 0)
+            keyfn = Gen_FindKw(args, "key")
+            rev = Gen_FindKw(args, "reverse")
+            IfCondition And(EqualTo(keyfn, 0), EqualTo(rev, 0)) ThenBlock: {
+                Gen_Emit("AIMacro.TypedSorted(")
+                IfCondition NotEqual(iterable, 0) ThenBlock: {
+                    IfCondition EqualTo(Gen_HasCall(iterable), 1) ThenBlock: {
+                        iterable = Gen_FlattenExpr(iterable)
+                    }
+                    Gen_Expr(iterable)
+                } ElseBlock: {
+                    Gen_Emit("0")
+                }
+                Gen_Emit(")")
+                ReturnValue(0)
+            }
+            Gen_Emit("AIMacro.TypedSortedKey(")
+            IfCondition NotEqual(iterable, 0) ThenBlock: {
+                IfCondition EqualTo(Gen_HasCall(iterable), 1) ThenBlock: {
+                    iterable = Gen_FlattenExpr(iterable)
+                }
+                Gen_Expr(iterable)
+            } ElseBlock: {
+                Gen_Emit("0")
+            }
+            Gen_Emit(", ")
+            IfCondition NotEqual(keyfn, 0) ThenBlock: {
+                IfCondition EqualTo(Gen_HasCall(keyfn), 1) ThenBlock: {
+                    keyfn = Gen_FlattenExpr(keyfn)
+                }
+                Gen_Expr(keyfn)
+            } ElseBlock: {
+                Gen_Emit("0")
+            }
+            Gen_Emit(", ")
+            IfCondition NotEqual(rev, 0) ThenBlock: {
+                IfCondition EqualTo(Gen_HasCall(rev), 1) ThenBlock: {
+                    rev = Gen_FlattenExpr(rev)
+                }
+                Gen_Expr(rev)
+            } ElseBlock: {
+                Gen_Emit("0")
+            }
+            Gen_Emit(")")
+            ReturnValue(0)
+        }
+
+        cmp = StringCompare(name, "reversed")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            nrev = 0
+            npos_r = 0
+            has_kw_r = 0
+            IfCondition NotEqual(args, 0) ThenBlock: {
+                nrev = Array.Size(args)
+            }
+            ir = 0
+            WhileLoop LessThan(ir, nrev) {
+                IfCondition EqualTo(AST_Type(Array.Get(args, ir)), Node.KW_ARG) ThenBlock: {
+                    has_kw_r = 1
+                } ElseBlock: {
+                    npos_r = Add(npos_r, 1)
+                }
+                ir = Add(ir, 1)
+            }
+            IfCondition Or(EqualTo(has_kw_r, 1), NotEqual(npos_r, 1)) ThenBlock: {
+                Gen_Emit("AIMacro.KwArgError()")
+                ReturnValue(0)
+            }
+            a0 = Gen_NthPosArg(args, 0)
+            Gen_Emit("AIMacro.TypedReversed(")
+            IfCondition NotEqual(a0, 0) ThenBlock: {
+                IfCondition EqualTo(Gen_HasCall(a0), 1) ThenBlock: {
+                    a0 = Gen_FlattenExpr(a0)
+                }
+                Gen_Expr(a0)
+            } ElseBlock: {
+                Gen_Emit("0")
+            }
+            Gen_Emit(")")
+            ReturnValue(0)
+        }
+
+        cmp = StringCompare(name, "enumerate")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            nkw = 0
+            npos_e = 0
+            bad_kw = 0
+            IfCondition NotEqual(args, 0) ThenBlock: {
+                nkw = Array.Size(args)
+            }
+            i = 0
+            WhileLoop LessThan(i, nkw) {
+                a = Array.Get(args, i)
+                IfCondition EqualTo(AST_Type(a), Node.KW_ARG) ThenBlock: {
+                    kn = ArrayGet(a, 3)
+                    IfCondition And(NotEqual(StringCompare(kn, "iterable"), 0), NotEqual(StringCompare(kn, "start"), 0)) ThenBlock: {
+                        bad_kw = 1
+                    }
+                } ElseBlock: {
+                    npos_e = Add(npos_e, 1)
+                }
+                i = Add(i, 1)
+            }
+            IfCondition Or(EqualTo(bad_kw, 1), GreaterThan(npos_e, 2)) ThenBlock: {
+                Gen_Emit("AIMacro.KwArgError()")
+                ReturnValue(0)
+            }
+            a0 = Gen_NthPosArg(args, 0)
+            kw_it = Gen_FindKw(args, "iterable")
+            IfCondition NotEqual(kw_it, 0) ThenBlock: {
+                a0 = kw_it
+            }
+            a1 = Gen_NthPosArg(args, 1)
+            kw_st = Gen_FindKw(args, "start")
+            IfCondition NotEqual(kw_st, 0) ThenBlock: {
+                a1 = kw_st
+            }
+            IfCondition EqualTo(a1, 0) ThenBlock: {
+                Gen_Emit("AIMacro.Enumerate(")
+                IfCondition NotEqual(a0, 0) ThenBlock: {
+                    IfCondition EqualTo(Gen_HasCall(a0), 1) ThenBlock: {
+                        a0 = Gen_FlattenExpr(a0)
+                    }
+                    Gen_Expr(a0)
+                } ElseBlock: {
+                    Gen_Emit("0")
+                }
+                Gen_Emit(")")
+            } ElseBlock: {
+                IfCondition EqualTo(a0, 0) ThenBlock: {
+                    Gen_Emit("AIMacro.KwArgError()")
+                    ReturnValue(0)
+                }
+                IfCondition EqualTo(Gen_HasCall(a0), 1) ThenBlock: {
+                    a0 = Gen_FlattenExpr(a0)
+                }
+                IfCondition EqualTo(Gen_HasCall(a1), 1) ThenBlock: {
+                    a1 = Gen_FlattenExpr(a1)
+                }
+                Gen_Emit("AIMacro.Enumerate2(")
+                Gen_Expr(a0)
+                Gen_Emit(", ")
+                Gen_Expr(a1)
+                Gen_Emit(")")
+            }
+            ReturnValue(0)
+        }
+
+        cmp = StringCompare(name, "range")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            a0 = Gen_NthPosArg(args, 0)
+            a1 = Gen_NthPosArg(args, 1)
+            a2 = Gen_NthPosArg(args, 2)
+            Gen_Emit("AIMacro.Range(")
+            IfCondition EqualTo(a1, 0) ThenBlock: {
+                Gen_Emit("0, ")
+                IfCondition NotEqual(a0, 0) ThenBlock: {
+                    Gen_Expr(a0)
+                } ElseBlock: {
+                    Gen_Emit("0")
+                }
+                Gen_Emit(", 1)")
+            } ElseBlock: {
+                Gen_Expr(a0)
+                Gen_Emit(", ")
+                Gen_Expr(a1)
+                Gen_Emit(", ")
+                IfCondition NotEqual(a2, 0) ThenBlock: {
+                    Gen_Expr(a2)
+                } ElseBlock: {
+                    Gen_Emit("1")
+                }
+                Gen_Emit(")")
+            }
+            ReturnValue(0)
+        }
+
+        cmp = StringCompare(name, "slice")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            sa0 = Gen_NthPosArg(args, 0)
+            sa1 = Gen_NthPosArg(args, 1)
+            sa2 = Gen_NthPosArg(args, 2)
+            IfCondition EqualTo(sa0, 0) ThenBlock: {
+                Gen_Emit("AIMacro.Slice(Types.GetNone(), Types.GetNone(), Types.GetNone())")
+                ReturnValue(0)
+            }
+            IfCondition EqualTo(Gen_HasCall(sa0), 1) ThenBlock: {
+                sa0 = Gen_FlattenExpr(sa0)
+            }
+            IfCondition And(NotEqual(sa1, 0), EqualTo(Gen_HasCall(sa1), 1)) ThenBlock: {
+                sa1 = Gen_FlattenExpr(sa1)
+            }
+            IfCondition And(NotEqual(sa2, 0), EqualTo(Gen_HasCall(sa2), 1)) ThenBlock: {
+                sa2 = Gen_FlattenExpr(sa2)
+            }
+            Gen_Emit("AIMacro.Slice(")
+            Gen_Expr(sa0)
+            Gen_Emit(", ")
+            IfCondition EqualTo(sa1, 0) ThenBlock: {
+                Gen_Emit("Types.GetNone()")
+            } ElseBlock: {
+                Gen_Expr(sa1)
+            }
+            Gen_Emit(", ")
+            IfCondition EqualTo(sa2, 0) ThenBlock: {
+                Gen_Emit("Types.GetNone()")
+            } ElseBlock: {
+                Gen_Expr(sa2)
+            }
+            Gen_Emit(")")
+            ReturnValue(0)
+        }
+
+        cmp = StringCompare(name, "list")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            has_kw = 0
+            i = 0
+            nkw = 0
+            IfCondition NotEqual(args, 0) ThenBlock: {
+                nkw = Array.Size(args)
+            }
+            WhileLoop LessThan(i, nkw) {
+                IfCondition EqualTo(AST_Type(Array.Get(args, i)), Node.KW_ARG) ThenBlock: {
+                    has_kw = 1
+                }
+                i = Add(i, 1)
+            }
+            IfCondition EqualTo(has_kw, 1) ThenBlock: {
+                Gen_Emit("AIMacro.KwArgError()")
+                ReturnValue(0)
+            }
+            a0 = Gen_NthPosArg(args, 0)
+            IfCondition EqualTo(a0, 0) ThenBlock: {
+                Gen_Emit("AIMacro.EmptyList()")
+            } ElseBlock: {
+                IfCondition EqualTo(Gen_HasCall(a0), 1) ThenBlock: {
+                    a0 = Gen_FlattenExpr(a0)
+                }
+                Gen_Emit("AIMacro.ListFrom(")
+                Gen_Expr(a0)
+                Gen_Emit(")")
+            }
+            ReturnValue(0)
+        }
+        
+        cmp = StringCompare(name, "argv")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_Emit("AIMacro.Argv()")
+            ReturnValue(0)
+        }
+        
+        // Handle print specially
+        cmp = StringCompare(name, "print")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_PrintCall(args)
+            ReturnValue(0)
+        }
+        
+        // Handle input specially - ensure we always pass a prompt argument
+        cmp = StringCompare(name, "input")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_Emit("AIMacro.Input(")
+            n = Array.Size(args)
+            IfCondition EqualTo(n, 0) ThenBlock: {
+                // No args - pass empty string
+                Gen_Emit("\"\"")
+            } ElseBlock: {
+                // Has prompt arg - emit it (flatten if needed)
+                arg = Array.Get(args, 0)
+                has_call = Gen_HasCall(arg)
+                IfCondition EqualTo(has_call, 1) ThenBlock: {
+                    arg = Gen_FlattenExpr(arg)
+                }
+                Gen_Expr(arg)
+            }
+            Gen_Emit(")")
+            ReturnValue(0)
+        }
+        
+        // Handle isinstance specially - second arg is a type name
+        cmp = StringCompare(name, "isinstance")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            arg0 = Array.Get(args, 0)
+            arg1 = Array.Get(args, 1)
+            arg1_type = AST_Type(arg1)
+            IfCondition EqualTo(arg1_type, Node.NONE_LIT) ThenBlock: {
+                Gen_Emit("AIMacro.Bool(Types.IsInstance(")
+                Gen_Expr(arg0)
+                Gen_Emit(", TypeID.NONE))")
+                ReturnValue(0)
+            }
+            IfCondition EqualTo(arg1_type, Node.IDENT) ThenBlock: {
+                type_name = ArrayGet(arg1, 3)
+                is_class = OOPGen_IsClassName(type_name)
+                IfCondition EqualTo(is_class, 1) ThenBlock: {
+                    Gen_Emit("AIMacro.IsInstance(")
+                    Gen_Expr(arg0)
+                    Gen_Emit(", \"")
+                    Gen_Emit(type_name)
+                    Gen_Emit("\")")
+                    ReturnValue(0)
+                }
+                type_const = Gen_MapTypeConstant(type_name)
+                cmp_tc = StringCompare(type_const, type_name)
+                IfCondition EqualTo(cmp_tc, 0) ThenBlock: {
+                    Gen_Emit("AIMacro.IsInstance(")
+                    Gen_Expr(arg0)
+                    Gen_Emit(", ")
+                    Gen_EmitIdent(type_name)
+                    Gen_Emit(")")
+                    ReturnValue(0)
+                }
+                Gen_Emit("AIMacro.IsInstance(")
+                Gen_Expr(arg0)
+                Gen_Emit(", ")
+                Gen_Emit(type_const)
+                Gen_Emit(")")
+                ReturnValue(0)
+            }
+            Gen_Emit("AIMacro.IsInstance(")
+            Gen_Expr(arg0)
+            Gen_Emit(", ")
+            Gen_Expr(arg1)
+            Gen_Emit(")")
+            ReturnValue(0)
+        }
+        
+        // Handle type() specially — string name so dict keys like {int: f} match
+        cmp = StringCompare(name, "type")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_Emit("AIMacro.PyType(")
+            n = Array.Size(args)
+            IfCondition GreaterThan(n, 0) ThenBlock: {
+                arg0 = Array.Get(args, 0)
+                Gen_Expr(arg0)
+            }
+            Gen_Emit(")")
+            ReturnValue(0)
+        }
+        
+        // ===== Handle len() with dict detection =====
+        // ===== Handle len() with dict/list detection =====
+        cmp = StringCompare(name, "len")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            n = Array.Size(args)
+            IfCondition GreaterThan(n, 0) ThenBlock: {
+                arg0 = Array.Get(args, 0)
+                arg0_type = AST_Type(arg0)
+                is_dict_arg = 0
+                is_list_arg = 0
+                
+                IfCondition EqualTo(arg0_type, Node.IDENT) ThenBlock: {
+                    arg_name = ArrayGet(arg0, 3)
+                    is_dict_arg = Gen_IsDictVar(arg_name)
+                    is_list_arg = Gen_IsListVar(arg_name)
+                }
+                IfCondition EqualTo(arg0_type, Node.DICT_LIT) ThenBlock: {
+                    is_dict_arg = 1
+                }
+                IfCondition EqualTo(arg0_type, Node.LIST_LIT) ThenBlock: {
+                    is_list_arg = 1
+                }
+                
+                IfCondition EqualTo(is_dict_arg, 1) ThenBlock: {
+                    Gen_Emit("AIMacro.SmartLen(")
+                    Gen_Expr(arg0)
+                    Gen_Emit(")")
+                    ReturnValue(0)
+                }
+                
+                IfCondition EqualTo(is_list_arg, 1) ThenBlock: {
+                    Gen_Emit("AIMacro.SmartLen(")
+                    Gen_Expr(arg0)
+                    Gen_Emit(")")
+                    ReturnValue(0)
+                }
+                
+                // Unknown type - use runtime dispatch
+                Gen_Emit("AIMacro.SmartLen(")
+                Gen_Expr(arg0)
+                Gen_Emit(")")
+                ReturnValue(0)
+            }
+        }
+
+        // ===== END len() dict handling =====
+
+        // getattr(obj, name[, default]) → AIMacro.GetAttr (pad default)
+        cmp = StringCompare(name, "getattr")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            a0 = Gen_NthPosArg(args, 0)
+            a1 = Gen_NthPosArg(args, 1)
+            a2 = Gen_NthPosArg(args, 2)
+            Gen_Emit("AIMacro.GetAttr(")
+            IfCondition NotEqual(a0, 0) ThenBlock: {
+                IfCondition EqualTo(Gen_HasCall(a0), 1) ThenBlock: {
+                    a0 = Gen_FlattenExpr(a0)
+                }
+                Gen_Expr(a0)
+            } ElseBlock: {
+                Gen_Emit("Types.GetNone()")
+            }
+            Gen_Emit(", ")
+            IfCondition NotEqual(a1, 0) ThenBlock: {
+                IfCondition EqualTo(Gen_HasCall(a1), 1) ThenBlock: {
+                    a1 = Gen_FlattenExpr(a1)
+                }
+                Gen_Expr(a1)
+            } ElseBlock: {
+                Gen_Emit("\"\"")
+            }
+            Gen_Emit(", ")
+            IfCondition NotEqual(a2, 0) ThenBlock: {
+                IfCondition EqualTo(Gen_HasCall(a2), 1) ThenBlock: {
+                    a2 = Gen_FlattenExpr(a2)
+                }
+                Gen_Expr(a2)
+            } ElseBlock: {
+                Gen_Emit("Types.GetNone()")
+            }
+            Gen_Emit(")")
+            ReturnValue(0)
+        }
+
+        // =========== OOP ADDITIONS ===========
+        
+        // Check for isinstance(obj, ClassName)
+        cmp = StringCompare(name, "isinstance")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            OOPGen_IsInstance(node)
+            ReturnValue(0)
+        }
+        
+        // Check if this is a class instantiation: ClassName(args)
+        // 'name' here is actually the function/class name string from the AST
+        is_class = OOPGen_IsClassName(name)
+        IfCondition EqualTo(is_class, 1) ThenBlock: {
+            OOPGen_InstanceCreation(name, args)
+            ReturnValue(0)
+        }
+        
+        // =========== END OOP ADDITIONS ===========
+        
+        // =========== PACKED FUNCTION CALL (>6 params) ===========
+        is_packed = Gen_IsPackedFunc(name)
+        IfCondition EqualTo(is_packed, 1) ThenBlock: {
+            Gen_PackedCall(name, args)
+            ReturnValue(0)
+        }
+        // =========== END PACKED FUNCTION CALL ===========
+        
+        func_name = Gen_MapBuiltin(name)
+        
+        n = Array.Size(args)
+        defaults = Gen_LookupDefaults(name)
+        is_va = Gen_LookupVarargs(name)
+        
+        IfCondition NotEqual(is_va, 0) ThenBlock: {
+            n_named = Subtract(is_va, 1)
+            IfCondition LessThan(n_named, 0) ThenBlock: {
+                n_named = 0
+            }
+            pack_name = Gen_TempName()
+            Gen_EmitIndent()
+            Gen_Emit(pack_name)
+            Gen_Emit(" = Array.Create(8)\n")
+            i = n_named
+            WhileLoop LessThan(i, n) {
+                Gen_EmitIndent()
+                Gen_Emit("Array.Push(")
+                Gen_Emit(pack_name)
+                Gen_Emit(", ")
+                Gen_Expr(Array.Get(args, i))
+                Gen_Emit(")\n")
+                i = Add(i, 1)
+            }
+            Gen_Emit(func_name)
+            Gen_Emit("(")
+            i = 0
+            WhileLoop LessThan(i, n_named) {
+                IfCondition GreaterThan(i, 0) ThenBlock: {
+                    Gen_Emit(", ")
+                }
+                IfCondition LessThan(i, n) ThenBlock: {
+                    Gen_Expr(Array.Get(args, i))
+                } ElseBlock: {
+                    IfCondition And(NotEqual(defaults, 0), LessThan(i, Array.Size(defaults))) ThenBlock: {
+                        d = Array.Get(defaults, i)
+                        IfCondition EqualTo(d, 0) ThenBlock: {
+                            Gen_Emit("Types.GetNone()")
+                        } ElseBlock: {
+                            Gen_Expr(d)
+                        }
+                    } ElseBlock: {
+                        Gen_Emit("Types.GetNone()")
+                    }
+                }
+                i = Add(i, 1)
+            }
+            IfCondition GreaterThan(n_named, 0) ThenBlock: {
+                Gen_Emit(", ")
+            }
+            Gen_Emit(pack_name)
+            Gen_Emit(")")
+            ReturnValue(0)
+        }
+
+        has_kw = 0
+        i = 0
+        WhileLoop LessThan(i, n) {
+            IfCondition EqualTo(AST_Type(Array.Get(args, i)), Node.KW_ARG) ThenBlock: {
+                has_kw = 1
+            }
+            i = Add(i, 1)
+        }
+        IfCondition EqualTo(has_kw, 1) ThenBlock: {
+            kwcmp = StringCompare(name, "bool")
+            IfCondition EqualTo(kwcmp, 0) ThenBlock: {
+                Gen_Emit("AIMacro.KwArgError()")
+                ReturnValue(0)
+            }
+            kwcmp = StringCompare(name, "list")
+            IfCondition EqualTo(kwcmp, 0) ThenBlock: {
+                Gen_Emit("AIMacro.KwArgError()")
+                ReturnValue(0)
+            }
+            kwcmp = StringCompare(name, "reversed")
+            IfCondition EqualTo(kwcmp, 0) ThenBlock: {
+                Gen_Emit("AIMacro.KwArgError()")
+                ReturnValue(0)
+            }
+            kwcmp = StringCompare(name, "enumerate")
+            IfCondition EqualTo(kwcmp, 0) ThenBlock: {
+                Gen_Emit("AIMacro.KwArgError()")
+                ReturnValue(0)
+            }
+            kwcmp = StringCompare(name, "tuple")
+            IfCondition EqualTo(kwcmp, 0) ThenBlock: {
+                Gen_Emit("AIMacro.KwArgError()")
+                ReturnValue(0)
+            }
+        }
+        IfCondition EqualTo(n, 0) ThenBlock: {
+            n0cmp = StringCompare(name, "bool")
+            IfCondition EqualTo(n0cmp, 0) ThenBlock: {
+                Gen_Emit("AIMacro.FalseVal()")
+                ReturnValue(0)
+            }
+        }
+        params = Gen_LookupParams(name)
+        IfCondition And(EqualTo(has_kw, 1), NotEqual(params, 0)) ThenBlock: {
+            nparams = Array.Size(params)
+            slots = Array.Create(nparams)
+            i = 0
+            WhileLoop LessThan(i, nparams) {
+                Array.Push(slots, 0)
+                i = Add(i, 1)
+            }
+            pos = 0
+            i = 0
+            WhileLoop LessThan(i, n) {
+                a = Array.Get(args, i)
+                IfCondition EqualTo(AST_Type(a), Node.KW_ARG) ThenBlock: {
+                    kn = ArrayGet(a, 3)
+                    kv = ArrayGet(a, 4)
+                    pi = 0
+                    WhileLoop LessThan(pi, nparams) {
+                        cmp = StringCompare(Array.Get(params, pi), kn)
+                        IfCondition EqualTo(cmp, 0) ThenBlock: {
+                            Array.Set(slots, pi, kv)
+                            BreakLoop
+                        }
+                        pi = Add(pi, 1)
+                    }
+                } ElseBlock: {
+                    IfCondition LessThan(pos, nparams) ThenBlock: {
+                        Array.Set(slots, pos, a)
+                        pos = Add(pos, 1)
+                    }
+                }
+                i = Add(i, 1)
+            }
+            Gen_Emit(func_name)
+            Gen_Emit("(")
+            i = 0
+            WhileLoop LessThan(i, nparams) {
+                IfCondition GreaterThan(i, 0) ThenBlock: {
+                    Gen_Emit(", ")
+                }
+                slot = Array.Get(slots, i)
+                IfCondition NotEqual(slot, 0) ThenBlock: {
+                    Gen_Expr(slot)
+                } ElseBlock: {
+                    IfCondition And(NotEqual(defaults, 0), LessThan(i, Array.Size(defaults))) ThenBlock: {
+                        d = Array.Get(defaults, i)
+                        IfCondition EqualTo(d, 0) ThenBlock: {
+                            Gen_Emit("Types.GetNone()")
+                        } ElseBlock: {
+                            Gen_Expr(d)
+                        }
+                    } ElseBlock: {
+                        Gen_Emit("Types.GetNone()")
+                    }
+                }
+                i = Add(i, 1)
+            }
+            Gen_Emit(")")
+            ReturnValue(0)
+        }
+        
+        // Unknown / leftover CALL → SmartCall(0). Method python-names
+        // (setUp, keys, __init__) must not emit Function.name that was never
+        // written; those live as ClassName_methodName. Module-level def stays.
+        mcmp_ci = StringCompare(func_name, name)
+        is_known_c = Gen_IsKnownFunc(name)
+        is_leftover_c = 0
+        IfCondition EqualTo(is_known_c, 0) ThenBlock: {
+            is_leftover_c = 1
+        }
+        IfCondition EqualTo(Gen_IsMethodPyName(name), 1) ThenBlock: {
+            IfCondition EqualTo(Gen_IsModuleFunc(name), 0) ThenBlock: {
+                is_leftover_c = 1
+            }
+        }
+        IfCondition And(EqualTo(mcmp_ci, 0), EqualTo(is_leftover_c, 1)) ThenBlock: {
+            IfCondition Or(EqualTo(Gen_IsParam(name), 1), Or(EqualTo(Gen_IsCallableVar(name), 1), EqualTo(Gen_IsModuleVar(name), 1))) ThenBlock: {
+                IfCondition EqualTo(n, 0) ThenBlock: {
+                    Gen_Emit("AIMacro.SmartCall(")
+                    Gen_EmitIdent(name)
+                    Gen_Emit(")")
+                } ElseBlock: {
+                    IfCondition EqualTo(n, 1) ThenBlock: {
+                        Gen_Emit("AIMacro.SmartCall1(")
+                        Gen_EmitIdent(name)
+                        Gen_Emit(", ")
+                        arg = Array.Get(args, 0)
+                        IfCondition EqualTo(Gen_HasCall(arg), 1) ThenBlock: {
+                            arg = Gen_FlattenExpr(arg)
+                        }
+                        Gen_Expr(arg)
+                        Gen_Emit(")")
+                    } ElseBlock: {
+                        IfCondition EqualTo(n, 2) ThenBlock: {
+                            Gen_Emit("AIMacro.SmartCall2(")
+                        } ElseBlock: {
+                            IfCondition EqualTo(n, 3) ThenBlock: {
+                                Gen_Emit("AIMacro.SmartCall3(")
+                            } ElseBlock: {
+                                Gen_Emit("CallIndirect(")
+                            }
+                        }
+                        Gen_EmitIdent(name)
+                        i = 0
+                        WhileLoop LessThan(i, n) {
+                            Gen_Emit(", ")
+                            arg = Array.Get(args, i)
+                            IfCondition EqualTo(Gen_HasCall(arg), 1) ThenBlock: {
+                                arg = Gen_FlattenExpr(arg)
+                            }
+                            Gen_Expr(arg)
+                            i = Add(i, 1)
+                        }
+                        Gen_Emit(")")
+                    }
+                }
+            } ElseBlock: {
+                Gen_EmitLeftoverCall(args)
+            }
+            ReturnValue(0)
+        }
+        
+        Gen_Emit(func_name)
+        Gen_Emit("(")
+        
+        n_need = n
+        IfCondition NotEqual(defaults, 0) ThenBlock: {
+            n_need = Array.Size(defaults)
+        }
+        i = 0
+        WhileLoop LessThan(i, n_need) {
+            IfCondition GreaterThan(i, 0) ThenBlock: {
+                Gen_Emit(", ")
+            }
+            IfCondition LessThan(i, n) ThenBlock: {
+                arg = Array.Get(args, i)
+                Gen_Expr(arg)
+            } ElseBlock: {
+                d = Array.Get(defaults, i)
+                IfCondition EqualTo(d, 0) ThenBlock: {
+                    Gen_Emit("Types.GetNone()")
+                } ElseBlock: {
+                    Gen_Expr(d)
+                }
+            }
+            i = Add(i, 1)
+        }
+        
+        Gen_Emit(")")
+    }
+}
+
+// =============================================================================
+// PACK ARGUMENTS FOR >6 PARAM FUNCTION CALL
+// =============================================================================
+Function.Gen_PackedCall {
+    Input: name: Address
+    Input: args: Address
+    Body: {
+        n = Array.Size(args)
+        
+        // Create pack array name
+        pack_name = Gen_TempName()
+        
+        // Emit: __packN = Array.Create(n)
+        Gen_EmitIndent()
+        Gen_Emit(pack_name)
+        Gen_Emit(" = Array.Create(")
+        n_str = NumberToString(n)
+        Gen_Emit(n_str)
+        Gen_Emit(")\n")
+        
+        // Emit: Array.Push(__packN, arg) for each arg
+        idx = 0
+        WhileLoop LessThan(idx, n) {
+            Gen_EmitIndent()
+            Gen_Emit("Array.Push(")
+            Gen_Emit(pack_name)
+            Gen_Emit(", ")
+            arg = Array.Get(args, idx)
+            Gen_Expr(arg)
+            Gen_Emit(")\n")
+            idx = Add(idx, 1)
+        }
+        
+        // Emit the call with packed array
+        Gen_Emit(name)
+        Gen_Emit("(")
+        Gen_Emit(pack_name)
+        Gen_Emit(")")
+    }
+}
+
+// =============================================================================
+// REPLACEMENT Gen_PrintCall - Uses Gen_FlattenExpr for all complex args
+// =============================================================================
+Function.Gen_EmitPrintChunk {
+    Input: arg: Address
+    Body: {
+        IfCondition EqualTo(arg, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        arg_type = AST_Type(arg)
+        IfCondition EqualTo(arg_type, Node.STR_LIT) ThenBlock: {
+            str = ArrayGet(arg, 3)
+            Gen_Emit("PrintMessage(\"")
+            Gen_EmitEscaped(str)
+            Gen_Emit("\")")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(arg_type, Node.NUM_LIT) ThenBlock: {
+            val = ArrayGet(arg, 3)
+            Gen_Emit("PrintNumber(")
+            Gen_EmitNumber(val)
+            Gen_Emit(")")
+            ReturnValue(0)
+        }
+        has_call = Gen_HasCall(arg)
+        is_string = Gen_InvolvesString(arg)
+        needs_flatten = Or(EqualTo(has_call, 1), EqualTo(is_string, 1))
+        IfCondition EqualTo(needs_flatten, 1) ThenBlock: {
+            arg = Gen_FlattenExpr(arg)
+        }
+        Gen_Emit("AIMacro.SmartPrint(")
+        Gen_Expr(arg)
+        Gen_Emit(")")
+    }
+}
+
+Function.Gen_PrintCall {
+    Input: args: Address
+    Body: {
+        n = Array.Size(args)
+        sep = Gen_FindKw(args, "sep")
+        end = Gen_FindKw(args, "end")
+        filekw = Gen_FindKw(args, "file")
+        IfCondition NotEqual(filekw, 0) ThenBlock: {
+            IfCondition EqualTo(Gen_HasCall(filekw), 1) ThenBlock: {
+                filekw = Gen_FlattenExpr(filekw)
+            }
+            i = 0
+            WhileLoop LessThan(i, n) {
+                arg = Array.Get(args, i)
+                IfCondition NotEqual(AST_Type(arg), Node.KW_ARG) ThenBlock: {
+                    IfCondition EqualTo(Gen_HasCall(arg), 1) ThenBlock: {
+                        arg = Gen_FlattenExpr(arg)
+                    }
+                    Gen_Emit("AIMacro.PrintTo(")
+                    Gen_Expr(filekw)
+                    Gen_Emit(", ")
+                    Gen_Expr(arg)
+                    Gen_Emit(")\n")
+                    Gen_EmitIndent()
+                }
+                i = Add(i, 1)
+            }
+            IfCondition EqualTo(end, 0) ThenBlock: {
+                Gen_Emit("AIMacro.PrintTo(")
+                Gen_Expr(filekw)
+                Gen_Emit(", \"\\n\")")
+            } ElseBlock: {
+                Gen_Emit("AIMacro.PrintTo(")
+                Gen_Expr(filekw)
+                Gen_Emit(", ")
+                Gen_Expr(end)
+                Gen_Emit(")")
+            }
+            ReturnValue(0)
+        }
+        n_pos = 0
+        i = 0
+        WhileLoop LessThan(i, n) {
+            IfCondition NotEqual(AST_Type(Array.Get(args, i)), Node.KW_ARG) ThenBlock: {
+                n_pos = Add(n_pos, 1)
+            }
+            i = Add(i, 1)
+        }
+        IfCondition EqualTo(n_pos, 0) ThenBlock: {
+            IfCondition EqualTo(end, 0) ThenBlock: {
+                Gen_Emit("PrintMessage(\"\\n\")")
+            } ElseBlock: {
+                Gen_EmitPrintChunk(end)
+            }
+            ReturnValue(0)
+        }
+        seen = 0
+        i = 0
+        WhileLoop LessThan(i, n) {
+            arg = Array.Get(args, i)
+            IfCondition EqualTo(AST_Type(arg), Node.KW_ARG) ThenBlock: {
+                i = Add(i, 1)
+                ContinueLoop
+            }
+            Gen_EmitPrintChunk(arg)
+            Gen_Emit("\n")
+            Gen_EmitIndent()
+            IfCondition EqualTo(seen, Subtract(n_pos, 1)) ThenBlock: {
+                IfCondition EqualTo(end, 0) ThenBlock: {
+                    Gen_Emit("PrintMessage(\"\\n\")")
+                } ElseBlock: {
+                    Gen_EmitPrintChunk(end)
+                }
+            } ElseBlock: {
+                IfCondition EqualTo(sep, 0) ThenBlock: {
+                    Gen_Emit("PrintMessage(\" \")\n")
+                    Gen_EmitIndent()
+                } ElseBlock: {
+                    Gen_EmitPrintChunk(sep)
+                    Gen_Emit("\n")
+                    Gen_EmitIndent()
+                }
+            }
+            seen = Add(seen, 1)
+            i = Add(i, 1)
+        }
+    }
+}
+
+// =============================================================================
+// MAP BUILTIN FUNCTIONS
+// =============================================================================
+Function.Gen_MapBuiltin {
+    Input: name: Address
+    Output: Address
+    Body: {
+        cmp = StringCompare(name, "len")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.SmartLen") }
+
+        cmp = StringCompare(name, "eval")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.Eval") }
+
+        cmp = StringCompare(name, "pow")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.NumPow") }
+        
+        cmp = StringCompare(name, "str")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.Str") }
+
+        cmp = StringCompare(name, "repr")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.Repr") }
+        
+        cmp = StringCompare(name, "int")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.Int") }
+
+        cmp = StringCompare(name, "float")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.Float") }
+        
+        cmp = StringCompare(name, "abs")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.Abs") }
+        
+        cmp = StringCompare(name, "max")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.Max") }
+        
+        cmp = StringCompare(name, "min")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.Min") }
+        
+        cmp = StringCompare(name, "sum")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.SmartSum") }  
+        
+        cmp = StringCompare(name, "ord")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.Ord") }
+        
+        cmp = StringCompare(name, "chr")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.Chr") }
+
+        cmp = StringCompare(name, "bool")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.Bool") }
+
+        cmp = StringCompare(name, "any")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.Any") }
+        
+        cmp = StringCompare(name, "all")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.All") }
+
+        // Use typed versions that return TArray
+        cmp = StringCompare(name, "reversed")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.TypedReversed") }
+        
+        cmp = StringCompare(name, "round")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.Round") }
+        
+        cmp = StringCompare(name, "enumerate")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.Enumerate") }
+        
+        cmp = StringCompare(name, "zip")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.Zip") }
+
+        cmp = StringCompare(name, "map")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.Map") }
+
+        cmp = StringCompare(name, "iter")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.Iter") }
+
+        cmp = StringCompare(name, "next")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.Next") }
+
+        // Use typed sorted that returns TArray
+        cmp = StringCompare(name, "sorted")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.TypedSorted") }
+
+        cmp = StringCompare(name, "isinstance")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.IsInstance") }
+        
+        cmp = StringCompare(name, "type")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.PyType") }
+
+        cmp = StringCompare(name, "format")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.StringFormat1") }
+
+        cmp = StringCompare(name, "sort")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.ListSort") }
+
+        cmp = StringCompare(name, "frozenset")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.FrozenSet") }
+
+        cmp = StringCompare(name, "translate")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.Translate") }
+
+        cmp = StringCompare(name, "set")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.MakeSet") }
+
+        cmp = StringCompare(name, "bytes")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.Bytes") }
+
+        cmp = StringCompare(name, "bytearray")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.ByteArray") }
+
+        cmp = StringCompare(name, "issubclass")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.IsSubclass") }
+
+        cmp = StringCompare(name, "getattr")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.GetAttr") }
+
+        cmp = StringCompare(name, "id")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.Id") }
+
+        cmp = StringCompare(name, "tuple")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.Tuple") }
+
+        cmp = StringCompare(name, "hasattr")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.HasAttr") }
+
+        cmp = StringCompare(name, "setattr")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.SetAttr") }
+
+        cmp = StringCompare(name, "list")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.ListFrom") }
+
+        cmp = StringCompare(name, "dict")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.Dict") }
+
+        cmp = StringCompare(name, "set")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.MakeSet") }
+
+        cmp = StringCompare(name, "int")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.Int") }
+
+        cmp = StringCompare(name, "float")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.Float") }
+
+        cmp = StringCompare(name, "bool")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.Bool") }
+
+        cmp = StringCompare(name, "str")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.Str") }
+
+        cmp = StringCompare(name, "complex")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.Complex") }
+
+        cmp = StringCompare(name, "islower")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("String.IsLower") }
+
+        cmp = StringCompare(name, "isupper")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("String.IsUpper") }
+
+        cmp = StringCompare(name, "isdecimal")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("String.IsDecimal") }
+
+        cmp = StringCompare(name, "isnumeric")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("String.IsNumeric") }
+
+        cmp = StringCompare(name, "istitle")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("String.IsTitle") }
+
+        cmp = StringCompare(name, "callable")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.Callable") }
+
+        cmp = StringCompare(name, "__init__")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.InitSink") }
+
+        cmp = StringCompare(name, "range")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.Range") }
+
+        cmp = StringCompare(name, "memoryview")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.MemoryView") }
+
+        cmp = StringCompare(name, "property")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.Property") }
+
+        cmp = StringCompare(name, "classmethod")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.ClassMethod") }
+
+        cmp = StringCompare(name, "staticmethod")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.StaticMethod") }
+
+        cmp = StringCompare(name, "super")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.Super") }
+
+        cmp = StringCompare(name, "slice")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.Slice") }
+
+        cmp = StringCompare(name, "object")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.ObjectType") }
+
+        cmp = StringCompare(name, "exec")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.Exec") }
+
+        cmp = StringCompare(name, "compile")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.PyCompile") }
+
+        cmp = StringCompare(name, "assert_python_ok")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.AssertPythonOk") }
+
+        cmp = StringCompare(name, "divmod")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("divmod") }
+
+        cmp = StringCompare(name, "delattr")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("delattr") }
+
+        cmp = StringCompare(name, "hash")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("hash") }
+
+        ReturnValue(name)
+    }
+}
+
+Function.Gen_IsDropRecvMethod {
+    Input: method: Address
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(method, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        cmp = StringCompare(method, "iskeyword")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+        cmp = StringCompare(method, "issoftkeyword")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+        cmp = StringCompare(method, "captured_output")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+        cmp = StringCompare(method, "getvalue")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+        cmp = StringCompare(method, "assert_python_ok")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+        ReturnValue(0)
+    }
+}
+
+Function.Gen_EmitDropRecvMethod {
+    Input: method: Address
+    Input: args: Address
+    Body: {
+        fn = "AIMacro.KeywordIsKeyword"
+        cmp = StringCompare(method, "issoftkeyword")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { fn = "AIMacro.KeywordIsSoftKeyword" }
+        cmp = StringCompare(method, "captured_output")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { fn = "AIMacro.CapturedOutput" }
+        cmp = StringCompare(method, "getvalue")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { fn = "AIMacro.IoGetValue" }
+        cmp = StringCompare(method, "assert_python_ok")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { fn = "AIMacro.AssertPythonOk" }
+        Gen_Emit(fn)
+        Gen_Emit("(")
+        IfCondition And(NotEqual(args, 0), GreaterThan(Array.Size(args), 0)) ThenBlock: {
+            a0 = Array.Get(args, 0)
+            IfCondition EqualTo(Gen_HasCall(a0), 1) ThenBlock: {
+                a0 = Gen_FlattenExpr(a0)
+            }
+            Gen_Expr(a0)
+        } ElseBlock: {
+            Gen_Emit("0")
+        }
+        Gen_Emit(")")
+    }
+}
+
+
+// =============================================================================
+// MAP TYPE NAME TO TYPEID CONSTANT
+// Converts Python type names to TypeID.* constants
+// =============================================================================
+Function.Gen_MapTypeConstant {
+    Input: name: Address
+    Output: Address
+    Body: {
+        cmp = StringCompare(name, "int")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("TypeID.INT") }
+
+        cmp = StringCompare(name, "float")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("TypeID.FLOAT") }
+        
+        cmp = StringCompare(name, "str")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("TypeID.STR") }
+
+        cmp = StringCompare(name, "bytes")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("TypeID.STR") }
+
+        cmp = StringCompare(name, "bytearray")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("TypeID.STR") }
+        
+        cmp = StringCompare(name, "list")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("TypeID.LIST") }
+
+        cmp = StringCompare(name, "tuple")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("TypeID.LIST") }
+        
+        cmp = StringCompare(name, "dict")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("TypeID.DICT") }
+        
+        cmp = StringCompare(name, "bool")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("TypeID.BOOL") }
+        
+        cmp = StringCompare(name, "None")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("TypeID.NONE") }
+        
+        cmp = StringCompare(name, "NoneType")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("TypeID.NONE") }
+
+        cmp = StringCompare(name, "type")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("TypeID.UNKNOWN") }
+
+        cmp = StringCompare(name, "slice")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("TypeID.UNKNOWN") }
+
+        // Exception types as isinstance args — ExcKind ints (see Gen_MapExcKind)
+        cmp = StringCompare(name, "ValueError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("2") }
+        cmp = StringCompare(name, "TypeError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("5") }
+        cmp = StringCompare(name, "StopIteration")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("9") }
+        cmp = StringCompare(name, "StopAsyncIteration")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("10") }
+        cmp = StringCompare(name, "BaseExceptionGroup")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("11") }
+        cmp = StringCompare(name, "ExceptionGroup")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("12") }
+        
+        // Unknown type - return as-is (might be a variable)
+        ReturnValue(name)
+    }
+}
+
+Function.Gen_EmitOsJoinArgs {
+    Input: args: Address
+    Input: n: Integer
+    Body: {
+        IfCondition LessEqual(n, 0) ThenBlock: {
+            Gen_Emit("\".\"")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(n, 1) ThenBlock: {
+            Gen_Expr(Array.Get(args, 0))
+            ReturnValue(0)
+        }
+        Gen_Emit("AIMacro.OsJoin(")
+        Gen_EmitOsJoinArgs(args, Subtract(n, 1))
+        Gen_Emit(", ")
+        Gen_Expr(Array.Get(args, Subtract(n, 1)))
+        Gen_Emit(")")
+    }
+}
+
+Function.Gen_EmitStdlibMethod {
+    Input: obj: Address
+    Input: method: Address
+    Input: args: Address
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(Gen_IsStdlibMethod(obj, method), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        n = 0
+        IfCondition NotEqual(args, 0) ThenBlock: {
+            n = Array.Size(args)
+        }
+        IfCondition EqualTo(Gen_IsOsPath(obj), 1) ThenBlock: {
+            cmp = StringCompare(method, "join")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                Gen_EmitOsJoinArgs(args, n)
+                ReturnValue(1)
+            }
+            cmp = StringCompare(method, "exists")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                Gen_Emit("AIMacro.OsExists(")
+                IfCondition GreaterThan(n, 0) ThenBlock: {
+                    Gen_Expr(Array.Get(args, 0))
+                } ElseBlock: {
+                    Gen_Emit("\".\"")
+                }
+                Gen_Emit(")")
+                ReturnValue(1)
+            }
+            cmp = StringCompare(method, "basename")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                Gen_Emit("AIMacro.OsBasename(")
+                IfCondition GreaterThan(n, 0) ThenBlock: {
+                    Gen_Expr(Array.Get(args, 0))
+                } ElseBlock: {
+                    Gen_Emit("\"\"")
+                }
+                Gen_Emit(")")
+                ReturnValue(1)
+            }
+            cmp = StringCompare(method, "dirname")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                Gen_Emit("AIMacro.OsDirname(")
+                IfCondition GreaterThan(n, 0) ThenBlock: {
+                    Gen_Expr(Array.Get(args, 0))
+                } ElseBlock: {
+                    Gen_Emit("\".\"")
+                }
+                Gen_Emit(")")
+                ReturnValue(1)
+            }
+        }
+        IfCondition NotEqual(AST_Type(obj), Node.IDENT) ThenBlock: {
+            ReturnValue(0)
+        }
+        name = ArrayGet(obj, 3)
+        cmp = StringCompare(name, "os")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            cmp = StringCompare(method, "listdir")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                Gen_Emit("AIMacro.OsListdir(")
+                IfCondition GreaterThan(n, 0) ThenBlock: {
+                    Gen_Expr(Array.Get(args, 0))
+                } ElseBlock: {
+                    Gen_Emit("\".\"")
+                }
+                Gen_Emit(")")
+                ReturnValue(1)
+            }
+            cmp = StringCompare(method, "openpty")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                Gen_Emit("AIMacro.OsOpenpty()")
+                ReturnValue(1)
+            }
+            cmp = StringCompare(method, "close")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                Gen_Emit("AIMacro.OsClose(")
+                IfCondition GreaterThan(n, 0) ThenBlock: {
+                    Gen_Expr(Array.Get(args, 0))
+                } ElseBlock: {
+                    Gen_Emit("0")
+                }
+                Gen_Emit(")")
+                ReturnValue(1)
+            }
+            cmp = StringCompare(method, "write")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                Gen_Emit("AIMacro.OsWrite(")
+                IfCondition GreaterThan(n, 0) ThenBlock: {
+                    Gen_Expr(Array.Get(args, 0))
+                } ElseBlock: {
+                    Gen_Emit("0")
+                }
+                Gen_Emit(", ")
+                IfCondition GreaterThan(n, 1) ThenBlock: {
+                    Gen_Expr(Array.Get(args, 1))
+                } ElseBlock: {
+                    Gen_Emit("\"\"")
+                }
+                Gen_Emit(")")
+                ReturnValue(1)
+            }
+            cmp = StringCompare(method, "read")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                Gen_Emit("AIMacro.OsRead(")
+                IfCondition GreaterThan(n, 0) ThenBlock: {
+                    Gen_Expr(Array.Get(args, 0))
+                } ElseBlock: {
+                    Gen_Emit("0")
+                }
+                Gen_Emit(", ")
+                IfCondition GreaterThan(n, 1) ThenBlock: {
+                    Gen_Expr(Array.Get(args, 1))
+                } ElseBlock: {
+                    Gen_Emit("1024")
+                }
+                Gen_Emit(")")
+                ReturnValue(1)
+            }
+            cmp = StringCompare(method, "isatty")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                Gen_Emit("AIMacro.OsIsatty(")
+                IfCondition GreaterThan(n, 0) ThenBlock: {
+                    Gen_Expr(Array.Get(args, 0))
+                } ElseBlock: {
+                    Gen_Emit("0")
+                }
+                Gen_Emit(")")
+                ReturnValue(1)
+            }
+            cmp = StringCompare(method, "join")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                Gen_EmitOsJoinArgs(args, n)
+                ReturnValue(1)
+            }
+            cmp = StringCompare(method, "exists")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                Gen_Emit("AIMacro.OsExists(")
+                IfCondition GreaterThan(n, 0) ThenBlock: {
+                    Gen_Expr(Array.Get(args, 0))
+                } ElseBlock: {
+                    Gen_Emit("\".\"")
+                }
+                Gen_Emit(")")
+                ReturnValue(1)
+            }
+            cmp = StringCompare(method, "basename")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                Gen_Emit("AIMacro.OsBasename(")
+                IfCondition GreaterThan(n, 0) ThenBlock: {
+                    Gen_Expr(Array.Get(args, 0))
+                } ElseBlock: {
+                    Gen_Emit("\"\"")
+                }
+                Gen_Emit(")")
+                ReturnValue(1)
+            }
+            cmp = StringCompare(method, "dirname")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                Gen_Emit("AIMacro.OsDirname(")
+                IfCondition GreaterThan(n, 0) ThenBlock: {
+                    Gen_Expr(Array.Get(args, 0))
+                } ElseBlock: {
+                    Gen_Emit("\".\"")
+                }
+                Gen_Emit(")")
+                ReturnValue(1)
+            }
+        }
+        cmp = StringCompare(name, "json")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            cmp = StringCompare(method, "loads")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                Gen_Emit("AIMacro.JsonLoads(")
+                IfCondition GreaterThan(n, 0) ThenBlock: {
+                    Gen_Expr(Array.Get(args, 0))
+                } ElseBlock: {
+                    Gen_Emit("\"null\"")
+                }
+                Gen_Emit(")")
+                ReturnValue(1)
+            }
+            cmp = StringCompare(method, "dumps")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                Gen_Emit("AIMacro.JsonDumps(")
+                IfCondition GreaterThan(n, 0) ThenBlock: {
+                    Gen_Expr(Array.Get(args, 0))
+                } ElseBlock: {
+                    Gen_Emit("Types.GetNone()")
+                }
+                Gen_Emit(")")
+                ReturnValue(1)
+            }
+        }
+        cmp = StringCompare(name, "math")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            cmp = StringCompare(method, "sqrt")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                Gen_Emit("AIMacro.Math.Sqrt(")
+                IfCondition GreaterThan(n, 0) ThenBlock: {
+                    Gen_Expr(Array.Get(args, 0))
+                } ElseBlock: {
+                    Gen_Emit("0")
+                }
+                Gen_Emit(")")
+                ReturnValue(1)
+            }
+            cmp = StringCompare(method, "sin")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                Gen_Emit("AIMacro.Math.Sin(")
+                IfCondition GreaterThan(n, 0) ThenBlock: {
+                    Gen_Expr(Array.Get(args, 0))
+                } ElseBlock: {
+                    Gen_Emit("0")
+                }
+                Gen_Emit(")")
+                ReturnValue(1)
+            }
+            cmp = StringCompare(method, "cos")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                Gen_Emit("AIMacro.Math.Cos(")
+                IfCondition GreaterThan(n, 0) ThenBlock: {
+                    Gen_Expr(Array.Get(args, 0))
+                } ElseBlock: {
+                    Gen_Emit("0")
+                }
+                Gen_Emit(")")
+                ReturnValue(1)
+            }
+            cmp = StringCompare(method, "pi")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                Gen_Emit("AIMacro.Math.Pi()")
+                ReturnValue(1)
+            }
+        }
+        cmp = StringCompare(name, "time")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            cmp = StringCompare(method, "time")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                Gen_Emit("AIMacro.TimeTime()")
+                ReturnValue(1)
+            }
+            cmp = StringCompare(method, "sleep")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                Gen_Emit("AIMacro.TimeSleep(")
+                IfCondition GreaterThan(n, 0) ThenBlock: {
+                    Gen_Expr(Array.Get(args, 0))
+                } ElseBlock: {
+                    Gen_Emit("0")
+                }
+                Gen_Emit(")")
+                ReturnValue(1)
+            }
+        }
+        cmp = StringCompare(name, "sys")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            cmp = StringCompare(method, "exit")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                Gen_Emit("AIMacro.Exit(")
+                IfCondition GreaterThan(n, 0) ThenBlock: {
+                    Gen_Expr(Array.Get(args, 0))
+                } ElseBlock: {
+                    Gen_Emit("0")
+                }
+                Gen_Emit(")")
+                ReturnValue(1)
+            }
+        }
+        cmp = StringCompare(name, "platform")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            cmp = StringCompare(method, "system")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                Gen_Emit("AIMacro.UnameSysname()")
+                ReturnValue(1)
+            }
+        }
+        ReturnValue(0)
+    }
+}

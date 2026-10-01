@@ -1,0 +1,1169 @@
+// Library.AIMacroParserExpr.ailang
+// AIMacro parser expressions (split from ParserCore).
+//
+// Copyright (c) 2025-2026 Sean Collins, 2 Paws Machine and Engineering. All rights reserved.
+// Licensed under the Sean Collins Software License (SCSL v1.0).
+
+LibraryImport.AIMacro.AIMacroCore
+LibraryImport.AIMacro.AIMacroTypeAnnotations
+LibraryImport.AIMacro.AIMacroParserOOP
+LibraryImport.AIMacro.AIMacroParserCore
+LibraryImport.AIMacro.AIMacroParserPrimary
+
+
+// =============================================================================
+// EXPRESSION PARSING - PRECEDENCE CLIMBING
+// =============================================================================
+Function.Parse_Expr {
+    Output: Address
+    Body: {
+        left = Parse_Or()
+        // Walrus / named expression: NAME := expr  (parse coverage)
+        is_walrus = Parse_Match(Token.WALRUS)
+        IfCondition EqualTo(is_walrus, 1) ThenBlock: {
+            line = Parse_Line()
+            col = Parse_Col()
+            Parse_Advance()
+            value = Parse_Expr()
+            node = AST_Create(Node.NAMED_EXPR, 2)
+            ArraySet(node, 1, line)
+            ArraySet(node, 2, col)
+            ArraySet(node, 3, left)
+            ArraySet(node, 4, value)
+            ReturnValue(node)
+        }
+        is_if = Parse_Match(Token.IF)
+        IfCondition EqualTo(is_if, 0) ThenBlock: {
+            ReturnValue(left)
+        }
+        line = Parse_Line()
+        col = Parse_Col()
+        Parse_Advance()
+        cond = Parse_Or()
+        Parse_Consume(Token.ELSE)
+        orelse = Parse_Expr()
+        node = AST_Create(Node.TERNARY, 3)
+        ArraySet(node, 1, line)
+        ArraySet(node, 2, col)
+        ArraySet(node, 3, left)
+        ArraySet(node, 4, cond)
+        ArraySet(node, 5, orelse)
+        ReturnValue(node)
+    }
+}
+
+Function.Parse_Or {
+    Output: Address
+    Body: {
+        left = Parse_And()
+        
+        WhileLoop EqualTo(1, 1) {
+            is_or = Parse_Match(Token.OR)
+            IfCondition EqualTo(is_or, 0) ThenBlock: {
+                BreakLoop
+            }
+            
+            line = Parse_Line()
+            col = Parse_Col()
+            Parse_Advance()
+            
+            right = Parse_And()
+            
+            // Create binary op: [BINARY_OP, line, col, left, op, right]
+            node = AST_Create(Node.BINARY_OP, 3)
+            ArraySet(node, 1, line)
+            ArraySet(node, 2, col)
+            ArraySet(node, 3, left)
+            ArraySet(node, 4, Token.OR)
+            ArraySet(node, 5, right)
+            
+            left = node
+        }
+        
+        ReturnValue(left)
+    }
+}
+
+Function.Parse_And {
+    Output: Address
+    Body: {
+        left = Parse_Not()      // <-- CHANGED from Parse_Equality
+        
+        WhileLoop EqualTo(1, 1) {
+            is_and = Parse_Match(Token.AND)
+            IfCondition EqualTo(is_and, 0) ThenBlock: {
+                BreakLoop
+            }
+            
+            line = Parse_Line()
+            col = Parse_Col()
+            Parse_Advance()
+            
+            right = Parse_Not()  // <-- CHANGED from Parse_Equality
+            
+            node = AST_Create(Node.BINARY_OP, 3)
+            ArraySet(node, 1, line)
+            ArraySet(node, 2, col)
+            ArraySet(node, 3, left)
+            ArraySet(node, 4, Token.AND)
+            ArraySet(node, 5, right)
+            
+            left = node
+        }
+        
+        ReturnValue(left)
+    }
+}
+
+
+Function.Parse_Not {
+    Output: Address
+    Body: {
+        t = Parse_Type()
+        
+        // Handle 'not' operator
+        IfCondition EqualTo(t, Token.NOT) ThenBlock: {
+            line = Parse_Line()
+            col = Parse_Col()
+            Parse_Advance()
+            
+            // Recursively parse - 'not' is right-associative
+            // not not x  ->  not (not x)
+            operand = Parse_Not()
+            
+            node = AST_Create(Node.UNARY_OP, 2)
+            ArraySet(node, 1, line)
+            ArraySet(node, 2, col)
+            ArraySet(node, 3, Token.NOT)
+            ArraySet(node, 4, operand)
+            
+            ReturnValue(node)
+        }
+        
+        // No 'not', continue to comparison
+        result = Parse_Equality()
+        ReturnValue(result)
+    }
+}
+
+
+Function.Parse_Equality {
+    Output: Address
+    Body: {
+        left = Parse_Comparison()
+        
+        WhileLoop EqualTo(1, 1) {
+            t = Parse_Type()
+            op = 0
+            
+            IfCondition EqualTo(t, Token.EQ) ThenBlock: {
+                op = Token.EQ
+            }
+            IfCondition EqualTo(t, Token.NE) ThenBlock: {
+                op = Token.NE
+            }
+            
+            IfCondition EqualTo(op, 0) ThenBlock: {
+                BreakLoop
+            }
+            
+            line = Parse_Line()
+            col = Parse_Col()
+            Parse_Advance()
+            
+            right = Parse_Comparison()
+            
+            // Check if either side is a string literal
+            left_type = AST_Type(left)
+            right_type = AST_Type(right)
+            is_string_cmp = 0
+            
+            IfCondition EqualTo(left_type, Node.STR_LIT) ThenBlock: {
+                is_string_cmp = 1
+            }
+            IfCondition EqualTo(right_type, Node.STR_LIT) ThenBlock: {
+                is_string_cmp = 1
+            }
+            
+            IfCondition EqualTo(is_string_cmp, 1) ThenBlock: {
+                // Create string comparison node
+                IfCondition EqualTo(op, Token.EQ) ThenBlock: {
+                    node = AST_Create(Node.STR_EQ, 3)
+                } ElseBlock: {
+                    node = AST_Create(Node.STR_NE, 3)
+                }
+                ArraySet(node, 1, line)
+                ArraySet(node, 2, col)
+                ArraySet(node, 3, left)
+                ArraySet(node, 4, op)
+                ArraySet(node, 5, right)
+                
+                left = node
+            } ElseBlock: {
+                // Normal binary op for integers
+                node = AST_Create(Node.BINARY_OP, 3)
+                ArraySet(node, 1, line)
+                ArraySet(node, 2, col)
+                ArraySet(node, 3, left)
+                ArraySet(node, 4, op)
+                ArraySet(node, 5, right)
+                
+                left = node
+            }
+        }
+        
+        ReturnValue(left)
+    }
+}
+
+Function.Parse_Comparison {
+    Output: Address
+    Body: {
+        left = Parse_BitwiseOr()
+        
+        WhileLoop EqualTo(1, 1) {
+            t = Parse_Type()
+            op = 0
+            is_negated = 0
+            
+            IfCondition EqualTo(t, Token.LT) ThenBlock: { op = Token.LT }
+            IfCondition EqualTo(t, Token.LE) ThenBlock: { op = Token.LE }
+            IfCondition EqualTo(t, Token.GT) ThenBlock: { op = Token.GT }
+            IfCondition EqualTo(t, Token.GE) ThenBlock: { op = Token.GE }
+            IfCondition EqualTo(t, Token.IN) ThenBlock: { op = Token.IN }
+            
+            IfCondition EqualTo(t, Token.IS) ThenBlock: {
+                line = Parse_Line()
+                col = Parse_Col()
+                Parse_Advance()
+                is_negated = 0
+                is_not = Parse_Match(Token.NOT)
+                IfCondition EqualTo(is_not, 1) ThenBlock: {
+                    Parse_Advance()
+                    is_negated = 1
+                }
+                right = Parse_BitwiseOr()
+                node = AST_Create(Node.BINARY_OP, 3)
+                ArraySet(node, 1, line)
+                ArraySet(node, 2, col)
+                ArraySet(node, 3, left)
+                ArraySet(node, 4, Token.IS)
+                ArraySet(node, 5, right)
+                IfCondition EqualTo(is_negated, 1) ThenBlock: {
+                    not_node = AST_Create(Node.UNARY_OP, 2)
+                    ArraySet(not_node, 1, line)
+                    ArraySet(not_node, 2, col)
+                    ArraySet(not_node, 3, Token.NOT)
+                    ArraySet(not_node, 4, node)
+                    left = not_node
+                } ElseBlock: {
+                    left = node
+                }
+                ContinueLoop
+            }
+            
+            // Check for "not in"
+            IfCondition EqualTo(t, Token.NOT) ThenBlock: {
+                // Peek ahead to see if next is IN
+                next_pos = Add(Parse.pos, 1)
+                next_t = Lex_GetType(next_pos)
+                IfCondition EqualTo(next_t, Token.IN) ThenBlock: {
+                    op = Token.IN
+                    is_negated = 1
+                    Parse_Advance()  // Skip the NOT
+                }
+            }
+            
+            IfCondition EqualTo(op, 0) ThenBlock: {
+                BreakLoop
+            }
+            
+            line = Parse_Line()
+            col = Parse_Col()
+            Parse_Advance()
+            
+            right = Parse_BitwiseOr()
+            
+            is_rel = 0
+            IfCondition EqualTo(op, Token.LT) ThenBlock: { is_rel = 1 }
+            IfCondition EqualTo(op, Token.LE) ThenBlock: { is_rel = 1 }
+            IfCondition EqualTo(op, Token.GT) ThenBlock: { is_rel = 1 }
+            IfCondition EqualTo(op, Token.GE) ThenBlock: { is_rel = 1 }
+            
+            IfCondition EqualTo(is_rel, 1) ThenBlock: {
+                t2 = Parse_Type()
+                is_rel2 = 0
+                IfCondition EqualTo(t2, Token.LT) ThenBlock: { is_rel2 = 1 }
+                IfCondition EqualTo(t2, Token.LE) ThenBlock: { is_rel2 = 1 }
+                IfCondition EqualTo(t2, Token.GT) ThenBlock: { is_rel2 = 1 }
+                IfCondition EqualTo(t2, Token.GE) ThenBlock: { is_rel2 = 1 }
+                IfCondition EqualTo(is_rel2, 1) ThenBlock: {
+                    operands = Array.Create(4)
+                    ops = Array.Create(4)
+                    Array.Push(operands, left)
+                    Array.Push(ops, op)
+                    Array.Push(operands, right)
+                    WhileLoop EqualTo(1, 1) {
+                        t3 = Parse_Type()
+                        op2 = 0
+                        IfCondition EqualTo(t3, Token.LT) ThenBlock: { op2 = Token.LT }
+                        IfCondition EqualTo(t3, Token.LE) ThenBlock: { op2 = Token.LE }
+                        IfCondition EqualTo(t3, Token.GT) ThenBlock: { op2 = Token.GT }
+                        IfCondition EqualTo(t3, Token.GE) ThenBlock: { op2 = Token.GE }
+                        IfCondition EqualTo(op2, 0) ThenBlock: {
+                            BreakLoop
+                        }
+                        Parse_Advance()
+                        nxt = Parse_BitwiseOr()
+                        Array.Push(ops, op2)
+                        Array.Push(operands, nxt)
+                    }
+                    node = AST_Create(Node.CHAIN_COMPARE, 2)
+                    ArraySet(node, 1, line)
+                    ArraySet(node, 2, col)
+                    ArraySet(node, 3, operands)
+                    ArraySet(node, 4, ops)
+                    left = node
+                    ContinueLoop
+                }
+            }
+            
+            node = AST_Create(Node.BINARY_OP, 3)
+            ArraySet(node, 1, line)
+            ArraySet(node, 2, col)
+            ArraySet(node, 3, left)
+            ArraySet(node, 4, op)
+            ArraySet(node, 5, right)
+            
+            // If negated, wrap in NOT
+            IfCondition EqualTo(is_negated, 1) ThenBlock: {
+                not_node = AST_Create(Node.UNARY_OP, 2)
+                ArraySet(not_node, 1, line)
+                ArraySet(not_node, 2, col)
+                ArraySet(not_node, 3, Token.NOT)
+                ArraySet(not_node, 4, node)
+                left = not_node
+            } ElseBlock: {
+                left = node
+            }
+        }
+        
+        ReturnValue(left)
+    }
+}
+
+Function.Parse_BitwiseOr {
+    Output: Address
+    Body: {
+        left = Parse_BitwiseXor()
+
+        WhileLoop EqualTo(1, 1) {
+            is_bor = Parse_Match(Token.BIT_OR)
+            IfCondition EqualTo(is_bor, 0) ThenBlock: {
+                BreakLoop
+            }
+
+            line = Parse_Line()
+            col = Parse_Col()
+            Parse_Advance()
+
+            right = Parse_BitwiseXor()
+
+            node = AST_Create(Node.BINARY_OP, 3)
+            ArraySet(node, 1, line)
+            ArraySet(node, 2, col)
+            ArraySet(node, 3, left)
+            ArraySet(node, 4, Token.BIT_OR)
+            ArraySet(node, 5, right)
+
+            left = node
+        }
+
+        ReturnValue(left)
+    }
+}
+
+Function.Parse_BitwiseXor {
+    Output: Address
+    Body: {
+        left = Parse_BitwiseAnd()
+
+        WhileLoop EqualTo(1, 1) {
+            is_bxor = Parse_Match(Token.BIT_XOR)
+            IfCondition EqualTo(is_bxor, 0) ThenBlock: {
+                BreakLoop
+            }
+
+            line = Parse_Line()
+            col = Parse_Col()
+            Parse_Advance()
+
+            right = Parse_BitwiseAnd()
+
+            node = AST_Create(Node.BINARY_OP, 3)
+            ArraySet(node, 1, line)
+            ArraySet(node, 2, col)
+            ArraySet(node, 3, left)
+            ArraySet(node, 4, Token.BIT_XOR)
+            ArraySet(node, 5, right)
+
+            left = node
+        }
+
+        ReturnValue(left)
+    }
+}
+
+Function.Parse_BitwiseAnd {
+    Output: Address
+    Body: {
+        left = Parse_Shift()
+
+        WhileLoop EqualTo(1, 1) {
+            is_band = Parse_Match(Token.BIT_AND)
+            IfCondition EqualTo(is_band, 0) ThenBlock: {
+                BreakLoop
+            }
+
+            line = Parse_Line()
+            col = Parse_Col()
+            Parse_Advance()
+
+            right = Parse_Shift()
+
+            node = AST_Create(Node.BINARY_OP, 3)
+            ArraySet(node, 1, line)
+            ArraySet(node, 2, col)
+            ArraySet(node, 3, left)
+            ArraySet(node, 4, Token.BIT_AND)
+            ArraySet(node, 5, right)
+
+            left = node
+        }
+
+        ReturnValue(left)
+    }
+}
+
+Function.Parse_Shift {
+    Output: Address
+    Body: {
+        left = Parse_Addition()
+
+        WhileLoop EqualTo(1, 1) {
+            t = Parse_Type()
+            op = 0
+            IfCondition EqualTo(t, Token.LSHIFT) ThenBlock: { op = Token.LSHIFT }
+            IfCondition EqualTo(t, Token.RSHIFT) ThenBlock: { op = Token.RSHIFT }
+            IfCondition EqualTo(op, 0) ThenBlock: {
+                BreakLoop
+            }
+
+            line = Parse_Line()
+            col = Parse_Col()
+            Parse_Advance()
+
+            right = Parse_Addition()
+
+            node = AST_Create(Node.BINARY_OP, 3)
+            ArraySet(node, 1, line)
+            ArraySet(node, 2, col)
+            ArraySet(node, 3, left)
+            ArraySet(node, 4, op)
+            ArraySet(node, 5, right)
+
+            left = node
+        }
+
+        ReturnValue(left)
+    }
+}
+
+Function.Parse_Addition {
+    Output: Address
+    Body: {
+        left = Parse_Multiplication()
+        
+        WhileLoop EqualTo(1, 1) {
+            t = Parse_Type()
+            op = 0
+            
+            IfCondition EqualTo(t, Token.PLUS) ThenBlock: { op = Token.PLUS }
+            IfCondition EqualTo(t, Token.MINUS) ThenBlock: { op = Token.MINUS }
+            
+            IfCondition EqualTo(op, 0) ThenBlock: {
+                BreakLoop
+            }
+            
+            line = Parse_Line()
+            col = Parse_Col()
+            Parse_Advance()
+            
+            right = Parse_Multiplication()
+            
+            node = AST_Create(Node.BINARY_OP, 3)
+            ArraySet(node, 1, line)
+            ArraySet(node, 2, col)
+            ArraySet(node, 3, left)
+            ArraySet(node, 4, op)
+            ArraySet(node, 5, right)
+            
+            left = node
+        }
+        
+        ReturnValue(left)
+    }
+}
+
+Function.Parse_Multiplication {
+    Output: Address
+    Body: {
+        left = Parse_Unary()
+        
+        WhileLoop EqualTo(1, 1) {
+            t = Parse_Type()
+            op = 0
+            
+            IfCondition EqualTo(t, Token.STAR) ThenBlock: { op = Token.STAR }
+            IfCondition EqualTo(t, Token.SLASH) ThenBlock: { op = Token.SLASH }
+            IfCondition EqualTo(t, Token.PERCENT) ThenBlock: { op = Token.PERCENT }
+            IfCondition EqualTo(t, Token.FLOOR_DIV) ThenBlock: { op = Token.FLOOR_DIV }
+            IfCondition EqualTo(t, Token.AT) ThenBlock: { op = Token.AT }
+            
+            IfCondition EqualTo(op, 0) ThenBlock: {
+                BreakLoop
+            }
+            
+            line = Parse_Line()
+            col = Parse_Col()
+            Parse_Advance()
+            
+            right = Parse_Unary()
+            
+            node = AST_Create(Node.BINARY_OP, 3)
+            ArraySet(node, 1, line)
+            ArraySet(node, 2, col)
+            ArraySet(node, 3, left)
+            ArraySet(node, 4, op)
+            ArraySet(node, 5, right)
+            
+            left = node
+        }
+        
+        ReturnValue(left)
+    }
+}
+
+Function.Parse_Power {
+    Output: Address
+    Body: {
+        // Python: power = primary ["**" u_expr]; u_expr includes unary, so
+        // -2 ** 4 is -(2 ** 4) and 2 ** -1 is 2 ** (-1).
+        left = Parse_Primary()
+        
+        is_pow = Parse_Match(Token.POWER)
+        IfCondition EqualTo(is_pow, 1) ThenBlock: {
+            line = Parse_Line()
+            col = Parse_Col()
+            Parse_Advance()
+            
+            right = Parse_Unary()
+            
+            node = AST_Create(Node.BINARY_OP, 3)
+            ArraySet(node, 1, line)
+            ArraySet(node, 2, col)
+            ArraySet(node, 3, left)
+            ArraySet(node, 4, Token.POWER)
+            ArraySet(node, 5, right)
+            
+            ReturnValue(node)
+        }
+        
+        ReturnValue(left)
+    }
+}
+
+Function.Parse_Unary {
+    Output: Address
+    Body: {
+        t = Parse_Type()
+        
+        // REMOVED: not handling (now in Parse_Not)
+        
+        // Unary minus
+        IfCondition EqualTo(t, Token.MINUS) ThenBlock: {
+            line = Parse_Line()
+            col = Parse_Col()
+            Parse_Advance()
+            
+            operand = Parse_Unary()
+            
+            node = AST_Create(Node.UNARY_OP, 2)
+            ArraySet(node, 1, line)
+            ArraySet(node, 2, col)
+            ArraySet(node, 3, Token.MINUS)
+            ArraySet(node, 4, operand)
+            
+            ReturnValue(node)
+        }
+
+        // Unary plus (+self / +x)
+        IfCondition EqualTo(t, Token.PLUS) ThenBlock: {
+            line = Parse_Line()
+            col = Parse_Col()
+            Parse_Advance()
+
+            operand = Parse_Unary()
+
+            node = AST_Create(Node.UNARY_OP, 2)
+            ArraySet(node, 1, line)
+            ArraySet(node, 2, col)
+            ArraySet(node, 3, Token.PLUS)
+            ArraySet(node, 4, operand)
+
+            ReturnValue(node)
+        }
+
+        // Bitwise not ~
+        IfCondition EqualTo(t, Token.BIT_NOT) ThenBlock: {
+            line = Parse_Line()
+            col = Parse_Col()
+            Parse_Advance()
+
+            operand = Parse_Unary()
+
+            node = AST_Create(Node.UNARY_OP, 2)
+            ArraySet(node, 1, line)
+            ArraySet(node, 2, col)
+            ArraySet(node, 3, Token.BIT_NOT)
+            ArraySet(node, 4, operand)
+
+            ReturnValue(node)
+        }
+        
+        result = Parse_Power()
+        ReturnValue(result)
+    }
+}
+
+Function.Parse_MakeStrLit {
+    Input: s: Address
+    Output: Address
+    Body: {
+        node = AST_Create(Node.STR_LIT, 1)
+        ArraySet(node, 3, s)
+        ReturnValue(node)
+    }
+}
+
+Function.Parse_MakeStrCall {
+    Input: expr: Address
+    Output: Address
+    Body: {
+        args = Array.Create(1)
+        Array.Push(args, expr)
+        node = AST_Create(Node.CALL, 2)
+        ArraySet(node, 3, "str")
+        ArraySet(node, 4, args)
+        ReturnValue(node)
+    }
+}
+
+Function.Parse_Concat {
+    Input: left: Address
+    Input: right: Address
+    Output: Address
+    Body: {
+        IfCondition EqualTo(left, 0) ThenBlock: {
+            ReturnValue(right)
+        }
+        node = AST_Create(Node.BINARY_OP, 3)
+        ArraySet(node, 3, left)
+        ArraySet(node, 4, Token.PLUS)
+        ArraySet(node, 5, right)
+        ReturnValue(node)
+    }
+}
+
+Function.Parse_InterpIdent {
+    Input: s: Address
+    Input: start: Integer
+    Input: endi: Integer
+    Output: Address
+    Body: {
+        IfCondition GreaterEqual(start, endi) ThenBlock: {
+            ReturnValue(Parse_MakeStrLit(""))
+        }
+        nlen = Subtract(endi, start)
+        name = Allocate(Add(nlen, 1))
+        i = 0
+        WhileLoop LessThan(i, nlen) {
+            SetByte(name, i, GetByte(s, Add(start, i)))
+            i = Add(i, 1)
+        }
+        SetByte(name, nlen, 0)
+        ident = AST_Create(Node.IDENT, 1)
+        ArraySet(ident, 3, name)
+        ReturnValue(ident)
+    }
+}
+
+// Lex+parse a source fragment as an expression, restoring the outer token stream.
+// Used for f-string {expr} when expr is more than a bare ident/attr/call.
+Function.Parse_ExprFromSource {
+    Input: src: Address
+    Input: length: Integer
+    Output: Address
+    Body: {
+        IfCondition Or(EqualTo(src, 0), LessEqual(length, 0)) ThenBlock: {
+            ReturnValue(Parse_MakeStrLit(""))
+        }
+
+        // Save outer lexer/parser state (do not Lex_Free — keeps outer tokens alive)
+        old_src = Lex.src
+        old_len = Lex.len
+        old_pos = Lex.pos
+        old_line = Lex.line
+        old_col = Lex.col
+        old_count = Lex.count
+        old_types = Lex.tok_types
+        old_vals = Lex.tok_vals
+        old_lines = Lex.tok_lines
+        old_cols = Lex.tok_cols
+        old_buf = Lex.buf
+        old_paren = Lex.paren_depth
+        old_bracket = Lex.bracket_depth
+        old_parse_pos = Parse.pos
+        old_parse_count = Parse.count
+        old_err = Parse.err
+        old_err_line = Parse.err_line
+        old_err_col = Parse.err_col
+        old_err_msg = Parse.err_msg
+
+        // Fresh tokenize of the fragment
+        Lex.src = src
+        Lex.len = length
+        Lex.pos = 0
+        Lex.line = 1
+        Lex.col = 1
+        Lex.count = 0
+        Lex.paren_depth = 0
+        Lex.bracket_depth = 0
+        Lex.tok_types = Array.Create(64)
+        Lex.tok_vals = Array.Create(64)
+        Lex.tok_lines = Array.Create(64)
+        Lex.tok_cols = Array.Create(64)
+        Lex.buf = Allocate(Lex.buf_size)
+        Lex_Tokenize()
+        Parse.pos = 0
+        Parse.count = Lex_Count()
+        Parse.err = 0
+
+        expr = Parse_Expr()
+
+        // Keep STRING/IDENT/FSTRING token values — AST nodes alias them.
+        // Only destroy the fragment token arrays and temp lex buf.
+        IfCondition NotEqual(Lex.tok_types, 0) ThenBlock: {
+            Array.Destroy(Lex.tok_types)
+        }
+        IfCondition NotEqual(Lex.tok_vals, 0) ThenBlock: {
+            Array.Destroy(Lex.tok_vals)
+        }
+        IfCondition NotEqual(Lex.tok_lines, 0) ThenBlock: {
+            Array.Destroy(Lex.tok_lines)
+        }
+        IfCondition NotEqual(Lex.tok_cols, 0) ThenBlock: {
+            Array.Destroy(Lex.tok_cols)
+        }
+        IfCondition NotEqual(Lex.buf, 0) ThenBlock: {
+            Deallocate(Lex.buf, Lex.buf_size)
+        }
+
+        // Restore outer state
+        Lex.src = old_src
+        Lex.len = old_len
+        Lex.pos = old_pos
+        Lex.line = old_line
+        Lex.col = old_col
+        Lex.count = old_count
+        Lex.tok_types = old_types
+        Lex.tok_vals = old_vals
+        Lex.tok_lines = old_lines
+        Lex.tok_cols = old_cols
+        Lex.buf = old_buf
+        Lex.paren_depth = old_paren
+        Lex.bracket_depth = old_bracket
+        Parse.pos = old_parse_pos
+        Parse.count = old_parse_count
+        Parse.err = old_err
+        Parse.err_line = old_err_line
+        Parse.err_col = old_err_col
+        Parse.err_msg = old_err_msg
+
+        ReturnValue(expr)
+    }
+}
+
+Function.Parse_FString {
+    Input: s: Address
+    Output: Address
+    Body: {
+        IfCondition EqualTo(s, 0) ThenBlock: {
+            ReturnValue(Parse_MakeStrLit(""))
+        }
+        slen = StringLength(s)
+        result = 0
+        lit = Allocate(Add(slen, 1))
+        lit_n = 0
+        i = 0
+        WhileLoop LessThan(i, slen) {
+            ch = GetByte(s, i)
+            nxt = 0
+            IfCondition LessThan(Add(i, 1), slen) ThenBlock: {
+                nxt = GetByte(s, Add(i, 1))
+            }
+            IfCondition And(EqualTo(ch, 123), EqualTo(nxt, 123)) ThenBlock: {
+                SetByte(lit, lit_n, 123)
+                lit_n = Add(lit_n, 1)
+                i = Add(i, 2)
+            } ElseBlock: {
+                IfCondition And(EqualTo(ch, 125), EqualTo(nxt, 125)) ThenBlock: {
+                    SetByte(lit, lit_n, 125)
+                    lit_n = Add(lit_n, 1)
+                    i = Add(i, 2)
+                } ElseBlock: {
+                    IfCondition EqualTo(ch, 123) ThenBlock: {
+                        IfCondition GreaterThan(lit_n, 0) ThenBlock: {
+                            SetByte(lit, lit_n, 0)
+                            chunk = Allocate(Add(lit_n, 1))
+                            k = 0
+                            WhileLoop LessThan(k, lit_n) {
+                                SetByte(chunk, k, GetByte(lit, k))
+                                k = Add(k, 1)
+                            }
+                            SetByte(chunk, lit_n, 0)
+                            result = Parse_Concat(result, Parse_MakeStrLit(chunk))
+                            lit_n = 0
+                        }
+                        // Skip '{'
+                        i = Add(i, 1)
+                        // Extract {expr} with brace+string awareness (PEP 701 nested quotes)
+                        expr_start = i
+                        edepth = 1
+                        WhileLoop And(LessThan(i, slen), GreaterThan(edepth, 0)) {
+                            ech = GetByte(s, i)
+                            // No {{/}} escapes inside an active expression field —
+                            // each brace changes edepth (format specs nest).
+                            IfCondition EqualTo(ech, 123) ThenBlock: {
+                                edepth = Add(edepth, 1)
+                                i = Add(i, 1)
+                                ContinueLoop
+                            }
+                            IfCondition EqualTo(ech, 125) ThenBlock: {
+                                edepth = Subtract(edepth, 1)
+                                IfCondition EqualTo(edepth, 0) ThenBlock: {
+                                    BreakLoop
+                                }
+                                i = Add(i, 1)
+                                ContinueLoop
+                            }
+                            // Nested quotes inside expr
+                            IfCondition Or(EqualTo(ech, 34), EqualTo(ech, 39)) ThenBlock: {
+                                nq = ech
+                                i = Add(i, 1)
+                                ntriple = 0
+                                IfCondition And(LessThan(i, slen), EqualTo(GetByte(s, i), nq)) ThenBlock: {
+                                    IfCondition And(LessThan(Add(i, 1), slen), EqualTo(GetByte(s, Add(i, 1)), nq)) ThenBlock: {
+                                        ntriple = 1
+                                        i = Add(i, 2)
+                                    } ElseBlock: {
+                                        // empty ''
+                                        i = Add(i, 1)
+                                        ContinueLoop
+                                    }
+                                }
+                                nended = 0
+                                WhileLoop And(EqualTo(nended, 0), LessThan(i, slen)) {
+                                    nc = GetByte(s, i)
+                                    IfCondition EqualTo(nc, 92) ThenBlock: {
+                                        i = Add(i, 2)
+                                        ContinueLoop
+                                    }
+                                    IfCondition EqualTo(nc, nq) ThenBlock: {
+                                        IfCondition EqualTo(ntriple, 1) ThenBlock: {
+                                            IfCondition And(LessThan(Add(i, 2), slen), And(EqualTo(GetByte(s, Add(i, 1)), nq), EqualTo(GetByte(s, Add(i, 2)), nq))) ThenBlock: {
+                                                i = Add(i, 3)
+                                                nended = 1
+                                                ContinueLoop
+                                            }
+                                            i = Add(i, 1)
+                                            ContinueLoop
+                                        }
+                                        i = Add(i, 1)
+                                        nended = 1
+                                        ContinueLoop
+                                    }
+                                    i = Add(i, 1)
+                                }
+                                ContinueLoop
+                            }
+                            i = Add(i, 1)
+                        }
+                        expr_end = i
+                        // Copy expression substring
+                        elen = Subtract(expr_end, expr_start)
+                        ebuf = Allocate(Add(elen, 1))
+                        ek = 0
+                        WhileLoop LessThan(ek, elen) {
+                            SetByte(ebuf, ek, GetByte(s, Add(expr_start, ek)))
+                            ek = Add(ek, 1)
+                        }
+                                                SetByte(ebuf, elen, 0)
+                        // Strip !conversion / :format_spec at top level (not inside ()[]{} or strings)
+                        cut = elen
+                        pdepth = 0
+                        bdepth = 0
+                        cdepth = 0
+                        in_str = 0
+                        sq = 0
+                        si = 0
+                        WhileLoop LessThan(si, elen) {
+                            sc = GetByte(ebuf, si)
+                            IfCondition EqualTo(in_str, 1) ThenBlock: {
+                                IfCondition EqualTo(sc, 92) ThenBlock: {
+                                    si = Add(si, 2)
+                                    ContinueLoop
+                                }
+                                IfCondition EqualTo(sc, sq) ThenBlock: {
+                                    in_str = 0
+                                }
+                                si = Add(si, 1)
+                                ContinueLoop
+                            }
+                            IfCondition Or(EqualTo(sc, 34), EqualTo(sc, 39)) ThenBlock: {
+                                in_str = 1
+                                sq = sc
+                                si = Add(si, 1)
+                                ContinueLoop
+                            }
+                            IfCondition EqualTo(sc, 40) ThenBlock: {
+                                pdepth = Add(pdepth, 1)
+                                si = Add(si, 1)
+                                ContinueLoop
+                            }
+                            IfCondition EqualTo(sc, 41) ThenBlock: {
+                                IfCondition GreaterThan(pdepth, 0) ThenBlock: {
+                                    pdepth = Subtract(pdepth, 1)
+                                }
+                                si = Add(si, 1)
+                                ContinueLoop
+                            }
+                            IfCondition EqualTo(sc, 91) ThenBlock: {
+                                bdepth = Add(bdepth, 1)
+                                si = Add(si, 1)
+                                ContinueLoop
+                            }
+                            IfCondition EqualTo(sc, 93) ThenBlock: {
+                                IfCondition GreaterThan(bdepth, 0) ThenBlock: {
+                                    bdepth = Subtract(bdepth, 1)
+                                }
+                                si = Add(si, 1)
+                                ContinueLoop
+                            }
+                            IfCondition EqualTo(sc, 123) ThenBlock: {
+                                cdepth = Add(cdepth, 1)
+                                si = Add(si, 1)
+                                ContinueLoop
+                            }
+                            IfCondition EqualTo(sc, 125) ThenBlock: {
+                                IfCondition GreaterThan(cdepth, 0) ThenBlock: {
+                                    cdepth = Subtract(cdepth, 1)
+                                }
+                                si = Add(si, 1)
+                                ContinueLoop
+                            }
+                            IfCondition And(EqualTo(pdepth, 0), And(EqualTo(bdepth, 0), EqualTo(cdepth, 0))) ThenBlock: {
+                                // '!' conversion or ':' format — cut value here
+                                IfCondition Or(EqualTo(sc, 33), EqualTo(sc, 58)) ThenBlock: {
+                                    cut = si
+                                    BreakLoop
+                                }
+                            }
+                            si = Add(si, 1)
+                        }
+                        IfCondition LessThan(cut, elen) ThenBlock: {
+                            SetByte(ebuf, cut, 0)
+                            elen = cut
+                        }
+                        expr = Parse_ExprFromSource(ebuf, elen)
+                        Deallocate(ebuf, 0)
+                        // Consume closing '}'
+                        IfCondition And(LessThan(i, slen), EqualTo(GetByte(s, i), 125)) ThenBlock: {
+                            i = Add(i, 1)
+                        }
+                        result = Parse_Concat(result, Parse_MakeStrCall(expr))
+                    } ElseBlock: {
+                        SetByte(lit, lit_n, ch)
+                        lit_n = Add(lit_n, 1)
+                        i = Add(i, 1)
+                    }
+                }
+            }
+        }
+        IfCondition GreaterThan(lit_n, 0) ThenBlock: {
+            SetByte(lit, lit_n, 0)
+            chunk = Allocate(Add(lit_n, 1))
+            k = 0
+            WhileLoop LessThan(k, lit_n) {
+                SetByte(chunk, k, GetByte(lit, k))
+                k = Add(k, 1)
+            }
+            SetByte(chunk, lit_n, 0)
+            result = Parse_Concat(result, Parse_MakeStrLit(chunk))
+        }
+        IfCondition EqualTo(result, 0) ThenBlock: {
+            ReturnValue(Parse_MakeStrLit(""))
+        }
+        ReturnValue(result)
+    }
+}
+
+Function.Parse_With {
+    Output: Address
+    Body: {
+        line = Parse_Line()
+        col = Parse_Col()
+        Parse_Consume(Token.WITH)
+
+        // Multi-with: with A as a, B as b { body }
+        // Desugar to nested WITH_STMT (rightmost innermost) so exit order matches Python.
+        exprs = Array.Create(4)
+        as_names = Array.Create(4)
+        WhileLoop EqualTo(1, 1) {
+            Parse_SkipNoise()
+            expr = Parse_Expr()
+            as_name = 0
+            is_as = Parse_Match(Token.AS)
+            IfCondition EqualTo(is_as, 1) ThenBlock: {
+                Parse_Advance()
+                Parse_SkipNoise()
+                // with expr as (a, b) — tuple target, parse coverage
+                IfCondition EqualTo(Parse_Match(Token.LPAREN), 1) ThenBlock: {
+                    Parse_SkipParens()
+                    as_name = 0
+                } ElseBlock: {
+                    name_ptr = Parse_Val()
+                    as_name = Parse_CopyStr(name_ptr)
+                    Parse_Consume(Token.IDENTIFIER)
+                }
+            }
+            Array.Push(exprs, expr)
+            Array.Push(as_names, as_name)
+            Parse_SkipNoise()
+            is_comma = Parse_Match(Token.COMMA)
+            IfCondition EqualTo(is_comma, 1) ThenBlock: {
+                Parse_Advance()
+                ContinueLoop
+            }
+            BreakLoop
+        }
+
+        body = Parse_EnterBlock()
+
+        n = Array.Size(exprs)
+        inner_body = body
+        i = Subtract(n, 1)
+        node = 0
+        WhileLoop EqualTo(1, 1) {
+            expr = Array.Get(exprs, i)
+            as_name = Array.Get(as_names, i)
+            node = AST_Create(Node.WITH_STMT, 3)
+            ArraySet(node, 1, line)
+            ArraySet(node, 2, col)
+            ArraySet(node, 3, expr)
+            ArraySet(node, 4, as_name)
+            ArraySet(node, 5, inner_body)
+            IfCondition EqualTo(i, 0) ThenBlock: {
+                BreakLoop
+            }
+            wrap = Array.Create(1)
+            Array.Push(wrap, node)
+            inner_body = wrap
+            i = Subtract(i, 1)
+        }
+        ReturnValue(node)
+    }
+}
+
+
+// =============================================================================
+// String-prefix helpers (b/r/u/br/rb) + one concat piece for implicit "a" "b"
+// =============================================================================
+Function.Parse_IsStringPrefix {
+    Input: name_ptr: Address
+    Output: Integer
+    Body: {
+        IfCondition Or(EqualTo(StringCompare(name_ptr, "b"), 0), EqualTo(StringCompare(name_ptr, "B"), 0)) ThenBlock: {
+            ReturnValue(1)
+        }
+        IfCondition Or(EqualTo(StringCompare(name_ptr, "r"), 0), EqualTo(StringCompare(name_ptr, "R"), 0)) ThenBlock: {
+            ReturnValue(1)
+        }
+        IfCondition Or(EqualTo(StringCompare(name_ptr, "u"), 0), EqualTo(StringCompare(name_ptr, "U"), 0)) ThenBlock: {
+            ReturnValue(1)
+        }
+        IfCondition Or(EqualTo(StringCompare(name_ptr, "br"), 0), EqualTo(StringCompare(name_ptr, "Br"), 0)) ThenBlock: {
+            ReturnValue(1)
+        }
+        IfCondition Or(EqualTo(StringCompare(name_ptr, "bR"), 0), EqualTo(StringCompare(name_ptr, "BR"), 0)) ThenBlock: {
+            ReturnValue(1)
+        }
+        IfCondition Or(EqualTo(StringCompare(name_ptr, "rb"), 0), EqualTo(StringCompare(name_ptr, "Rb"), 0)) ThenBlock: {
+            ReturnValue(1)
+        }
+        IfCondition Or(EqualTo(StringCompare(name_ptr, "rB"), 0), EqualTo(StringCompare(name_ptr, "RB"), 0)) ThenBlock: {
+            ReturnValue(1)
+        }
+        ReturnValue(0)
+    }
+}
+
+// Consume one implicit-concat string piece: STRING/FSTRING, or prefix IDENT + STRING/FSTRING.
+// Returns 0 if the next token is not a string piece.
+Function.Parse_TryStringConcatPiece {
+    Output: Address
+    Body: {
+        t = Parse_Type()
+        IfCondition Or(EqualTo(t, Token.STRING), EqualTo(t, Token.FSTRING)) ThenBlock: {
+            IfCondition EqualTo(t, Token.FSTRING) ThenBlock: {
+                node = Parse_FString(Parse_Val())
+                Parse_Advance()
+                ReturnValue(node)
+            }
+            node = AST_Create(Node.STR_LIT, 1)
+            ArraySet(node, 3, Parse_Val())
+            Parse_Advance()
+            ReturnValue(node)
+        }
+        IfCondition EqualTo(t, Token.IDENTIFIER) ThenBlock: {
+            name_ptr = Parse_Val()
+            next_t = Lex_GetType(Add(Parse.pos, 1))
+            IfCondition Or(EqualTo(next_t, Token.STRING), EqualTo(next_t, Token.FSTRING)) ThenBlock: {
+                is_prefix = Parse_IsStringPrefix(name_ptr)
+                IfCondition EqualTo(is_prefix, 1) ThenBlock: {
+                    Parse_Advance()
+                    IfCondition EqualTo(Parse_Type(), Token.FSTRING) ThenBlock: {
+                        node = Parse_FString(Parse_Val())
+                        Parse_Advance()
+                        ReturnValue(node)
+                    }
+                    node = AST_Create(Node.STR_LIT, 1)
+                    ArraySet(node, 3, Parse_Val())
+                    Parse_Advance()
+                    ReturnValue(node)
+                }
+            }
+        }
+        ReturnValue(0)
+    }
+}

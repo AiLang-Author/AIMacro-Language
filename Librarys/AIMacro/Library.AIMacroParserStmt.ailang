@@ -1,0 +1,1486 @@
+// Library.AIMacroParserStmt.ailang
+// AIMacro parser statements (split from ParserCore).
+//
+// Copyright (c) 2025-2026 Sean Collins, 2 Paws Machine and Engineering. All rights reserved.
+// Licensed under the Sean Collins Software License (SCSL v1.0).
+
+LibraryImport.AIMacro.AIMacroCore
+LibraryImport.AIMacro.AIMacroTypeAnnotations
+LibraryImport.AIMacro.AIMacroParserOOP
+LibraryImport.AIMacro.AIMacroParserCore
+LibraryImport.AIMacro.AIMacroParserExpr
+LibraryImport.AIMacro.AIMacroParserPrimary
+
+
+// =============================================================================
+// STATEMENT PARSING
+// =============================================================================
+Function.Parse_Stmt {
+    Output: Address
+    Body: {
+        t = Parse_Type()
+
+        IfCondition EqualTo(t, Token.RBRACE) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t, Token.EOF) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t, Token.ELIF) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t, Token.ELSE) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t, Token.EXCEPT) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t, Token.FINALLY) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t, Token.AT) ThenBlock: {
+            decos = Parse_Decorators()
+            Parse_SkipAsync()
+            t = Parse_Type()
+            IfCondition EqualTo(t, Token.DEF) ThenBlock: {
+                node = Parse_FuncDef()
+                IfCondition NotEqual(node, 0) ThenBlock: {
+                    ArraySet(node, 9, decos)
+                }
+                ReturnValue(node)
+            }
+            IfCondition Parse_IsClassDef() ThenBlock: {
+                node = Parse_ClassDef()
+                IfCondition NotEqual(node, 0) ThenBlock: {
+                    ArraySet(node, 6, decos)
+                }
+                ReturnValue(node)
+            }
+            Parse_Error("Expected def or class after decorator")
+            ReturnValue(0)
+        }
+        Parse_SkipAsync()
+        t = Parse_Type()
+        IfCondition EqualTo(t, Token.DEF) ThenBlock: {
+            node = Parse_FuncDef()
+            ReturnValue(node)
+        }
+        IfCondition Parse_IsClassDef() ThenBlock: {
+            node = Parse_ClassDef()
+            ReturnValue(node)
+        }
+        
+        IfCondition EqualTo(t, Token.WITH) ThenBlock: {
+            node = Parse_With()
+            ReturnValue(node)
+        }
+        
+        IfCondition EqualTo(t, Token.IF) ThenBlock: {
+            node = Parse_If()
+            ReturnValue(node)
+        }
+        
+        IfCondition EqualTo(t, Token.WHILE) ThenBlock: {
+            node = Parse_While()
+            ReturnValue(node)
+        }
+        
+        IfCondition EqualTo(t, Token.FOR) ThenBlock: {
+            node = Parse_For()
+            ReturnValue(node)
+        }
+        
+        IfCondition EqualTo(t, Token.RETURN) ThenBlock: {
+            node = Parse_Return()
+            ReturnValue(node)
+        }
+
+        IfCondition EqualTo(t, Token.YIELD) ThenBlock: {
+            node = Parse_Yield(1)
+            ReturnValue(node)
+        }
+        
+        IfCondition EqualTo(t, Token.BREAK) ThenBlock: {
+            node = Parse_Break()
+            ReturnValue(node)
+        }
+        
+        IfCondition EqualTo(t, Token.CONTINUE) ThenBlock: {
+            node = Parse_Continue()
+            ReturnValue(node)
+        }
+        
+        // NEW: Handle pass statement
+        IfCondition EqualTo(t, Token.PASS) ThenBlock: {
+            Parse_Advance()
+            node = AST_Create(Node.PASS_STMT, 0)
+            ReturnValue(node)
+        }
+        
+        IfCondition EqualTo(t, Token.TRY) ThenBlock: {
+            node = Parse_Try()
+            ReturnValue(node)
+        }
+
+        IfCondition EqualTo(t, Token.RAISE) ThenBlock: {
+            node = Parse_Raise()
+            ReturnValue(node)
+        }
+        IfCondition EqualTo(t, Token.ASSERT) ThenBlock: {
+            node = Parse_Assert()
+            ReturnValue(node)
+        }
+        IfCondition EqualTo(t, Token.DEL) ThenBlock: {
+            node = Parse_Del()
+            ReturnValue(node)
+        }
+        IfCondition EqualTo(t, Token.GLOBAL) ThenBlock: {
+            node = Parse_Global()
+            ReturnValue(node)
+        }
+        IfCondition EqualTo(t, Token.NONLOCAL) ThenBlock: {
+            node = Parse_Nonlocal()
+            ReturnValue(node)
+        }
+        IfCondition EqualTo(t, Token.IMPORT) ThenBlock: {
+            node = Parse_Import()
+            ReturnValue(node)
+        }
+        IfCondition EqualTo(t, Token.FROM) ThenBlock: {
+            node = Parse_FromImport()
+            ReturnValue(node)
+        }
+        // Default: assignment or expression
+        node = Parse_AssignOrExpr()
+        ReturnValue(node)
+    }
+}
+
+// =============================================================================
+// TRY STATEMENT: try: ... except: ... finally: ...
+// =============================================================================
+Function.Parse_Try {
+    Output: Address
+    Body: {
+        line = Parse_Line()
+        col = Parse_Col()
+        
+        Parse_Consume(Token.TRY)
+        try_body = Parse_EnterBlock()
+        Parse_SkipNoise()
+        
+        // Parse except clauses (can be multiple)
+        except_clauses = Array.Create(4)
+        
+        WhileLoop EqualTo(1, 1) {
+            is_except = Parse_Match(Token.EXCEPT)
+            IfCondition EqualTo(is_except, 0) ThenBlock: {
+                BreakLoop
+            }
+            
+            Parse_Advance()  // Skip 'except'
+            Parse_SkipNoise()
+            
+            // except { } | except Type { } | except pkg.Type { }
+            // | except (A, B) { } | except Type as name { } | except (A, B) as e { }
+            exc_type = 0
+            as_name = 0
+            is_lparen = Parse_Match(Token.LPAREN)
+            is_ident = Parse_Match(Token.IDENTIFIER)
+            IfCondition EqualTo(is_lparen, 1) ThenBlock: {
+                Parse_Advance()
+                Parse_SkipNoise()
+                // First (or only) exception type; keep last dotted component for MapExcKind
+                WhileLoop EqualTo(1, 1) {
+                    Parse_SkipNoise()
+                    is_rp = Parse_Match(Token.RPAREN)
+                    IfCondition EqualTo(is_rp, 1) ThenBlock: {
+                        BreakLoop
+                    }
+                    is_comma = Parse_Match(Token.COMMA)
+                    IfCondition EqualTo(is_comma, 1) ThenBlock: {
+                        Parse_Advance()
+                        Parse_SkipNoise()
+                    } ElseBlock: {
+                        is_id = Parse_Match(Token.IDENTIFIER)
+                        IfCondition EqualTo(is_id, 1) ThenBlock: {
+                            // dotted name: Ident (. Ident)*
+                            WhileLoop EqualTo(1, 1) {
+                                p = Parse_Val()
+                                IfCondition EqualTo(exc_type, 0) ThenBlock: {
+                                    exc_type = Parse_CopyStr(p)
+                                } ElseBlock: {
+                                    // prefer last component (CancelledError vs exceptions.CancelledError)
+                                    exc_type = Parse_CopyStr(p)
+                                }
+                                Parse_Consume(Token.IDENTIFIER)
+                                Parse_SkipNoise()
+                                is_dot = Parse_Match(Token.DOT)
+                                IfCondition EqualTo(is_dot, 1) ThenBlock: {
+                                    Parse_Advance()
+                                    Parse_SkipNoise()
+                                } ElseBlock: {
+                                    BreakLoop
+                                }
+                            }
+                        } ElseBlock: {
+                            BreakLoop
+                        }
+                    }
+                }
+                Parse_SkipNoise()
+                Parse_Consume(Token.RPAREN)
+                Parse_SkipNoise()
+            } ElseBlock: {
+                IfCondition EqualTo(is_ident, 1) ThenBlock: {
+                    // dotted name: Type | pkg.Type
+                    WhileLoop EqualTo(1, 1) {
+                        p = Parse_Val()
+                        exc_type = Parse_CopyStr(p)
+                        Parse_Consume(Token.IDENTIFIER)
+                        Parse_SkipNoise()
+                        is_dot = Parse_Match(Token.DOT)
+                        IfCondition EqualTo(is_dot, 1) ThenBlock: {
+                            Parse_Advance()
+                            Parse_SkipNoise()
+                        } ElseBlock: {
+                            BreakLoop
+                        }
+                    }
+                    // except Type() as e  (call, not a type tuple)
+                    IfCondition EqualTo(Parse_Match(Token.LPAREN), 1) ThenBlock: {
+                        Parse_SkipParens()
+                    }
+                }
+            }
+            is_as = Parse_Match(Token.AS)
+            IfCondition EqualTo(is_as, 1) ThenBlock: {
+                Parse_Advance()
+                Parse_SkipNoise()
+                as_ptr = Parse_Val()
+                as_name = Parse_CopyStr(as_ptr)
+                Parse_Consume(Token.IDENTIFIER)
+                Parse_SkipNoise()
+            }
+            
+            except_body = Parse_EnterBlock()
+            Parse_SkipNoise()
+            
+            // [EXCEPT_CLAUSE, line, col, type, body, as_name]
+            clause = AST_Create(Node.EXCEPT_CLAUSE, 3)
+            ArraySet(clause, 3, exc_type)
+            ArraySet(clause, 4, except_body)
+            ArraySet(clause, 5, as_name)
+            
+            Array.Push(except_clauses, clause)
+        }
+        
+        // Optional else (Python try/except/else) — parse for coverage; field 6
+        else_body = 0
+        is_else = Parse_Match(Token.ELSE)
+        IfCondition EqualTo(is_else, 1) ThenBlock: {
+            Parse_Advance()
+            else_body = Parse_EnterBlock()
+            Parse_SkipNoise()
+        }
+
+        // Parse optional finally
+        finally_body = 0
+        is_finally = Parse_Match(Token.FINALLY)
+        IfCondition EqualTo(is_finally, 1) ThenBlock: {
+            Parse_Advance()
+            finally_body = Parse_EnterBlock()
+        }
+        
+        // Create try node: [TRY_STMT, line, col, try_body, except_clauses, finally_body, else_body]
+        node = AST_Create(Node.TRY_STMT, 4)
+        ArraySet(node, 1, line)
+        ArraySet(node, 2, col)
+        ArraySet(node, 3, try_body)
+        ArraySet(node, 4, except_clauses)
+        ArraySet(node, 5, finally_body)
+        ArraySet(node, 6, else_body)
+        
+        ReturnValue(node)
+    }
+}
+
+// =============================================================================
+// RAISE STATEMENT: raise ExceptionType("message") or bare raise
+// Maps to HaltProgram in AILang (no user-level raise in AILang)
+// =============================================================================
+Function.Parse_Raise {
+    Output: Address
+    Body: {
+        line = Parse_Line()
+        col = Parse_Col()
+
+        Parse_Consume(Token.RAISE)
+
+        // Optional expression after raise (e.g. ValueError("msg"))
+        expr = 0
+        t = Parse_Type()
+        IfCondition NotEqual(t, Token.NEWLINE) ThenBlock: {
+            IfCondition NotEqual(t, Token.EOF) ThenBlock: {
+                IfCondition NotEqual(t, Token.RBRACE) ThenBlock: {
+                    IfCondition NotEqual(t, Token.FROM) ThenBlock: {
+                        expr = Parse_Expr()
+                    }
+                }
+            }
+        }
+        // Python exception chaining: raise X from Y — skip for parse coverage
+        IfCondition EqualTo(Parse_Match(Token.FROM), 1) ThenBlock: {
+            Parse_Advance()
+            Parse_SkipNoise()
+            t = Parse_Type()
+            IfCondition NotEqual(t, Token.NEWLINE) ThenBlock: {
+                IfCondition NotEqual(t, Token.EOF) ThenBlock: {
+                    IfCondition NotEqual(t, Token.RBRACE) ThenBlock: {
+                        Parse_Expr()
+                    }
+                }
+            }
+        }
+
+        node = AST_Create(Node.RAISE_STMT, 1)
+        ArraySet(node, 1, line)
+        ArraySet(node, 2, col)
+        ArraySet(node, 3, expr)
+
+        ReturnValue(node)
+    }
+}
+
+Function.Parse_Assert {
+    Output: Address
+    Body: {
+        line = Parse_Line()
+        col = Parse_Col()
+        Parse_Consume(Token.ASSERT)
+        cond = Parse_Expr()
+        msg = 0
+        is_comma = Parse_Match(Token.COMMA)
+        IfCondition EqualTo(is_comma, 1) ThenBlock: {
+            Parse_Advance()
+            msg = Parse_Expr()
+        }
+        node = AST_Create(Node.ASSERT_STMT, 2)
+        ArraySet(node, 1, line)
+        ArraySet(node, 2, col)
+        ArraySet(node, 3, cond)
+        ArraySet(node, 4, msg)
+        ReturnValue(node)
+    }
+}
+
+// =============================================================================
+// DEL STATEMENT: del a / del a, b / del d[k], obj.attr
+// =============================================================================
+Function.Parse_Del {
+    Output: Address
+    Body: {
+        line = Parse_Line()
+        col = Parse_Col()
+        Parse_Consume(Token.DEL)
+        targets = Array.Create(2)
+        // first target required
+        tgt = Parse_Expr()
+        IfCondition EqualTo(tgt, 0) ThenBlock: {
+            Parse_Error("expected delete target")
+            ReturnValue(0)
+        }
+        Array.Push(targets, tgt)
+        // more targets: , expr
+        WhileLoop EqualTo(Parse_Match(Token.COMMA), 1) {
+            Parse_Advance()
+            // trailing comma allowed
+            t = Parse_Type()
+            IfCondition Or(EqualTo(t, Token.NEWLINE), Or(EqualTo(t, Token.RBRACE), EqualTo(t, Token.EOF))) ThenBlock: {
+                BreakLoop
+            }
+            tgt = Parse_Expr()
+            IfCondition EqualTo(tgt, 0) ThenBlock: {
+                Parse_Error("expected delete target after comma")
+                ReturnValue(0)
+            }
+            Array.Push(targets, tgt)
+        }
+        node = AST_Create(Node.DEL_STMT, 1)
+        ArraySet(node, 1, line)
+        ArraySet(node, 2, col)
+        ArraySet(node, 3, targets)
+        ReturnValue(node)
+    }
+}
+
+// =============================================================================
+// GLOBAL / NONLOCAL: global a, b / nonlocal x, y (names only; transpile no-op)
+// =============================================================================
+Function.Parse_GlobalNameList {
+    Output: Address
+    Body: {
+        names = Array.Create(2)
+        IfCondition NotEqual(Parse_Match(Token.IDENTIFIER), 1) ThenBlock: {
+            Parse_Error("expected name after global/nonlocal")
+            ReturnValue(0)
+        }
+        name_ptr = Parse_Val()
+        name = Parse_CopyStr(name_ptr)
+        Parse_Consume(Token.IDENTIFIER)
+        idn = AST_Create(Node.IDENT, 1)
+        ArraySet(idn, 3, name)
+        Array.Push(names, idn)
+        WhileLoop EqualTo(Parse_Match(Token.COMMA), 1) {
+            Parse_Advance()
+            tok = Parse_Type()
+            IfCondition Or(EqualTo(tok, Token.NEWLINE), Or(EqualTo(tok, Token.RBRACE), EqualTo(tok, Token.EOF))) ThenBlock: {
+                BreakLoop
+            }
+            IfCondition NotEqual(Parse_Match(Token.IDENTIFIER), 1) ThenBlock: {
+                Parse_Error("expected name after comma in global/nonlocal")
+                ReturnValue(0)
+            }
+            name_ptr = Parse_Val()
+            name = Parse_CopyStr(name_ptr)
+            Parse_Consume(Token.IDENTIFIER)
+            idn = AST_Create(Node.IDENT, 1)
+            ArraySet(idn, 3, name)
+            Array.Push(names, idn)
+        }
+        ReturnValue(names)
+    }
+}
+
+Function.Parse_Global {
+    Output: Address
+    Body: {
+        line = Parse_Line()
+        col = Parse_Col()
+        Parse_Consume(Token.GLOBAL)
+        names = Parse_GlobalNameList()
+        IfCondition EqualTo(names, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        node = AST_Create(Node.GLOBAL_STMT, 1)
+        ArraySet(node, 1, line)
+        ArraySet(node, 2, col)
+        ArraySet(node, 3, names)
+        ReturnValue(node)
+    }
+}
+
+Function.Parse_Nonlocal {
+    Output: Address
+    Body: {
+        line = Parse_Line()
+        col = Parse_Col()
+        Parse_Consume(Token.NONLOCAL)
+        names = Parse_GlobalNameList()
+        IfCondition EqualTo(names, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        node = AST_Create(Node.NONLOCAL_STMT, 1)
+        ArraySet(node, 1, line)
+        ArraySet(node, 2, col)
+        ArraySet(node, 3, names)
+        ReturnValue(node)
+    }
+}
+
+// =============================================================================
+// BREAK STATEMENT
+// =============================================================================
+Function.Parse_Break {
+    Output: Address
+    Body: {
+        line = Parse_Line()
+        col = Parse_Col()
+        
+        Parse_Consume(Token.BREAK)
+        
+        node = AST_Create(Node.BREAK_STMT, 0)
+        ArraySet(node, 1, line)
+        ArraySet(node, 2, col)
+        
+        ReturnValue(node)
+    }
+}
+
+// =============================================================================
+// CONTINUE STATEMENT
+// =============================================================================
+Function.Parse_Continue {
+    Output: Address
+    Body: {
+        line = Parse_Line()
+        col = Parse_Col()
+        
+        Parse_Consume(Token.CONTINUE)
+        
+        node = AST_Create(Node.CONTINUE_STMT, 0)
+        ArraySet(node, 1, line)
+        ArraySet(node, 2, col)
+        
+        ReturnValue(node)
+    }
+}
+
+// =============================================================================
+// IF STATEMENT
+// =============================================================================
+Function.Parse_If {
+    Output: Address
+    Body: {
+        line = Parse_Line()
+        col = Parse_Col()
+        
+        // Consume IF or ELIF
+        Parse_Advance()
+        
+        // Parse condition
+        cond = Parse_Expr()
+        then_body = Parse_EnterBlock()
+        Parse_SkipNoise()
+        
+        // Check for elif/else
+        else_body = 0
+        else_type = Parse_Type()
+        
+        IfCondition EqualTo(else_type, Token.ELIF) ThenBlock: {
+            // Recursive elif
+            elif_node = Parse_If()
+            else_body = Array.Create(1)
+            Array.Push(else_body, elif_node)
+        } ElseBlock: {
+            IfCondition EqualTo(else_type, Token.ELSE) ThenBlock: {
+                Parse_Advance()
+                else_body = Parse_EnterBlock()
+            }
+        }
+        
+        // Create if node: [IF_STMT, line, col, cond, then, else]
+        node = AST_Create(Node.IF_STMT, 3)
+        ArraySet(node, 1, line)
+        ArraySet(node, 2, col)
+        ArraySet(node, 3, cond)
+        ArraySet(node, 4, then_body)
+        ArraySet(node, 5, else_body)
+        
+        ReturnValue(node)
+    }
+}
+
+// =============================================================================
+// WHILE STATEMENT
+// =============================================================================
+Function.Parse_While {
+    Output: Address
+    Body: {
+        line = Parse_Line()
+        col = Parse_Col()
+        
+        Parse_Consume(Token.WHILE)
+        
+        cond = Parse_Expr()
+        body = Parse_EnterBlock()
+        
+        // Optional else: while ... { } else { } (runs if no break)
+        else_body = 0
+        Parse_SkipNoise()
+        is_else = Parse_Match(Token.ELSE)
+        IfCondition EqualTo(is_else, 1) ThenBlock: {
+            Parse_Advance()
+            else_body = Parse_EnterBlock()
+        }
+        
+        // Create while node: [WHILE_STMT, line, col, cond, body, else]
+        node = AST_Create(Node.WHILE_STMT, 3)
+        ArraySet(node, 1, line)
+        ArraySet(node, 2, col)
+        ArraySet(node, 3, cond)
+        ArraySet(node, 4, body)
+        ArraySet(node, 5, else_body)
+        
+        ReturnValue(node)
+    }
+}
+
+
+// Consume one for/comp unpack target: IDENT or nested (target, ...).
+// Returns first IDENT name for AST binding; nested structure is parse-coverage only.
+Function.Parse_ConsumeForTarget {
+    Output: Address
+    Body: {
+        Parse_SkipNoise()
+        is_lp = Parse_Match(Token.LPAREN)
+        IfCondition EqualTo(is_lp, 1) ThenBlock: {
+            Parse_Advance()
+            depth = 1
+            first = 0
+            WhileLoop GreaterThan(depth, 0) {
+                Parse_SkipNoise()
+                t = Parse_Type()
+                IfCondition EqualTo(t, Token.EOF) ThenBlock: {
+                    BreakLoop
+                }
+                IfCondition EqualTo(t, Token.LPAREN) ThenBlock: {
+                    depth = Add(depth, 1)
+                    Parse_Advance()
+                } ElseBlock: {
+                    IfCondition EqualTo(t, Token.RPAREN) ThenBlock: {
+                        depth = Subtract(depth, 1)
+                        Parse_Advance()
+                    } ElseBlock: {
+                        IfCondition EqualTo(t, Token.IDENTIFIER) ThenBlock: {
+                            IfCondition EqualTo(first, 0) ThenBlock: {
+                                p = Parse_Val()
+                                first = Parse_CopyStr(p)
+                            }
+                            Parse_Advance()
+                        } ElseBlock: {
+                            // COMMA / STAR / other tokens inside nested target
+                            Parse_Advance()
+                        }
+                    }
+                }
+            }
+            Parse_SkipNoise()
+            ReturnValue(first)
+        }
+        p = Parse_Val()
+        name = Parse_CopyStr(p)
+        Parse_Consume(Token.IDENTIFIER)
+        Parse_SkipNoise()
+        ReturnValue(name)
+    }
+}
+
+// =============================================================================
+// FOR STATEMENT - WITH TUPLE UNPACKING SUPPORT
+// =============================================================================
+Function.Parse_For {
+    Output: Address
+    Body: {
+        line = Parse_Line()
+        col = Parse_Col()
+        
+        Parse_Consume(Token.FOR)
+        Parse_SkipNoise()
+        
+        var1 = 0
+        var2 = 0
+        is_tuple = 0
+        
+        // for (a, b[, c...]) / for (i, (a, b)) in ...
+        is_lparen = Parse_Match(Token.LPAREN)
+        IfCondition EqualTo(is_lparen, 1) ThenBlock: {
+            Parse_Advance()
+            Parse_SkipNoise()
+            var1 = Parse_ConsumeForTarget()
+            WhileLoop EqualTo(Parse_Match(Token.COMMA), 1) {
+                Parse_Advance()
+                Parse_SkipNoise()
+                is_rp = Parse_Match(Token.RPAREN)
+                IfCondition EqualTo(is_rp, 1) ThenBlock: {
+                    BreakLoop
+                }
+                name = Parse_ConsumeForTarget()
+                IfCondition EqualTo(var2, 0) ThenBlock: {
+                    var2 = name
+                }
+                is_tuple = 1
+            }
+            Parse_SkipNoise()
+            Parse_Consume(Token.RPAREN)
+            Parse_SkipNoise()
+        } ElseBlock: {
+            // for a[, b[, c...]] / for i, (a, b) in ...
+            var1 = Parse_ConsumeForTarget()
+            is_comma = Parse_Match(Token.COMMA)
+            IfCondition EqualTo(is_comma, 1) ThenBlock: {
+                is_tuple = 1
+                Parse_Advance()
+                Parse_SkipNoise()
+                var2 = Parse_ConsumeForTarget()
+                WhileLoop EqualTo(Parse_Match(Token.COMMA), 1) {
+                    Parse_Advance()
+                    Parse_SkipNoise()
+                    discard = Parse_ConsumeForTarget()
+                }
+            }
+        }
+        
+        Parse_Consume(Token.IN)
+        // Bare tuple iterable: for j in 1, 2, 5 {  /  for x in a, b {
+        // (paren form for j in (1, 2, 5) already works via Parse_Expr)
+        iterable = Parse_BareTupleTail(Parse_Expr())
+        body = Parse_EnterBlock()
+        
+        // Optional else: for ... { } else { } (runs if no break)
+        else_body = 0
+        Parse_SkipNoise()
+        is_else = Parse_Match(Token.ELSE)
+        IfCondition EqualTo(is_else, 1) ThenBlock: {
+            Parse_Advance()
+            else_body = Parse_EnterBlock()
+        }
+        
+        IfCondition EqualTo(is_tuple, 1) ThenBlock: {
+            IfCondition EqualTo(var2, 0) ThenBlock: {
+                var2 = var1
+            }
+            node = AST_Create(Node.TUPLE_FOR, 5)
+            ArraySet(node, 1, line)
+            ArraySet(node, 2, col)
+            ArraySet(node, 3, var1)
+            ArraySet(node, 4, var2)
+            ArraySet(node, 5, iterable)
+            ArraySet(node, 6, body)
+            ArraySet(node, 7, else_body)
+            ReturnValue(node)
+        }
+        
+        node = AST_Create(Node.FOR_STMT, 4)
+        ArraySet(node, 1, line)
+        ArraySet(node, 2, col)
+        ArraySet(node, 3, var1)
+        ArraySet(node, 4, iterable)
+        ArraySet(node, 5, body)
+        ArraySet(node, 6, else_body)
+        ReturnValue(node)
+    }
+}
+
+// =============================================================================
+// YIELD / YIELD FROM — parse coverage (no generator runtime)
+// as_stmt=1 → bare yield is PASS; as_stmt=0 → bare yield is None
+// valued / yield-from → the value expression (stmt or expr context)
+// =============================================================================
+Function.Parse_Yield {
+    Input: as_stmt: Integer
+    Output: Address
+    Body: {
+        line = Parse_Line()
+        col = Parse_Col()
+
+        Parse_Consume(Token.YIELD)
+        Parse_SkipNoise()
+
+        // yield from <expr>
+        is_from = Parse_Match(Token.FROM)
+        IfCondition EqualTo(is_from, 1) ThenBlock: {
+            Parse_Advance()
+            Parse_SkipNoise()
+            yfrom = Parse_Expr()
+            ynode = AST_Create(Node.YIELD_STMT, 1)
+            ArraySet(ynode, 1, line)
+            ArraySet(ynode, 2, col)
+            ArraySet(ynode, 3, yfrom)
+            ReturnValue(ynode)
+        }
+
+        // Bare yield? Terminators include ) ] , so (yield) / [(yield), x] parse.
+        next = Parse_Type()
+        IfCondition Or(EqualTo(next, Token.SEMICOLON), Or(EqualTo(next, Token.NEWLINE), Or(EqualTo(next, Token.RBRACE), Or(EqualTo(next, Token.EOF), Or(EqualTo(next, Token.RPAREN), Or(EqualTo(next, Token.RBRACKET), EqualTo(next, Token.COMMA))))))) ThenBlock: {
+            IfCondition EqualTo(as_stmt, 1) ThenBlock: {
+                node = AST_Create(Node.PASS_STMT, 0)
+                ReturnValue(node)
+            }
+            node = AST_Create(Node.NONE_LIT, 0)
+            ReturnValue(node)
+        }
+
+        value = Parse_Expr()
+        is_comma = Parse_Match(Token.COMMA)
+        IfCondition EqualTo(is_comma, 1) ThenBlock: {
+            elems = Array.Create(4)
+            Array.Push(elems, value)
+            WhileLoop EqualTo(1, 1) {
+                is_comma = Parse_Match(Token.COMMA)
+                IfCondition EqualTo(is_comma, 0) ThenBlock: {
+                    BreakLoop
+                }
+                Parse_Advance()
+                nxt = Parse_Type()
+                IfCondition Or(EqualTo(nxt, Token.NEWLINE), Or(EqualTo(nxt, Token.RBRACE), Or(EqualTo(nxt, Token.SEMICOLON), EqualTo(nxt, Token.EOF)))) ThenBlock: {
+                    BreakLoop
+                }
+                Array.Push(elems, Parse_Expr())
+            }
+            tup = AST_Create(Node.LIST_LIT, 1)
+            ArraySet(tup, 1, line)
+            ArraySet(tup, 2, col)
+            ArraySet(tup, 3, elems)
+            value = tup
+        }
+        ynode = AST_Create(Node.YIELD_STMT, 1)
+        ArraySet(ynode, 1, line)
+        ArraySet(ynode, 2, col)
+        ArraySet(ynode, 3, value)
+        ReturnValue(ynode)
+    }
+}
+
+// =============================================================================
+// RETURN STATEMENT
+// =============================================================================
+Function.Parse_Return {
+    Output: Address
+    Body: {
+        line = Parse_Line()
+        col = Parse_Col()
+        
+        Parse_Consume(Token.RETURN)
+        
+        // Check if there's a value
+        value = 0
+        next = Parse_Type()
+        
+        IfCondition NotEqual(next, Token.SEMICOLON) ThenBlock: {
+            IfCondition NotEqual(next, Token.NEWLINE) ThenBlock: {
+                IfCondition NotEqual(next, Token.RBRACE) ThenBlock: {
+                    IfCondition NotEqual(next, Token.EOF) ThenBlock: {
+                        value = Parse_Expr()
+                        is_comma = Parse_Match(Token.COMMA)
+                        IfCondition EqualTo(is_comma, 1) ThenBlock: {
+                            elems = Array.Create(4)
+                            Array.Push(elems, value)
+                            WhileLoop EqualTo(1, 1) {
+                                is_comma = Parse_Match(Token.COMMA)
+                                IfCondition EqualTo(is_comma, 0) ThenBlock: {
+                                    BreakLoop
+                                }
+                                Parse_Advance()
+                                nxt = Parse_Type()
+                                IfCondition Or(EqualTo(nxt, Token.NEWLINE), Or(EqualTo(nxt, Token.RBRACE), Or(EqualTo(nxt, Token.SEMICOLON), EqualTo(nxt, Token.EOF)))) ThenBlock: {
+                                    BreakLoop
+                                }
+                                Array.Push(elems, Parse_Expr())
+                            }
+                            tup = AST_Create(Node.LIST_LIT, 1)
+                            ArraySet(tup, 1, line)
+                            ArraySet(tup, 2, col)
+                            ArraySet(tup, 3, elems)
+                            value = tup
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Create return node: [RETURN_STMT, line, col, value]
+        node = AST_Create(Node.RETURN_STMT, 1)
+        ArraySet(node, 1, line)
+        ArraySet(node, 2, col)
+        ArraySet(node, 3, value)
+        
+        ReturnValue(node)
+    }
+}
+
+// =============================================================================
+// ASSIGNMENT OR EXPRESSION
+// =============================================================================
+// =============================================================================
+// ASSIGNMENT OR EXPRESSION - WITH TUPLE UNPACKING
+// =============================================================================
+Function.Parse_IsAnnotStop {
+    Input: t: Integer
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(t, Token.ASSIGN) ThenBlock: { ReturnValue(1) }
+        IfCondition EqualTo(t, Token.NEWLINE) ThenBlock: { ReturnValue(1) }
+        IfCondition EqualTo(t, Token.SEMICOLON) ThenBlock: { ReturnValue(1) }
+        IfCondition EqualTo(t, Token.RBRACE) ThenBlock: { ReturnValue(1) }
+        IfCondition EqualTo(t, Token.DEF) ThenBlock: { ReturnValue(1) }
+        IfCondition EqualTo(t, Token.CLASS) ThenBlock: { ReturnValue(1) }
+        IfCondition EqualTo(t, Token.AT) ThenBlock: { ReturnValue(1) }
+        IfCondition EqualTo(t, Token.IF) ThenBlock: { ReturnValue(1) }
+        IfCondition EqualTo(t, Token.WHILE) ThenBlock: { ReturnValue(1) }
+        IfCondition EqualTo(t, Token.FOR) ThenBlock: { ReturnValue(1) }
+        IfCondition EqualTo(t, Token.RETURN) ThenBlock: { ReturnValue(1) }
+        IfCondition EqualTo(t, Token.YIELD) ThenBlock: { ReturnValue(1) }
+        IfCondition EqualTo(t, Token.TRY) ThenBlock: { ReturnValue(1) }
+        IfCondition EqualTo(t, Token.WITH) ThenBlock: { ReturnValue(1) }
+        IfCondition EqualTo(t, Token.IMPORT) ThenBlock: { ReturnValue(1) }
+        IfCondition EqualTo(t, Token.FROM) ThenBlock: { ReturnValue(1) }
+        IfCondition EqualTo(t, Token.PASS) ThenBlock: { ReturnValue(1) }
+        IfCondition EqualTo(t, Token.GLOBAL) ThenBlock: { ReturnValue(1) }
+        IfCondition EqualTo(t, Token.NONLOCAL) ThenBlock: { ReturnValue(1) }
+        IfCondition EqualTo(t, Token.DEL) ThenBlock: { ReturnValue(1) }
+        ReturnValue(0)
+    }
+}
+
+
+Function.Parse_SkipParamAnnotation {
+    Body: {
+        dp = 0
+        db = 0
+        WhileLoop EqualTo(1, 1) {
+            t = Parse_Type()
+            IfCondition EqualTo(t, Token.EOF) ThenBlock: {
+                BreakLoop
+            }
+            IfCondition And(EqualTo(dp, 0), EqualTo(db, 0)) ThenBlock: {
+                IfCondition EqualTo(t, Token.COMMA) ThenBlock: { ReturnValue(0) }
+                IfCondition EqualTo(t, Token.RPAREN) ThenBlock: { ReturnValue(0) }
+                IfCondition EqualTo(t, Token.ASSIGN) ThenBlock: { ReturnValue(0) }
+                IfCondition EqualTo(t, Token.LBRACE) ThenBlock: { ReturnValue(0) }
+                IfCondition EqualTo(t, Token.COLON) ThenBlock: { ReturnValue(0) }
+                IfCondition EqualTo(t, Token.NEWLINE) ThenBlock: { ReturnValue(0) }
+            }
+            IfCondition EqualTo(t, Token.LPAREN) ThenBlock: { dp = Add(dp, 1) }
+            IfCondition EqualTo(t, Token.RPAREN) ThenBlock: {
+                IfCondition GreaterThan(dp, 0) ThenBlock: { dp = Subtract(dp, 1) }
+            }
+            IfCondition EqualTo(t, Token.LBRACKET) ThenBlock: { db = Add(db, 1) }
+            IfCondition EqualTo(t, Token.RBRACKET) ThenBlock: {
+                IfCondition GreaterThan(db, 0) ThenBlock: { db = Subtract(db, 1) }
+            }
+            Parse_Advance()
+        }
+    }
+}
+
+Function.Parse_SkipAnnotation {
+    Body: {
+        dp = 0
+        db = 0
+        WhileLoop EqualTo(1, 1) {
+            t = Parse_Type()
+            IfCondition EqualTo(t, Token.EOF) ThenBlock: {
+                BreakLoop
+            }
+            IfCondition And(EqualTo(dp, 0), EqualTo(db, 0)) ThenBlock: {
+                IfCondition EqualTo(Parse_IsAnnotStop(t), 1) ThenBlock: {
+                    ReturnValue(0)
+                }
+            }
+            IfCondition EqualTo(t, Token.LPAREN) ThenBlock: {
+                dp = Add(dp, 1)
+            }
+            IfCondition EqualTo(t, Token.RPAREN) ThenBlock: {
+                IfCondition GreaterThan(dp, 0) ThenBlock: {
+                    dp = Subtract(dp, 1)
+                }
+            }
+            IfCondition EqualTo(t, Token.LBRACKET) ThenBlock: {
+                db = Add(db, 1)
+            }
+            IfCondition EqualTo(t, Token.RBRACKET) ThenBlock: {
+                IfCondition GreaterThan(db, 0) ThenBlock: {
+                    db = Subtract(db, 1)
+                }
+            }
+            Parse_Advance()
+        }
+    }
+}
+
+Function.Parse_Decorators {
+    Output: Address
+    Body: {
+        decos = Array.Create(4)
+        WhileLoop EqualTo(Parse_Match(Token.AT), 1) {
+            Parse_Advance()
+            expr = Parse_Expr()
+            Array.Push(decos, expr)
+            Parse_SkipNoise()
+        }
+        ReturnValue(decos)
+    }
+}
+
+Function.Parse_SkipAsync {
+    Body: {
+        IfCondition EqualTo(Parse_Type(), Token.IDENTIFIER) ThenBlock: {
+            cmp = StringCompare(Parse_Val(), "async")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                nxt = Lex_GetType(Add(Parse.pos, 1))
+                IfCondition Or(EqualTo(nxt, Token.DEF), Or(EqualTo(nxt, Token.FOR), EqualTo(nxt, Token.WITH))) ThenBlock: {
+                    Parse_Advance()
+                }
+            }
+        }
+    }
+}
+
+
+// After first RHS expr of an assignment, consume ", e2, e3, ..." as LIST_LIT.
+// Covers enum-style: CONTINUE = 100, 'Continue', 'msg'
+Function.Parse_BareTupleTail {
+    Input: first: Address
+    Output: Address
+    Body: {
+        is_comma = Parse_Match(Token.COMMA)
+        IfCondition EqualTo(is_comma, 0) ThenBlock: {
+            ReturnValue(first)
+        }
+        line = Parse_Line()
+        col = Parse_Col()
+        elems = Array.Create(8)
+        Array.Push(elems, first)
+        WhileLoop EqualTo(1, 1) {
+            is_comma = Parse_Match(Token.COMMA)
+            IfCondition EqualTo(is_comma, 0) ThenBlock: {
+                BreakLoop
+            }
+            Parse_Advance()
+            // Skip comments only — do NOT SkipNoise here (that eats NEWLINE and
+            // wrongly continues bare tuples across statements: x = 1,\ny = 2).
+            WhileLoop EqualTo(Parse_Type(), Token.COMMENT) {
+                Parse_Advance()
+            }
+            t = Parse_Type()
+            IfCondition EqualTo(t, Token.NEWLINE) ThenBlock: {
+                BreakLoop
+            }
+            IfCondition EqualTo(t, Token.RBRACE) ThenBlock: {
+                BreakLoop
+            }
+            IfCondition EqualTo(t, Token.EOF) ThenBlock: {
+                BreakLoop
+            }
+            IfCondition EqualTo(t, Token.SEMICOLON) ThenBlock: {
+                BreakLoop
+            }
+            Array.Push(elems, Parse_Expr())
+        }
+        node = AST_Create(Node.LIST_LIT, 1)
+        ArraySet(node, 1, line)
+        ArraySet(node, 2, col)
+        ArraySet(node, 3, elems)
+        ReturnValue(node)
+    }
+}
+
+// RHS of assignment: chained a = b = 1 / self.x = y = 1 and bare tuples a = 1, 2
+// Middle targets become nested ASSIGNMENT / ATTR_ASSIGN / INDEX_ASSIGN (codegen unwraps).
+Function.Parse_AssignRhs {
+    Output: Address
+    Body: {
+        first = Parse_Expr()
+        is_assign = Parse_Match(Token.ASSIGN)
+        IfCondition EqualTo(is_assign, 1) ThenBlock: {
+            line = Parse_Line()
+            col = Parse_Col()
+            Parse_Advance()
+            deeper = Parse_AssignRhs()
+            ft = AST_Type(first)
+            IfCondition EqualTo(ft, Node.IDENT) ThenBlock: {
+                name = ArrayGet(first, 3)
+                node = AST_Create(Node.ASSIGNMENT, 2)
+                ArraySet(node, 1, line)
+                ArraySet(node, 2, col)
+                ArraySet(node, 3, name)
+                ArraySet(node, 4, deeper)
+                ReturnValue(node)
+            }
+            IfCondition EqualTo(ft, Node.ATTRIBUTE) ThenBlock: {
+                obj = ArrayGet(first, 3)
+                attr_name = ArrayGet(first, 4)
+                node = ArrayCreate(6)
+                ArraySet(node, 0, Node.ATTR_ASSIGN)
+                ArraySet(node, 1, line)
+                ArraySet(node, 2, col)
+                ArraySet(node, 3, obj)
+                ArraySet(node, 4, attr_name)
+                ArraySet(node, 5, deeper)
+                ReturnValue(node)
+            }
+            IfCondition EqualTo(ft, Node.INDEX_ACCESS) ThenBlock: {
+                node = AST_Create(Node.INDEX_ASSIGN, 3)
+                ArraySet(node, 1, line)
+                ArraySet(node, 2, col)
+                ArraySet(node, 3, ArrayGet(first, 3))
+                ArraySet(node, 4, ArrayGet(first, 4))
+                ArraySet(node, 5, deeper)
+                ReturnValue(node)
+            }
+            // Unknown middle target shape — keep prior skip behavior
+            ReturnValue(deeper)
+        }
+        ReturnValue(Parse_BareTupleTail(first))
+    }
+}
+
+Function.Parse_AssignOrExpr {
+    Output: Address
+    Body: {
+        // Starred / rich unpack: *rest, last = ... / *a, self.x = ...
+        t = Parse_Type()
+        IfCondition EqualTo(t, Token.STAR) ThenBlock: {
+            line = Parse_Line()
+            col = Parse_Col()
+            targets = Array.Create(8)
+            WhileLoop EqualTo(1, 1) {
+                Array.Push(targets, Parse_UnpackTarget())
+                IfCondition EqualTo(Parse_Match(Token.COMMA), 0) ThenBlock: {
+                    BreakLoop
+                }
+                Parse_Advance()
+                IfCondition EqualTo(Parse_Match(Token.ASSIGN), 1) ThenBlock: {
+                    BreakLoop
+                }
+            }
+            Parse_Consume(Token.ASSIGN)
+            values = Array.Create(8)
+            Array.Push(values, Parse_AssignRhs())
+            node = AST_Create(Node.TUPLE_UNPACK, 2)
+            ArraySet(node, 1, line)
+            ArraySet(node, 2, col)
+            ArraySet(node, 3, targets)
+            ArraySet(node, 4, values)
+            ReturnValue(node)
+        }
+        // First check for tuple unpacking pattern: IDENT COMMA ...
+        IfCondition EqualTo(t, Token.IDENTIFIER) ThenBlock: {
+            // Peek ahead to see if this is tuple unpacking
+            next_pos = Add(Parse.pos, 1)
+            next_t = Lex_GetType(next_pos)
+
+            IfCondition EqualTo(next_t, Token.COLON) ThenBlock: {
+                line = Parse_Line()
+                col = Parse_Col()
+                name_ptr = Parse_Val()
+                name = Parse_CopyStr(name_ptr)
+                Parse_Advance()
+                Parse_Advance()
+                Parse_SkipAnnotation()
+                is_assign = Parse_Match(Token.ASSIGN)
+                IfCondition EqualTo(is_assign, 1) ThenBlock: {
+                    Parse_Advance()
+                    value = Parse_AssignRhs()
+                    node = AST_Create(Node.ASSIGNMENT, 2)
+                    ArraySet(node, 1, line)
+                    ArraySet(node, 2, col)
+                    ArraySet(node, 3, name)
+                    ArraySet(node, 4, value)
+                    ReturnValue(node)
+                }
+                node = AST_Create(Node.PASS_STMT, 0)
+                ReturnValue(node)
+            }
+            
+            IfCondition EqualTo(next_t, Token.COMMA) ThenBlock: {
+                // This is tuple unpacking: a, b = ...
+                result = Parse_TupleUnpack()
+                ReturnValue(result)
+            }
+        }
+        
+        // Regular expression/assignment
+        expr = Parse_Expr()
+
+        // Annotated assignment on attr/name: self.x: T = v  /  x: T = v (complex T)
+        is_colon = Parse_Match(Token.COLON)
+        IfCondition EqualTo(is_colon, 1) ThenBlock: {
+            line = Parse_Line()
+            col = Parse_Col()
+            Parse_Advance()
+            Parse_SkipAnnotation()
+            is_assign = Parse_Match(Token.ASSIGN)
+            IfCondition EqualTo(is_assign, 1) ThenBlock: {
+                Parse_Advance()
+                value = Parse_AssignRhs()
+                expr_type = AST_Type(expr)
+                IfCondition EqualTo(expr_type, Node.IDENT) ThenBlock: {
+                    name = ArrayGet(expr, 3)
+                    node = AST_Create(Node.ASSIGNMENT, 2)
+                    ArraySet(node, 1, line)
+                    ArraySet(node, 2, col)
+                    ArraySet(node, 3, name)
+                    ArraySet(node, 4, value)
+                    ReturnValue(node)
+                }
+                IfCondition EqualTo(expr_type, Node.ATTRIBUTE) ThenBlock: {
+                    obj = ArrayGet(expr, 3)
+                    attr_name = ArrayGet(expr, 4)
+                    node = ArrayCreate(6)
+                    ArraySet(node, 0, Node.ATTR_ASSIGN)
+                    ArraySet(node, 1, line)
+                    ArraySet(node, 2, col)
+                    ArraySet(node, 3, obj)
+                    ArraySet(node, 4, attr_name)
+                    ArraySet(node, 5, value)
+                    ReturnValue(node)
+                }
+                // Unknown LHS — still consumed annotation+value for coverage
+                ReturnValue(expr)
+            }
+            // Annotation-only (no '='): treat as pass
+            node = AST_Create(Node.PASS_STMT, 0)
+            ReturnValue(node)
+        }
+
+        is_comma = Parse_Match(Token.COMMA)
+        IfCondition EqualTo(is_comma, 1) ThenBlock: {
+            line = Parse_Line()
+            col = Parse_Col()
+            targets = Array.Create(8)
+            Array.Push(targets, expr)
+            WhileLoop EqualTo(1, 1) {
+                is_comma = Parse_Match(Token.COMMA)
+                IfCondition EqualTo(is_comma, 0) ThenBlock: {
+                    BreakLoop
+                }
+                Parse_Advance()
+                IfCondition EqualTo(Parse_Match(Token.ASSIGN), 1) ThenBlock: {
+                    BreakLoop
+                }
+                Array.Push(targets, Parse_UnpackTarget())
+            }
+            Parse_Consume(Token.ASSIGN)
+            // Chained attr unpack: self.size, self.name = self._state = state
+            values = Array.Create(8)
+            Array.Push(values, Parse_AssignRhs())
+            node = AST_Create(Node.TUPLE_UNPACK, 2)
+            ArraySet(node, 1, line)
+            ArraySet(node, 2, col)
+            ArraySet(node, 3, targets)
+            ArraySet(node, 4, values)
+            ReturnValue(node)
+        }
+        
+        // Check for simple assignment
+        is_assign = Parse_Match(Token.ASSIGN)
+        IfCondition EqualTo(is_assign, 1) ThenBlock: {
+            line = Parse_Line()
+            col = Parse_Col()
+            Parse_Advance()
+            
+            value = Parse_AssignRhs()
+            
+            // Check what we're assigning to
+            expr_type = AST_Type(expr)
+            
+            // -----------------------------------------------------------------
+            // Simple variable assignment: x = value
+            // -----------------------------------------------------------------
+            IfCondition EqualTo(expr_type, Node.IDENT) ThenBlock: {
+                name = ArrayGet(expr, 3)
+                
+                node = AST_Create(Node.ASSIGNMENT, 2)
+                ArraySet(node, 1, line)
+                ArraySet(node, 2, col)
+                ArraySet(node, 3, name)
+                ArraySet(node, 4, value)
+                
+                ReturnValue(node)
+            }
+            
+            // -----------------------------------------------------------------
+            // Index assignment: list[i] = value
+            // -----------------------------------------------------------------
+            IfCondition EqualTo(expr_type, Node.INDEX_ACCESS) ThenBlock: {
+                idx_expr = ArrayGet(expr, 3)
+                idx_idx = ArrayGet(expr, 4)
+                
+                node = AST_Create(Node.INDEX_ASSIGN, 3)
+                ArraySet(node, 1, line)
+                ArraySet(node, 2, col)
+                ArraySet(node, 3, idx_expr)
+                ArraySet(node, 4, idx_idx)
+                ArraySet(node, 5, value)
+                
+                ReturnValue(node)
+            }
+
+            // Slice assignment: parts[:0] = ['']
+            IfCondition EqualTo(expr_type, Node.SLICE_ACCESS) ThenBlock: {
+                node = AST_Create(Node.SLICE_ASSIGN, 5)
+                ArraySet(node, 1, line)
+                ArraySet(node, 2, col)
+                ArraySet(node, 3, ArrayGet(expr, 3))
+                ArraySet(node, 4, ArrayGet(expr, 4))
+                ArraySet(node, 5, ArrayGet(expr, 5))
+                ArraySet(node, 6, ArrayGet(expr, 6))
+                ArraySet(node, 7, value)
+                ReturnValue(node)
+            }
+            
+            // =================================================================
+            // ATTRIBUTE ASSIGNMENT: self.x = value (NEW FIX!)
+            // Node.ATTRIBUTE = 102, Node.ATTR_ASSIGN = 103
+            // =================================================================
+            IfCondition EqualTo(expr_type, Node.ATTRIBUTE) ThenBlock: {
+                // expr is [ATTRIBUTE, line, col, object, attr_name]
+                obj = ArrayGet(expr, 3)       // the object (e.g., 'self')
+                attr_name = ArrayGet(expr, 4) // the attribute name (e.g., 'x')
+                
+                // Create ATTR_ASSIGN node
+                // Structure: [type, line, col, object, attr, value]
+                node = ArrayCreate(6)
+                ArraySet(node, 0, Node.ATTR_ASSIGN)
+                ArraySet(node, 1, line)
+                ArraySet(node, 2, col)
+                ArraySet(node, 3, obj)
+                ArraySet(node, 4, attr_name)
+                ArraySet(node, 5, value)
+                
+                ReturnValue(node)
+            }
+        }
+        
+        // Check for augmented assignment (+=, -=, *=, /=, %=)
+        aug_op = Parse_GetAugOp()
+        IfCondition NotEqual(aug_op, 0) ThenBlock: {
+            line = Parse_Line()
+            col = Parse_Col()
+            Parse_Advance()
+            
+            value = Parse_Expr()
+            
+            expr_type = AST_Type(expr)
+            IfCondition EqualTo(expr_type, Node.IDENT) ThenBlock: {
+                name = ArrayGet(expr, 3)
+                
+                // Create augmented assignment: [AUG_ASSIGN, line, col, name, op, value]
+                node = AST_Create(Node.AUG_ASSIGN, 3)
+                ArraySet(node, 1, line)
+                ArraySet(node, 2, col)
+                ArraySet(node, 3, name)
+                ArraySet(node, 4, aug_op)
+                ArraySet(node, 5, value)
+                
+                ReturnValue(node)
+            }
+            IfCondition EqualTo(expr_type, Node.ATTRIBUTE) ThenBlock: {
+                obj = ArrayGet(expr, 3)
+                attr_name = ArrayGet(expr, 4)
+                bin = AST_Create(Node.BINARY_OP, 3)
+                ArraySet(bin, 1, line)
+                ArraySet(bin, 2, col)
+                ArraySet(bin, 3, expr)
+                ArraySet(bin, 4, aug_op)
+                ArraySet(bin, 5, value)
+                node = ArrayCreate(6)
+                ArraySet(node, 0, Node.ATTR_ASSIGN)
+                ArraySet(node, 1, line)
+                ArraySet(node, 2, col)
+                ArraySet(node, 3, obj)
+                ArraySet(node, 4, attr_name)
+                ArraySet(node, 5, bin)
+                ReturnValue(node)
+            }
+        }
+        
+        // Just an expression statement
+        ReturnValue(expr)
+    }
+}
+
+// =============================================================================
+// TUPLE UNPACKING: a, b = expr  OR  a, b, c = expr
+// =============================================================================
+// One unpack LHS target: IDENT / *IDENT / ATTRIBUTE / INDEX (parse-coverage for *).
+Function.Parse_UnpackTarget {
+    Output: Address
+    Body: {
+        Parse_SkipNoise()
+        is_star = Parse_Match(Token.STAR)
+        IfCondition EqualTo(is_star, 1) ThenBlock: {
+            Parse_Advance()
+            Parse_SkipNoise()
+            // *name / *obj.attr / *_forkserver._inherited_fds
+            ReturnValue(Parse_Expr())
+        }
+        ReturnValue(Parse_Expr())
+    }
+}
+
+// TUPLE UNPACKING: a, b = expr  OR  a, *b = expr  OR  tmp, self.x = expr
+Function.Parse_TupleUnpack {
+    Output: Address
+    Body: {
+        line = Parse_Line()
+        col = Parse_Col()
+        
+        targets = Array.Create(8)
+        Array.Push(targets, Parse_UnpackTarget())
+        
+        WhileLoop EqualTo(1, 1) {
+            is_comma = Parse_Match(Token.COMMA)
+            IfCondition EqualTo(is_comma, 0) ThenBlock: {
+                BreakLoop
+            }
+            Parse_Advance()
+            
+            is_assign = Parse_Match(Token.ASSIGN)
+            IfCondition EqualTo(is_assign, 1) ThenBlock: {
+                BreakLoop
+            }
+            
+            Array.Push(targets, Parse_UnpackTarget())
+        }
+        
+        Parse_Consume(Token.ASSIGN)
+
+        // Parse_AssignRhs: chained a, b = c = expr and bare a, b = 1, 2
+        values = Array.Create(8)
+        Array.Push(values, Parse_AssignRhs())
+
+        node = AST_Create(Node.TUPLE_UNPACK, 2)
+        ArraySet(node, 1, line)
+        ArraySet(node, 2, col)
+        ArraySet(node, 3, targets)
+        ArraySet(node, 4, values)
+        
+        ReturnValue(node)
+    }
+}
+
+
+// =============================================================================
+// GET AUGMENTED ASSIGNMENT OPERATOR
+// =============================================================================
+Function.Parse_GetAugOp {
+    Output: Integer
+    Body: {
+        t = Parse_Type()
+        
+        IfCondition EqualTo(t, Token.PLUS_EQ) ThenBlock: {
+            ReturnValue(Token.PLUS)
+        }
+        IfCondition EqualTo(t, Token.MINUS_EQ) ThenBlock: {
+            ReturnValue(Token.MINUS)
+        }
+        IfCondition EqualTo(t, Token.STAR_EQ) ThenBlock: {
+            ReturnValue(Token.STAR)
+        }
+        IfCondition EqualTo(t, Token.SLASH_EQ) ThenBlock: {
+            ReturnValue(Token.SLASH)
+        }
+        IfCondition EqualTo(t, Token.MOD_EQ) ThenBlock: {
+            ReturnValue(Token.PERCENT)
+        }
+        IfCondition EqualTo(t, Token.POWER_EQ) ThenBlock: {
+            ReturnValue(Token.POWER)
+        }
+        IfCondition EqualTo(t, Token.FLOOR_DIV_EQ) ThenBlock: {
+            ReturnValue(Token.FLOOR_DIV)
+        }
+        IfCondition EqualTo(t, Token.BIT_OR_EQ) ThenBlock: {
+            ReturnValue(Token.BIT_OR)
+        }
+        IfCondition EqualTo(t, Token.LSHIFT_EQ) ThenBlock: {
+            ReturnValue(Token.LSHIFT)
+        }
+        IfCondition EqualTo(t, Token.RSHIFT_EQ) ThenBlock: {
+            ReturnValue(Token.RSHIFT)
+        }
+        IfCondition EqualTo(t, Token.BIT_XOR_EQ) ThenBlock: {
+            ReturnValue(Token.BIT_XOR)
+        }
+        IfCondition EqualTo(t, Token.BIT_AND_EQ) ThenBlock: {
+            ReturnValue(Token.BIT_AND)
+        }
+        IfCondition EqualTo(t, Token.AT_EQ) ThenBlock: {
+            ReturnValue(Token.AT)
+        }
+        
+        ReturnValue(0)
+    }
+}

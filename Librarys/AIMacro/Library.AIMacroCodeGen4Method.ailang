@@ -1,0 +1,761 @@
+// Library.AIMacroCodeGen4Method.ailang
+// method / index emit (split from CodeGen4).
+//
+// Copyright (c) 2025-2026 Sean Collins, 2 Paws Machine and Engineering. All rights reserved.
+// Licensed under the Sean Collins Software License (SCSL v1.0).
+
+LibraryImport.Array
+LibraryImport.AIMacro.AIMacroTypes
+LibraryImport.AIMacro.AIMacroCore
+LibraryImport.AIMacro.AIMacroParserCore
+LibraryImport.AIMacro.AIMacroTypeAnnotations
+LibraryImport.AIMacro.AIMacroCodeGen1
+LibraryImport.AIMacro.AIMacroCodeGen3
+LibraryImport.AIMacro.AIMacroCodeGenOOP
+LibraryImport.AIMacro.AIMacroCodeGen4
+LibraryImport.AIMacro.AIMacroCodeGen4Call
+
+
+// =============================================================================
+// METHOD CALL - With type-aware dispatch for ambiguous methods
+// =============================================================================
+Function.Gen_MethodCallExpr {
+    Input: node: Address
+    Body: {
+        obj = ArrayGet(node, 3)
+        method = ArrayGet(node, 4)
+        args = ArrayGet(node, 5)
+        // string.Formatter.__init__(self) / super-style: never emit bare __init__(
+        cmp_initm = StringCompare(method, "__init__")
+        IfCondition EqualTo(cmp_initm, 0) ThenBlock: {
+            Gen_Emit("AIMacro.InitSink(")
+            Gen_Expr(obj)
+            Gen_Emit(", ")
+            n_init = 0
+            IfCondition NotEqual(args, 0) ThenBlock: {
+                n_init = Array.Size(args)
+            }
+            IfCondition GreaterThan(n_init, 0) ThenBlock: {
+                Gen_Expr(Array.Get(args, 0))
+            } ElseBlock: {
+                Gen_Emit("0")
+            }
+            Gen_Emit(")")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(Gen_IsDropRecvMethod(method), 1) ThenBlock: {
+            Gen_EmitDropRecvMethod(method, args)
+            ReturnValue(0)
+        }
+        
+        IfCondition EqualTo(Gen_EmitStdlibMethod(obj, method, args), 1) ThenBlock: {
+            ReturnValue(0)
+        }
+        
+        // ===== CHECK IF OBJECT IS A DICT =====
+        obj_type = AST_Type(obj)
+        is_dict = 0
+        IfCondition EqualTo(obj_type, Node.IDENT) ThenBlock: {
+            obj_name = ArrayGet(obj, 3)
+            is_dict = Gen_IsDictVar(obj_name)
+        }
+        
+        // ===== DICT METHODS =====
+        IfCondition EqualTo(is_dict, 1) ThenBlock: {
+            // d.keys()
+            cmp = StringCompare(method, "keys")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                Gen_Emit("Hash.Keys(")
+                Gen_Expr(obj)
+                Gen_Emit(")")
+                ReturnValue(0)
+            }
+            
+            // d.values()
+            cmp = StringCompare(method, "values")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                Gen_Emit("Hash.Values(")
+                Gen_Expr(obj)
+                Gen_Emit(")")
+                ReturnValue(0)
+            }
+            
+            // d.items()
+            cmp = StringCompare(method, "items")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                Gen_Emit("Hash.Items(")
+                Gen_Expr(obj)
+                Gen_Emit(")")
+                ReturnValue(0)
+            }
+            
+            // d.clear()
+            cmp = StringCompare(method, "clear")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                Gen_Emit("Hash.Clear(")
+                Gen_Expr(obj)
+                Gen_Emit(")")
+                ReturnValue(0)
+            }
+            
+            // d.get(key) or d.get(key, default)
+            cmp = StringCompare(method, "get")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                n = Array.Size(args)
+                IfCondition LessEqual(n, 1) ThenBlock: {
+                    Gen_Emit("Hash.Get(")
+                    Gen_Expr(obj)
+                    IfCondition EqualTo(n, 1) ThenBlock: {
+                        Gen_Emit(", ")
+                        arg0 = Array.Get(args, 0)
+                        Gen_Expr(arg0)
+                    }
+                    Gen_Emit(")")
+                } ElseBlock: {
+                    Gen_Emit("DictGen_GetWithDefault(")
+                    Gen_Expr(obj)
+                    Gen_Emit(", ")
+                    arg0 = Array.Get(args, 0)
+                    Gen_Expr(arg0)
+                    Gen_Emit(", ")
+                    arg1 = Array.Get(args, 1)
+                    Gen_Expr(arg1)
+                    Gen_Emit(")")
+                }
+                ReturnValue(0)
+            }
+            
+            // d.pop(key) - dict version
+            cmp = StringCompare(method, "pop")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                Gen_Emit("DictGen_Pop(")
+                Gen_Expr(obj)
+                Gen_Emit(", ")
+                arg0 = Array.Get(args, 0)
+                Gen_Expr(arg0)
+                Gen_Emit(")")
+                ReturnValue(0)
+            }
+            
+            // d.update(other)
+            cmp = StringCompare(method, "update")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                Gen_Emit("DictGen_Update(")
+                Gen_Expr(obj)
+                Gen_Emit(", ")
+                arg0 = Array.Get(args, 0)
+                Gen_Expr(arg0)
+                Gen_Emit(")")
+                ReturnValue(0)
+            }
+            
+            // d.copy()
+            cmp = StringCompare(method, "copy")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                Gen_Emit("DictGen_Copy(")
+                Gen_Expr(obj)
+                Gen_Emit(")")
+                ReturnValue(0)
+            }
+            
+            // d.setdefault(key, default)
+            cmp = StringCompare(method, "setdefault")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                Gen_Emit("DictGen_SetDefault(")
+                Gen_Expr(obj)
+                Gen_Emit(", ")
+                arg0 = Array.Get(args, 0)
+                Gen_Expr(arg0)
+                Gen_Emit(", ")
+                n = Array.Size(args)
+                IfCondition GreaterThan(n, 1) ThenBlock: {
+                    arg1 = Array.Get(args, 1)
+                    Gen_Expr(arg1)
+                } ElseBlock: {
+                    Gen_Emit("0")
+                }
+                Gen_Emit(")")
+                ReturnValue(0)
+            }
+        }
+        // ===== END DICT METHODS =====
+        
+        // Check for ambiguous methods that need type dispatch
+        cmp = StringCompare(method, "count")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            // Determine if object is a list or string
+            obj_type = AST_Type(obj)
+            is_list = 0
+            
+            IfCondition EqualTo(obj_type, Node.IDENT) ThenBlock: {
+                obj_name = ArrayGet(obj, 3)
+                is_list = Gen_IsListVar(obj_name)
+            }
+            IfCondition EqualTo(obj_type, Node.LIST_LIT) ThenBlock: {
+                is_list = 1
+            }
+            
+            IfCondition EqualTo(is_list, 1) ThenBlock: {
+                Gen_Emit("AIMacro.ListCount(")
+            } ElseBlock: {
+                // Flattened list temps are IDENT, not LIST_LIT, so dispatch at runtime
+                Gen_Emit("AIMacro.SmartCount(")
+            }
+            Gen_Expr(obj)
+            
+            n = Array.Size(args)
+            i = 0
+            WhileLoop LessThan(i, n) {
+                Gen_Emit(", ")
+                arg = Array.Get(args, i)
+                Gen_Expr(arg)
+                i = Add(i, 1)
+            }
+            
+            Gen_Emit(")")
+            ReturnValue(0)
+        }
+        
+        // Handle pop() - check if it has an argument (LIST version)
+        cmp = StringCompare(method, "pop")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            n = Array.Size(args)
+            IfCondition EqualTo(n, 0) ThenBlock: {
+                // No args - use SmartPop (handles both XArray and TArray)
+                Gen_Emit("AIMacro.SmartPop(")
+                Gen_Expr(obj)
+                Gen_Emit(")")
+            } ElseBlock: {
+                // Has index arg - use SmartPopAt
+                Gen_Emit("AIMacro.SmartPopAt(")
+                Gen_Expr(obj)
+                Gen_Emit(", ")
+                arg = Array.Get(args, 0)
+                Gen_Expr(arg)
+                Gen_Emit(")")
+            }
+            ReturnValue(0)
+        }
+
+        IfCondition EqualTo(AST_Type(obj), Node.IDENT) ThenBlock: {
+            obj_name = ArrayGet(obj, 3)
+            go_cmp = StringCompare(obj_name, "getopt")
+            IfCondition EqualTo(go_cmp, 0) ThenBlock: {
+                cmp = StringCompare(method, "getopt")
+                IfCondition EqualTo(cmp, 0) ThenBlock: {
+                    Gen_Emit("AIMacro.GetOpt(")
+                    n = Array.Size(args)
+                    IfCondition GreaterThan(n, 0) ThenBlock: {
+                        Gen_Expr(Array.Get(args, 0))
+                    } ElseBlock: {
+                        Gen_Emit("0")
+                    }
+                    Gen_Emit(")")
+                    ReturnValue(0)
+                }
+            }
+            sys_cmp = StringCompare(obj_name, "sys")
+            IfCondition EqualTo(sys_cmp, 0) ThenBlock: {
+                cmp = StringCompare(method, "exit")
+                IfCondition EqualTo(cmp, 0) ThenBlock: {
+                    Gen_Emit("AIMacro.Exit(")
+                    n = Array.Size(args)
+                    IfCondition GreaterThan(n, 0) ThenBlock: {
+                        Gen_Expr(Array.Get(args, 0))
+                    } ElseBlock: {
+                        Gen_Emit("0")
+                    }
+                    Gen_Emit(")")
+                    ReturnValue(0)
+                }
+            }
+        }
+        
+        cmp = StringCompare(method, "read")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_Emit("AIMacro.FileRead(")
+            Gen_Expr(obj)
+            Gen_Emit(")")
+            ReturnValue(0)
+        }
+        cmp = StringCompare(method, "readline")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_Emit("AIMacro.FileReadLine(")
+            Gen_Expr(obj)
+            Gen_Emit(")")
+            ReturnValue(0)
+        }
+        cmp = StringCompare(method, "write")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_Emit("AIMacro.FileWrite(")
+            Gen_Expr(obj)
+            Gen_Emit(", ")
+            n = Array.Size(args)
+            IfCondition GreaterThan(n, 0) ThenBlock: {
+                Gen_Expr(Array.Get(args, 0))
+            } ElseBlock: {
+                Gen_Emit("\"\"")
+            }
+            Gen_Emit(")")
+            ReturnValue(0)
+        }
+        cmp = StringCompare(method, "close")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_Emit("AIMacro.FileClose(")
+            Gen_Expr(obj)
+            Gen_Emit(")")
+            ReturnValue(0)
+        }
+        cmp = StringCompare(method, "strip")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            nstrip = 0
+            IfCondition NotEqual(args, 0) ThenBlock: { nstrip = Array.Size(args) }
+            Gen_Emit("AIMacro.Strip(")
+            Gen_Expr(obj)
+            Gen_Emit(", ")
+            IfCondition GreaterThan(nstrip, 0) ThenBlock: {
+                Gen_Expr(Array.Get(args, 0))
+            } ElseBlock: { Gen_Emit("0") }
+            Gen_Emit(")")
+            ReturnValue(0)
+        }
+        cmp = StringCompare(method, "count")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_Emit("AIMacro.SmartCount(")
+            Gen_Expr(obj)
+            Gen_Emit(", ")
+            IfCondition And(NotEqual(args, 0), GreaterThan(Array.Size(args), 0)) ThenBlock: {
+                Gen_Expr(Array.Get(args, 0))
+            } ElseBlock: { Gen_Emit("Types.GetNone()") }
+            Gen_Emit(")")
+            ReturnValue(0)
+        }
+        cmp = StringCompare(method, "__setattr__")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            nsa = 0
+            IfCondition NotEqual(args, 0) ThenBlock: {
+                nsa = Array.Size(args)
+            }
+            Gen_Emit("AIMacro.ObjectSet(")
+            IfCondition GreaterThan(nsa, 2) ThenBlock: {
+                Gen_Expr(Array.Get(args, 0))
+                Gen_Emit(", ")
+                Gen_Expr(Array.Get(args, 1))
+                Gen_Emit(", ")
+                Gen_Expr(Array.Get(args, 2))
+            } ElseBlock: {
+                Gen_Expr(obj)
+                Gen_Emit(", ")
+                IfCondition GreaterThan(nsa, 0) ThenBlock: {
+                    Gen_Expr(Array.Get(args, 0))
+                } ElseBlock: {
+                    Gen_Emit("\"\"")
+                }
+                Gen_Emit(", ")
+                IfCondition GreaterThan(nsa, 1) ThenBlock: {
+                    Gen_Expr(Array.Get(args, 1))
+                } ElseBlock: {
+                    Gen_Emit("0")
+                }
+            }
+            Gen_Emit(")")
+            ReturnValue(0)
+        }
+
+        // =========== OOP ADDITIONS ===========
+        
+        // If we reach here, this might be an OOP method call
+        // Check if the object is an OOP instance (not a dict, list, or string)
+        // For now, use OOP dispatch for any unrecognized method
+        
+        // If object is a known OOP variable, use OOP.MethodCall
+        // This requires tracking which variables hold OOP objects
+        // For simplicity, we can check if it's NOT a known dict/list/string
+        
+        obj_type = AST_Type(obj)
+        IfCondition EqualTo(obj_type, Node.IDENT) ThenBlock: {
+            obj_name = ArrayGet(obj, 3)
+            is_dict = Gen_IsDictVar(obj_name)
+            is_list = Gen_IsListVar(obj_name)
+            is_str = Gen_IsStringVar(obj_name)
+            
+            // If not a known container type, try OOP dispatch
+            IfCondition And(EqualTo(is_dict, 0), And(EqualTo(is_list, 0), EqualTo(is_str, 0))) ThenBlock: {
+                OOPGen_MethodCall(node)
+                ReturnValue(0)
+            }
+        }
+        
+        // =========== END OOP ADDITIONS ===========
+
+        // str.format → arity-specific StringFormatN (NumMod is 2-arg only;
+        // multi-arg .format was emitting illegal AIMacro.NumMod(a,b,c) → Expected ')')
+        cmp = StringCompare(method, "format")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            IfCondition EqualTo(args, 0) ThenBlock: {
+                n = 0
+            } ElseBlock: {
+                n = Array.Size(args)
+            }
+            IfCondition EqualTo(n, 0) ThenBlock: {
+                Gen_Emit("AIMacro.StringFormat0(")
+                Gen_Expr(obj)
+                Gen_Emit(")")
+                ReturnValue(0)
+            }
+            IfCondition EqualTo(n, 1) ThenBlock: {
+                Gen_Emit("AIMacro.StringFormat1(")
+                Gen_Expr(obj)
+                Gen_Emit(", ")
+                Gen_Expr(Array.Get(args, 0))
+                Gen_Emit(")")
+                ReturnValue(0)
+            }
+            IfCondition EqualTo(n, 2) ThenBlock: {
+                Gen_Emit("AIMacro.StringFormat2(")
+                Gen_Expr(obj)
+                Gen_Emit(", ")
+                Gen_Expr(Array.Get(args, 0))
+                Gen_Emit(", ")
+                Gen_Expr(Array.Get(args, 1))
+                Gen_Emit(")")
+                ReturnValue(0)
+            }
+            IfCondition EqualTo(n, 3) ThenBlock: {
+                Gen_Emit("AIMacro.StringFormat3(")
+                Gen_Expr(obj)
+                Gen_Emit(", ")
+                Gen_Expr(Array.Get(args, 0))
+                Gen_Emit(", ")
+                Gen_Expr(Array.Get(args, 1))
+                Gen_Emit(", ")
+                Gen_Expr(Array.Get(args, 2))
+                Gen_Emit(")")
+                ReturnValue(0)
+            }
+            // 4+ args: pack into StringFormat4 using first four (compile bar)
+            Gen_Emit("AIMacro.StringFormat4(")
+            Gen_Expr(obj)
+            Gen_Emit(", ")
+            Gen_Expr(Array.Get(args, 0))
+            Gen_Emit(", ")
+            Gen_Expr(Array.Get(args, 1))
+            Gen_Emit(", ")
+            Gen_Expr(Array.Get(args, 2))
+            Gen_Emit(", ")
+            Gen_Expr(Array.Get(args, 3))
+            Gen_Emit(")")
+            ReturnValue(0)
+        }
+
+        // Normal method dispatch for non-ambiguous methods
+        func = Gen_MapMethod(method)
+        // Unmapped names are Python methods, not AILANG functions.
+        // string.Formatter.get_value(...) used to emit get_value(_aim_t0, ...).
+        mcmp_raw = StringCompare(func, method)
+        IfCondition EqualTo(mcmp_raw, 0) ThenBlock: {
+            OOPGen_MethodCall(node)
+            ReturnValue(0)
+        }
+        is_pred = 0
+        cmp = StringCompare(method, "islower")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { is_pred = 1 }
+        cmp = StringCompare(method, "isupper")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { is_pred = 1 }
+        cmp = StringCompare(method, "isdecimal")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { is_pred = 1 }
+        cmp = StringCompare(method, "isnumeric")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { is_pred = 1 }
+        cmp = StringCompare(method, "istitle")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { is_pred = 1 }
+        cmp = StringCompare(method, "isspace")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { is_pred = 1 }
+        cmp = StringCompare(method, "isdigit")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { is_pred = 1 }
+        cmp = StringCompare(method, "isalpha")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { is_pred = 1 }
+        cmp = StringCompare(method, "isalnum")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { is_pred = 1 }
+        cmp = StringCompare(method, "startswith")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { is_pred = 1 }
+        cmp = StringCompare(method, "endswith")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { is_pred = 1 }
+        IfCondition EqualTo(is_pred, 1) ThenBlock: {
+            Gen_Emit("AIMacro.Bool(")
+        }
+        Gen_Emit(func)
+        Gen_Emit("(")
+        Gen_Expr(obj)
+        
+        n = Array.Size(args)
+        i = 0
+        WhileLoop LessThan(i, n) {
+            Gen_Emit(", ")
+            arg = Array.Get(args, i)
+            Gen_Expr(arg)
+            i = Add(i, 1)
+        }
+        
+        Gen_Emit(")")
+        IfCondition EqualTo(is_pred, 1) ThenBlock: {
+            Gen_Emit(")")
+        }
+    }
+}
+
+// =============================================================================
+// MAP METHODS
+// =============================================================================
+Function.Gen_MapMethod {
+    Input: method: Address
+    Output: Address
+    Body: {
+        // List methods - use smart versions that handle both XArray and TArray
+        cmp = StringCompare(method, "append")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.SmartPush") }
+
+        cmp = StringCompare(method, "add")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.SetAdd") }
+
+        cmp = StringCompare(method, "union")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.SetUnion") }
+        
+         cmp = StringCompare(method, "pop")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.SmartPop") }
+        
+        // String methods (unchanged)
+        cmp = StringCompare(method, "upper")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("String.Upper") }
+        
+        cmp = StringCompare(method, "lower")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("String.Lower") }
+        
+        cmp = StringCompare(method, "strip")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("String.Strip") }
+        
+        cmp = StringCompare(method, "lstrip")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("String.LStrip") }
+        
+        cmp = StringCompare(method, "rstrip")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("String.RStrip") }
+        
+        cmp = StringCompare(method, "split")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("String.Split") }
+        
+        cmp = StringCompare(method, "join")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("String.Join") }
+        
+        cmp = StringCompare(method, "replace")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("String.Replace") }
+        
+        cmp = StringCompare(method, "format")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.StringFormat1") }
+        
+        cmp = StringCompare(method, "find")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("String.Find") }
+        
+        cmp = StringCompare(method, "startswith")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("String.StartsWith") }
+        
+        cmp = StringCompare(method, "endswith")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("String.EndsWith") }
+
+        cmp = StringCompare(method, "islower")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("String.IsLower") }
+
+        cmp = StringCompare(method, "isupper")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("String.IsUpper") }
+
+        cmp = StringCompare(method, "isdecimal")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("String.IsDecimal") }
+
+        cmp = StringCompare(method, "isnumeric")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("String.IsNumeric") }
+
+        cmp = StringCompare(method, "istitle")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("String.IsTitle") }
+        
+        cmp = StringCompare(method, "count")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.SmartCount") }
+
+        cmp = StringCompare(method, "encode")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.Encode") }
+
+        cmp = StringCompare(method, "decode")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.Decode") }
+        
+        cmp = StringCompare(method, "isdigit")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("String.IsDigit") }
+        
+        cmp = StringCompare(method, "isalpha")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("String.IsAlpha") }
+        
+        cmp = StringCompare(method, "isalnum")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("String.IsAlnum") }
+
+        cmp = StringCompare(method, "isspace")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("String.IsSpace") }
+
+        cmp = StringCompare(method, "splitlines")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("String.SplitLines") }
+
+        cmp = StringCompare(method, "translate")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.Translate") }
+
+        cmp = StringCompare(method, "maketrans")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.MakeTrans") }
+
+        cmp = StringCompare(method, "make_identity_dict")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.MakeIdentityDict") }
+
+        cmp = StringCompare(method, "update")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.DictUpdate") }
+
+        cmp = StringCompare(method, "fspath")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.FsPath") }
+
+        cmp = StringCompare(method, "register")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.NoOp") }
+
+        cmp = StringCompare(method, "compile")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.ReCompile") }
+
+        cmp = StringCompare(method, "iskeyword")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.KeywordIsKeyword") }
+
+        cmp = StringCompare(method, "issoftkeyword")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.KeywordIsSoftKeyword") }
+
+        cmp = StringCompare(method, "captured_output")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.CapturedOutput") }
+
+        cmp = StringCompare(method, "getvalue")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.IoGetValue") }
+
+        // Other list methods
+        cmp = StringCompare(method, "clear")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.SmartClear") }
+        
+        cmp = StringCompare(method, "index")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.ListIndex") }
+
+        cmp = StringCompare(method, "copy")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.TypedListCopy") }
+        
+        cmp = StringCompare(method, "extend")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.ListExtend") }
+
+        cmp = StringCompare(method, "remove")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.ListRemove") }
+        
+        cmp = StringCompare(method, "insert")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.ListInsert") }
+        
+        cmp = StringCompare(method, "sort")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.ListSort") }
+
+        cmp = StringCompare(method, "reverse")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.ListReverse") }
+
+        cmp = StringCompare(method, "isdisjoint")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.SetIsdisjoint") }
+
+        cmp = StringCompare(method, "__init__")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.InitSink") }
+                
+        ReturnValue(method)
+    }
+}
+
+// =============================================================================
+// Gen_IndexAccess - FIXED VERSION
+// Handles both string and list indexing, including negative indices
+// =============================================================================
+
+Function.Gen_IndexAccess {
+    Input: node: Address
+    Body: {
+        expr = ArrayGet(node, 3)
+        index = ArrayGet(node, 4)
+        
+        expr_type = AST_Type(expr)
+        is_string_access = 0
+        is_dict_access = 0
+        
+        IfCondition EqualTo(expr_type, Node.IDENT) ThenBlock: {
+            var_name = ArrayGet(expr, 3)
+            is_str = Gen_IsStringVar(var_name)
+            IfCondition EqualTo(is_str, 1) ThenBlock: {
+                is_string_access = 1
+            }
+            is_dict = Gen_IsDictVar(var_name)
+            IfCondition EqualTo(is_dict, 1) ThenBlock: {
+                is_dict_access = 1
+            }
+        }
+        IfCondition EqualTo(expr_type, Node.STR_LIT) ThenBlock: {
+            is_string_access = 1
+        }
+        
+        // DICT INDEXING
+        IfCondition EqualTo(is_dict_access, 1) ThenBlock: {
+            Gen_Emit("Hash.Get(")
+            Gen_Expr(expr)
+            Gen_Emit(", ")
+            Gen_Expr(index)
+            Gen_Emit(")")
+            ReturnValue(0)
+        }
+        
+        index_type = AST_Type(index)
+        is_negative = 0
+        neg_value = 0
+        
+        IfCondition EqualTo(index_type, Node.UNARY_OP) ThenBlock: {
+            op = ArrayGet(index, 3)
+            IfCondition EqualTo(op, Token.MINUS) ThenBlock: {
+                operand = ArrayGet(index, 4)
+                operand_type = AST_Type(operand)
+                IfCondition EqualTo(operand_type, Node.NUM_LIT) ThenBlock: {
+                    is_negative = 1
+                    neg_value = ArrayGet(operand, 3)
+                }
+            }
+        }
+        
+        // STRING INDEXING — DictGen_SmartGet so __index__ objects work
+        IfCondition EqualTo(is_string_access, 1) ThenBlock: {
+            IfCondition EqualTo(is_negative, 1) ThenBlock: {
+                Gen_Emit("DictGen_SmartGet(")
+                Gen_Expr(expr)
+                Gen_Emit(", Subtract(0, ")
+                Gen_EmitNumber(neg_value)
+                Gen_Emit("))")
+            } ElseBlock: {
+                Gen_Emit("DictGen_SmartGet(")
+                Gen_Expr(expr)
+                Gen_Emit(", ")
+                Gen_Expr(index)
+                Gen_Emit(")")
+            }
+            ReturnValue(0)
+        }
+        
+        // ARRAY INDEXING - SmartGet/SmartSize (handles XArray & TArray)
+        IfCondition EqualTo(is_negative, 1) ThenBlock: {
+            Gen_Emit("DictGen_SmartGet(")
+            Gen_Expr(expr)
+            Gen_Emit(", Subtract(AIMacro.SmartSize(")
+            Gen_Expr(expr)
+            Gen_Emit("), ")
+            Gen_EmitNumber(neg_value)
+            Gen_Emit("))")
+        } ElseBlock: {
+            Gen_Emit("DictGen_SmartGet(")
+            Gen_Expr(expr)
+            Gen_Emit(", ")
+            Gen_Expr(index)
+            Gen_Emit(")")
+        }
+    }
+}

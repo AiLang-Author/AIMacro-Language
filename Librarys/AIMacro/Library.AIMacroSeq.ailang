@@ -1,0 +1,2320 @@
+// Library.AIMacroSeq.ailang
+// dict/tuple/slice/range/iter/file/json (split from AIMacro).
+//
+// Copyright (c) 2025-2026 Sean Collins, 2 Paws Machine and Engineering. All rights reserved.
+// Licensed under the Sean Collins Software License (SCSL v1.0).
+
+LibraryImport.Array
+LibraryImport.Hash
+LibraryImport.JSON
+LibraryImport.Plex
+LibraryImport.OOP
+LibraryImport.FixedPointTrig
+LibraryImport.AIMacro.AIMacroString
+LibraryImport.AIMacro.AIMacroTypes
+LibraryImport.AIMacro.AIMacro
+
+
+Function.AIMacro.Dict {
+    Output: Address
+    Body: {
+        dict = Hash.Create(16)
+        ReturnValue(dict)
+    }
+}
+
+Function.AIMacro.TupleKeyString {
+    Input: lst: Address
+    Output: Address
+    Body: {
+        IfCondition EqualTo(Array.IsArray(lst), 0) ThenBlock: {
+            ReturnValue("")
+        }
+        n = Array.Size(lst)
+        out = ""
+        i = 0
+        WhileLoop LessThan(i, n) {
+            IfCondition GreaterThan(i, 0) ThenBlock: {
+                out = StringConcat(out, "\x1f")
+            }
+            el = Array.Get(lst, i)
+            IfCondition EqualTo(AIMacro.LooksLikeString(el), 1) ThenBlock: {
+                IfCondition EqualTo(AIMacro.SafeIsHash(el), 0) ThenBlock: {
+                    out = StringConcat(out, el)
+                } ElseBlock: {
+                    out = StringConcat(out, NumberToString(AIMacro.UnboxIntZero(el)))
+                }
+            } ElseBlock: {
+                out = StringConcat(out, NumberToString(AIMacro.UnboxIntZero(el)))
+            }
+            i = Add(i, 1)
+        }
+        ReturnValue(out)
+    }
+}
+
+Function.AIMacro.DictKey {
+    Input: key: Address
+    Output: Address
+    Body: {
+        IfCondition EqualTo(AIMacro.LooksLikeString(key), 1) ThenBlock: {
+            IfCondition EqualTo(Types.IsBigInt(key), 0) ThenBlock: {
+                IfCondition EqualTo(AIMacro.SafeIsHash(key), 0) ThenBlock: {
+                    ReturnValue(key)
+                }
+            }
+        }
+        IfCondition EqualTo(AIMacro.SafeIsHash(key), 1) ThenBlock: {
+            ck = Hash.Get(key, "__class__")
+            IfCondition EqualTo(StringCompare(ck, "tuple"), 0) ThenBlock: {
+                lst = Hash.Get(key, "__list__")
+                IfCondition EqualTo(Array.IsArray(lst), 1) ThenBlock: {
+                    ReturnValue(AIMacro.TupleKeyString(lst))
+                }
+            }
+        }
+        ReturnValue(NumberToString(AIMacro.UnboxIntZero(key)))
+    }
+}
+
+Function.AIMacro.WrapSeq {
+    Input: arr: Address
+    Input: kind: Address
+    Output: Address
+    Body: {
+        items = arr
+        IfCondition EqualTo(Array.IsArray(items), 0) ThenBlock: {
+            items = AIMacro.EmptyList()
+        }
+        h = Hash.Create(8)
+        Hash.Set(h, "__class__", kind)
+        Hash.Set(h, "__list__", items)
+        ReturnValue(h)
+    }
+}
+
+Function.AIMacro.Tuple {
+    Input: elements: Address
+    Output: Address
+    Body: {
+        IfCondition Or(EqualTo(elements, 0), EqualTo(AIMacro.IsNone(elements), 1)) ThenBlock: {
+            ReturnValue(AIMacro.WrapSeq(AIMacro.EmptyList(), "tuple"))
+        }
+        IfCondition EqualTo(Array.IsArray(elements), 0) ThenBlock: {
+            ReturnValue(AIMacro.WrapSeq(AIMacro.ListFrom(elements), "tuple"))
+        }
+        len = Array.Size(elements)
+        tuple = AIMacro.ArrayNew(len)
+        i = 0
+        WhileLoop LessThan(i, len) {
+            Array.Push(tuple, Array.Get(elements, i))
+            i = Add(i, 1)
+        }
+        ReturnValue(AIMacro.WrapSeq(tuple, "tuple"))
+    }
+}
+
+
+// =============================================================================
+// SORTED - Return new sorted list (ascending)
+// Uses simple insertion sort - good enough for small lists
+// =============================================================================
+Function.AIMacro.Sorted {
+    Input: list: Address
+    Output: Address
+    Body: {
+        IfCondition EqualTo(list, 0) ThenBlock: {
+            ReturnValue(Array.Create(0))
+        }
+        
+        size = Array.Size(list)
+        IfCondition EqualTo(size, 0) ThenBlock: {
+            ReturnValue(Array.Create(0))
+        }
+        
+        // Create copy
+        result = Array.Create(size)
+        i = 0
+        WhileLoop LessThan(i, size) {
+            item = Array.Get(list, i)
+            Array.Push(result, item)
+            i = Add(i, 1)
+        }
+        
+        // Insertion sort the copy - FIXED VERSION
+        // 
+        // BUG WAS: WhileLoop And(GreaterEqual(j, 0), GreaterThan(Array.Get(result, j), key))
+        // 
+        // AILang's And() is NOT short-circuit evaluated!
+        // Both arguments are computed BEFORE the And operation.
+        // When j becomes -1, Array.Get(result, -1) causes undefined behavior.
+        //
+        // FIX: Check j >= 0 BEFORE accessing the array, using nested if-else.
+        
+        i = 1
+        WhileLoop LessThan(i, size) {
+            key = Array.Get(result, i)
+            j = Subtract(i, 1)
+            
+            // Use flag-controlled loop instead of And() with array access
+            continue_shift = 1
+            WhileLoop EqualTo(continue_shift, 1) {
+                // FIRST: Check if j is still in bounds
+                IfCondition LessThan(j, 0) ThenBlock: {
+                    // j went negative, stop shifting
+                    continue_shift = 0
+                } ElseBlock: {
+                    // NOW it's safe to access result[j]
+                    curr_val = Array.Get(result, j)
+                    IfCondition GreaterThan(curr_val, key) ThenBlock: {
+                        // Shift element right
+                        Array.Set(result, Add(j, 1), curr_val)
+                        j = Subtract(j, 1)
+                    } ElseBlock: {
+                        // Found correct position, stop
+                        continue_shift = 0
+                    }
+                }
+            }
+            
+            // Insert key at position j+1
+            Array.Set(result, Add(j, 1), key)
+            i = Add(i, 1)
+        }
+        
+        ReturnValue(result)
+    }
+}
+
+// =============================================================================
+// LIST SLICE - Return sublist from start to end (exclusive)
+// =============================================================================
+Function.AIMacro.ListSlice {
+    Input: list: Address
+    Input: start: Integer
+    Input: end_idx: Integer
+    Input: step: Integer
+    Output: Address
+    Body: {
+        IfCondition EqualTo(list, 0) ThenBlock: {
+            ReturnValue(AIMacro.EmptyList())
+        }
+        IfCondition EqualTo(AIMacro.LooksLikeString(list), 1) ThenBlock: {
+            ReturnValue(AIMacro.StringSlice(list, start, end_idx, step))
+        }
+        IfCondition EqualTo(step, 0) ThenBlock: {
+            step = 1
+        } ElseBlock: {
+            step = AIMacro.AsIndex(step)
+            IfCondition EqualTo(step, 0) ThenBlock: {
+                step = 1
+            }
+        }
+        start = AIMacro.AsIndex(start)
+        IfCondition EqualTo(Array.IsArray(list), 0) ThenBlock: {
+            ReturnValue(AIMacro.EmptyList())
+        }
+        size = Array.Size(list)
+        end_idx = AIMacro.AsIndex(end_idx)
+        
+        // Handle negative indices (Python-ish; positive-step omitted end uses Size)
+        IfCondition LessThan(start, 0) ThenBlock: {
+            start = Add(size, start)
+            IfCondition LessThan(start, 0) ThenBlock: {
+                start = 0
+            }
+        }
+        
+        IfCondition LessThan(end_idx, 0) ThenBlock: {
+            end_idx = Add(size, end_idx)
+        }
+        
+        // Clamp to bounds
+        IfCondition GreaterThan(start, size) ThenBlock: {
+            start = size
+        }
+        IfCondition GreaterThan(end_idx, size) ThenBlock: {
+            end_idx = size
+        }
+        // [::-1]: omitted start is 0, omitted end is Size.
+        IfCondition LessThan(step, 0) ThenBlock: {
+            IfCondition EqualTo(start, 0) ThenBlock: {
+                start = Subtract(size, 1)
+            }
+            IfCondition GreaterEqual(end_idx, size) ThenBlock: {
+                end_idx = Subtract(0, 1)
+            }
+        }
+        
+        result = Array.Create(8)
+        
+        IfCondition GreaterThan(step, 0) ThenBlock: {
+            IfCondition LessThan(end_idx, start) ThenBlock: {
+                end_idx = start
+            }
+            i = start
+            WhileLoop LessThan(i, end_idx) {
+                item = Array.Get(list, i)
+                Array.Push(result, item)
+                i = Add(i, step)
+            }
+        } ElseBlock: {
+            // Negative step: walk downward while i > end
+            IfCondition GreaterThan(end_idx, start) ThenBlock: {
+                end_idx = start
+            }
+            i = start
+            WhileLoop GreaterThan(i, end_idx) {
+                IfCondition And(GreaterEqual(i, 0), LessThan(i, size)) ThenBlock: {
+                    item = Array.Get(list, i)
+                    Array.Push(result, item)
+                }
+                i = Add(i, step)
+            }
+        }
+        
+        ReturnValue(result)
+    }
+}
+
+Function.AIMacro.ListSliceAssign {
+    Input: list: Address
+    Input: start: Integer
+    Input: end_idx: Integer
+    Input: step: Integer
+    Input: seq: Address
+    Output: Address
+    Body: {
+        IfCondition EqualTo(Array.IsArray(list), 0) ThenBlock: {
+            ReturnValue(list)
+        }
+        IfCondition EqualTo(step, 0) ThenBlock: {
+            step = 1
+        } ElseBlock: {
+            step = AIMacro.AsIndex(step)
+            IfCondition EqualTo(step, 0) ThenBlock: {
+                step = 1
+            }
+        }
+        size = Array.Size(list)
+        start = AIMacro.AsIndex(start)
+        IfCondition EqualTo(end_idx, 0) ThenBlock: {
+            end_idx = size
+        } ElseBlock: {
+            end_idx = AIMacro.AsIndex(end_idx)
+        }
+        IfCondition LessThan(start, 0) ThenBlock: {
+            start = Add(size, start)
+            IfCondition LessThan(start, 0) ThenBlock: {
+                start = 0
+            }
+        }
+        IfCondition LessThan(end_idx, 0) ThenBlock: {
+            end_idx = Add(size, end_idx)
+        }
+        IfCondition GreaterThan(start, size) ThenBlock: {
+            start = size
+        }
+        IfCondition GreaterThan(end_idx, size) ThenBlock: {
+            end_idx = size
+        }
+        idxs = Array.Create(8)
+        IfCondition GreaterThan(step, 0) ThenBlock: {
+            i = start
+            WhileLoop LessThan(i, end_idx) {
+                Array.Push(idxs, i)
+                i = Add(i, step)
+            }
+        } ElseBlock: {
+            i = start
+            WhileLoop GreaterThan(i, end_idx) {
+                IfCondition And(GreaterEqual(i, 0), LessThan(i, size)) ThenBlock: {
+                    Array.Push(idxs, i)
+                }
+                i = Add(i, step)
+            }
+        }
+        nidx = Array.Size(idxs)
+        nseq = 0
+        IfCondition EqualTo(Array.IsArray(seq), 1) ThenBlock: {
+            nseq = Array.Size(seq)
+        }
+        IfCondition NotEqual(step, 1) ThenBlock: {
+            IfCondition NotEqual(nidx, nseq) ThenBlock: {
+                AIMacro.RaiseKind(2, "ValueError")
+                ReturnValue(list)
+            }
+            si = 0
+            WhileLoop LessThan(si, nidx) {
+                Array.Set(list, Array.Get(idxs, si), Array.Get(seq, si))
+                si = Add(si, 1)
+            }
+            ReturnValue(list)
+        }
+        AIMacro.ListDelSlice(list, start, end_idx, 1)
+        si = Subtract(nseq, 1)
+        WhileLoop GreaterEqual(si, 0) {
+            AIMacro.ListInsert(list, start, Array.Get(seq, si))
+            si = Subtract(si, 1)
+        }
+        ReturnValue(list)
+    }
+}
+
+Function.AIMacro.ListDelSlice {
+    Input: list: Address
+    Input: start: Integer
+    Input: end_idx: Integer
+    Input: step: Integer
+    Output: Address
+    Body: {
+        IfCondition EqualTo(Array.IsArray(list), 0) ThenBlock: {
+            ReturnValue(list)
+        }
+        IfCondition EqualTo(step, 0) ThenBlock: {
+            step = 1
+        } ElseBlock: {
+            step = AIMacro.AsIndex(step)
+            IfCondition EqualTo(step, 0) ThenBlock: {
+                step = 1
+            }
+        }
+        size = Array.Size(list)
+        IfCondition And(GreaterEqual(start, 4000000), EqualTo(AIMacro.SafeIsHash(start), 0)) ThenBlock: {
+            start = 0
+        } ElseBlock: {
+            start = AIMacro.AsIndex(start)
+        }
+        IfCondition And(GreaterEqual(end_idx, 4000000), EqualTo(AIMacro.SafeIsHash(end_idx), 0)) ThenBlock: {
+            end_idx = size
+        } ElseBlock: {
+            end_idx = AIMacro.AsIndex(end_idx)
+        }
+        IfCondition LessThan(start, 0) ThenBlock: {
+            start = Add(size, start)
+            IfCondition LessThan(start, 0) ThenBlock: {
+                start = 0
+            }
+        }
+        IfCondition LessThan(end_idx, 0) ThenBlock: {
+            end_idx = Add(size, end_idx)
+        }
+        IfCondition GreaterThan(start, size) ThenBlock: {
+            start = size
+        }
+        IfCondition GreaterThan(end_idx, size) ThenBlock: {
+            end_idx = size
+        }
+        keep = AIMacro.EmptyList()
+        i = 0
+        nstep = step
+        IfCondition LessThan(nstep, 0) ThenBlock: {
+            nstep = Subtract(0, nstep)
+        }
+        WhileLoop LessThan(i, size) {
+            drop = 0
+            IfCondition GreaterThan(step, 0) ThenBlock: {
+                IfCondition And(GreaterEqual(i, start), LessThan(i, end_idx)) ThenBlock: {
+                    IfCondition EqualTo(Modulo(Subtract(i, start), nstep), 0) ThenBlock: {
+                        drop = 1
+                    }
+                }
+            } ElseBlock: {
+                IfCondition And(LessEqual(i, start), GreaterThan(i, end_idx)) ThenBlock: {
+                    IfCondition EqualTo(Modulo(Subtract(start, i), nstep), 0) ThenBlock: {
+                        drop = 1
+                    }
+                }
+            }
+            IfCondition EqualTo(drop, 0) ThenBlock: {
+                Array.Push(keep, Array.Get(list, i))
+            }
+            i = Add(i, 1)
+        }
+        WhileLoop GreaterThan(Array.Size(list), 0) {
+            Array.Pop(list)
+        }
+        j = 0
+        kn = Array.Size(keep)
+        WhileLoop LessThan(j, kn) {
+            Array.Push(list, Array.Get(keep, j))
+            j = Add(j, 1)
+        }
+        ReturnValue(list)
+    }
+}
+
+// String slice
+Function.AIMacro.StringSlice {
+    Input: str: Address
+    Input: start: Integer
+    Input: end_idx: Integer
+    Input: step: Integer
+    Output: Address
+    Body: {
+        IfCondition EqualTo(str, 0) ThenBlock: {
+            result = Allocate(1)
+            SetByte(result, 0, 0)
+            ReturnValue(result)
+        }
+        IfCondition EqualTo(step, 0) ThenBlock: {
+            step = 1
+        } ElseBlock: {
+            step = AIMacro.AsIndex(step)
+            IfCondition EqualTo(step, 0) ThenBlock: {
+                step = 1
+            }
+        }
+        start = AIMacro.AsIndex(start)
+        size = StringLength(str)
+        end_idx = AIMacro.AsIndex(end_idx)
+        
+        // Handle negative indices
+        IfCondition LessThan(start, 0) ThenBlock: {
+            start = Add(size, start)
+            IfCondition LessThan(start, 0) ThenBlock: {
+                start = 0
+            }
+        }
+        
+        IfCondition LessThan(end_idx, 0) ThenBlock: {
+            end_idx = Add(size, end_idx)
+        }
+        
+        // Clamp
+        IfCondition GreaterThan(start, size) ThenBlock: {
+            start = size
+        }
+        IfCondition GreaterThan(end_idx, size) ThenBlock: {
+            end_idx = size
+        }
+        IfCondition LessThan(step, 0) ThenBlock: {
+            IfCondition EqualTo(start, 0) ThenBlock: {
+                start = Subtract(size, 1)
+            }
+            IfCondition GreaterEqual(end_idx, size) ThenBlock: {
+                end_idx = Subtract(0, 1)
+            }
+        }
+        
+        // Collect chars into temp buffer (max size)
+        tmp = Allocate(Add(size, 1))
+        n = 0
+        
+        IfCondition GreaterThan(step, 0) ThenBlock: {
+            IfCondition LessThan(end_idx, start) ThenBlock: {
+                end_idx = start
+            }
+            i = start
+            WhileLoop LessThan(i, end_idx) {
+                SetByte(tmp, n, GetByte(str, i))
+                n = Add(n, 1)
+                i = Add(i, step)
+            }
+        } ElseBlock: {
+            IfCondition GreaterThan(end_idx, start) ThenBlock: {
+                end_idx = start
+            }
+            i = start
+            WhileLoop GreaterThan(i, end_idx) {
+                IfCondition And(GreaterEqual(i, 0), LessThan(i, size)) ThenBlock: {
+                    SetByte(tmp, n, GetByte(str, i))
+                    n = Add(n, 1)
+                }
+                i = Add(i, step)
+            }
+        }
+        
+        result = Allocate(Add(n, 1))
+        j = 0
+        WhileLoop LessThan(j, n) {
+            SetByte(result, j, GetByte(tmp, j))
+            j = Add(j, 1)
+        }
+        SetByte(result, n, 0)
+        
+        ReturnValue(result)
+    }
+}
+
+// =============================================================================
+// ITERATION FUNCTIONS
+// =============================================================================
+
+Function.AIMacro.Range {
+    Input: start: Integer
+    Input: stop: Integer
+    Input: step: Integer
+    Output: Address
+    Body: {
+        IfCondition EqualTo(step, 0) ThenBlock: {
+            ReturnValue(Array.Create(0))
+        }
+        start = AIMacro.UnboxIntZero(start)
+        stop = AIMacro.UnboxIntZero(stop)
+        step = AIMacro.UnboxIntZero(step)
+        IfCondition EqualTo(step, 0) ThenBlock: {
+            step = 1
+        }
+        span = Subtract(stop, start)
+        IfCondition LessThan(span, 0) ThenBlock: {
+            span = Subtract(0, span)
+        }
+        h = Hash.Create(8)
+        Hash.Set(h, "__class__", "range")
+        Hash.Set(h, "start", start)
+        Hash.Set(h, "stop", stop)
+        Hash.Set(h, "step", step)
+        Hash.Set(h, "__span__", span)
+        ReturnValue(h)
+    }
+}
+
+Function.AIMacro.RangeLen {
+    Input: rng: Address
+    Output: Integer
+    Body: {
+        start = AIMacro.UnboxIntZero(Hash.Get(rng, "start"))
+        stop = AIMacro.UnboxIntZero(Hash.Get(rng, "stop"))
+        step = AIMacro.UnboxIntZero(Hash.Get(rng, "step"))
+        IfCondition EqualTo(step, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        n = 0
+        current = start
+        IfCondition GreaterThan(step, 0) ThenBlock: {
+            WhileLoop And(LessThan(current, stop), LessThan(n, 65536)) {
+                n = Add(n, 1)
+                current = Add(current, step)
+            }
+        } ElseBlock: {
+            WhileLoop And(GreaterThan(current, stop), LessThan(n, 65536)) {
+                n = Add(n, 1)
+                current = Add(current, step)
+            }
+        }
+        ReturnValue(n)
+    }
+}
+
+Function.AIMacro.RangeItems {
+    Input: rng: Address
+    Output: Address
+    Body: {
+        IfCondition EqualTo(AIMacro.SafeIsHash(rng), 0) ThenBlock: {
+            ReturnValue(AIMacro.EmptyList())
+        }
+        start = AIMacro.UnboxIntZero(Hash.Get(rng, "start"))
+        stop = AIMacro.UnboxIntZero(Hash.Get(rng, "stop"))
+        step = AIMacro.UnboxIntZero(Hash.Get(rng, "step"))
+        IfCondition EqualTo(step, 0) ThenBlock: {
+            step = 1
+        }
+        span = Hash.Get(rng, "__span__")
+        IfCondition GreaterThan(span, 65536) ThenBlock: {
+            AIMacro.RaiseKind(23, "MemoryError")
+            ReturnValue(AIMacro.EmptyList())
+        }
+        result = Array.Create(8)
+        current = start
+        IfCondition GreaterThan(step, 0) ThenBlock: {
+            WhileLoop LessThan(current, stop) {
+                Array.Push(result, current)
+                current = Add(current, step)
+            }
+        } ElseBlock: {
+            WhileLoop GreaterThan(current, stop) {
+                Array.Push(result, current)
+                current = Add(current, step)
+            }
+        }
+        ReturnValue(result)
+    }
+}
+
+Function.AIMacro.IsSliceObj {
+    Input: v: Address
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(Hash.IsHash(v), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        ca = Hash.Get(v, "__class__")
+        IfCondition EqualTo(ca, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(ca, "slice"), 0) ThenBlock: {
+            ReturnValue(1)
+        }
+        ReturnValue(0)
+    }
+}
+
+Function.AIMacro.SliceWrap {
+    Input: container: Address
+    Input: sliced: Address
+    Output: Address
+    Body: {
+        IfCondition EqualTo(Hash.IsHash(container), 0) ThenBlock: {
+            ReturnValue(sliced)
+        }
+        ca = Hash.Get(container, "__class__")
+        IfCondition EqualTo(ca, 0) ThenBlock: {
+            ReturnValue(sliced)
+        }
+        IfCondition Or(EqualTo(StringCompare(ca, "tuple"), 0), EqualTo(StringCompare(ca, "bytearray"), 0)) ThenBlock: {
+            w = AIMacro.WrapSeq(sliced, ca)
+            ReturnValue(w)
+        }
+        ReturnValue(sliced)
+    }
+}
+
+Function.AIMacro.RangeGet {
+    Input: rng: Address
+    Input: idx: Address
+    Output: Address
+    Body: {
+        nlen = AIMacro.RangeLen(rng)
+        i = AIMacro.NormIndex(idx, nlen)
+        IfCondition Or(LessThan(i, 0), GreaterEqual(i, nlen)) ThenBlock: {
+            AIMacro.RaiseKind(17, "range index out of range")
+            ReturnValue(0)
+        }
+        start = AIMacro.UnboxIntZero(Hash.Get(rng, "start"))
+        step = AIMacro.UnboxIntZero(Hash.Get(rng, "step"))
+        IfCondition EqualTo(step, 0) ThenBlock: {
+            step = 1
+        }
+        r = Add(start, Multiply(i, step))
+        IfCondition EqualTo(r, 0) ThenBlock: {
+            ReturnValue(AIMacro.IntZero())
+        }
+        ReturnValue(r)
+    }
+}
+
+Function.AIMacro.AsIndex {
+    Input: v: Address
+    Output: Integer
+    Body: {
+        IfCondition Or(EqualTo(v, 0), EqualTo(AIMacro.IsNone(v), 1)) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(Types.IsBool(v), 1) ThenBlock: {
+            ReturnValue(AIMacro.BoolVal(v))
+        }
+        IfCondition And(GreaterEqual(v, 0), LessThan(v, 4000000)) ThenBlock: {
+            ReturnValue(v)
+        }
+        IfCondition EqualTo(Types.IsBigInt(v), 1) ThenBlock: {
+            digs = Dereference(Add(v, 16))
+            IfCondition GreaterThan(StringLength(digs), 9) ThenBlock: {
+                ReturnValue(1073741824)
+            }
+            ReturnValue(StringToNumber(digs))
+        }
+        IfCondition EqualTo(Hash.IsHash(v), 1) ThenBlock: {
+            IfCondition EqualTo(OOP.MethodExists(v, "__index__"), 1) ThenBlock: {
+                empty = AIMacro.EmptyList()
+                r = OOP.MethodCall(v, "__index__", empty)
+                IfCondition EqualTo(AIMacro.LooksLikeString(r), 1) ThenBlock: {
+                    AIMacro.RaiseKind(5, "TypeError")
+                    ReturnValue(0)
+                }
+                IfCondition EqualTo(Hash.IsHash(r), 1) ThenBlock: {
+                    IfCondition EqualTo(OOP.MethodExists(r, "__index__"), 0) ThenBlock: {
+                        AIMacro.RaiseKind(5, "TypeError")
+                        ReturnValue(0)
+                    }
+                }
+                ReturnValue(AIMacro.UnboxIntZero(AIMacro.Int(r)))
+            }
+            data = Hash.Get(v, "__data__")
+            IfCondition EqualTo(Hash.IsHash(data), 1) ThenBlock: {
+                ind = Hash.Get(data, "ind")
+                IfCondition NotEqual(ind, 0) ThenBlock: {
+                    ReturnValue(AIMacro.UnboxIntZero(AIMacro.Int(ind)))
+                }
+                iv = Hash.Get(data, "__int__")
+                IfCondition NotEqual(iv, 0) ThenBlock: {
+                    ReturnValue(AIMacro.UnboxIntZero(AIMacro.Int(iv)))
+                }
+            }
+            ind2 = Hash.Get(v, "ind")
+            IfCondition NotEqual(ind2, 0) ThenBlock: {
+                ReturnValue(AIMacro.UnboxIntZero(AIMacro.Int(ind2)))
+            }
+            iv2 = Hash.Get(v, "__int__")
+            IfCondition NotEqual(iv2, 0) ThenBlock: {
+                ReturnValue(AIMacro.UnboxIntZero(AIMacro.Int(iv2)))
+            }
+            ReturnValue(0)
+        }
+        ReturnValue(AIMacro.UnboxIntZero(AIMacro.BoolVal(v)))
+    }
+}
+
+Function.AIMacro.NormIndex {
+    Input: idx: Address
+    Input: n: Integer
+    Output: Integer
+    Body: {
+        i = AIMacro.AsIndex(idx)
+        IfCondition LessThan(i, 0) ThenBlock: {
+            i = Add(i, n)
+        }
+        ReturnValue(i)
+    }
+}
+
+FixedPool.AIMacroNI {
+    "box": Initialize=0, CanChange=True
+}
+
+Function.AIMacro.SafeIsHash {
+    Input: v: Address
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(v, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(Types.CanDeref(v), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        ReturnValue(Hash.IsHash(v))
+    }
+}
+
+Function.AIMacro.GetNotImpl {
+    Output: Address
+    Body: {
+        IfCondition EqualTo(AIMacroNI.box, 0) ThenBlock: {
+            h = Allocate(16)
+            StoreValue(h, 1313422672)
+            StoreValue(Add(h, 8), 1)
+            AIMacroNI.box = h
+        }
+        ReturnValue(AIMacroNI.box)
+    }
+}
+
+Function.AIMacro.IsNotImpl {
+    Input: v: Address
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(v, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(v, AIMacro.GetNotImpl()) ThenBlock: {
+            ReturnValue(1)
+        }
+        ReturnValue(0)
+    }
+}
+
+Function.AIMacro.NormBool {
+    Input: v: Address
+    Output: Address
+    Body: {
+        IfCondition EqualTo(Types.IsBool(v), 1) ThenBlock: {
+            ReturnValue(v)
+        }
+        ReturnValue(AIMacro.Bool(v))
+    }
+}
+
+Function.AIMacro.CallBinMethod {
+    Input: obj: Address
+    Input: name: Address
+    Input: other: Address
+    Output: Address
+    Body: {
+        IfCondition EqualTo(Hash.IsHash(obj), 0) ThenBlock: {
+            ReturnValue(AIMacro.GetNotImpl())
+        }
+        cls = Hash.Get(obj, "__class__")
+        IfCondition NotEqual(cls, 0) ThenBlock: {
+            blocked = AIMacro.ClassAttrGet(cls, name)
+            IfCondition And(NotEqual(blocked, 0), EqualTo(AIMacro.IsNone(blocked), 1)) ThenBlock: {
+                AIMacro.RaiseKind(5, name)
+                ReturnValue(0)
+            }
+        }
+        args = Array.Create(1)
+        oth = other
+        IfCondition EqualTo(oth, 0) ThenBlock: {
+            oth = AIMacro.IntZero()
+        }
+        Array.Push(args, oth)
+        IfCondition EqualTo(OOP.MethodExists(obj, name), 1) ThenBlock: {
+            func = OOP.MethodLookup(obj, name)
+            ReturnValue(CallIndirect(func, AIMacro.PackCallArgs(obj, args)))
+        }
+        fn = AIMacro.ObjectGet(obj, name)
+        IfCondition EqualTo(fn, 0) ThenBlock: {
+            ReturnValue(AIMacro.GetNotImpl())
+        }
+        IfCondition EqualTo(AIMacro.SafeIsHash(fn), 1) ThenBlock: {
+            ReturnValue(AIMacro.SmartCallN(fn, args))
+        }
+        ReturnValue(CallIndirect(fn, AIMacro.PackCallArgs(obj, args)))
+    }
+}
+
+// 1 when type(b) is a real (non-ABC) subclass of type(a). Same type is 0.
+Function.AIMacro.RichSubFirst {
+    Input: a: Address
+    Input: b: Address
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(AIMacro.SafeIsHash(a), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(AIMacro.SafeIsHash(b), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        ca = Hash.Get(a, "__class__")
+        cb = Hash.Get(b, "__class__")
+        IfCondition Or(EqualTo(ca, 0), EqualTo(cb, 0)) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(ca, cb), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        walk = cb
+        hops = 0
+        WhileLoop And(NotEqual(walk, 0), LessThan(hops, 16)) {
+            IfCondition EqualTo(StringCompare(walk, ca), 0) ThenBlock: {
+                ReturnValue(1)
+            }
+            walk = OOP.ClassGetParent(walk)
+            hops = Add(hops, 1)
+        }
+        ReturnValue(0)
+    }
+}
+
+Function.AIMacro.RichCall {
+    Input: a: Address
+    Input: name: Address
+    Input: b: Address
+    Input: rname: Address
+    Output: Address
+    Body: {
+        r = 0
+        IfCondition EqualTo(AIMacro.RichSubFirst(a, b), 1) ThenBlock: {
+            r = AIMacro.CallBinMethod(b, rname, a)
+            IfCondition EqualTo(AIMacro.ExcPending(), 1) ThenBlock: {
+                ReturnValue(0)
+            }
+            IfCondition EqualTo(AIMacro.IsNotImpl(r), 0) ThenBlock: {
+                ReturnValue(r)
+            }
+            r = AIMacro.CallBinMethod(a, name, b)
+            IfCondition EqualTo(AIMacro.ExcPending(), 1) ThenBlock: {
+                ReturnValue(0)
+            }
+            IfCondition EqualTo(AIMacro.IsNotImpl(r), 0) ThenBlock: {
+                ReturnValue(r)
+            }
+            ReturnValue(AIMacro.GetNotImpl())
+        }
+        r = AIMacro.CallBinMethod(a, name, b)
+        IfCondition EqualTo(AIMacro.ExcPending(), 1) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(AIMacro.IsNotImpl(r), 0) ThenBlock: {
+            ReturnValue(r)
+        }
+        r = AIMacro.CallBinMethod(b, rname, a)
+        IfCondition EqualTo(AIMacro.ExcPending(), 1) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(AIMacro.IsNotImpl(r), 0) ThenBlock: {
+            ReturnValue(r)
+        }
+        ReturnValue(AIMacro.GetNotImpl())
+    }
+}
+
+Function.AIMacro.InvertBool {
+    Input: v: Address
+    Output: Address
+    Body: {
+        IfCondition EqualTo(AIMacro.SmartBool(v), 1) ThenBlock: {
+            ReturnValue(AIMacro.FalseVal())
+        }
+        ReturnValue(AIMacro.TrueVal())
+    }
+}
+
+Function.AIMacro.CopyArray {
+    Input: src: Address
+    Output: Address
+    Body: {
+        IfCondition EqualTo(Array.IsArray(src), 0) ThenBlock: {
+            ReturnValue(AIMacro.EmptyList())
+        }
+        n = Array.Size(src)
+        out = AIMacro.ArrayNew(n)
+        i = 0
+        WhileLoop LessThan(i, n) {
+            Array.Push(out, Array.Get(src, i))
+            i = Add(i, 1)
+        }
+        ReturnValue(out)
+    }
+}
+
+Function.AIMacro.ListIMul {
+    Input: lst: Address
+    Input: times: Address
+    Output: Address
+    Body: {
+        IfCondition EqualTo(Array.IsArray(lst), 0) ThenBlock: {
+            ReturnValue(lst)
+        }
+        n = 0
+        // Unboxed ints sit below PTR_MIN. Array.IsArray on 0x40000000 SIGSEGVs.
+        IfCondition LessThan(times, TypeMagic.PTR_MIN) ThenBlock: {
+            IfCondition LessThan(times, 0) ThenBlock: {
+                n = 0
+            } ElseBlock: {
+                IfCondition GreaterThan(times, 1000000) ThenBlock: {
+                    AIMacro.RaiseKind(22, "OverflowError")
+                    ReturnValue(lst)
+                } ElseBlock: {
+                    n = times
+                }
+            }
+        } ElseBlock: {
+            IfCondition EqualTo(Types.IsFloat(times), 1) ThenBlock: {
+                n = Float_ToInt(AIMacro.FloatBits(times))
+            } ElseBlock: {
+                IfCondition EqualTo(Types.IsBigInt(times), 1) ThenBlock: {
+                    AIMacro.RaiseKind(22, "OverflowError")
+                    ReturnValue(lst)
+                } ElseBlock: {
+                    n = AIMacro.AsIndex(times)
+                }
+            }
+        }
+        IfCondition LessThan(n, 0) ThenBlock: {
+            n = 0
+        }
+        IfCondition GreaterThan(n, 1000000) ThenBlock: {
+            AIMacro.RaiseKind(22, "OverflowError")
+            ReturnValue(lst)
+        }
+        IfCondition EqualTo(n, 0) ThenBlock: {
+            WhileLoop GreaterThan(Array.Size(lst), 0) {
+                Array.Pop(lst)
+            }
+            ReturnValue(lst)
+        }
+        orig = AIMacro.CopyArray(lst)
+        on = Array.Size(orig)
+        i = 1
+        WhileLoop LessThan(i, n) {
+            j = 0
+            WhileLoop LessThan(j, on) {
+                Array.Push(lst, Array.Get(orig, j))
+                j = Add(j, 1)
+            }
+            i = Add(i, 1)
+        }
+        ReturnValue(lst)
+    }
+}
+
+Function.AIMacro.NumIMul {
+    Input: a: Address
+    Input: b: Address
+    Output: Address
+    Body: {
+        IfCondition EqualTo(Array.IsArray(a), 1) ThenBlock: {
+            ReturnValue(AIMacro.ListIMul(a, b))
+        }
+        ReturnValue(AIMacro.NumMul(a, b))
+    }
+}
+
+Function.AIMacro.ListFrom {
+    Input: iterable: Address
+    Output: Address
+    Body: {
+        IfCondition Or(EqualTo(iterable, 0), EqualTo(AIMacro.IsNone(iterable), 1)) ThenBlock: {
+            ReturnValue(AIMacro.EmptyList())
+        }
+        IfCondition EqualTo(Hash.IsHash(iterable), 1) ThenBlock: {
+            skip_unwrap = 0
+            IfCondition EqualTo(OOP.MethodExists(iterable, "__iter__"), 1) ThenBlock: {
+                skip_unwrap = 1
+            }
+            IfCondition EqualTo(OOP.MethodExists(iterable, "__next__"), 1) ThenBlock: {
+                skip_unwrap = 1
+            }
+            IfCondition EqualTo(skip_unwrap, 0) ThenBlock: {
+                wrapped = Hash.Get(iterable, "__list__")
+                IfCondition EqualTo(Array.IsArray(wrapped), 1) ThenBlock: {
+                    ReturnValue(AIMacro.CopyArray(wrapped))
+                }
+                wrapped = Hash.Get(iterable, "__int__")
+                IfCondition EqualTo(Array.IsArray(wrapped), 1) ThenBlock: {
+                    ReturnValue(AIMacro.CopyArray(wrapped))
+                }
+                cls_r = Hash.Get(iterable, "__class__")
+                IfCondition NotEqual(cls_r, 0) ThenBlock: {
+                    IfCondition EqualTo(StringCompare(cls_r, "range"), 0) ThenBlock: {
+                        sp = Hash.Get(iterable, "__span__")
+                        IfCondition GreaterThan(sp, 65536) ThenBlock: {
+                            AIMacro.RaiseKind(23, "MemoryError")
+                            ReturnValue(AIMacro.EmptyList())
+                        }
+                    }
+                }
+            }
+        }
+        it = AIMacro.Iter(iterable)
+        IfCondition EqualTo(AIMacro.ExcPending(), 1) ThenBlock: {
+            ReturnValue(AIMacro.EmptyList())
+        }
+        out = AIMacro.EmptyList()
+        i = 0
+        WhileLoop LessThan(i, 4096) {
+            AIMacro.ExcEnter()
+            v = AIMacro.Next(it)
+            IfCondition EqualTo(AIMacro.ExcPending(), 1) ThenBlock: {
+                k = AIMacro.ExcKind()
+                AIMacro.ExcClear()
+                AIMacro.ExcLeave()
+                IfCondition EqualTo(k, 9) ThenBlock: {
+                    BreakLoop
+                }
+                AIMacro.RaiseKind(k, "list")
+                BreakLoop
+            }
+            AIMacro.ExcLeave()
+            Array.Push(out, v)
+            i = Add(i, 1)
+        }
+        ReturnValue(out)
+    }
+}
+
+Function.AIMacro.Enumerate {
+    Input: iterable: Address
+    Output: Address
+    Body: {
+        ReturnValue(AIMacro.EnumerateFrom(iterable, 0))
+    }
+}
+
+Function.AIMacro.Enumerate2 {
+    Input: iterable: Address
+    Input: start: Address
+    Output: Address
+    Body: {
+        IfCondition EqualTo(Types.IsString(start), 1) ThenBlock: {
+            AIMacro.RaiseKind(5, "enumerate() start must be int")
+            ReturnValue(AIMacro.EnumerateFrom(iterable, 0))
+        }
+        ReturnValue(AIMacro.EnumerateFrom(iterable, AIMacro.UnboxIntZero(start)))
+    }
+}
+
+Function.AIMacro.EnumerateFrom {
+    Input: iterable: Address
+    Input: start: Integer
+    Output: Address
+    Body: {
+        IfCondition Or(EqualTo(iterable, 0), EqualTo(AIMacro.IsNone(iterable), 1)) ThenBlock: {
+            AIMacro.RaiseKind(5, "enumerate() arg is not iterable")
+            h0 = Hash.Create(8)
+            Hash.Set(h0, "__class__", AddressOf(AIMacro.Enumerate))
+            Hash.Set(h0, "__items__", AIMacro.EmptyList())
+            Hash.Set(h0, "__pos__", 0)
+            ReturnValue(h0)
+        }
+        i = start
+        it = AIMacro.Iter(iterable)
+        IfCondition EqualTo(AIMacro.ExcPending(), 1) ThenBlock: {
+            h2 = Hash.Create(8)
+            Hash.Set(h2, "__class__", AddressOf(AIMacro.Enumerate))
+            Hash.Set(h2, "__items__", AIMacro.EmptyList())
+            Hash.Set(h2, "__pos__", 0)
+            ReturnValue(h2)
+        }
+        items = AIMacro.EmptyList()
+        IfCondition EqualTo(Array.IsArray(it), 1) ThenBlock: {
+            n = Array.Size(it)
+            j = 0
+            WhileLoop LessThan(j, n) {
+                pair = AIMacro.ArrayNew(2)
+                Array.Push(pair, Add(start, j))
+                Array.Push(pair, Array.Get(it, j))
+                Array.Push(items, pair)
+                j = Add(j, 1)
+            }
+        } ElseBlock: {
+            n = 0
+            WhileLoop LessThan(n, 4096) {
+                AIMacro.ExcEnter()
+                v = AIMacro.Next(it)
+                IfCondition EqualTo(AIMacro.ExcPending(), 1) ThenBlock: {
+                    k = AIMacro.ExcKind()
+                    AIMacro.ExcClear()
+                    AIMacro.ExcLeave()
+                    IfCondition EqualTo(k, 9) ThenBlock: {
+                        BreakLoop
+                    }
+                    AIMacro.RaiseKind(k, "enumerate")
+                    BreakLoop
+                }
+                AIMacro.ExcLeave()
+                pair = AIMacro.ArrayNew(2)
+                Array.Push(pair, i)
+                Array.Push(pair, v)
+                Array.Push(items, pair)
+                i = Add(i, 1)
+                n = Add(n, 1)
+            }
+        }
+        h = Hash.Create(8)
+        Hash.Set(h, "__class__", AddressOf(AIMacro.Enumerate))
+        Hash.Set(h, "__items__", items)
+        Hash.Set(h, "__pos__", 0)
+        ReturnValue(h)
+    }
+}
+
+
+Function.AIMacro.Zip {
+    Input: list1: Address
+    Input: list2: Address
+    Output: Address
+    Body: {
+        IfCondition EqualTo(AIMacro.SafeIsHash(list1), 1) ThenBlock: {
+            w1 = Hash.Get(list1, "__list__")
+            IfCondition EqualTo(Array.IsArray(w1), 1) ThenBlock: {
+                list1 = w1
+            }
+        }
+        IfCondition EqualTo(AIMacro.SafeIsHash(list2), 1) ThenBlock: {
+            w2 = Hash.Get(list2, "__list__")
+            IfCondition EqualTo(Array.IsArray(w2), 1) ThenBlock: {
+                list2 = w2
+            }
+        }
+        IfCondition EqualTo(Array.IsArray(list1), 0) ThenBlock: {
+            list1 = AIMacro.ListFrom(list1)
+        }
+        IfCondition EqualTo(Array.IsArray(list2), 0) ThenBlock: {
+            list2 = AIMacro.ListFrom(list2)
+        }
+        len1 = Array.Size(list1)
+        len2 = Array.Size(list2)
+        min_len = AIMacro.Min(len1, len2)
+        
+        result = Array.Create(min_len)
+        
+        i = 0
+        WhileLoop LessThan(i, min_len) {
+            item1 = Array.Get(list1, i)
+            item2 = Array.Get(list2, i)
+            // Create pair as XArray so Array.Get works on it
+            pair = Array.Create(2)
+            Array.Push(pair, item1)
+            Array.Push(pair, item2)
+            Array.Push(result, pair)
+            i = Add(i, 1)
+        }
+        
+        ReturnValue(result)
+    }
+}
+
+// map(fn, iterable) — apply CallIndirect(fn, item) to each element
+Function.AIMacro.Map {
+    Input: fn: Address
+    Input: iterable: Address
+    Output: Address
+    Body: {
+        IfCondition EqualTo(iterable, 0) ThenBlock: {
+            ReturnValue(Array.Create(0))
+        }
+        IfCondition EqualTo(AIMacro.IsNone(iterable), 1) ThenBlock: {
+            ReturnValue(Array.Create(0))
+        }
+        IfCondition EqualTo(Array.IsArray(iterable), 0) ThenBlock: {
+            ReturnValue(Array.Create(0))
+        }
+        n = Array.Size(iterable)
+        result = Array.Create(n)
+        i = 0
+        WhileLoop LessThan(i, n) {
+            item = Array.Get(iterable, i)
+            IfCondition EqualTo(fn, 0) ThenBlock: {
+                Array.Push(result, item)
+            } ElseBlock: {
+                Array.Push(result, AIMacro.SmartCall1(fn, item))
+            }
+            i = Add(i, 1)
+        }
+        ReturnValue(result)
+    }
+}
+
+// =============================================================================
+// I/O FUNCTIONS
+// =============================================================================
+
+
+// iter(iterable) — array copy, __iter__/__getitem__, or string chars
+Function.AIMacro.Iter {
+    Input: iterable: Address
+    Output: Address
+    Body: {
+        IfCondition Or(EqualTo(iterable, 0), EqualTo(AIMacro.IsNone(iterable), 1)) ThenBlock: {
+            AIMacro.RaiseKind(5, "iter() arg is not iterable")
+            ReturnValue(AIMacro.EmptyList())
+        }
+        IfCondition EqualTo(Hash.IsHash(iterable), 1) ThenBlock: {
+            empty = AIMacro.EmptyList()
+            IfCondition EqualTo(OOP.MethodExists(iterable, "__iter__"), 1) ThenBlock: {
+                r = OOP.MethodCall(iterable, "__iter__", empty)
+                IfCondition EqualTo(AIMacro.ExcPending(), 1) ThenBlock: {
+                    ReturnValue(AIMacro.EmptyList())
+                }
+                IfCondition EqualTo(Array.IsArray(r), 1) ThenBlock: {
+                    ReturnValue(AIMacro.CopyArray(r))
+                }
+                IfCondition EqualTo(Hash.IsHash(r), 1) ThenBlock: {
+                    IfCondition EqualTo(OOP.MethodExists(r, "__next__"), 1) ThenBlock: {
+                        ReturnValue(r)
+                    }
+                    ritems = Hash.Get(r, "__items__")
+                    IfCondition EqualTo(Array.IsArray(ritems), 1) ThenBlock: {
+                        ReturnValue(r)
+                    }
+                }
+                AIMacro.RaiseKind(5, "iter() returned non-iterator")
+                ReturnValue(AIMacro.EmptyList())
+            }
+            items = Hash.Get(iterable, "__items__")
+            IfCondition EqualTo(Array.IsArray(items), 1) ThenBlock: {
+                ReturnValue(iterable)
+            }
+            wrapped_l = Hash.Get(iterable, "__list__")
+            IfCondition EqualTo(Array.IsArray(wrapped_l), 1) ThenBlock: {
+                ReturnValue(AIMacro.CopyArray(wrapped_l))
+            }
+            IfCondition EqualTo(OOP.MethodExists(iterable, "__getitem__"), 1) ThenBlock: {
+                h = Hash.Create(8)
+                Hash.Set(h, "__class__", "getitemiter")
+                Hash.Set(h, "__src__", iterable)
+                Hash.Set(h, "__pos__", 0)
+                ReturnValue(h)
+            }
+            cls0 = Hash.Get(iterable, "__class__")
+            is_enum = 0
+            walk = cls0
+            eh = 0
+            WhileLoop LessThan(eh, 16) {
+                IfCondition EqualTo(walk, 0) ThenBlock: {
+                    BreakLoop
+                }
+                IfCondition EqualTo(StringCompare(walk, "enumerate"), 0) ThenBlock: {
+                    is_enum = 1
+                    BreakLoop
+                }
+                walk = OOP.ClassGetParent(walk)
+                eh = Add(eh, 1)
+            }
+            IfCondition EqualTo(is_enum, 1) ThenBlock: {
+                src_e = AIMacro.ObjectGet(iterable, "iterable")
+                st_e = AIMacro.ObjectGet(iterable, "start")
+                ReturnValue(AIMacro.Iter(AIMacro.EnumerateFrom(src_e, AIMacro.UnboxIntZero(st_e))))
+            }
+            IfCondition NotEqual(cls0, 0) ThenBlock: {
+                IfCondition EqualTo(StringCompare(cls0, "range"), 0) ThenBlock: {
+                    ReturnValue(AIMacro.RangeItems(iterable))
+                }
+                AIMacro.RaiseKind(5, "object is not iterable")
+                ReturnValue(AIMacro.EmptyList())
+            }
+            ReturnValue(AIMacro.CopyArray(Hash.Keys(iterable)))
+        }
+        IfCondition EqualTo(Array.IsArray(iterable), 1) ThenBlock: {
+            ReturnValue(AIMacro.CopyArray(iterable))
+        }
+        IfCondition EqualTo(AIMacro.LooksLikeString(iterable), 1) ThenBlock: {
+            n = StringLength(iterable)
+            out = AIMacro.ArrayNew(n)
+            i = 0
+            WhileLoop LessThan(i, n) {
+                Array.Push(out, AIMacro.IterGet(iterable, i))
+                i = Add(i, 1)
+            }
+            h = Hash.Create(8)
+            Hash.Set(h, "__class__", "striter")
+            Hash.Set(h, "__items__", out)
+            Hash.Set(h, "__pos__", 0)
+            ReturnValue(h)
+        }
+        AIMacro.RaiseKind(5, "object is not iterable")
+        ReturnValue(AIMacro.EmptyList())
+    }
+}
+
+
+// next(iterator) — advance array-backed iterator (Iter materializes as Array)
+Function.AIMacro.Next {
+    Input: iterator: Address
+    Output: Address
+    Body: {
+        IfCondition EqualTo(AIMacro.ExcPending(), 1) ThenBlock: {
+            ReturnValue(Types.GetNone())
+        }
+        IfCondition EqualTo(iterator, 0) ThenBlock: {
+            AIMacro.RaiseKind(9, "StopIteration")
+            ReturnValue(Types.GetNone())
+        }
+        IfCondition EqualTo(AIMacro.IsNone(iterator), 1) ThenBlock: {
+            AIMacro.RaiseKind(9, "StopIteration")
+            ReturnValue(Types.GetNone())
+        }
+        IfCondition EqualTo(Hash.IsHash(iterator), 1) ThenBlock: {
+            cls = Hash.Get(iterator, "__class__")
+            IfCondition EqualTo(StringCompare(cls, "getitemiter"), 0) ThenBlock: {
+                src = Hash.Get(iterator, "__src__")
+                pos = Hash.Get(iterator, "__pos__")
+                IfCondition EqualTo(OOP.MethodExists(src, "__len__"), 1) ThenBlock: {
+                    empty = AIMacro.EmptyList()
+                    ln = OOP.MethodCall(src, "__len__", empty)
+                    ln = AIMacro.UnboxIntZero(ln)
+                    IfCondition GreaterEqual(pos, ln) ThenBlock: {
+                        AIMacro.RaiseKind(9, "StopIteration")
+                        ReturnValue(Types.GetNone())
+                    }
+                }
+                gargs = Array.Create(1)
+                gidx = pos
+                IfCondition EqualTo(gidx, 0) ThenBlock: {
+                    gidx = AIMacro.IntZero()
+                }
+                Array.Push(gargs, gidx)
+                AIMacro.ExcEnter()
+                item = OOP.MethodCall(src, "__getitem__", gargs)
+                IfCondition EqualTo(AIMacro.ExcPending(), 1) ThenBlock: {
+                    AIMacro.ExcClear()
+                    AIMacro.ExcLeave()
+                    AIMacro.RaiseKind(9, "StopIteration")
+                    ReturnValue(Types.GetNone())
+                }
+                AIMacro.ExcLeave()
+                Hash.Set(iterator, "__pos__", Add(pos, 1))
+                ReturnValue(item)
+            }
+            IfCondition EqualTo(OOP.MethodExists(iterator, "__next__"), 1) ThenBlock: {
+                empty = AIMacro.EmptyList()
+                ReturnValue(OOP.MethodCall(iterator, "__next__", empty))
+            }
+            items = Hash.Get(iterator, "__items__")
+            IfCondition EqualTo(Array.IsArray(items), 1) ThenBlock: {
+                pos = Hash.Get(iterator, "__pos__")
+                IfCondition LessThan(pos, 0) ThenBlock: {
+                    pos = 0
+                }
+                n = Array.Size(items)
+                IfCondition GreaterEqual(pos, n) ThenBlock: {
+                    AIMacro.RaiseKind(9, "StopIteration")
+                    ReturnValue(Types.GetNone())
+                }
+                item = Array.Get(items, pos)
+                Hash.Set(iterator, "__pos__", Add(pos, 1))
+                ReturnValue(item)
+            }
+        }
+        IfCondition EqualTo(Array.IsArray(iterator), 1) ThenBlock: {
+            n = Array.Size(iterator)
+            IfCondition EqualTo(n, 0) ThenBlock: {
+                AIMacro.RaiseKind(9, "StopIteration")
+                ReturnValue(Types.GetNone())
+            }
+            item = Array.Get(iterator, 0)
+            i = 0
+            WhileLoop LessThan(i, Subtract(n, 1)) {
+                Array.Set(iterator, i, Array.Get(iterator, Add(i, 1)))
+                i = Add(i, 1)
+            }
+            Array.Pop(iterator)
+            ReturnValue(item)
+        }
+        AIMacro.RaiseKind(9, "StopIteration")
+        ReturnValue(Types.GetNone())
+    }
+}
+
+Function.AIMacro.GetNone {
+    Output: Address
+    Body: {
+        ReturnValue(Types.GetNone())
+    }
+}
+
+Function.AIMacro.IsNone {
+    Input: value: Address
+    Output: Integer
+    Body: {
+        ReturnValue(Types.IsNone(value))
+    }
+}
+
+Function.AIMacro.SmartBool {
+    Input: value: Address
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(AIMacro.IsNone(value), 1) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(Types.IsBool(value), 1) ThenBlock: {
+            ReturnValue(AIMacro.BoolVal(value))
+        }
+        IfCondition And(GreaterEqual(value, TypeMagic.PTR_MIN), EqualTo(Hash.IsHash(value), 1)) ThenBlock: {
+            IfCondition Or(EqualTo(OOP.MethodExists(value, "__bool__"), 1), EqualTo(OOP.MethodExists(value, "__len__"), 1)) ThenBlock: {
+                ReturnValue(AIMacro.BoolVal(AIMacro.Bool(value)))
+            }
+        }
+        IfCondition EqualTo(Types.IsFloat(value), 1) ThenBlock: {
+            mag = BitwiseAnd(AIMacro.FloatBits(value), 0x7FFFFFFFFFFFFFFF)
+            IfCondition EqualTo(mag, 0) ThenBlock: {
+                ReturnValue(0)
+            }
+            ReturnValue(1)
+        }
+        value = AIMacro.UnboxIntZero(value)
+        IfCondition EqualTo(value, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(Types.IsBigInt(value), 1) ThenBlock: {
+            ReturnValue(1)
+        }
+        IfCondition GreaterEqual(value, TypeMagic.PTR_MIN) ThenBlock: {
+            is_arr = Array.IsArray(value)
+            IfCondition EqualTo(is_arr, 1) ThenBlock: {
+                sz = Array.Size(value)
+                IfCondition EqualTo(sz, 0) ThenBlock: {
+                    ReturnValue(0)
+                }
+                ReturnValue(1)
+            }
+            is_hash = Hash.IsHash(value)
+            IfCondition EqualTo(is_hash, 1) ThenBlock: {
+                sz = Hash.Size(value)
+                IfCondition EqualTo(sz, 0) ThenBlock: {
+                    ReturnValue(0)
+                }
+                ReturnValue(1)
+            }
+        }
+        IfCondition LessThan(value, 4000000) ThenBlock: {
+            ReturnValue(1)
+        }
+        IfCondition EqualTo(AIMacro.IsFile(value), 1) ThenBlock: {
+            ReturnValue(1)
+        }
+        first = GetByte(value, 0)
+        IfCondition EqualTo(first, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        ReturnValue(1)
+    }
+}
+
+Function.AIMacro.StrContains {
+    Input: haystack: Address
+    Input: needle: Address
+    Output: Integer
+    Body: {
+        IfCondition Or(EqualTo(haystack, 0), EqualTo(AIMacro.IsNone(haystack), 1)) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(needle, 0) ThenBlock: {
+            ReturnValue(1)
+        }
+        found = StringIndexOf(haystack, needle, 0)
+        IfCondition GreaterEqual(found, 0) ThenBlock: {
+            ReturnValue(1)
+        }
+        ReturnValue(0)
+    }
+}
+
+Function.AIMacro.IterLen {
+    Input: container: Address
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(Hash.IsHash(container), 1) ThenBlock: {
+            items = Hash.Get(container, "__items__")
+            IfCondition EqualTo(Array.IsArray(items), 1) ThenBlock: {
+                ReturnValue(Array.Size(items))
+            }
+        }
+        n = AIMacro.UnboxIntZero(AIMacro.SmartLen(container))
+        IfCondition LessThan(n, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition GreaterEqual(n, TypeMagic.HEAP_START) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition GreaterThan(n, 65536) ThenBlock: {
+            ReturnValue(65536)
+        }
+        ReturnValue(n)
+    }
+}
+
+Function.AIMacro.IterGet {
+    Input: container: Address
+    Input: index: Integer
+    Output: Address
+    Body: {
+        IfCondition Or(EqualTo(container, 0), EqualTo(AIMacro.IsNone(container), 1)) ThenBlock: {
+            ReturnValue(AIMacro.GetNone())
+        }
+        IfCondition GreaterEqual(container, TypeMagic.PTR_MIN) ThenBlock: {
+            is_hash = Hash.IsHash(container)
+            IfCondition EqualTo(is_hash, 1) ThenBlock: {
+                items = Hash.Get(container, "__items__")
+                IfCondition EqualTo(Array.IsArray(items), 1) ThenBlock: {
+                    ReturnValue(Array.Get(items, index))
+                }
+                items = Hash.Get(container, "__list__")
+                IfCondition EqualTo(Array.IsArray(items), 1) ThenBlock: {
+                    ReturnValue(Array.Get(items, index))
+                }
+                cls_g = Hash.Get(container, "__class__")
+                IfCondition NotEqual(cls_g, 0) ThenBlock: {
+                    IfCondition EqualTo(StringCompare(cls_g, "range"), 0) ThenBlock: {
+                        start = AIMacro.UnboxIntZero(Hash.Get(container, "start"))
+                        step = AIMacro.UnboxIntZero(Hash.Get(container, "step"))
+                        IfCondition EqualTo(step, 0) ThenBlock: {
+                            step = 1
+                        }
+                        ReturnValue(Add(start, Multiply(index, step)))
+                    }
+                }
+                keys = Hash.Keys(container)
+                ReturnValue(Array.Get(keys, index))
+            }
+            is_arr = Array.IsArray(container)
+            IfCondition EqualTo(is_arr, 1) ThenBlock: {
+                ReturnValue(Array.Get(container, index))
+            }
+        }
+        ch = GetByte(container, index)
+        s = Allocate(2)
+        SetByte(s, 0, ch)
+        SetByte(s, 1, 0)
+        ReturnValue(s)
+    }
+}
+
+Function.AIMacro.IsFile {
+    Input: handle: Address
+    Output: Integer
+    Body: {
+        IfCondition Or(EqualTo(handle, 0), LessThan(handle, 4000000)) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(Array.IsArray(handle), 1) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(Hash.IsHash(handle), 1) ThenBlock: {
+            ReturnValue(0)
+        }
+        mag = Dereference(handle)
+        IfCondition EqualTo(mag, 1095518534) ThenBlock: {
+            ReturnValue(1)
+        }
+        ReturnValue(0)
+    }
+}
+
+Function.AIMacro.Open {
+    Input: filename: Address
+    Input: mode: Address
+    Output: Address
+    Body: {
+        flags = 0
+        kind = 1
+        IfCondition NotEqual(mode, 0) ThenBlock: {
+            cmp = StringCompare(mode, "w")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                flags = 577
+                kind = 2
+            }
+            cmp = StringCompare(mode, "wb")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                flags = 577
+                kind = 2
+            }
+            cmp = StringCompare(mode, "a")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                flags = 1089
+                kind = 2
+            }
+            cmp = StringCompare(mode, "ab")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                flags = 1089
+                kind = 2
+            }
+        }
+        fd = SystemCall(2, filename, flags, 420)
+        IfCondition LessThan(fd, 0) ThenBlock: {
+            AIMacro.RaiseKind(4, "No such file")
+            ReturnValue(AIMacro.GetNone())
+        }
+        h = Allocate(24)
+        StoreValue(h, 1095518534)
+        StoreValue(Add(h, 8), fd)
+        StoreValue(Add(h, 16), kind)
+        ReturnValue(h)
+    }
+}
+
+Function.AIMacro.FileRead {
+    Input: handle: Address
+    Output: Address
+    Body: {
+        IfCondition EqualTo(AIMacro.IsFile(handle), 0) ThenBlock: {
+            ReturnValue(AIMacro.GetNone())
+        }
+        fd = Dereference(Add(handle, 8))
+        IfCondition LessThan(fd, 0) ThenBlock: {
+            ReturnValue(AIMacro.GetNone())
+        }
+        sz = SystemCall(8, fd, 0, 2)
+        SystemCall(8, fd, 0, 0)
+        IfCondition LessThan(sz, 0) ThenBlock: {
+            sz = 0
+        }
+        buf = Allocate(Add(sz, 1))
+        IfCondition GreaterThan(sz, 0) ThenBlock: {
+            SystemCall(0, fd, buf, sz)
+        }
+        SetByte(buf, sz, 0)
+        ReturnValue(buf)
+    }
+}
+
+Function.AIMacro.FileReadLine {
+    Input: handle: Address
+    Output: Address
+    Body: {
+        IfCondition EqualTo(AIMacro.IsFile(handle), 0) ThenBlock: {
+            ReturnValue(AIMacro.GetNone())
+        }
+        fd = Dereference(Add(handle, 8))
+        IfCondition LessThan(fd, 0) ThenBlock: {
+            ReturnValue(AIMacro.GetNone())
+        }
+        buf = Allocate(1024)
+        pos = 0
+        WhileLoop LessThan(pos, 1023) {
+            n = SystemCall(0, fd, Add(buf, pos), 1)
+            IfCondition LessEqual(n, 0) ThenBlock: {
+                BreakLoop
+            }
+            ch = GetByte(buf, pos)
+            IfCondition EqualTo(ch, 10) ThenBlock: {
+                pos = Add(pos, 1)
+                BreakLoop
+            }
+            pos = Add(pos, 1)
+        }
+        SetByte(buf, pos, 0)
+        ReturnValue(buf)
+    }
+}
+
+Function.AIMacro.FileWrite {
+    Input: handle: Address
+    Input: data: Address
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(AIMacro.IsFile(handle), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        fd = Dereference(Add(handle, 8))
+        IfCondition LessThan(fd, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(data, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        n = StringLength(data)
+        wrote = SystemCall(1, fd, data, n)
+        ReturnValue(wrote)
+    }
+}
+
+Function.AIMacro.FileClose {
+    Input: handle: Address
+    Body: {
+        IfCondition EqualTo(AIMacro.IsFile(handle), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        fd = Dereference(Add(handle, 8))
+        IfCondition And(GreaterEqual(fd, 3), GreaterEqual(fd, 0)) ThenBlock: {
+            SystemCall(3, fd)
+            StoreValue(Add(handle, 8), Subtract(0, 1))
+        }
+    }
+}
+
+Function.AIMacro.Input {
+    Input: prompt: Address
+    Output: Address
+    Body: {
+        // Print prompt if provided
+        IfCondition NotEqual(prompt, 0) ThenBlock: {
+            plen = StringLength(prompt)
+            IfCondition GreaterThan(plen, 0) ThenBlock: {
+                // syscall write(1, prompt, len)
+                SystemCall(1, 1, prompt, plen)
+            }
+        }
+        
+        buf = Allocate(256)
+        pos = 0
+        
+        // Read char by char until newline
+        WhileLoop LessThan(pos, 255) {
+            // syscall read(0, buf+pos, 1)
+            bytes = SystemCall(0, 0, Add(buf, pos), 1)
+            IfCondition LessEqual(bytes, 0) ThenBlock: {
+                BreakLoop
+            }
+            ch = GetByte(buf, pos)
+            // Stop on newline (10) or carriage return (13)
+            IfCondition EqualTo(ch, 10) ThenBlock: {
+                BreakLoop
+            }
+            IfCondition EqualTo(ch, 13) ThenBlock: {
+                BreakLoop
+            }
+            pos = Add(pos, 1)
+        }
+        
+        // Null terminate (without the newline)
+        SetByte(buf, pos, 0)
+        ReturnValue(buf)
+    }
+}
+
+// =============================================================================
+// LIST METHODS (as functions)
+// =============================================================================
+
+Function.AIMacro.ListAppend {
+    Input: list: Address
+    Input: item: Address
+    Body: {
+        Array.Push(list, item)
+    }
+}
+
+
+
+
+
+
+
+// =============================================================================
+// MATH MODULE FUNCTIONS
+// =============================================================================
+
+Function.AIMacro.Math.Sqrt {
+    Input: value: Integer
+    Output: Address
+    Body: {
+        ReturnValue(AIMacro.FloatBox(Float_Sqrt(AIMacro.ToFloatBits(value))))
+    }
+}
+
+Function.AIMacro.Math.Sin {
+    Input: angle: Integer
+    Output: Address
+    Body: {
+        ReturnValue(AIMacro.FloatBox(Float_Sin(AIMacro.ToFloatBits(angle))))
+    }
+}
+
+Function.AIMacro.Math.Cos {
+    Input: angle: Integer
+    Output: Address
+    Body: {
+        ReturnValue(AIMacro.FloatBox(Float_Cos(AIMacro.ToFloatBits(angle))))
+    }
+}
+
+Function.AIMacro.Math.Pi {
+    Output: Address
+    Body: {
+        ReturnValue(AIMacro.FloatBox(0x400921FB54442D18))
+    }
+}
+
+// =============================================================================
+// SYSTEM FUNCTIONS
+// =============================================================================
+
+Function.AIMacro.Exit {
+    Input: code: Integer
+    Body: {
+        HaltProgram()
+    }
+}
+
+Function.AIMacro.GetCommandLineArgs {
+    Output: Address
+    Body: {
+        ReturnValue(AIMacro.Argv())
+    }
+}
+
+Function.AIMacro.Argv {
+    Output: Address
+    Body: {
+        args = Array.Create(8)
+        fd = SystemCall(2, "/proc/self/cmdline", 0, 420)
+        IfCondition LessThan(fd, 0) ThenBlock: {
+            ReturnValue(args)
+        }
+        buf = Allocate(8192)
+        total = SystemCall(0, fd, buf, 8192)
+        SystemCall(3, fd)
+        IfCondition LessThan(total, 0) ThenBlock: {
+            ReturnValue(args)
+        }
+        off = 0
+        WhileLoop LessThan(off, total) {
+            start = off
+            WhileLoop LessThan(off, total) {
+                ch = GetByte(buf, off)
+                IfCondition EqualTo(ch, 0) ThenBlock: {
+                    BreakLoop
+                }
+                off = Add(off, 1)
+            }
+            alen = Subtract(off, start)
+            IfCondition GreaterThan(alen, 0) ThenBlock: {
+                s = Allocate(Add(alen, 1))
+                j = 0
+                WhileLoop LessThan(j, alen) {
+                    SetByte(s, j, GetByte(buf, Add(start, j)))
+                    j = Add(j, 1)
+                }
+                SetByte(s, alen, 0)
+                Array.Push(args, s)
+            }
+            off = Add(off, 1)
+        }
+        ReturnValue(args)
+    }
+}
+
+Function.AIMacro.StdHandle {
+    Input: fd: Integer
+    Input: kind: Integer
+    Output: Address
+    Body: {
+        h = Allocate(24)
+        StoreValue(h, 1095518534)
+        StoreValue(Add(h, 8), fd)
+        StoreValue(Add(h, 16), kind)
+        ReturnValue(h)
+    }
+}
+
+Function.AIMacro.OsJoin {
+    Input: a: Address
+    Input: b: Address
+    Output: Address
+    Body: {
+        IfCondition EqualTo(a, 0) ThenBlock: {
+            ReturnValue(b)
+        }
+        IfCondition EqualTo(b, 0) ThenBlock: {
+            ReturnValue(a)
+        }
+        alen = StringLength(a)
+        IfCondition EqualTo(alen, 0) ThenBlock: {
+            ReturnValue(b)
+        }
+        last = GetByte(a, Subtract(alen, 1))
+        IfCondition EqualTo(last, 47) ThenBlock: {
+            ReturnValue(String.Concat(a, b))
+        }
+        ReturnValue(String.Concat(String.Concat(a, "/"), b))
+    }
+}
+
+Function.AIMacro.OsExists {
+    Input: path: Address
+    Output: Integer
+    Body: {
+        fd = SystemCall(2, path, 0, 0)
+        IfCondition LessThan(fd, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        SystemCall(3, fd)
+        ReturnValue(1)
+    }
+}
+
+Function.AIMacro.OsBasename {
+    Input: path: Address
+    Output: Address
+    Body: {
+        IfCondition EqualTo(path, 0) ThenBlock: {
+            ReturnValue("")
+        }
+        n = StringLength(path)
+        IfCondition EqualTo(n, 0) ThenBlock: {
+            ReturnValue("")
+        }
+        last = Subtract(n, 1)
+        WhileLoop GreaterThan(last, 0) {
+            IfCondition EqualTo(GetByte(path, last), 47) ThenBlock: {
+                BreakLoop
+            }
+            last = Subtract(last, 1)
+        }
+        start = 0
+        IfCondition EqualTo(GetByte(path, last), 47) ThenBlock: {
+            start = Add(last, 1)
+        }
+        slen = Subtract(n, start)
+        out = Allocate(Add(slen, 1))
+        j = 0
+        WhileLoop LessThan(j, slen) {
+            SetByte(out, j, GetByte(path, Add(start, j)))
+            j = Add(j, 1)
+        }
+        SetByte(out, slen, 0)
+        ReturnValue(out)
+    }
+}
+
+Function.AIMacro.OsDirname {
+    Input: path: Address
+    Output: Address
+    Body: {
+        IfCondition EqualTo(path, 0) ThenBlock: {
+            ReturnValue(".")
+        }
+        n = StringLength(path)
+        last = Subtract(n, 1)
+        WhileLoop GreaterThan(last, 0) {
+            IfCondition EqualTo(GetByte(path, last), 47) ThenBlock: {
+                BreakLoop
+            }
+            last = Subtract(last, 1)
+        }
+        IfCondition EqualTo(last, 0) ThenBlock: {
+            ReturnValue(".")
+        }
+        out = Allocate(Add(last, 1))
+        j = 0
+        WhileLoop LessThan(j, last) {
+            SetByte(out, j, GetByte(path, j))
+            j = Add(j, 1)
+        }
+        SetByte(out, last, 0)
+        ReturnValue(out)
+    }
+}
+
+Function.AIMacro.OsListdir {
+    Input: path: Address
+    Output: Address
+    Body: {
+        names = Array.Create(16)
+        fd = SystemCall(2, path, 65536, 0)
+        IfCondition LessThan(fd, 0) ThenBlock: {
+            fd = SystemCall(2, path, 0, 0)
+        }
+        IfCondition LessThan(fd, 0) ThenBlock: {
+            ReturnValue(names)
+        }
+        buf = Allocate(4096)
+        looping = 1
+        WhileLoop EqualTo(looping, 1) {
+            nread = SystemCall(217, fd, buf, 4096)
+            IfCondition LessEqual(nread, 0) ThenBlock: {
+                looping = 0
+            } ElseBlock: {
+                off = 0
+                WhileLoop LessThan(off, nread) {
+                    reclen = Add(GetByte(buf, Add(off, 16)), Multiply(GetByte(buf, Add(off, 17)), 256))
+                    IfCondition LessEqual(reclen, 0) ThenBlock: {
+                        BreakLoop
+                    }
+                    nstart = Add(off, 19)
+                    nl = 0
+                    WhileLoop LessThan(Add(nstart, nl), Add(off, reclen)) {
+                        IfCondition EqualTo(GetByte(buf, Add(nstart, nl)), 0) ThenBlock: {
+                            BreakLoop
+                        }
+                        nl = Add(nl, 1)
+                    }
+                    skip = 0
+                    IfCondition EqualTo(nl, 1) ThenBlock: {
+                        IfCondition EqualTo(GetByte(buf, nstart), 46) ThenBlock: {
+                            skip = 1
+                        }
+                    }
+                    IfCondition EqualTo(nl, 2) ThenBlock: {
+                        IfCondition And(EqualTo(GetByte(buf, nstart), 46), EqualTo(GetByte(buf, Add(nstart, 1)), 46)) ThenBlock: {
+                            skip = 1
+                        }
+                    }
+                    IfCondition EqualTo(skip, 0) ThenBlock: {
+                        s = Allocate(Add(nl, 1))
+                        j = 0
+                        WhileLoop LessThan(j, nl) {
+                            SetByte(s, j, GetByte(buf, Add(nstart, j)))
+                            j = Add(j, 1)
+                        }
+                        SetByte(s, nl, 0)
+                        Array.Push(names, s)
+                    }
+                    off = Add(off, reclen)
+                }
+            }
+        }
+        SystemCall(3, fd)
+        ReturnValue(names)
+    }
+}
+
+Function.AIMacro.TimeTime {
+    Output: Integer
+    Body: {
+        ts = Allocate(16)
+        SystemCall(228, 0, ts)
+        ReturnValue(Dereference(ts))
+    }
+}
+
+Function.AIMacro.TimeSleep {
+    Input: seconds: Integer
+    Body: {
+        IfCondition LessThan(seconds, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        ts = Allocate(16)
+        StoreValue(ts, seconds)
+        StoreValue(Add(ts, 8), 0)
+        SystemCall(35, ts, 0)
+    }
+}
+
+Function.AIMacro.JsonToNative {
+    Input: tagged: Address
+    Output: Address
+    Body: {
+        IfCondition EqualTo(tagged, 0) ThenBlock: {
+            ReturnValue(Types.GetNone())
+        }
+        vtype = Dereference(tagged)
+        IfCondition EqualTo(vtype, 0) ThenBlock: {
+            ReturnValue(Types.GetNone())
+        }
+        IfCondition EqualTo(vtype, 1) ThenBlock: {
+            ReturnValue(JSON.AsString(tagged))
+        }
+        IfCondition EqualTo(vtype, 2) ThenBlock: {
+            ReturnValue(JSON.AsNumber(tagged))
+        }
+        IfCondition EqualTo(vtype, 3) ThenBlock: {
+            ReturnValue(AIMacro.Bool(JSON.AsBool(tagged)))
+        }
+        IfCondition EqualTo(vtype, 5) ThenBlock: {
+            arr = JSON.AsArray(tagged)
+            n = Array.Size(arr)
+            out = Array.Create(n)
+            i = 0
+            WhileLoop LessThan(i, n) {
+                Array.Push(out, AIMacro.JsonToNative(Array.Get(arr, i)))
+                i = Add(i, 1)
+            }
+            ReturnValue(out)
+        }
+        IfCondition EqualTo(vtype, 4) ThenBlock: {
+            obj = JSON.AsObject(tagged)
+            h = Hash.Create(16)
+            keys = SHash.Keys(obj)
+            n = Array.Size(keys)
+            i = 0
+            WhileLoop LessThan(i, n) {
+                k = Array.Get(keys, i)
+                Hash.Set(h, k, AIMacro.JsonToNative(SHash.Lookup(obj, k)))
+                i = Add(i, 1)
+            }
+            ReturnValue(h)
+        }
+        ReturnValue(Types.GetNone())
+    }
+}
+
+Function.AIMacro.NativeToJSON {
+    Input: value: Address
+    Output: Address
+    Body: {
+        IfCondition EqualTo(AIMacro.IsNone(value), 1) ThenBlock: {
+            ReturnValue(JSON.Tag(0, 0))
+        }
+        IfCondition EqualTo(Types.IsBool(value), 1) ThenBlock: {
+            ReturnValue(JSON.Tag(3, AIMacro.BoolVal(value)))
+        }
+        IfCondition EqualTo(value, 0) ThenBlock: {
+            ReturnValue(JSON.Tag(2, 0))
+        }
+        IfCondition EqualTo(Types.IsFloat(value), 1) ThenBlock: {
+            ReturnValue(JSON.Tag(2, Float_ToInt(AIMacro.FloatBits(value))))
+        }
+        IfCondition GreaterEqual(value, TypeMagic.PTR_MIN) ThenBlock: {
+            is_arr = Array.IsArray(value)
+            IfCondition EqualTo(is_arr, 1) ThenBlock: {
+                ja = JSON.NewArray()
+                n = Array.Size(value)
+                i = 0
+                WhileLoop LessThan(i, n) {
+                    Array.Push(ja, AIMacro.NativeToJSON(Array.Get(value, i)))
+                    i = Add(i, 1)
+                }
+                ReturnValue(JSON.Tag(5, ja))
+            }
+            is_hash = Hash.IsHash(value)
+            IfCondition EqualTo(is_hash, 1) ThenBlock: {
+                jo = JSON.NewObject()
+                keys = Hash.Keys(value)
+                n = Array.Size(keys)
+                i = 0
+                WhileLoop LessThan(i, n) {
+                    k = Array.Get(keys, i)
+                    SHash.Insert(jo, k, AIMacro.NativeToJSON(Hash.Get(value, k)))
+                    i = Add(i, 1)
+                }
+                ReturnValue(JSON.Tag(4, jo))
+            }
+        }
+        IfCondition EqualTo(AIMacro.LooksLikeString(value), 1) ThenBlock: {
+            ReturnValue(JSON.Tag(1, value))
+        }
+        ReturnValue(JSON.Tag(2, value))
+    }
+}
+
+Function.AIMacro.JsonLoads {
+    Input: s: Address
+    Output: Address
+    Body: {
+        tagged = ParseJSON(s)
+        IfCondition EqualTo(tagged, 0) ThenBlock: {
+            AIMacro.RaiseKind(2, "json.loads failed")
+            ReturnValue(Types.GetNone())
+        }
+        ReturnValue(AIMacro.JsonToNative(tagged))
+    }
+}
+
+Function.AIMacro.JsonDumpQuote {
+    Input: s: Address
+    Output: Address
+    Body: {
+        IfCondition EqualTo(s, 0) ThenBlock: {
+            ReturnValue("\"\"")
+        }
+        escaped = JSON.EscapeString(s)
+        ReturnValue(String.Concat("\"", String.Concat(escaped, "\"")))
+    }
+}
+
+Function.AIMacro.JsonDumpNative {
+    Input: value: Address
+    Output: Address
+    Body: {
+        IfCondition EqualTo(AIMacro.IsNone(value), 1) ThenBlock: {
+            ReturnValue("null")
+        }
+        IfCondition EqualTo(Types.IsBool(value), 1) ThenBlock: {
+            IfCondition EqualTo(AIMacro.BoolVal(value), 1) ThenBlock: {
+                ReturnValue("true")
+            }
+            ReturnValue("false")
+        }
+        IfCondition EqualTo(Types.IsFloat(value), 1) ThenBlock: {
+            ReturnValue(AIMacro.FloatStr(value))
+        }
+        IfCondition GreaterEqual(value, TypeMagic.PTR_MIN) ThenBlock: {
+            IfCondition EqualTo(Array.IsArray(value), 1) ThenBlock: {
+                n = Array.Size(value)
+                IfCondition EqualTo(n, 0) ThenBlock: {
+                    ReturnValue("[]")
+                }
+                s = "["
+                i = 0
+                WhileLoop LessThan(i, n) {
+                    IfCondition GreaterThan(i, 0) ThenBlock: {
+                        s = String.Concat(s, ", ")
+                    }
+                    s = String.Concat(s, AIMacro.JsonDumpNative(Array.Get(value, i)))
+                    i = Add(i, 1)
+                }
+                ReturnValue(String.Concat(s, "]"))
+            }
+            IfCondition EqualTo(Hash.IsHash(value), 1) ThenBlock: {
+                keys = Hash.Keys(value)
+                n = Array.Size(keys)
+                IfCondition EqualTo(n, 0) ThenBlock: {
+                    ReturnValue("{}")
+                }
+                s = "{"
+                i = 0
+                WhileLoop LessThan(i, n) {
+                    IfCondition GreaterThan(i, 0) ThenBlock: {
+                        s = String.Concat(s, ", ")
+                    }
+                    k = Array.Get(keys, i)
+                    IfCondition EqualTo(AIMacro.LooksLikeString(k), 1) ThenBlock: {
+                        s = String.Concat(s, AIMacro.JsonDumpQuote(k))
+                    } ElseBlock: {
+                        s = String.Concat(s, AIMacro.JsonDumpQuote(AIMacro.Str(k)))
+                    }
+                    s = String.Concat(s, ": ")
+                    s = String.Concat(s, AIMacro.JsonDumpNative(Hash.Get(value, k)))
+                    i = Add(i, 1)
+                }
+                ReturnValue(String.Concat(s, "}"))
+            }
+        }
+        IfCondition EqualTo(AIMacro.LooksLikeString(value), 1) ThenBlock: {
+            ReturnValue(AIMacro.JsonDumpQuote(value))
+        }
+        ReturnValue(NumberToString(value))
+    }
+}
+
+Function.AIMacro.JsonDumps {
+    Input: value: Address
+    Output: Address
+    Body: {
+        ReturnValue(AIMacro.JsonDumpNative(value))
+    }
+}

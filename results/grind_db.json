@@ -1352,12 +1352,9 @@
     },
     "test_dictviews.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_dictviews.py",
-      "status": "fail",
-      "stage": "compile",
-      "rc": 1,
-      "err": "LINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\nERROR: Variable not found: CustomSet\nCompilation Failed: \n[AST] Freeing 92865 node child-lists...\n[AST] Freed 39635 child-lists (node slots stay in pool)",
-      "out": "",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_dictviews.py",
       "updated": "2026-09-30"
     },
@@ -2785,12 +2782,9 @@
     },
     "test_int.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_int.py",
-      "status": "fail",
-      "stage": "compile",
-      "rc": 1,
-      "err": "LINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\nERROR: Variable not found: CustomStr\nCompilation Failed: \n[AST] Freeing 94507 node child-lists...\n[AST] Freed 40222 child-lists (node slots stay in pool)",
-      "out": "",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_int.py",
       "updated": "2026-09-30"
     },

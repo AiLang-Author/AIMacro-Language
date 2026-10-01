@@ -38,6 +38,7 @@ test_crashers.py
 test_csv.py
 test_defaultdict.py
 test_deque.py
+test_dictviews.py
 test_doctest2.py
 test_eintr.py
 test_email/test_utils.py
@@ -80,6 +81,7 @@ test_importlib/test_threaded_import.py
 test_importlib/test_windows.py
 test_importlib/test_zip.py
 test_index.py
+test_int.py
 test_iterlen.py
 test_json/test_default.py
 test_json/test_encode_basestring_ascii.py
