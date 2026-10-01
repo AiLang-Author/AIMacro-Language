@@ -1054,6 +1054,39 @@ Function.Gen_FlattenExpr {
                 instance_var = OOPGen_InstanceCreation(call_name, args)
                 ReturnValue(Gen_MakeIdent(instance_var))
             }
+
+            // Leftover / callable CALL with n>3: pack + SmartCallN (CallIndirect
+            // is illegal for leftover-0 and exceeds the SysV input cap).
+            n_sc = 0
+            IfCondition NotEqual(args, 0) ThenBlock: {
+                n_sc = Array.Size(args)
+            }
+            IfCondition GreaterThan(n_sc, 3) ThenBlock: {
+                pack = Gen_TempName()
+                Gen_EmitIndent()
+                Gen_Emit(pack)
+                Gen_Emit(" = Array.Create(8)\n")
+                si = 0
+                WhileLoop LessThan(si, n_sc) {
+                    sarg = Array.Get(args, si)
+                    Gen_EmitIndent()
+                    Gen_Emit("Array.Push(")
+                    Gen_Emit(pack)
+                    Gen_Emit(", ")
+                    Gen_Expr(sarg)
+                    Gen_Emit(")\n")
+                    si = Add(si, 1)
+                }
+                temp = Gen_TempName()
+                Gen_EmitIndent()
+                Gen_Emit(temp)
+                Gen_Emit(" = AIMacro.SmartCallN(")
+                Gen_EmitIdent(call_name)
+                Gen_Emit(", ")
+                Gen_Emit(pack)
+                Gen_Emit(")\n")
+                ReturnValue(Gen_MakeIdent(temp))
+            }
             
             // Emit this call to a temp
             temp = Gen_TempName()

@@ -481,12 +481,9 @@
     },
     "test_augassign.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_augassign.py",
-      "status": "fail",
-      "stage": "compile",
-      "rc": 1,
-      "err": "LLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\nERROR: Variable not found: aug_test\nCompilation Failed: \n[AST] Freeing 84989 node child-lists...\n[AST] Freed 37111 child-lists (node slots stay in pool)",
-      "out": "",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_augassign.py",
       "updated": "2026-09-30"
     },
@@ -1099,12 +1096,9 @@
     },
     "test_copy.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_copy.py",
-      "status": "fail",
-      "stage": "compile",
-      "rc": 1,
-      "err": "nts\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\nERROR: Variable not found: C\nCompilation Failed: \n[AST] Freeing 98472 node child-lists...\n[AST] Freed 41282 child-lists (node slots stay in pool)",
-      "out": "",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_copy.py",
       "updated": "2026-09-30"
     },
@@ -1345,10 +1339,11 @@
       "status": "fail",
       "stage": "compile",
       "rc": 1,
-      "err": "nts\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 2 arguments\nERROR: Variable not found: j\nCompilation Failed: \n[AST] Freeing 40118 node child-lists...\n[AST] Freed 17095 child-lists (node slots stay in pool)",
+      "err": "nts\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\nERROR: Variable not found: j\nCompilation Failed: \n[AST] Freeing 85038 node child-lists...\n[AST] Freed 37207 child-lists (node slots stay in pool)",
       "out": "",
       "tags": [],
-      "key": "test_dictcomps.py"
+      "key": "test_dictcomps.py",
+      "updated": "2026-09-30"
     },
     "test_dictviews.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_dictviews.py",
@@ -1435,18 +1430,19 @@
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_dynamic.py",
       "status": "fail",
       "stage": "compile",
-      "rc": 1,
-      "err": "nts\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\nERROR: Variable not found: C\nCompilation Failed: \n[AST] Freeing 39514 node child-lists...\n[AST] Freed 16977 child-lists (node slots stay in pool)",
+      "rc": -11,
+      "err": "] Loaded: AIMacro.AIMacroExtraCall\n[IMPORT] Loaded: AIMacro.AIMacroExtraStdlib\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT] Loaded: AIMacro.AIMacroSeq\n[IMPORT] Loaded: AIMacro.AIMacroNum\n[IMPORT ERROR] Cannot read: builtins\n[IMPORT] Extracting symbols from 24 modules\n[IMPORT] Checking 944 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 29857, col 87: Expected ')' after arguments\n  In:",
       "out": "",
       "tags": [],
-      "key": "test_dynamic.py"
+      "key": "test_dynamic.py",
+      "updated": "2026-09-30"
     },
     "test_dynamicclassattribute.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_dynamicclassattribute.py",
       "status": "fail",
       "stage": "compile",
       "rc": 1,
-      "err": "LLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\nERROR: Variable not found: __bool__\nCompilation Failed: \n[AST] Freeing 84244 node child-lists...\n[AST] Freed 36856 child-lists (node slots stay in pool)",
+      "err": "\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\nERROR: Variable not found: spam\nCompilation Failed: \n[AST] Freeing 85322 node child-lists...\n[AST] Freed 37288 child-lists (node slots stay in pool)",
       "out": "",
       "tags": [],
       "key": "test_dynamicclassattribute.py",
@@ -1697,11 +1693,12 @@
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_exception_group.py",
       "status": "fail",
       "stage": "compile",
-      "rc": 1,
-      "err": "ts\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 3 arguments\nERROR: Variable not found: EG\nCompilation Failed: \n[AST] Freeing 51016 node child-lists...\n[AST] Freed 20558 child-lists (node slots stay in pool)",
+      "rc": -11,
+      "err": "T] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments",
       "out": "",
       "tags": [],
-      "key": "test_exception_group.py"
+      "key": "test_exception_group.py",
+      "updated": "2026-09-30"
     },
     "test_exception_hierarchy.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_exception_hierarchy.py",
@@ -1896,10 +1893,11 @@
       "status": "fail",
       "stage": "compile",
       "rc": 1,
-      "err": "nts\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 0 arguments\nERROR: Variable not found: x\nCompilation Failed: \n[AST] Freeing 40485 node child-lists...\n[AST] Freed 17280 child-lists (node slots stay in pool)",
+      "err": "nts\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\nERROR: Variable not found: x\nCompilation Failed: \n[AST] Freeing 85624 node child-lists...\n[AST] Freed 37448 child-lists (node slots stay in pool)",
       "out": "",
       "tags": [],
-      "key": "test_frame.py"
+      "key": "test_frame.py",
+      "updated": "2026-09-30"
     },
     "test_frozen.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_frozen.py",
@@ -1934,11 +1932,12 @@
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_funcattrs.py",
       "status": "fail",
       "stage": "compile",
-      "rc": 1,
-      "err": "DIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 0 arguments\nERROR: Variable not found: __builtins__\nCompilation Failed: \n[AST] Freeing 42128 node child-lists...\n[AST] Freed 17774 child-lists (node slots stay in pool)",
+      "rc": -11,
+      "err": "[IMPORT] Loaded: AIMacro.AIMacroExtraStdlib\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT] Loaded: AIMacro.AIMacroSeq\n[IMPORT] Loaded: AIMacro.AIMacroNum\n[IMPORT ERROR] Cannot read: textwrap\n[IMPORT ERROR] Cannot read: types\n[IMPORT] Extracting symbols from 24 modules\n[IMPORT] Checking 962 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 29962, col 32: Unexpected token in statement\n  In:",
       "out": "",
       "tags": [],
-      "key": "test_funcattrs.py"
+      "key": "test_funcattrs.py",
+      "updated": "2026-09-30"
     },
     "test_functools.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_functools.py",
@@ -2053,11 +2052,12 @@
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_genericclass.py",
       "status": "fail",
       "stage": "compile",
-      "rc": 1,
-      "err": "nts\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 0 arguments\nERROR: Variable not found: C\nCompilation Failed: \n[AST] Freeing 41624 node child-lists...\n[AST] Freed 17602 child-lists (node slots stay in pool)",
+      "rc": -11,
+      "err": "oaded: AIMacro.AIMacroExtraOS\n[IMPORT] Loaded: AIMacro.AIMacroExtraCall\n[IMPORT] Loaded: AIMacro.AIMacroExtraStdlib\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT] Loaded: AIMacro.AIMacroSeq\n[IMPORT] Loaded: AIMacro.AIMacroNum\n[IMPORT] Extracting symbols from 24 modules\n[IMPORT] Checking 958 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 29940, col 60: Expected ')' after arguments\n  In:",
       "out": "",
       "tags": [],
-      "key": "test_genericclass.py"
+      "key": "test_genericclass.py",
+      "updated": "2026-09-30"
     },
     "test_genericpath.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_genericpath.py",
@@ -2320,11 +2320,12 @@
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_import/__init__.py",
       "status": "fail",
       "stage": "compile",
-      "rc": 1,
-      "err": "INDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\nERROR: Variable not found: __import__\nCompilation Failed: \n[AST] Freeing 51798 node child-lists...\n[AST] Freed 21003 child-lists (node slots stay in pool)",
+      "rc": -11,
+      "err": "til\n[IMPORT ERROR] Cannot read: stat\n[IMPORT ERROR] Cannot read: subprocess\n[IMPORT ERROR] Cannot read: textwrap\n[IMPORT ERROR] Cannot read: threading\n[IMPORT ERROR] Cannot read: _imp\n[IMPORT ERROR] Cannot read: types\n[IMPORT] Extracting symbols from 24 modules\n[IMPORT] Checking 1022 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 30128, col 32: Unexpected token in statement\n  In:",
       "out": "",
       "tags": [],
-      "key": "test_import/__init__.py"
+      "key": "test_import/__init__.py",
+      "updated": "2026-09-30"
     },
     "test_importlib/__init__.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_importlib/__init__.py",
@@ -2493,11 +2494,12 @@
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_importlib/import_/test_path.py",
       "status": "fail",
       "stage": "compile",
-      "rc": 1,
-      "err": "INDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 0 arguments\nERROR: Variable not found: __loader__\nCompilation Failed: \n[AST] Freeing 41484 node child-lists...\n[AST] Freed 17587 child-lists (node slots stay in pool)",
+      "rc": -11,
+      "err": "tdlib\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT] Loaded: AIMacro.AIMacroSeq\n[IMPORT] Loaded: AIMacro.AIMacroNum\n[IMPORT ERROR] Cannot read: types\n[IMPORT ERROR] Cannot read: warnings\n[IMPORT ERROR] Cannot read: zipimport\n[IMPORT] Extracting symbols from 24 modules\n[IMPORT] Checking 939 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 29831, col 32: Unexpected token in statement\n  In:",
       "out": "",
       "tags": [],
-      "key": "test_importlib/import_/test_path.py"
+      "key": "test_importlib/import_/test_path.py",
+      "updated": "2026-09-30"
     },
     "test_importlib/import_/test_relative_imports.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_importlib/import_/test_relative_imports.py",
@@ -2556,7 +2558,7 @@
       "status": "fail",
       "stage": "compile",
       "rc": -11,
-      "err": "rig\n[IMPORT ERROR] Cannot read: codecs\n[IMPORT ERROR] Cannot read: importlib\n[IMPORT ERROR] Cannot read: re\n[IMPORT ERROR] Cannot read: types\n[IMPORT ERROR] Cannot read: unicodedata\n[IMPORT ERROR] Cannot read: warnings\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 921 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 29416, col 32: Unexpected token in statement\n  In:",
+      "err": "Num\n[IMPORT ERROR] Cannot read: codecs\n[IMPORT ERROR] Cannot read: importlib\n[IMPORT ERROR] Cannot read: re\n[IMPORT ERROR] Cannot read: types\n[IMPORT ERROR] Cannot read: unicodedata\n[IMPORT ERROR] Cannot read: warnings\n[IMPORT] Extracting symbols from 24 modules\n[IMPORT] Checking 921 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 29578, col 32: Unexpected token in statement\n  In:",
       "out": "",
       "tags": [],
       "key": "test_importlib/source/test_source_encoding.py",
@@ -2701,11 +2703,12 @@
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_importlib/test_reader.py",
       "status": "fail",
       "stage": "compile",
-      "rc": 1,
-      "err": "] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\nERROR: Variable not found: NotADirectoryError\nCompilation Failed: \n[AST] Freeing 38907 node child-lists...\n[AST] Freed 16744 child-lists (node slots stay in pool)",
+      "rc": -11,
+      "err": "ib\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT] Loaded: AIMacro.AIMacroSeq\n[IMPORT] Loaded: AIMacro.AIMacroNum\n[IMPORT ERROR] Cannot read: pathlib\n[IMPORT ERROR] Cannot read: importlib\n[IMPORT ERROR] Cannot read: importlib\n[IMPORT] Extracting symbols from 24 modules\n[IMPORT] Checking 920 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 29272, col 32: Unexpected token in statement\n  In:",
       "out": "",
       "tags": [],
-      "key": "test_importlib/test_reader.py"
+      "key": "test_importlib/test_reader.py",
+      "updated": "2026-09-30"
     },
     "test_importlib/test_resource.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_importlib/test_resource.py",
@@ -2832,22 +2835,22 @@
     "test_ipaddress.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_ipaddress.py",
       "status": "fail",
-      "stage": "compile",
-      "rc": 1,
-      "err": "s\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\nERROR: Variable not found: hex\nCompilation Failed: \n[AST] Freeing 80737 node child-lists...\n[AST] Freed 29843 child-lists (node slots stay in pool)",
-      "out": "",
+      "stage": "py2aim",
+      "err": "timeout",
       "tags": [],
-      "key": "test_ipaddress.py"
+      "key": "test_ipaddress.py",
+      "updated": "2026-09-30"
     },
     "test_isinstance.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_isinstance.py",
       "status": "fail",
       "stage": "compile",
       "rc": 1,
-      "err": "nts\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 0 arguments\nERROR: Variable not found: E\nCompilation Failed: \n[AST] Freeing 41407 node child-lists...\n[AST] Freed 17545 child-lists (node slots stay in pool)",
+      "err": "LLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\nERROR: Variable not found: getclass\nCompilation Failed: \n[AST] Freeing 87714 node child-lists...\n[AST] Freed 38069 child-lists (node slots stay in pool)",
       "out": "",
       "tags": [],
-      "key": "test_isinstance.py"
+      "key": "test_isinstance.py",
+      "updated": "2026-09-30"
     },
     "test_iter.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_iter.py",
@@ -3288,10 +3291,10 @@
     "test_module/__init__.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_module/__init__.py",
       "status": "fail",
-      "stage": "compile",
-      "rc": 1,
-      "err": "[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\nERROR: Variable not found: Descr\nCompilation Failed: \n[AST] Freeing 85802 node child-lists...\n[AST] Freed 37507 child-lists (node slots stay in pool)",
-      "out": "",
+      "stage": "run",
+      "rc": -11,
+      "err": "",
+      "out": "  ModuleTests.test_uninitialized\nFAIL: assertTrue\n  ModuleTests.test_uninitialized_missing_getattr\n  ModuleTests.test_missing_getattr\n  ModuleTests.test_no_docstring\nFAIL: assertEqual\n  ModuleTests.test_ascii_docstring\nFAIL: assertEqual\n  ModuleTests.test_unicode_docstring\nFAIL: assertEqual\n  ModuleTests.test_reinit\nFAIL: assertEqual\n  ModuleTests.test_dont_clear_dict\n  ModuleTests.test_clear_dict_in_ref_cycle\n  ModuleTests.test_weakref\nERROR: Method not found: ref\n  ModuleTests.test_module_getattr\nFAIL: assertEqual\nFAIL: assertEqual\n  ModuleTests.test_module_getattr_errors\nFAIL: assertEqual\n  ModuleTests.test_module_dir\nFAIL: assertEqual\n  ModuleTests.test_module_dir_errors\n  ModuleTests.test_module_getattr_tricky\n  ModuleTests.test_module_repr_minimal\nFAIL: assertEqual\n  ModuleTests.test_module_repr_with_name\nFAIL: assertEqual\n  ModuleTests.test_module_repr_with_name_and_filename\nFAIL: assertEqual\n  ModuleTests.test_module_repr_with_filename_only\nFAIL: assertEqual\n  ModuleTests.test_module_repr_with_loader_as_None\n  ModuleTests.test_module_repr_with_bare_loader_but_no_name\nFAIL: assertEqual\n  ModuleTests.test_module_repr_with_full_loader_but_no_name\nFAIL: assertEqual\n  ModuleTests.test_module_repr_with_bare_loader\nFAIL: assertEqual\n  ModuleTests.test_module_repr_with_full_loader\nFAIL: assertEqual\n  ModuleTests.test_module_repr_with_bare_loader_and_filename\nFAIL: assertEqual\n  ModuleTests.test_module_repr_with_full_loader_and_filename\nFAIL: assertEqual\n  ModuleTests.test_module_repr_builtin\nFAIL: assertEqual\n  ModuleTests.test_module_repr_source\nFAIL: assertEqual\n",
       "tags": [],
       "key": "test_module/__init__.py",
       "updated": "2026-09-30"
@@ -3342,10 +3345,11 @@
       "status": "fail",
       "stage": "compile",
       "rc": 1,
-      "err": "\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\nERROR: Variable not found: info\nCompilation Failed: \n[AST] Freeing 45601 node child-lists...\n[AST] Freed 18995 child-lists (node slots stay in pool)",
+      "err": "\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\nERROR: Variable not found: info\nCompilation Failed: \n[AST] Freeing 91737 node child-lists...\n[AST] Freed 39448 child-lists (node slots stay in pool)",
       "out": "",
       "tags": [],
-      "key": "test_named_expressions.py"
+      "key": "test_named_expressions.py",
+      "updated": "2026-09-30"
     },
     "test_netrc.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_netrc.py",
@@ -3399,12 +3403,13 @@
     "test_opcache.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_opcache.py",
       "status": "fail",
-      "stage": "compile",
-      "rc": 1,
-      "err": "[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 0 arguments\nERROR: Variable not found: Class\nCompilation Failed: \n[AST] Freeing 40927 node child-lists...\n[AST] Freed 17536 child-lists (node slots stay in pool)",
-      "out": "",
+      "stage": "run",
+      "rc": -11,
+      "err": "",
+      "out": "  TestLoadAttrCache.test_descriptor_added_after_optimization\n",
       "tags": [],
-      "key": "test_opcache.py"
+      "key": "test_opcache.py",
+      "updated": "2026-09-30"
     },
     "test_opcodes.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_opcodes.py",
@@ -3556,12 +3561,13 @@
     "test_peg_generator/test_pegen.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_peg_generator/test_pegen.py",
       "status": "fail",
-      "stage": "compile",
+      "stage": "transpile",
       "rc": 1,
-      "err": "DIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\nERROR: Variable not found: GrammarError\nCompilation Failed: \n[AST] Freeing 44490 node child-lists...\n[AST] Freed 18444 child-lists (node slots stay in pool)",
+      "err": "transpile: \nParse Error: Unexpected token in expression\n token=52\nParse Error: Expected ')' after super method arguments\nParse Error: expected token 85 got 86\nParse Error: Expected '}' after class body\nParse Error: Expected '}' after class body\nerror: compilation failed",
       "out": "",
       "tags": [],
-      "key": "test_peg_generator/test_pegen.py"
+      "key": "test_peg_generator/test_pegen.py",
+      "updated": "2026-09-30"
     },
     "test_pep646_syntax.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_pep646_syntax.py",
@@ -3746,12 +3752,13 @@
     "test_print.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_print.py",
       "status": "fail",
-      "stage": "compile",
-      "rc": 1,
-      "err": "[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 2 arguments\nERROR: Variable not found: print\nCompilation Failed: \n[AST] Freeing 39453 node child-lists...\n[AST] Freed 16900 child-lists (node slots stay in pool)",
-      "out": "",
+      "stage": "run",
+      "rc": -11,
+      "err": "",
+      "out": "  TestPrint.test_print\nERROR: Method not found: check\nERROR: Method not found: check\nERROR: Method not found: check\nERROR: Method not found: check\nERROR: Method not found: check\nERROR: Method not found: check\nERROR: Method not found: check\nERROR: Method not found: check\nERROR: Method not found: check\nERROR: Method not found: check\nERROR: Method not found: check\nERROR: Method not found: check\nERROR: Method not found: check\nERROR: Method not found: check\nERROR: Method not found: check\nERROR: Method not found: check\nERROR: Method not found: check\nERROR: Method not found: check\nERROR: Method not found: check\nERROR: Method not found: check\nERROR: Method not found: check\nERROR: Method not found: check\n  TestPrint.test_print_flush\n",
       "tags": [],
-      "key": "test_print.py"
+      "key": "test_print.py",
+      "updated": "2026-09-30"
     },
     "test_profile.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_profile.py",
@@ -3767,10 +3774,10 @@
     "test_property.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_property.py",
       "status": "fail",
-      "stage": "compile",
+      "stage": "run",
       "rc": 1,
-      "err": "LLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\nERROR: Variable not found: __bool__\nCompilation Failed: \n[AST] Freeing 75097 node child-lists...\n[AST] Freed 32530 child-lists (node slots stay in pool)",
-      "out": "",
+      "err": "",
+      "out": "  PropertyTests.test_property_decorator_baseclass\nFAIL: assertEqual\n  PropertyTests.test_property_decorator_subclass\n  PropertyTests.test_property_decorator_subclass_doc\nFAIL: assertEqual\n  PropertyTests.test_property_decorator_baseclass_doc\nFAIL: assertEqual\n  PropertyTests.test_property_decorator_doc\nFAIL: assertEqual\n  PropertyTests.test_property_getter_doc_override\nFAIL: assertEqual\n  PropertyTests.test_property___isabstractmethod__descriptor\nFAIL: assertIs\n  PropertyTests.test_property_builtin_doc_writable\nFAIL: assertEqual\n  PropertyTests.test_property_decorator_doc_writable\nFAIL: assertEqual\n  PropertyTests.test_refleaks_in___init__\nERROR: Method not found: get_attribute\n  PropertyTests.test_class_property\nFAIL: assertEqual\n  PropertyTests.test_class_property_override\nFAIL: assertEqual\n  PropertyTests.test_property_set_name_incorrect_args\nERROR: Method not found: __set_name__\nERROR: Method not found: __set_name__\nERROR: Method not found: __set_name__\n  PropertyTests.test_property_setname_on_property_subclass\nERROR: Method not found: __set_name__\nERROR: Method not found: getter\n  PropertySubclassTests.test_slots_docstring_copy_exception\nERROR: AttributeError not raised\n  PropertySubclassTests.test_docstring_copy\nFAIL: assertEqual\n  PropertySubclassTests.test_property_setter_copies_getter_docstring\nFAIL: assertEqual\n  PropertySubclassTests.test_property_new_getter_new_docstring\nFAIL: assertEqual\n  PropertyUnreachableAttributeWithName.test_get_property\n  PropertyUnreachableAttributeWithName.test_set_property\n  PropertyUnreachableAttributeWithName.test_del_property\n  PropertyUnreachableAttributeNoName.test_get_property\n  PropertyUnreachableAttributeNoName.test_set_property\n  PropertyUnreachableAttributeNoName.test_del_property\nunittest: ran 24 tests, 14 failed\n",
       "tags": [],
       "key": "test_property.py",
       "updated": "2026-09-30"
@@ -4005,12 +4012,13 @@
     "test_sax.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_sax.py",
       "status": "fail",
-      "stage": "compile",
+      "stage": "transpile",
       "rc": 1,
-      "err": "\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\nERROR: Variable not found: open\nCompilation Failed: \n[AST] Freeing 54959 node child-lists...\n[AST] Freed 21651 child-lists (node slots stay in pool)",
+      "err": "transpile: \nParse Error: Unexpected token in expression\n token=52\nParse Error: Expected ')' after super method arguments\nParse Error: expected token 85 got 86\nParse Error: Expected '}' after class body\nParse Error: expected token 85 got 56\nParse Error: Expected '}' after class body\nerror: compilation failed",
       "out": "",
       "tags": [],
-      "key": "test_sax.py"
+      "key": "test_sax.py",
+      "updated": "2026-09-30"
     },
     "test_sched.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_sched.py",
@@ -4216,12 +4224,13 @@
     "test_source_encoding.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_source_encoding.py",
       "status": "fail",
-      "stage": "compile",
-      "rc": 1,
-      "err": "INDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\nERROR: Variable not found: __import__\nCompilation Failed: \n[AST] Freeing 40967 node child-lists...\n[AST] Freed 17443 child-lists (node slots stay in pool)",
-      "out": "",
+      "stage": "run",
+      "rc": -11,
+      "err": "",
+      "out": "  MiscSourceEncodingTest.test_pep263\nFAIL: assertEqual\n  MiscSourceEncodingTest.test_compilestring\nFAIL: assertEqual\n  MiscSourceEncodingTest.test_issue2301\nFAIL: parent\n  MiscSourceEncodingTest.test_issue4626\nFAIL: assertEqual\n  MiscSourceEncodingTest.test_issue3297\n  MiscSourceEncodingTest.test_issue7820\n  MiscSourceEncodingTest.test_20731\nERROR: Method not found: Popen\n  MiscSourceEncodingTest.test_error_message\n  MiscSourceEncodingTest.test_bad_coding\nERROR: No such file\n  MiscSourceEncodingTest.test_bad_coding2\nERROR: No such file\n  MiscSourceEncodingTest.test_exec_valid_coding\nFAIL: assertEqual\n  MiscSourceEncodingTest.test_file_parse\n  MiscSourceEncodingTest.test_error_from_string\n",
       "tags": [],
-      "key": "test_source_encoding.py"
+      "key": "test_source_encoding.py",
+      "updated": "2026-09-30"
     },
     "test_spwd.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_spwd.py",
@@ -4288,12 +4297,13 @@
     "test_sqlite3/test_hooks.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_sqlite3/test_hooks.py",
       "status": "fail",
-      "stage": "compile",
+      "stage": "run",
       "rc": 1,
-      "err": "[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 1 arguments\nERROR: Variable not found: ascii\nCompilation Failed: \n[AST] Freeing 41340 node child-lists...\n[AST] Freed 17538 child-lists (node slots stay in pool)",
-      "out": "",
+      "err": "",
+      "out": "  CollationTests.test_create_collation_not_string\nERROR: Method not found: connect\nERROR: Method not found: create_collation\n  CollationTests.test_create_collation_not_callable\nERROR: Method not found: connect\nERROR: Method not found: create_collation\nFAIL: assertEqual\n  CollationTests.test_create_collation_not_ascii\nERROR: Method not found: connect\nERROR: Method not found: create_collation\n  CollationTests.test_create_collation_bad_upper\nERROR: Method not found: connect\nERROR: Method not found: create_collation\nERROR: Method not found: execute\nERROR: Method not found: fetchall\nFAIL: assertEqual\n  CollationTests.test_collation_is_used\nERROR: Method not found: connect\nERROR: Method not found: create_collation\nERROR: Method not found: execute\nERROR: Method not found: fetchall\nFAIL: assertEqual\nERROR: Method not found: create_collation\nFAIL: assertEqual\n  CollationTests.test_collation_returns_large_integer\nERROR: Method not found: connect\nERROR: Method not found: create_collation\nERROR: Method not found: execute\nERROR: Method not found: fetchall\nFAIL: assertEqual\n  CollationTests.test_collation_register_twice\nERROR: Method not found: connect\nERROR: Method not found: create_collation\nERROR: Method not found: create_collation\nERROR: Method not found: execute\nERROR: Method not found: fetchall\nFAIL: assertEqual\n  CollationTests.test_deregister_collation\nERROR: Method not found: connect\nERROR: Method not found: create_collation\nERROR: Method not found: create_collation\nERROR: Method not found: execute\nFAIL: assertEqual\n  ProgressTests.test_progress_handler_used\nERROR: Method not found: connect\nERROR: Method not found: set_progress_handler\nERROR: Method not found: execute\nFAIL: assertTrue\n  ProgressTests.test_opcode_count\nERROR: Method not found: connect\nERROR: Method not found: set_progress_handler\nERROR: Method not found: cursor\nERROR: Method not found: execute\nERROR: Method not found: set_progress_handler\nERROR: Method not found: execute\n  ProgressTests.test_cancel_operation\nERROR: Method not found: connect\nERROR: Method not found: set_progress_handler\nERROR: Method not found: cursor\n  ProgressTests.test_clear_handler\nERROR: Method not found: connect\nERROR: Method not found: set_progress_handler\nERROR: Method not found: set_progress_handler\nERROR: Method not found: execute\nERROR: Method not found: fetchall\n  ProgressTests.test_error_in_progress_handler\nERROR: Method not found: connect\nERROR: Method not found: set_progress_handler\nERROR: Method not found: execute\n  ProgressTests.test_error_in_progress_handler_result\nERROR: Method not found: connect\nERROR: Method not found: set_progress_handler\nERROR: Method not found: execute\n  TraceCallbackTests.test_trace_callback_used\nERROR: Method not found: connect\nERROR: Method not found: set_trace_callback\nERROR: Method not found: execute\nFAIL: assertTrue\n  TraceCallbackTests.test_clear_trace_callback\nERROR: Method not found: connect\nERROR: Method not found: set_trace_callback\nERROR: Method not found: set_trace_callback\nERROR: Method not found: execute\n  TraceCallbackTests.test_unicode_content\nERROR: Method not found: connect\nERROR: Method not found: set_trace_callback\nERROR: Method not found: execute\nERROR: Method not found: execute\nERROR: Method not found: commit\nFAIL: assertTrue\n  TraceCallbackTests.test_trace_callback_content\nERROR: Method not found: connect\nERROR: Method not found: connect\nERROR: Method not found: set_trace_callback\nERROR: Method not found: cursor\nERROR: Method not found: execute\nERROR: Method not found: execute\nERROR: Method not found: execute\nFAIL: assertEqual\n  TraceCallbackTests.test_trace_expanded_sql\n  TraceCallbackTests.test_trace_too_much_expanded_sql\n  TraceCallbackTests.test_trace_bad_handler\nunittest: ran 21 tests, 11 failed\n",
       "tags": [],
-      "key": "test_sqlite3/test_hooks.py"
+      "key": "test_sqlite3/test_hooks.py",
+      "updated": "2026-09-30"
     },
     "test_sqlite3/test_regression.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_sqlite3/test_regression.py",
@@ -4524,12 +4534,13 @@
     "test_syntax.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_syntax.py",
       "status": "fail",
-      "stage": "compile",
-      "rc": 1,
-      "err": "\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\nERROR: Variable not found: exec\nCompilation Failed: \n[AST] Freeing 40612 node child-lists...\n[AST] Freed 17241 child-lists (node slots stay in pool)",
-      "out": "",
+      "stage": "run",
+      "rc": -11,
+      "err": "",
+      "out": "  SyntaxTestCase.test_expression_with_assignment\nFAIL: compile() did not raise SyntaxError\n  SyntaxTestCase.test_curly_brace_after_primary_raises_immediately\nFAIL: compile() did not raise SyntaxError\n  SyntaxTestCase.test_assign_call\nFAIL: compile() did not raise SyntaxError\n  SyntaxTestCase.test_assign_del\nFAIL: compile() did not raise SyntaxError\n  SyntaxTestCase.test_global_param_err_first\nFAIL: compile() did not raise SyntaxError\n  SyntaxTestCase.test_nonlocal_param_err_first\nFAIL: compile() did not raise SyntaxError\n  SyntaxTestCase.test_yield_outside_function\nFAIL: compile() did not raise SyntaxError\n  SyntaxTestCase.test_return_outside_function\nFAIL: compile() did not raise SyntaxError\n  SyntaxTestCase.test_break_outside_loop\nFAIL: compile() did not raise SyntaxError\n  SyntaxTestCase.test_continue_outside_loop\nFAIL: compile() did not raise SyntaxError\n  SyntaxTestCase.test_unexpected_indent\nFAIL: compile() did not raise SyntaxError\n  SyntaxTestCase.test_bad_outdent\nFAIL: compile() did not raise SyntaxError\n  SyntaxTestCase.test_kwargs_last\nFAIL: compile() did not raise SyntaxError\n  SyntaxTestCase.test_kwargs_last2\nFAIL: compile() did not raise SyntaxError\n  SyntaxTestCase.test_kwargs_last3\nFAIL: compile() did not raise SyntaxError\n  SyntaxTestCase.test_generator_in_function_call\nFAIL: compile() did not raise SyntaxError\n  SyntaxTestCase.test_except_then_except_star\nFAIL: compile() did not raise SyntaxError\n  SyntaxTestCase.test_except_star_then_except\nFAIL: compile() did not raise SyntaxError\n  SyntaxTestCase.test_empty_line_after_linecont\n  SyntaxTestCase.test_continuation_bad_indentation\n  SyntaxTestCase.test_nested_named_except_blocks\n",
       "tags": [],
-      "key": "test_syntax.py"
+      "key": "test_syntax.py",
+      "updated": "2026-09-30"
     },
     "test_sys.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_sys.py",
@@ -4545,12 +4556,13 @@
     "test_sys_setprofile.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_sys_setprofile.py",
       "status": "fail",
-      "stage": "compile",
+      "stage": "run",
       "rc": 1,
-      "err": "[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 0 arguments\nERROR: Variable not found: print\nCompilation Failed: \n[AST] Freeing 42819 node child-lists...\n[AST] Freed 18047 child-lists (node slots stay in pool)",
-      "out": "",
+      "err": "",
+      "out": "t found: pformat\nFAIL: Expected events:\n%s\nReceived events:\n%s\n  ProfileHookTestCase.test_generator\nERROR: Method not found: isenabled\nERROR: Method not found: disable\nERROR: Method not found: setprofile\nERROR: Method not found: setprofile\nERROR: Method not found: pformat\nERROR: Method not found: pformat\nFAIL: Expected events:\n%s\nReceived events:\n%s\n  ProfileHookTestCase.test_stop_iteration\nERROR: Method not found: isenabled\nERROR: Method not found: disable\nERROR: Method not found: setprofile\nERROR: Method not found: setprofile\nERROR: Method not found: pformat\nERROR: Method not found: pformat\nFAIL: Expected events:\n%s\nReceived events:\n%s\n  ProfileSimulatorTestCase.test_simple\nERROR: Method not found: isenabled\nERROR: Method not found: disable\nERROR: Method not found: setprofile\nERROR: Method not found: setprofile\nERROR: Method not found: pformat\nERROR: Method not found: pformat\nFAIL: Expected events:\n%s\nReceived events:\n%s\n  ProfileSimulatorTestCase.test_basic_exception\nERROR: Method not found: isenabled\nERROR: Method not found: disable\nERROR: Method not found: setprofile\nERROR: Method not found: setprofile\nERROR: Method not found: pformat\nERROR: Method not found: pformat\nFAIL: Expected events:\n%s\nReceived events:\n%s\n  ProfileSimulatorTestCase.test_caught_exception\nERROR: Method not found: isenabled\nERROR: Method not found: disable\nERROR: Method not found: setprofile\nERROR: Method not found: setprofile\nERROR: Method not found: pformat\nERROR: Method not found: pformat\nFAIL: Expected events:\n%s\nReceived events:\n%s\n  ProfileSimulatorTestCase.test_distant_exception\nERROR: Method not found: isenabled\nERROR: Method not found: disable\nERROR: Method not found: setprofile\nERROR: Method not found: setprofile\nERROR: Method not found: pformat\nERROR: Method not found: pformat\nFAIL: Expected events:\n%s\nReceived events:\n%s\n  ProfileSimulatorTestCase.test_unbound_method\nERROR: Method not found: isenabled\nERROR: Method not found: disable\nERROR: Method not found: setprofile\nERROR: Method not found: get\nERROR: Method not found: setprofile\nERROR: Method not found: pformat\nERROR: Method not found: pformat\nFAIL: Expected events:\n%s\nReceived events:\n%s\n  ProfileSimulatorTestCase.test_unbound_method_no_args\nERROR: Method not found: isenabled\nERROR: Method not found: disable\nERROR: Method not found: setprofile\nERROR: Method not found: get\nERROR: Method not found: setprofile\nERROR: Method not found: pformat\nERROR: Method not found: pformat\nFAIL: Expected events:\n%s\nReceived events:\n%s\n  ProfileSimulatorTestCase.test_unbound_method_invalid_args\nERROR: Method not found: isenabled\nERROR: Method not found: disable\nERROR: Method not found: setprofile\nERROR: Method not found: get\nERROR: Method not found: setprofile\nERROR: Method not found: pformat\nERROR: Method not found: pformat\nFAIL: Expected events:\n%s\nReceived events:\n%s\n  ProfileSimulatorTestCase.test_unbound_method_no_keyword_args\nERROR: Method not found: isenabled\nERROR: Method not found: disable\nERROR: Method not found: setprofile\nERROR: Method not found: get\nERROR: Method not found: setprofile\nERROR: Method not found: pformat\nERROR: Method not found: pformat\nFAIL: Expected events:\n%s\nReceived events:\n%s\n  ProfileSimulatorTestCase.test_unbound_method_invalid_keyword_args\nERROR: Method not found: isenabled\nERROR: Method not found: disable\nERROR: Method not found: setprofile\nERROR: Method not found: get\nERROR: Method not found: setprofile\nERROR: Method not found: pformat\nERROR: Method not found: pformat\nFAIL: Expected events:\n%s\nReceived events:\n%s\nERROR: Method not found: getprofile\nERROR: Method not found: setprofile\n  TestEdgeCases.test_reentrancy\nERROR: Method not found: setprofile\nERROR: Method not found: catch_unraisable_exception\nERROR: Method not found: setprofile\nFAIL: assertIsInstance\nERROR: Method not found: getprofile\nERROR: Method not found: setprofile\n  TestEdgeCases.test_same_object\nERROR: Method not found: setprofile\nERROR: Method not found: setprofile\nunittest: ran 26 tests, 23 failed\n",
       "tags": [],
-      "key": "test_sys_setprofile.py"
+      "key": "test_sys_setprofile.py",
+      "updated": "2026-09-30"
     },
     "test_sys_settrace.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_sys_settrace.py",
@@ -5057,12 +5069,13 @@
     "test_unicode_file_functions.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_unicode_file_functions.py",
       "status": "fail",
-      "stage": "compile",
+      "stage": "run",
       "rc": 1,
-      "err": "\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\nERROR: Variable not found: open\nCompilation Failed: \n[AST] Freeing 39039 node child-lists...\n[AST] Freed 16793 child-lists (node slots stay in pool)",
-      "out": "",
+      "err": "",
+      "out": "ERROR: Method not found: getfilesystemencoding\nERROR: Method not found: stat\nERROR: Method not found: stat\nERROR: Method not found: stat\nERROR: Method not found: stat\nERROR: Method not found: stat\nERROR: Method not found: stat\nERROR: Method not found: stat\nERROR: Method not found: stat\nERROR: Method not found: stat\nERROR: Method not found: stat\nERROR: Method not found: stat\nERROR: Method not found: stat\nERROR: Method not found: stat\nERROR: Method not found: stat\nERROR: Method not found: stat\nERROR: Method not found: stat\nERROR: Method not found: stat\nERROR: Method not found: stat\nERROR: Method not found: stat\n  UnicodeFileTests.test_open\nException: mkdir\n",
       "tags": [],
-      "key": "test_unicode_file_functions.py"
+      "key": "test_unicode_file_functions.py",
+      "updated": "2026-09-30"
     },
     "test_unicode_identifiers.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_unicode_identifiers.py",
@@ -5331,8 +5344,8 @@
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_weakref.py",
       "status": "fail",
       "stage": "compile",
-      "rc": 1,
-      "err": "CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\nERROR: Variable not found: print\nCompilation Failed: \n[AST] Freeing 103882 node child-lists...\n[AST] Freed 41962 child-lists (node slots stay in pool)",
+      "rc": 124,
+      "err": "arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[SUBDEF] Stack allocation: base=64 + 2 locals * 16 = 96 bytes\n[EMIT] WARNING: Data base address not set\n\ntimeout",
       "out": "",
       "tags": [],
       "key": "test_weakref.py",

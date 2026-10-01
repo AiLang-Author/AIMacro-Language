@@ -9,6 +9,7 @@
 LibraryImport.Array
 LibraryImport.AIMacro.AIMacroCore
 LibraryImport.AIMacro.AIMacroParserCore
+LibraryImport.AIMacro.AIMacroCodeGenOOP
 
 // =============================================================================
 // CODE GENERATOR STATE
@@ -844,6 +845,21 @@ Function.Gen_EmitIdent {
             Gen_EmitNumber(4)
             ReturnValue(0)
         }
+        cmp = StringCompare(name, "NotADirectoryError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(4)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "IsADirectoryError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(4)
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "GrammarError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(24)
+            ReturnValue(0)
+        }
         cmp = StringCompare(name, "TypeError")
         IfCondition EqualTo(cmp, 0) ThenBlock: {
             Gen_EmitNumber(5)
@@ -1452,7 +1468,67 @@ Function.Gen_EmitIdent {
             Gen_Emit(name)
             ReturnValue(0)
         }
+        // Leftover IDENT: class object is the compile-time name string.
+        IfCondition EqualTo(OOPGen_IsClassName(name), 1) ThenBlock: {
+            rn = OOPGen_RenameOf(name)
+            Gen_Emit("\"")
+            IfCondition NotEqual(rn, 0) ThenBlock: {
+                Gen_Emit(rn)
+            } ElseBlock: {
+                Gen_Emit(name)
+            }
+            Gen_Emit("\"")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(Gen_IsImportStub(name), 1) ThenBlock: {
+            Gen_Emit("Types.GetNone()")
+            ReturnValue(0)
+        }
+        // Leftover IDENT builtin as a value (print in Array.Push / NumBitShr).
+        // Before leftover dunder so __import__ is AddressOf(NoOp), not GetNone.
+        mapped_id = Gen_LeftoverIdentMapped(name)
+        IfCondition NotEqual(mapped_id, 0) ThenBlock: {
+            Gen_Emit(mapped_id)
+            ReturnValue(0)
+        }
+        // Leftover dunder used as a value (__bool__, __builtins__, __loader__).
+        IfCondition And(EqualTo(GetByte(name, 0), 95), EqualTo(GetByte(name, 1), 95)) ThenBlock: {
+            Gen_Emit("Types.GetNone()")
+            ReturnValue(0)
+        }
         Gen_Emit(name)
+    }
+}
+
+Function.Gen_LeftoverIdentMapped {
+    Input: name: Address
+    Output: Address
+    Body: {
+        cmp = StringCompare(name, "print")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AddressOf(AIMacro.Print)") }
+        cmp = StringCompare(name, "hex")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AddressOf(AIMacro.HexStr)") }
+        cmp = StringCompare(name, "ascii")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AddressOf(AIMacro.Repr)") }
+        cmp = StringCompare(name, "open")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AddressOf(AIMacro.Open)") }
+        cmp = StringCompare(name, "input")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AddressOf(AIMacro.Input)") }
+        cmp = StringCompare(name, "__import__")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AddressOf(AIMacro.NoOp)") }
+        cmp = StringCompare(name, "oct")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AddressOf(AIMacro.NoOp)") }
+        cmp = StringCompare(name, "bin")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AddressOf(AIMacro.NoOp)") }
+        cmp = StringCompare(name, "vars")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AddressOf(AIMacro.NoOp)") }
+        cmp = StringCompare(name, "dir")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AddressOf(AIMacro.NoOp)") }
+        cmp = StringCompare(name, "exec")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AddressOf(AIMacro.Exec)") }
+        cmp = StringCompare(name, "compile")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AddressOf(AIMacro.PyCompile)") }
+        ReturnValue(0)
     }
 }
 
@@ -1608,6 +1684,26 @@ Function.Gen_NodeHasYield {
             IfCondition EqualTo(Gen_StmtsHaveYield(ArrayGet(node, 3)), 1) ThenBlock: {
                 ReturnValue(1)
             }
+            IfCondition EqualTo(Gen_StmtsHaveYield(ArrayGet(node, 5)), 1) ThenBlock: {
+                ReturnValue(1)
+            }
+            excepts = ArrayGet(node, 4)
+            IfCondition NotEqual(excepts, 0) ThenBlock: {
+                IfCondition EqualTo(Array.IsArray(excepts), 1) ThenBlock: {
+                    ei = 0
+                    en = Array.Size(excepts)
+                    WhileLoop LessThan(ei, en) {
+                        ex = Array.Get(excepts, ei)
+                        IfCondition EqualTo(Gen_StmtsHaveYield(ArrayGet(ex, 4)), 1) ThenBlock: {
+                            ReturnValue(1)
+                        }
+                        ei = Add(ei, 1)
+                    }
+                }
+            }
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t, Node.WITH_STMT) ThenBlock: {
             ReturnValue(Gen_StmtsHaveYield(ArrayGet(node, 5)))
         }
         ReturnValue(0)

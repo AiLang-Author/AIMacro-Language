@@ -257,6 +257,16 @@ Function.Gen_Node {
                 ReturnValue(0)
             }
             Gen_FlattenCallArgs(node)
+            cargs = ArrayGet(node, 4)
+            cn = 0
+            IfCondition NotEqual(cargs, 0) ThenBlock: {
+                cn = Array.Size(cargs)
+            }
+            IfCondition GreaterThan(cn, 3) ThenBlock: {
+                Gen_EmitPackedSmartCall(cname, cargs)
+                Gen_Emit("\n")
+                ReturnValue(0)
+            }
             Gen_EmitIndent()
             Gen_CallExpr(node)
             Gen_Emit("\n")

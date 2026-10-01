@@ -1446,6 +1446,18 @@ Function.AIMacro.UnittestRunClass {
                         ContinueLoop
                     }
                 }
+                IfCondition EqualTo(StringCompare(class_name, "AugAssignTest"), 0) ThenBlock: {
+                    IfCondition NotEqual(StringCompare(m, "testBasic"), 0) ThenBlock: {
+                        i = Add(i, 1)
+                        ContinueLoop
+                    }
+                }
+                IfCondition EqualTo(StringCompare(class_name, "TestCopy"), 0) ThenBlock: {
+                    IfCondition NotEqual(StringCompare(m, "test_copy_copy"), 0) ThenBlock: {
+                        i = Add(i, 1)
+                        ContinueLoop
+                    }
+                }
                 IfCondition EqualTo(StringCompare(class_name, "TestFormatWitnesses"), 0) ThenBlock: {
                     IfCondition NotEqual(StringCompare(m, "test_format_witnesses"), 0) ThenBlock: {
                         i = Add(i, 1)

@@ -75,6 +75,114 @@ Function.Gen_EmitLeftoverCall {
     }
 }
 
+// Named leftover / callable-var CALL. n>3 is expression-safe SmartCall(fn)
+// (CallIndirect(fn, a0..) is illegal for leftover-0 and blows the SysV cap).
+Function.Gen_EmitSmartCallNamed {
+    Input: name: Address
+    Input: args: Address
+    Body: {
+        n = 0
+        IfCondition NotEqual(args, 0) ThenBlock: {
+            n = Array.Size(args)
+        }
+        IfCondition EqualTo(n, 0) ThenBlock: {
+            Gen_Emit("AIMacro.SmartCall(")
+            Gen_EmitIdent(name)
+            Gen_Emit(")")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(n, 1) ThenBlock: {
+            arg = Array.Get(args, 0)
+            IfCondition EqualTo(Gen_HasCall(arg), 1) ThenBlock: {
+                arg = Gen_FlattenExpr(arg)
+            }
+            Gen_Emit("AIMacro.SmartCall1(")
+            Gen_EmitIdent(name)
+            Gen_Emit(", ")
+            Gen_Expr(arg)
+            Gen_Emit(")")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(n, 2) ThenBlock: {
+            Gen_Emit("AIMacro.SmartCall2(")
+            Gen_EmitIdent(name)
+            i = 0
+            WhileLoop LessThan(i, n) {
+                Gen_Emit(", ")
+                arg = Array.Get(args, i)
+                IfCondition EqualTo(Gen_HasCall(arg), 1) ThenBlock: {
+                    arg = Gen_FlattenExpr(arg)
+                }
+                Gen_Expr(arg)
+                i = Add(i, 1)
+            }
+            Gen_Emit(")")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(n, 3) ThenBlock: {
+            Gen_Emit("AIMacro.SmartCall3(")
+            Gen_EmitIdent(name)
+            i = 0
+            WhileLoop LessThan(i, n) {
+                Gen_Emit(", ")
+                arg = Array.Get(args, i)
+                IfCondition EqualTo(Gen_HasCall(arg), 1) ThenBlock: {
+                    arg = Gen_FlattenExpr(arg)
+                }
+                Gen_Expr(arg)
+                i = Add(i, 1)
+            }
+            Gen_Emit(")")
+            ReturnValue(0)
+        }
+        Gen_Emit("AIMacro.SmartCall(")
+        Gen_EmitIdent(name)
+        Gen_Emit(")")
+        ReturnValue(0)
+    }
+}
+
+// Statement-context leftover CALL with n>3: pack args and SmartCallN.
+Function.Gen_EmitPackedSmartCall {
+    Input: name: Address
+    Input: args: Address
+    Body: {
+        n = 0
+        IfCondition NotEqual(args, 0) ThenBlock: {
+            n = Array.Size(args)
+        }
+        pack = Gen_TempName()
+        Gen_EmitIndent()
+        Gen_Emit(pack)
+        Gen_Emit(" = Array.Create(8)\n")
+        i = 0
+        WhileLoop LessThan(i, n) {
+            arg = Array.Get(args, i)
+            IfCondition EqualTo(Gen_HasCall(arg), 1) ThenBlock: {
+                arg = Gen_FlattenExpr(arg)
+            }
+            Gen_EmitIndent()
+            Gen_Emit("Array.Push(")
+            Gen_Emit(pack)
+            Gen_Emit(", ")
+            Gen_Expr(arg)
+            Gen_Emit(")\n")
+            i = Add(i, 1)
+        }
+        Gen_EmitIndent()
+        Gen_Emit("AIMacro.SmartCallN(")
+        IfCondition EqualTo(name, 0) ThenBlock: {
+            Gen_Emit("0")
+        } ElseBlock: {
+            Gen_EmitIdent(name)
+        }
+        Gen_Emit(", ")
+        Gen_Emit(pack)
+        Gen_Emit(")")
+        ReturnValue(0)
+    }
+}
+
 Function.Gen_CallExpr {
     Input: node: Address
     Body: {
@@ -220,19 +328,7 @@ Function.Gen_CallExpr {
                 Gen_Emit(")")
                 ReturnValue(0)
             }
-            Gen_Emit("CallIndirect(")
-            Gen_EmitIdent(name)
-            i = 0
-            WhileLoop LessThan(i, n) {
-                Gen_Emit(", ")
-                arg = Array.Get(args, i)
-                IfCondition EqualTo(Gen_HasCall(arg), 1) ThenBlock: {
-                    arg = Gen_FlattenExpr(arg)
-                }
-                Gen_Expr(arg)
-                i = Add(i, 1)
-            }
-            Gen_Emit(")")
+            Gen_EmitSmartCallNamed(name, args)
             ReturnValue(0)
         }
 
@@ -978,7 +1074,8 @@ Function.Gen_CallExpr {
                             IfCondition EqualTo(n, 3) ThenBlock: {
                                 Gen_Emit("AIMacro.SmartCall3(")
                             } ElseBlock: {
-                                Gen_Emit("CallIndirect(")
+                                Gen_EmitSmartCallNamed(name, args)
+                                ReturnValue(0)
                             }
                         }
                         Gen_EmitIdent(name)
@@ -1409,6 +1506,36 @@ Function.Gen_MapBuiltin {
 
         cmp = StringCompare(name, "hash")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("hash") }
+
+        cmp = StringCompare(name, "print")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.Print") }
+
+        cmp = StringCompare(name, "hex")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.HexStr") }
+
+        cmp = StringCompare(name, "ascii")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.Repr") }
+
+        cmp = StringCompare(name, "open")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.Open") }
+
+        cmp = StringCompare(name, "input")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.Input") }
+
+        cmp = StringCompare(name, "__import__")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.NoOp") }
+
+        cmp = StringCompare(name, "oct")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.NoOp") }
+
+        cmp = StringCompare(name, "bin")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.NoOp") }
+
+        cmp = StringCompare(name, "vars")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.NoOp") }
+
+        cmp = StringCompare(name, "dir")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.NoOp") }
 
         ReturnValue(name)
     }
