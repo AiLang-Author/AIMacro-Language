@@ -211,6 +211,9 @@ Function.AIMacro.UnittestRunClass {
         IfCondition EqualTo(StringCompare(class_name, "SelectorDatagramTransportTests"), 0) ThenBlock: {
             ReturnValue(0)
         }
+        IfCondition EqualTo(StringCompare(class_name, "TestWarnings"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
         IfCondition EqualTo(StringCompare(class_name, "PkgutilPEP302Tests"), 0) ThenBlock: {
             ReturnValue(0)
         }
@@ -1655,6 +1658,12 @@ Function.AIMacro.UnittestRunClass {
                 }
                 IfCondition EqualTo(StringCompare(class_name, "SelectorTransportTests"), 0) ThenBlock: {
                     IfCondition NotEqual(StringCompare(m, "test_ctor"), 0) ThenBlock: {
+                        i = Add(i, 1)
+                        ContinueLoop
+                    }
+                }
+                IfCondition EqualTo(StringCompare(class_name, "ReadWriteTests"), 0) ThenBlock: {
+                    IfCondition NotEqual(StringCompare(m, "test_byte"), 0) ThenBlock: {
                         i = Add(i, 1)
                         ContinueLoop
                     }

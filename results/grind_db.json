@@ -21,7 +21,7 @@
       "out": "",
       "tags": [],
       "key": "test__locale.py",
-      "updated": "2026-09-30"
+      "updated": "2026-10-02"
     },
     "test__opcode.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test__opcode.py",
@@ -523,7 +523,7 @@
       "out": "  BytesTest.test_concat\n  BytesTest.test_optimized_concat\n  StrTest.test_concat\n",
       "tags": [],
       "key": "test_bigaddrspace.py",
-      "updated": "2026-09-30"
+      "updated": "2026-10-02"
     },
     "test_bigmem.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_bigmem.py",
@@ -699,14 +699,11 @@
     },
     "test_capi/test_structmembers.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_capi/test_structmembers.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": -11,
-      "err": "",
-      "out": "",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_capi/test_structmembers.py",
-      "updated": "2026-09-30"
+      "updated": "2026-10-02"
     },
     "test_capi/test_unicode.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_capi/test_unicode.py",
@@ -852,7 +849,7 @@
       "out": "ERROR: Method not found: load_teststring\nERROR: Method not found: load_teststring\nERROR: Method not found: load_teststring\nERROR: Method not found: load_teststring\nERROR: Method not found: load_teststring\nERROR: Method not found: load_teststring\nERROR: Method not found: load_teststring\nERROR: Method not found: load_teststring\nunittest: ran 0 tests, 0 failed\nunittest: TestCase scheduled but 0 tests ran\n",
       "tags": [],
       "key": "test_codecencodings_cn.py",
-      "updated": "2026-09-30"
+      "updated": "2026-10-02"
     },
     "test_codecencodings_hk.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_codecencodings_hk.py",
@@ -915,7 +912,7 @@
       "out": "unittest: ran 0 tests, 0 failed\nunittest: TestCase scheduled but 0 tests ran\n",
       "tags": [],
       "key": "test_codecmaps_cn.py",
-      "updated": "2026-09-30"
+      "updated": "2026-10-02"
     },
     "test_codecmaps_hk.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_codecmaps_hk.py",
@@ -1304,7 +1301,7 @@
       "out": "Exception: \n",
       "tags": [],
       "key": "test_devpoll.py",
-      "updated": "2026-09-30"
+      "updated": "2026-10-02"
     },
     "test_dict.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_dict.py",
@@ -1663,7 +1660,7 @@
       "out": "Exception: \n",
       "tags": [],
       "key": "test_epoll.py",
-      "updated": "2026-09-30"
+      "updated": "2026-10-02"
     },
     "test_errno.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_errno.py",
@@ -1858,7 +1855,7 @@
       "out": "Exception: \n",
       "tags": [],
       "key": "test_fork1.py",
-      "updated": "2026-09-30"
+      "updated": "2026-10-02"
     },
     "test_format.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_format.py",
@@ -2243,12 +2240,12 @@
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_http_cookies.py",
       "status": "fail",
       "stage": "run",
-      "rc": 0,
-      "err": "no tests ran",
-      "out": "unittest: ran 0 tests, 0 failed\n",
+      "rc": -11,
+      "err": "",
+      "out": "  MorselTests.test_defaults\nERROR: Method not found: keys\n",
       "tags": [],
       "key": "test_http_cookies.py",
-      "updated": "2026-09-30"
+      "updated": "2026-10-02"
     },
     "test_httplib.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_httplib.py",
@@ -2818,7 +2815,7 @@
       "out": "Exception: No such file\n",
       "tags": [],
       "key": "test_ioctl.py",
-      "updated": "2026-09-30"
+      "updated": "2026-10-02"
     },
     "test_ipaddress.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_ipaddress.py",
@@ -3048,7 +3045,7 @@
       "out": "Exception: \n",
       "tags": [],
       "key": "test_kqueue.py",
-      "updated": "2026-09-30"
+      "updated": "2026-10-02"
     },
     "test_largefile.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_largefile.py",
@@ -3314,13 +3311,13 @@
     "test_multiprocessing_main_handling.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_multiprocessing_main_handling.py",
       "status": "fail",
-      "stage": "run",
+      "stage": "compile",
       "rc": 1,
-      "err": "",
-      "out": "ERROR: Method not found: get_all_start_methods\nERROR: Method not found: skip_if_broken_multiprocessing_synchronize\nException: %r start method not available\n",
+      "err": "T] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\nERROR: Variable not found: _make_test_script\nCompilation Failed: \n[AST] Freeing 85659 node child-lists...\n[AST] Freed 37580 child-lists (node slots stay in pool)",
+      "out": "",
       "tags": [],
       "key": "test_multiprocessing_main_handling.py",
-      "updated": "2026-09-30"
+      "updated": "2026-10-02"
     },
     "test_named_expressions.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_named_expressions.py",
@@ -3915,7 +3912,7 @@
       "out": "Exception: \n",
       "tags": [],
       "key": "test_repl.py",
-      "updated": "2026-09-30"
+      "updated": "2026-10-02"
     },
     "test_reprlib.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_reprlib.py",
@@ -4651,10 +4648,10 @@
       "stage": "run",
       "rc": -11,
       "err": "",
-      "out": "ERROR: Method not found: getpid\nERROR: Method not found: allocate_lock\n",
+      "out": "ERROR: Method not found: getpid\n",
       "tags": [],
       "key": "test_threadsignals.py",
-      "updated": "2026-09-30"
+      "updated": "2026-10-02"
     },
     "test_time.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_time.py",
@@ -5021,10 +5018,10 @@
       "stage": "run",
       "rc": 1,
       "err": "",
-      "out": "ERROR: Method not found: getfilesystemencoding\nERROR: Method not found: stat\nERROR: Method not found: stat\nERROR: Method not found: stat\nERROR: Method not found: stat\nERROR: Method not found: stat\nERROR: Method not found: stat\nERROR: Method not found: stat\nERROR: Method not found: stat\nERROR: Method not found: stat\nERROR: Method not found: stat\nERROR: Method not found: stat\nERROR: Method not found: stat\nERROR: Method not found: stat\nERROR: Method not found: stat\nERROR: Method not found: stat\nERROR: Method not found: stat\nERROR: Method not found: stat\nERROR: Method not found: stat\nERROR: Method not found: stat\n  UnicodeFileTests.test_open\nException: mkdir\n",
+      "out": "ERROR: Method not found: getfilesystemencoding\nException: mkdir\n",
       "tags": [],
       "key": "test_unicode_file_functions.py",
-      "updated": "2026-09-30"
+      "updated": "2026-10-02"
     },
     "test_unicode_identifiers.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_unicode_identifiers.py",
@@ -5257,7 +5254,7 @@
       "out": "Exception: \n",
       "tags": [],
       "key": "test_wait3.py",
-      "updated": "2026-09-30"
+      "updated": "2026-10-02"
     },
     "test_wait4.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_wait4.py",
@@ -5268,7 +5265,7 @@
       "out": "Exception: \n",
       "tags": [],
       "key": "test_wait4.py",
-      "updated": "2026-09-30"
+      "updated": "2026-10-02"
     },
     "test_warnings/__init__.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_warnings/__init__.py",
@@ -5469,10 +5466,10 @@
       "stage": "run",
       "rc": 1,
       "err": "",
-      "out": "ound: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: writestr\nERROR: Method not found: namelist\nFAIL: assertEqual\nERROR: Method not found: ZipFile\nException: No such file\n",
+      "out": "ERROR: Method not found: requires\nException: No such file\n",
       "tags": [],
       "key": "test_zipfile64.py",
-      "updated": "2026-09-30"
+      "updated": "2026-10-02"
     },
     "test_zipimport.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_zipimport.py",

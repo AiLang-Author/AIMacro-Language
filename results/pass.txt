@@ -23,6 +23,7 @@ test_c_locale_coercion.py
 test_capi/test_codecs.py
 test_capi/test_eval_code_ex.py
 test_capi/test_getargs.py
+test_capi/test_structmembers.py
 test_cgitb.py
 test_charmapcodec.py
 test_check_c_globals.py
