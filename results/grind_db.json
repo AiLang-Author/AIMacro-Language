@@ -624,7 +624,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_c_locale_coercion.py",
-      "updated": "2026-09-30"
+      "updated": "2026-10-02"
     },
     "test_calendar.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_calendar.py",
@@ -1148,7 +1148,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_csv.py",
-      "updated": "2026-09-30"
+      "updated": "2026-10-02"
     },
     "test_ctypes.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_ctypes.py",
@@ -1313,12 +1313,9 @@
     },
     "test_dict_version.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_dict_version.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": 1,
-      "err": "",
-      "out": "  DictVersionTests.test_constructor\nERROR: add\nunittest: ran 1 tests, 1 failed\n",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_dict_version.py",
       "updated": "2026-10-02"
     },
@@ -1545,7 +1542,7 @@
       "stage": "run",
       "rc": -11,
       "err": "",
-      "out": "ERROR: Method not found: splitlines\n",
+      "out": "",
       "tags": [],
       "key": "test_email/test_inversion.py",
       "updated": "2026-10-02"
@@ -1785,7 +1782,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_fileinput.py",
-      "updated": "2026-09-30"
+      "updated": "2026-10-02"
     },
     "test_fileio.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_fileio.py",
@@ -2141,7 +2138,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_graphlib.py",
-      "updated": "2026-09-30"
+      "updated": "2026-10-02"
     },
     "test_grp.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_grp.py",
@@ -2299,7 +2296,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_imp.py",
-      "updated": "2026-09-30"
+      "updated": "2026-10-02"
     },
     "test_import/__init__.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_import/__init__.py",
@@ -3605,7 +3602,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_pkgutil.py",
-      "updated": "2026-09-30"
+      "updated": "2026-10-02"
     },
     "test_platform.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_platform.py",
@@ -3749,7 +3746,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_pstats.py",
-      "updated": "2026-09-30"
+      "updated": "2026-10-02"
     },
     "test_pty.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_pty.py",
@@ -4095,7 +4092,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_signal.py",
-      "updated": "2026-09-30"
+      "updated": "2026-10-02"
     },
     "test_site.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_site.py",
@@ -4418,7 +4415,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_structseq.py",
-      "updated": "2026-09-30"
+      "updated": "2026-10-02"
     },
     "test_subclassinit.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_subclassinit.py",
@@ -5012,7 +5009,7 @@
       "stage": "run",
       "rc": 1,
       "err": "",
-      "out": "ERROR: Method not found: getfilesystemencoding\nException: mkdir\n",
+      "out": "unittest: ran 0 tests, 0 failed\nunittest: TestCase scheduled but 0 tests ran\n",
       "tags": [],
       "key": "test_unicode_file_functions.py",
       "updated": "2026-10-02"
@@ -5297,7 +5294,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_weakset.py",
-      "updated": "2026-09-30"
+      "updated": "2026-10-02"
     },
     "test_webbrowser.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_webbrowser.py",
@@ -5444,7 +5441,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_zipapp.py",
-      "updated": "2026-09-30"
+      "updated": "2026-10-02"
     },
     "test_zipfile.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_zipfile.py",

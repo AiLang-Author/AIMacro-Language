@@ -84,6 +84,9 @@ Function.AIMacro.Mkdir {
             md = AIMacro.UnboxIntZero(mode)
         }
         mrc = SystemCall(83, path, md)
+        IfCondition EqualTo(mrc, -17) ThenBlock: {
+            ReturnValue(Types.GetNone())
+        }
         IfCondition LessThan(mrc, 0) ThenBlock: {
             AIMacro.RaiseKind(4, "mkdir")
             ReturnValue(0)

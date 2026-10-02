@@ -44,6 +44,7 @@ test_crashers.py
 test_csv.py
 test_defaultdict.py
 test_deque.py
+test_dict_version.py
 test_dictviews.py
 test_doctest2.py
 test_eintr.py
