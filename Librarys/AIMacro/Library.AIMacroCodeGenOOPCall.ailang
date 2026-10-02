@@ -564,6 +564,10 @@ Function.OOPGen_EmitClassRegistration {
             IfCondition EqualTo(cmp_tc, 0) ThenBlock: {
                 is_test = 1
             }
+            cmp_tc = StringCompare(parent, "TestEmailBase")
+            IfCondition EqualTo(cmp_tc, 0) ThenBlock: {
+                is_test = 1
+            }
             cmp_ex = StringCompare(parent, "Exception")
             cmp_be = StringCompare(parent, "BaseException")
             cmp_ob = StringCompare(parent, "object")
@@ -582,6 +586,9 @@ Function.OOPGen_EmitClassRegistration {
             WhileLoop LessThan(bjm, nbsm) {
                 bnmm = Array.Get(bases, bjm)
                 IfCondition EqualTo(StringCompare(bnmm, "TestCase"), 0) ThenBlock: {
+                    is_test = 1
+                }
+                IfCondition EqualTo(StringCompare(bnmm, "TestEmailBase"), 0) ThenBlock: {
                     is_test = 1
                 }
                 IfCondition EqualTo(OOPGen_LooksLikeTestClass(bnmm), 1) ThenBlock: {

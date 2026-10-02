@@ -25,6 +25,7 @@ test_capi/test_codecs.py
 test_capi/test_eval_code_ex.py
 test_capi/test_getargs.py
 test_capi/test_structmembers.py
+test_cgi.py
 test_cgitb.py
 test_charmapcodec.py
 test_check_c_globals.py
@@ -48,6 +49,7 @@ test_dict_version.py
 test_dictviews.py
 test_doctest2.py
 test_eintr.py
+test_email/test_asian_codecs.py
 test_email/test_utils.py
 test_enumerate.py
 test_eof.py
