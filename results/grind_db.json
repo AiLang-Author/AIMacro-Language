@@ -63,12 +63,9 @@
     },
     "test_abstract_numbers.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_abstract_numbers.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": 1,
-      "err": "",
-      "out": "  TestNumbers.test_int\nFAIL: assertEqual\nunittest: ran 1 tests, 1 failed\n",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_abstract_numbers.py",
       "updated": "2026-10-02"
     },

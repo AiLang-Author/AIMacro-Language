@@ -1,5 +1,6 @@
 test__opcode.py
 test__osx_support.py
+test_abstract_numbers.py
 test_aifc.py
 test_asynchat.py
 test_asyncio/test_context.py

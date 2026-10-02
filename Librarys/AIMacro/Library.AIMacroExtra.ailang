@@ -546,9 +546,15 @@ Function.AIMacro.ObjectGet {
                 IfCondition EqualTo(Types.IsBool(obj), 1) ThenBlock: {
                     ReturnValue(AIMacro.BoolVal(obj))
                 }
+                IfCondition EqualTo(Types.IsFloat(obj), 1) ThenBlock: {
+                    ReturnValue(obj)
+                }
+                IfCondition And(And(EqualTo(AIMacro.LooksLikeString(obj), 0), EqualTo(Array.IsArray(obj), 0)), EqualTo(AIMacro.SafeIsHash(obj), 0)) ThenBlock: {
+                    ReturnValue(obj)
+                }
             }
             IfCondition EqualTo(StringCompare(field, "imag"), 0) ThenBlock: {
-                IfCondition EqualTo(Types.IsBool(obj), 1) ThenBlock: {
+                IfCondition And(And(EqualTo(AIMacro.LooksLikeString(obj), 0), EqualTo(Array.IsArray(obj), 0)), EqualTo(AIMacro.SafeIsHash(obj), 0)) ThenBlock: {
                     ReturnValue(0)
                 }
             }
