@@ -29,8 +29,10 @@ python3 tools/aimacro_cpython_runner.py --full \
 ```
 
 `./AIMacro/scripts/run_conformance.sh` is the remaining grind. One `ailang.x`
-at a time, `RLIMIT_AS` 4 GiB, 2 s CPU and 2 s wall per child. Longer than that
-is a stall or a perf hole.
+at a time, `RLIMIT_AS` 4 GiB, 10 s CPU and 10 s wall per child. A 2 s cap
+killed real tests (`test_enumerate.py`). 90 s wall on 31 large py2aim
+files is about 45 min of timeouts; the earlier unbounded run swapped the
+box. `killpg` stays. 10 s still kills a tight loop.
 
 See [CONFORMANCE.md](CONFORMANCE.md).
 

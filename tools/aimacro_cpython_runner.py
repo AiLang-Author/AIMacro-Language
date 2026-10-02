@@ -9,7 +9,7 @@ results/grind_db.json is the living database. Passing files are dropped from the
 grind until --full. Work a batch with --only @results/batch10.txt. When remaining
 is empty, rerun --full.
 
-Pipeline per file (one ailang.x at a time, RLIMIT_AS 4GiB, 2s CPU / 2s wall):
+Pipeline per file (one ailang.x at a time, RLIMIT_AS 4GiB, 10s CPU / 10s wall):
   1. py2aim.py     indent Python → AIMacro `{ }`
   2. ./aimacro.x   .aim → .ailang
   3. ./ailang.x    compile
@@ -40,12 +40,14 @@ from collections import Counter
 from datetime import date
 from pathlib import Path
 
-# One ailang.x at a time. 4 GiB AS. 2s CPU / 2s wall per child: the compiler
-# does 3 MB in ~0.67s and ELFs start in ~5ms. Longer than that is a stall
-# or a perf hole, not a wait we should sit on.
+# One ailang.x at a time. 4 GiB AS. 10s CPU / 10s wall per child.
+# 2s killed real tests (enumerate). 90s wall on 31 large py2aim files
+# is ~45 min of timeouts; unbounded compile swapped the box. killpg
+# stays. 10s still kills a tight loop. RLIMIT_CPU hard equals soft.
+# --timeout sets both.
 RSS_AS_BYTES = 4 * 1024 * 1024 * 1024
-CPU_SEC = 2
-DEFAULT_TIMEOUT = 2.0
+CPU_SEC = 10
+DEFAULT_TIMEOUT = 10.0
 LOCK_PATH = Path("/tmp/aimacro-runner.lock")
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -474,8 +476,8 @@ def main() -> int:
         "--timeout",
         type=float,
         default=DEFAULT_TIMEOUT,
-        help="Wall seconds per child (py2aim, aimacro, ailang, ELF). Default 2. "
-        "A hit is a stall or a perf hole.",
+        help="Wall seconds per child (py2aim, aimacro, ailang, ELF). Default 10. "
+        "RLIMIT_CPU uses the same ceiling. A hit is a stall or a perf hole.",
     )
     ap.add_argument("--output-json", type=Path)
     ap.add_argument("--output-md", type=Path)
@@ -513,6 +515,8 @@ def main() -> int:
         help="Run these Lib/test relative paths (or @file with one path per line).",
     )
     args = ap.parse_args()
+    global CPU_SEC
+    CPU_SEC = max(1, int(args.timeout) if float(args.timeout) == int(args.timeout) else int(args.timeout) + 1)
 
     lock_f = open(LOCK_PATH, "w")
     try:
