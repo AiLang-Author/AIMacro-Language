@@ -1491,8 +1491,29 @@ Function.Gen_EmitIdent {
             Gen_Emit(mapped_id)
             ReturnValue(0)
         }
-        // Leftover dunder used as a value (__bool__, __builtins__, __loader__).
-        IfCondition And(EqualTo(GetByte(name, 0), 95), EqualTo(GetByte(name, 1), 95)) ThenBlock: {
+        // Leftover module dunders as values. Do not GetNone __index__/__str__/...
+        cmp = StringCompare(name, "__bool__")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_Emit("Types.GetNone()")
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "__builtins__")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_Emit("Types.GetNone()")
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "__loader__")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_Emit("Types.GetNone()")
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "__spec__")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_Emit("Types.GetNone()")
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "__cached__")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
             Gen_Emit("Types.GetNone()")
             ReturnValue(0)
         }
