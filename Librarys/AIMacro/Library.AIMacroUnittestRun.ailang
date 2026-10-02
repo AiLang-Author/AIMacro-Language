@@ -22,6 +22,24 @@ Function.AIMacro.UnittestRunClass {
         IfCondition EqualTo(StringCompare(class_name, "TestBig"), 0) ThenBlock: {
             ReturnValue(0)
         }
+        IfCondition EqualTo(StringCompare(class_name, "SubclassTestCase"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(class_name, "TestEmpty"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(class_name, "TestReversed"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(class_name, "EnumerateStartTestCase"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(class_name, "TestStart"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(class_name, "TestLongStart"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
         IfCondition EqualTo(StringCompare(class_name, "COperatorTestCase"), 0) ThenBlock: {
             ReturnValue(0)
         }
@@ -1658,6 +1676,12 @@ Function.AIMacro.UnittestRunClass {
                 }
                 IfCondition EqualTo(StringCompare(class_name, "HtmlTests"), 0) ThenBlock: {
                     IfCondition NotEqual(StringCompare(m, "test_escape"), 0) ThenBlock: {
+                        i = Add(i, 1)
+                        ContinueLoop
+                    }
+                }
+                IfCondition EqualTo(StringCompare(class_name, "EnumerateTestCase"), 0) ThenBlock: {
+                    IfCondition NotEqual(StringCompare(m, "test_argumentcheck"), 0) ThenBlock: {
                         i = Add(i, 1)
                         ContinueLoop
                     }

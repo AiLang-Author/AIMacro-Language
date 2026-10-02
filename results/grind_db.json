@@ -80,22 +80,24 @@
     "test_argparse.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_argparse.py",
       "status": "fail",
-      "stage": "py2aim",
-      "err": "timeout",
+      "stage": "transpile",
+      "rc": 1,
+      "err": "transpile: \nParse Error: Expected ')' after super method arguments\nParse Error: Expected '}' after class body\nerror: compilation failed",
+      "out": "",
       "tags": [],
       "key": "test_argparse.py",
-      "updated": "2026-09-30"
+      "updated": "2026-10-02"
     },
     "test_array.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_array.py",
       "status": "fail",
-      "stage": "compile",
-      "rc": 124,
-      "err": "ments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 4 arguments\n\ntimeout",
-      "out": "",
+      "stage": "run",
+      "rc": 1,
+      "err": "",
+      "out": "ERROR: Method not found: array\nunittest: ran 0 tests, 0 failed\nunittest: TestCase scheduled but 0 tests ran\n",
       "tags": [],
       "key": "test_array.py",
-      "updated": "2026-09-30"
+      "updated": "2026-10-02"
     },
     "test_asdl_parser.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_asdl_parser.py",
@@ -111,11 +113,13 @@
     "test_ast.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_ast.py",
       "status": "fail",
-      "stage": "py2aim",
-      "err": "timeout",
+      "stage": "transpile",
+      "rc": 1,
+      "err": "transpile: \nParse Error: Unexpected token in expression\n token=52\nParse Error: Expected ')' after super method arguments\nParse Error: expected token 85 got 86\nParse Error: Expected '}' after class body\nParse Error: expected token 85 got 56\nParse Error: Expected '}' after class body\nerror: compilation failed",
+      "out": "",
       "tags": [],
       "key": "test_ast.py",
-      "updated": "2026-09-30"
+      "updated": "2026-10-02"
     },
     "test_asyncgen.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_asyncgen.py",
@@ -180,11 +184,13 @@
     "test_asyncio/test_events.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_asyncio/test_events.py",
       "status": "fail",
-      "stage": "py2aim",
-      "err": "timeout",
+      "stage": "transpile",
+      "rc": 1,
+      "err": "transpile: \nParse Error: Expected ')' after super method arguments\nParse Error: Expected '}' after class body\nParse Error: expected token 85 got 3\nParse Error: Expected '}' after class body\nerror: compilation failed",
+      "out": "",
       "tags": [],
       "key": "test_asyncio/test_events.py",
-      "updated": "2026-09-30"
+      "updated": "2026-10-02"
     },
     "test_asyncio/test_futures.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_asyncio/test_futures.py",
@@ -312,7 +318,7 @@
       "out": "",
       "tags": [],
       "key": "test_asyncio/test_ssl.py",
-      "updated": "2026-09-30"
+      "updated": "2026-10-02"
     },
     "test_asyncio/test_sslproto.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_asyncio/test_sslproto.py",
@@ -341,11 +347,11 @@
       "status": "fail",
       "stage": "compile",
       "rc": -11,
-      "err": "l\n[IMPORT ERROR] Cannot read: signal\n[IMPORT ERROR] Cannot read: textwrap\n[IMPORT ERROR] Cannot read: warnings\n[IMPORT ERROR] Cannot read: asyncio\n[IMPORT ERROR] Cannot read: asyncio\n[IMPORT ERROR] Cannot read: asyncio\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 975 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 29462, col 32: Unexpected token in statement\n  In:",
+      "err": "l\n[IMPORT ERROR] Cannot read: signal\n[IMPORT ERROR] Cannot read: textwrap\n[IMPORT ERROR] Cannot read: warnings\n[IMPORT ERROR] Cannot read: asyncio\n[IMPORT ERROR] Cannot read: asyncio\n[IMPORT ERROR] Cannot read: asyncio\n[IMPORT] Extracting symbols from 24 modules\n[IMPORT] Checking 975 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 29844, col 32: Unexpected token in statement\n  In:",
       "out": "",
       "tags": [],
       "key": "test_asyncio/test_subprocess.py",
-      "updated": "2026-09-30"
+      "updated": "2026-10-02"
     },
     "test_asyncio/test_taskgroups.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_asyncio/test_taskgroups.py",
@@ -361,11 +367,13 @@
     "test_asyncio/test_tasks.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_asyncio/test_tasks.py",
       "status": "fail",
-      "stage": "py2aim",
-      "err": "timeout",
+      "stage": "transpile",
+      "rc": 1,
+      "err": "transpile: \nParse Error: Unexpected token in expression\n token=52\nParse Error: Expected ')' after super method arguments\nParse Error: expected token 85 got 86\nParse Error: Expected '}' after class body\nParse Error: expected token 85 got 56\nParse Error: Expected '}' after class body\nerror: compilation failed",
+      "out": "",
       "tags": [],
       "key": "test_asyncio/test_tasks.py",
-      "updated": "2026-09-30"
+      "updated": "2026-10-02"
     },
     "test_asyncio/test_threads.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_asyncio/test_threads.py",
@@ -568,11 +576,13 @@
     "test_buffer.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_buffer.py",
       "status": "fail",
-      "stage": "py2aim",
-      "err": "timeout",
+      "stage": "transpile",
+      "rc": 1,
+      "err": "transpile: \nParse Error: expected token 84 got 89\nParse Error: Expected '{' to start block\nParse Error: expected token 85 got 89\nerror: compilation failed",
+      "out": "",
       "tags": [],
       "key": "test_buffer.py",
-      "updated": "2026-09-30"
+      "updated": "2026-10-02"
     },
     "test_bufio.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_bufio.py",
@@ -665,7 +675,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_capi/test_codecs.py",
-      "updated": "2026-09-30"
+      "updated": "2026-10-02"
     },
     "test_capi/test_eval_code_ex.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_capi/test_eval_code_ex.py",
@@ -707,11 +717,11 @@
       "status": "fail",
       "stage": "compile",
       "rc": -11,
-      "err": "oaded: AIMacro.AIMacroString\n[IMPORT] Loaded: AIMacro.AIMacroOperator\n[IMPORT] Loaded: AIMacro.AIMacroDict\n[IMPORT] Loaded: AIMacro.AIMacroUnittest\n[IMPORT] Loaded: AIMacro.AIMacroFormat\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 914 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 29219, col 32: Unexpected token in statement\n  In:",
+      "err": "aded: AIMacro.AIMacroExtraOS\n[IMPORT] Loaded: AIMacro.AIMacroExtraCall\n[IMPORT] Loaded: AIMacro.AIMacroExtraStdlib\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT] Loaded: AIMacro.AIMacroSeq\n[IMPORT] Loaded: AIMacro.AIMacroNum\n[IMPORT] Extracting symbols from 24 modules\n[IMPORT] Checking 914 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 29646, col 32: Unexpected token in statement\n  In:",
       "out": "",
       "tags": [],
       "key": "test_capi/test_unicode.py",
-      "updated": "2026-09-30"
+      "updated": "2026-10-02"
     },
     "test_cgi.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_cgi.py",
@@ -958,11 +968,13 @@
     "test_codecs.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_codecs.py",
       "status": "fail",
-      "stage": "py2aim",
-      "err": "timeout",
+      "stage": "compile",
+      "rc": -11,
+      "err": "IMPORT] Loaded: AIMacro.AIMacroSeq\n[IMPORT] Loaded: AIMacro.AIMacroNum\n[IMPORT ERROR] Cannot read: codecs\n[IMPORT ERROR] Cannot read: contextlib\n[IMPORT ERROR] Cannot read: locale\n[IMPORT ERROR] Cannot read: encodings\n[IMPORT] Extracting symbols from 24 modules\n[IMPORT] Checking 1148 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 37380, col 40: Unexpected token in statement\n  In:",
+      "out": "",
       "tags": [],
       "key": "test_codecs.py",
-      "updated": "2026-09-30"
+      "updated": "2026-10-02"
     },
     "test_codeop.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_codeop.py",
@@ -975,11 +987,13 @@
     "test_collections.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_collections.py",
       "status": "fail",
-      "stage": "py2aim",
-      "err": "timeout",
+      "stage": "compile",
+      "rc": -11,
+      "err": "eq\n[IMPORT] Loaded: AIMacro.AIMacroNum\n[IMPORT ERROR] Cannot read: doctest\n[IMPORT ERROR] Cannot read: inspect\n[IMPORT ERROR] Cannot read: random\n[IMPORT ERROR] Cannot read: itertools\n[IMPORT ERROR] Cannot read: types\n[IMPORT] Extracting symbols from 24 modules\n[IMPORT] Checking 1209 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 31818, col 32: Unexpected token in statement\n  In:",
+      "out": "",
       "tags": [],
       "key": "test_collections.py",
-      "updated": "2026-09-30"
+      "updated": "2026-10-02"
     },
     "test_colorsys.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_colorsys.py",
@@ -1175,10 +1189,13 @@
     "test_dataclasses/__init__.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_dataclasses/__init__.py",
       "status": "fail",
-      "stage": "py2aim",
-      "err": "timeout",
+      "stage": "compile",
+      "rc": -11,
+      "err": "PORT ERROR] Cannot read: traceback\n[IMPORT ERROR] Cannot read: typing\n[IMPORT ERROR] Cannot read: typing\n[IMPORT ERROR] Cannot read: functools\n[IMPORT ERROR] Cannot read: typing\n[IMPORT ERROR] Cannot read: dataclasses\n[IMPORT] Extracting symbols from 24 modules\n[IMPORT] Checking 1388 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 30001, col 32: Unexpected token in statement\n  In:",
+      "out": "",
       "tags": [],
-      "key": "test_dataclasses/__init__.py"
+      "key": "test_dataclasses/__init__.py",
+      "updated": "2026-10-02"
     },
     "test_datetime.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_datetime.py",
@@ -1238,10 +1255,13 @@
     "test_decimal.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_decimal.py",
       "status": "fail",
-      "stage": "py2aim",
-      "err": "timeout",
+      "stage": "transpile",
+      "rc": 1,
+      "err": "transpile: \nParse Error: expected token 84 got 82\nParse Error: Expected '{' to start block\nParse Error: expected token 85 got 82\nParse Error: expected token 85 got 82\nParse Error: expected token 85 got 82\nParse Error: expected token 85 got 82\nParse Error: expected token 85 got 82\nParse Error: Expected '}' after class body\nerror: compilation failed",
+      "out": "",
       "tags": [],
-      "key": "test_decimal.py"
+      "key": "test_decimal.py",
+      "updated": "2026-10-02"
     },
     "test_decorators.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_decorators.py",
@@ -1273,10 +1293,13 @@
     "test_descr.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_descr.py",
       "status": "fail",
-      "stage": "py2aim",
-      "err": "timeout",
+      "stage": "transpile",
+      "rc": 1,
+      "err": "transpile: \nParse Error: Expected ')' after 'super('\nParse Error: expected token 85 got 3\nParse Error: Expected '}' after class body\nParse Error: expected token 85 got 86\nParse Error: Expected '}' after class body\nerror: compilation failed",
+      "out": "",
       "tags": [],
-      "key": "test_descr.py"
+      "key": "test_descr.py",
+      "updated": "2026-10-02"
     },
     "test_descrtut.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_descrtut.py",
@@ -1465,13 +1488,13 @@
     "test_email/test__header_value_parser.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_email/test__header_value_parser.py",
       "status": "fail",
-      "stage": "compile",
-      "rc": 124,
-      "err": "ALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[SUBDEF] Stack allocation: base=64 + 2 locals * 16 = 96 bytes\n\ntimeout",
-      "out": "",
+      "stage": "run",
+      "rc": 0,
+      "err": "no tests ran",
+      "out": "ERROR: Method not found: translate\nERROR: Method not found: translate\n",
       "tags": [],
       "key": "test_email/test__header_value_parser.py",
-      "updated": "2026-09-30"
+      "updated": "2026-10-02"
     },
     "test_email/test_asian_codecs.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_email/test_asian_codecs.py",
@@ -1509,10 +1532,13 @@
     "test_email/test_email.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_email/test_email.py",
       "status": "fail",
-      "stage": "py2aim",
-      "err": "timeout",
+      "stage": "compile",
+      "rc": -11,
+      "err": "t read: email\n[IMPORT ERROR] Cannot read: email\n[IMPORT ERROR] Cannot read: email\n[IMPORT ERROR] Cannot read: email\n[IMPORT ERROR] Cannot read: email\n[IMPORT ERROR] Cannot read: email\n[IMPORT ERROR] Cannot read: email\n[IMPORT] Extracting symbols from 24 modules\n[IMPORT] Checking 1415 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 30224, col 32: Unexpected token in statement\n  In:",
+      "out": "",
       "tags": [],
-      "key": "test_email/test_email.py"
+      "key": "test_email/test_email.py",
+      "updated": "2026-10-02"
     },
     "test_email/test_generator.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_email/test_generator.py",
@@ -1624,19 +1650,19 @@
     "test_enum.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_enum.py",
       "status": "fail",
-      "stage": "py2aim",
-      "err": "timeout",
+      "stage": "transpile",
+      "rc": 1,
+      "err": "transpile: \nParse Error: Expected ')' after 'super('\nParse Error: expected token 85 got 3\nParse Error: Expected '}' after class body\nParse Error: expected token 85 got 86\nParse Error: Expected '}' after class body\nerror: compilation failed",
+      "out": "",
       "tags": [],
-      "key": "test_enum.py"
+      "key": "test_enum.py",
+      "updated": "2026-10-02"
     },
     "test_enumerate.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_enumerate.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": 124,
-      "err": "timeout",
-      "out": "",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_enumerate.py",
       "updated": "2026-10-02"
     },
@@ -1930,10 +1956,13 @@
     "test_functools.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_functools.py",
       "status": "fail",
-      "stage": "py2aim",
-      "err": "timeout",
+      "stage": "transpile",
+      "rc": 1,
+      "err": "transpile: \nParse Error: Expected ')' after 'super('\nParse Error: expected token 85 got 86\nParse Error: Expected '}' after class body\nParse Error: expected token 85 got 3\nParse Error: Expected '}' after class body\nerror: compilation failed",
+      "out": "",
       "tags": [],
-      "key": "test_functools.py"
+      "key": "test_functools.py",
+      "updated": "2026-10-02"
     },
     "test_future_stmt/__init__.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_future_stmt/__init__.py",
@@ -2335,12 +2364,12 @@
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_importlib/builtin/test_loader.py",
       "status": "fail",
       "stage": "run",
-      "rc": -9,
-      "err": "",
-      "out": "ERROR: Method not found: import_importlib\nERROR: Method not found: test_both\nERROR: Method not found: test_both\n",
+      "rc": 0,
+      "err": "no tests ran",
+      "out": "ERROR: Method not found: import_importlib\nERROR: Method not found: test_both\nERROR: Method not found: test_both\nunittest: ran 0 tests, 0 failed\n",
       "tags": [],
       "key": "test_importlib/builtin/test_loader.py",
-      "updated": "2026-09-30"
+      "updated": "2026-10-02"
     },
     "test_importlib/extension/test_case_sensitivity.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_importlib/extension/test_case_sensitivity.py",
@@ -2519,7 +2548,7 @@
       "out": "ERROR: Method not found: import_importlib\nERROR: Method not found: test_both\nERROR: Method not found: test_both\nERROR: Method not found: test_both\n",
       "tags": [],
       "key": "test_importlib/source/test_finder.py",
-      "updated": "2026-09-30"
+      "updated": "2026-10-02"
     },
     "test_importlib/source/test_path_hook.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_importlib/source/test_path_hook.py",
@@ -2757,10 +2786,13 @@
     "test_inspect.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_inspect.py",
       "status": "fail",
-      "stage": "py2aim",
-      "err": "timeout",
+      "stage": "transpile",
+      "rc": 1,
+      "err": "transpile: \nParse Error: Unexpected token in expression\n token=18\nParse Error: expected token 85 got 2\nerror: compilation failed",
+      "out": "",
       "tags": [],
-      "key": "test_inspect.py"
+      "key": "test_inspect.py",
+      "updated": "2026-10-02"
     },
     "test_int.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_int.py",
@@ -2795,10 +2827,13 @@
     "test_io.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_io.py",
       "status": "fail",
-      "stage": "py2aim",
-      "err": "timeout",
+      "stage": "transpile",
+      "rc": 1,
+      "err": "transpile: \nParse Error: Expected '(' after super method name\nParse Error: expected token 85 got 19\nParse Error: expected token 85 got 19\nParse Error: Expected '}' after class body\nParse Error: Expected '}' after class body\nerror: compilation failed",
+      "out": "",
       "tags": [],
-      "key": "test_io.py"
+      "key": "test_io.py",
+      "updated": "2026-10-02"
     },
     "test_ioctl.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_ioctl.py",
@@ -2814,11 +2849,13 @@
     "test_ipaddress.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_ipaddress.py",
       "status": "fail",
-      "stage": "py2aim",
-      "err": "timeout",
+      "stage": "compile",
+      "rc": -11,
+      "err": "g\n[IMPORT] Loaded: AIMacro.AIMacroSeq\n[IMPORT] Loaded: AIMacro.AIMacroNum\n[IMPORT ERROR] Cannot read: re\n[IMPORT ERROR] Cannot read: contextlib\n[IMPORT ERROR] Cannot read: ipaddress\n[IMPORT ERROR] Cannot read: weakref\n[IMPORT] Extracting symbols from 24 modules\n[IMPORT] Checking 1093 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 30969, col 32: Unexpected token in statement\n  In:",
+      "out": "",
       "tags": [],
       "key": "test_ipaddress.py",
-      "updated": "2026-09-30"
+      "updated": "2026-10-02"
     },
     "test_isinstance.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_isinstance.py",
@@ -2853,10 +2890,13 @@
     "test_itertools.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_itertools.py",
       "status": "fail",
-      "stage": "py2aim",
-      "err": "timeout",
+      "stage": "transpile",
+      "rc": 1,
+      "err": "transpile: \nParse Error: Unexpected token in expression\n token=52\nParse Error: Expected ')' after super method arguments\nParse Error: expected token 85 got 3\nParse Error: Expected '}' after class body\nParse Error: expected token 85 got 81\nParse Error: expected token 85 got 81\nParse Error: expected token 85 got 81\nParse Error: Expected '}' after class body\nerror: compilation failed",
+      "out": "",
       "tags": [],
-      "key": "test_itertools.py"
+      "key": "test_itertools.py",
+      "updated": "2026-10-02"
     },
     "test_json/__init__.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_json/__init__.py",
@@ -2913,7 +2953,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_json/test_enum.py",
-      "updated": "2026-09-30"
+      "updated": "2026-10-02"
     },
     "test_json/test_fail.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_json/test_fail.py",
@@ -3012,7 +3052,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_json/test_unicode.py",
-      "updated": "2026-09-30"
+      "updated": "2026-10-02"
     },
     "test_keyword.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_keyword.py",
@@ -3126,10 +3166,13 @@
     "test_logging.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_logging.py",
       "status": "fail",
-      "stage": "py2aim",
-      "err": "timeout",
+      "stage": "transpile",
+      "rc": 1,
+      "err": "transpile: \nParse Error: Expected ')' after 'super('\nParse Error: expected token 85 got 86\nParse Error: Expected '}' after class body\nerror: compilation failed",
+      "out": "",
       "tags": [],
-      "key": "test_logging.py"
+      "key": "test_logging.py",
+      "updated": "2026-10-02"
     },
     "test_long.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_long.py",
@@ -3194,10 +3237,13 @@
     "test_math.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_math.py",
       "status": "fail",
-      "stage": "py2aim",
-      "err": "timeout",
+      "stage": "compile",
+      "rc": 1,
+      "err": "RECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\nERROR: Variable not found: ulp_abs_check\nCompilation Failed: \n[AST] Freeing 136574 node child-lists...\n[AST] Freed 53735 child-lists (node slots stay in pool)",
+      "out": "",
       "tags": [],
-      "key": "test_math.py"
+      "key": "test_math.py",
+      "updated": "2026-10-02"
     },
     "test_memoryio.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_memoryio.py",
@@ -3430,10 +3476,13 @@
     "test_os.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_os.py",
       "status": "fail",
-      "stage": "py2aim",
-      "err": "timeout",
+      "stage": "transpile",
+      "rc": 1,
+      "err": "transpile: \nParse Error: expected token 83 got 3\nParse Error: expected token 81 got 3\nParse Error: expected token 85 got 3\nParse Error: Expected '}' after class body\nerror: compilation failed",
+      "out": "",
       "tags": [],
-      "key": "test_os.py"
+      "key": "test_os.py",
+      "updated": "2026-10-02"
     },
     "test_ossaudiodev.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_ossaudiodev.py",
@@ -3454,10 +3503,13 @@
     "test_pathlib.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_pathlib.py",
       "status": "fail",
-      "stage": "py2aim",
-      "err": "timeout",
+      "stage": "compile",
+      "rc": -11,
+      "err": "oSeq\n[IMPORT] Loaded: AIMacro.AIMacroNum\n[IMPORT ERROR] Cannot read: contextlib\n[IMPORT ERROR] Cannot read: errno\n[IMPORT ERROR] Cannot read: pathlib\n[IMPORT ERROR] Cannot read: socket\n[IMPORT ERROR] Cannot read: stat\n[IMPORT] Extracting symbols from 24 modules\n[IMPORT] Checking 1106 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 30790, col 36: Unexpected token in statement\n  In:",
+      "out": "",
       "tags": [],
-      "key": "test_pathlib.py"
+      "key": "test_pathlib.py",
+      "updated": "2026-10-02"
     },
     "test_patma.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_patma.py",
@@ -3873,10 +3925,13 @@
     "test_re.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_re.py",
       "status": "fail",
-      "stage": "py2aim",
-      "err": "timeout",
+      "stage": "compile",
+      "rc": -11,
+      "err": ".AIMacroSeq\n[IMPORT] Loaded: AIMacro.AIMacroNum\n[IMPORT ERROR] Cannot read: locale\n[IMPORT ERROR] Cannot read: re\n[IMPORT ERROR] Cannot read: warnings\n[IMPORT ERROR] Cannot read: re\n[IMPORT ERROR] Cannot read: weakref\n[IMPORT] Extracting symbols from 24 modules\n[IMPORT] Checking 1085 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 30821, col 32: Unexpected token in statement\n  In:",
+      "out": "",
       "tags": [],
-      "key": "test_re.py"
+      "key": "test_re.py",
+      "updated": "2026-10-02"
     },
     "test_readline.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_readline.py",
@@ -4083,11 +4138,13 @@
     "test_shutil.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_shutil.py",
       "status": "fail",
-      "stage": "py2aim",
-      "err": "timeout",
+      "stage": "compile",
+      "rc": -11,
+      "err": "MPORT ERROR] Cannot read: subprocess\n[IMPORT ERROR] Cannot read: random\n[IMPORT ERROR] Cannot read: contextlib\n[IMPORT ERROR] Cannot read: shutil\n[IMPORT ERROR] Cannot read: tarfile\n[IMPORT ERROR] Cannot read: zipfile\n[IMPORT] Extracting symbols from 24 modules\n[IMPORT] Checking 1124 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 29731, col 36: Unexpected token in statement\n  In:",
+      "out": "",
       "tags": [],
       "key": "test_shutil.py",
-      "updated": "2026-09-30"
+      "updated": "2026-10-02"
     },
     "test_signal.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_signal.py",
@@ -4156,10 +4213,13 @@
     "test_socket.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_socket.py",
       "status": "fail",
-      "stage": "py2aim",
-      "err": "timeout",
+      "stage": "transpile",
+      "rc": 1,
+      "err": "transpile: \nParse Error: Unexpected token in expression\n token=52\nParse Error: Expected ')' after super method arguments\nParse Error: expected token 85 got 86\nParse Error: Expected '}' after class body\nerror: compilation failed",
+      "out": "",
       "tags": [],
-      "key": "test_socket.py"
+      "key": "test_socket.py",
+      "updated": "2026-10-02"
     },
     "test_socketserver.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_socketserver.py",
@@ -4307,10 +4367,13 @@
     "test_ssl.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_ssl.py",
       "status": "fail",
-      "stage": "py2aim",
-      "err": "timeout",
+      "stage": "transpile",
+      "rc": 1,
+      "err": "transpile: \nParse Error: Expected ')' after super method arguments\nParse Error: Expected '}' after class body\nParse Error: Expected '}' after class body\nerror: compilation failed",
+      "out": "",
       "tags": [],
-      "key": "test_ssl.py"
+      "key": "test_ssl.py",
+      "updated": "2026-10-02"
     },
     "test_stable_abi_ctypes.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_stable_abi_ctypes.py",
@@ -4342,10 +4405,13 @@
     "test_statistics.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_statistics.py",
       "status": "fail",
-      "stage": "py2aim",
-      "err": "timeout",
+      "stage": "compile",
+      "rc": -11,
+      "err": "IMPORT] Loaded: AIMacro.AIMacroNum\n[IMPORT ERROR] Cannot read: bisect\n[IMPORT ERROR] Cannot read: doctest\n[IMPORT ERROR] Cannot read: itertools\n[IMPORT ERROR] Cannot read: random\n[IMPORT ERROR] Cannot read: statistics\n[IMPORT] Extracting symbols from 24 modules\n[IMPORT] Checking 1209 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 40814, col 32: Unexpected token in statement\n  In:",
+      "out": "",
       "tags": [],
-      "key": "test_statistics.py"
+      "key": "test_statistics.py",
+      "updated": "2026-10-02"
     },
     "test_strftime.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_strftime.py",
@@ -4434,10 +4500,13 @@
     "test_subprocess.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_subprocess.py",
       "status": "fail",
-      "stage": "py2aim",
-      "err": "timeout",
+      "stage": "transpile",
+      "rc": 1,
+      "err": "transpile: \nParse Error: Unexpected token in expression\n token=52\nParse Error: Expected ')' after super method arguments\nParse Error: expected token 85 got 86\nParse Error: Expected '}' after class body\nParse Error: Expected '}' after class body\nerror: compilation failed",
+      "out": "",
       "tags": [],
-      "key": "test_subprocess.py"
+      "key": "test_subprocess.py",
+      "updated": "2026-10-02"
     },
     "test_sunau.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_sunau.py",
@@ -4550,10 +4619,13 @@
     "test_tarfile.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_tarfile.py",
       "status": "fail",
-      "stage": "py2aim",
-      "err": "timeout",
+      "stage": "transpile",
+      "rc": 1,
+      "err": "transpile: \nParse Error: Expected ')' after 'super('\nParse Error: expected token 85 got 3\nParse Error: Expected '}' after class body\nParse Error: expected token 85 got 86\nParse Error: Expected '}' after class body\nerror: compilation failed",
+      "out": "",
       "tags": [],
-      "key": "test_tarfile.py"
+      "key": "test_tarfile.py",
+      "updated": "2026-10-02"
     },
     "test_tcl.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_tcl.py",
@@ -4973,8 +5045,8 @@
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_ucn.py",
       "status": "fail",
       "stage": "run",
-      "rc": 124,
-      "err": "timeout",
+      "rc": -11,
+      "err": "",
       "out": "R: Method not found: lookup\nERROR: Method not found: name\nERROR: Method not found: lookup\nERROR: Method not found: name\nERROR: Method not found: lookup\nERROR: Method not found: name\nERROR: Method not found: lookup\nERROR: Method not found: name\nERROR: Method not found: lookup\nERROR: Method not found: name\nERROR: Method not found: lookup\nERROR: Method not found: name\nERROR: Method not found: lookup\nERROR: Method not found: name\nERROR: Method not found: lookup\nERROR: Method not found: name\nERROR: Method not found: lookup\nERROR: Method not found: name\nERROR: Method not found: lookup\nERROR: Method not found: name\nERROR: Method not found: lookup\nERROR: Method not found: name\nERROR: Method not found: lookup\nERROR: Method not found: name\nERROR: Method not found: lookup\nERROR: Method not found: name\nERROR: Method not found: lookup\nERROR: Method not found: name\nERROR: Method not found: lookup\nERROR: Method not found: name\nERROR: Method not found: lookup\nERROR: Method not found: name\nERROR: Method not found: lookup\nERROR: Method not found: name\nERROR: Method not found: lookup\nERROR: Method not found: name\nERROR: Method not found: lookup\nERROR: Method not found: name\nERROR: Method not found: lookup\nERROR: Method not found: name\nERROR: Method not found: lookup\nERROR: Method not found: name\nERROR: Method not found: lookup\nERROR: Method not found: name\nERROR: Method not found: lookup\nERROR: Method not found: name\nERROR: Method not found: lookup\nERROR: Method not found: name\nERROR: Method not found: lookup\nERROR: Method not found: name\nERROR: Method not found: lookup\nERROR: Method not found: name\nERROR: Method not found: lookup\nERROR: Method not found: name\nERROR: Method not found: lookup\nERROR: Method not found: name\nERROR: Method not found: lookup\nERROR: Method not found: name\nERROR: Method not found: lookup\nERROR: Method not found: name\nERROR: Method not found: lookup\nERROR: Method not found: name\nERROR: Method not found: lookup\nERROR: Method not found: name\nERROR: Method not found: lookup\n  UnicodeNamesTest.test_misc_symbols\nERROR: Method not found: literal_eval\nFAIL: assertEqual\nERROR: Method not found: literal_eval\nERROR: Method not found: literal_eval\nERROR: Method not found: literal_eval\n  UnicodeNamesTest.test_aliases\nERROR: Method not found: literal_eval\nFAIL: assertEqual\nERROR: Method not found: name\nERROR: Method not found: lookup\nERROR: Method not found: lookup\nERROR: Method not found: literal_eval\nFAIL: assertEqual\nERROR: Method not found: name\nERROR: Method not found: lookup\nERROR: Method not found: lookup\nERROR: Method not found: literal_eval\nFAIL: assertEqual\nERROR: Method not found: name\nERROR: Method not found: lookup\nERROR: Method not found: lookup\nERROR: Method not found: literal_eval\nFAIL: assertEqual\nERROR: Method not found: name\nERROR: Method not found: lookup\nERROR: Method not found: lookup\nERROR: Method not found: literal_eval\nFAIL: assertEqual\nERROR: Method not found: name\nERROR: Method not found: lookup\nERROR: Method not found: lookup\nERROR: Method not found: literal_eval\nFAIL: assertEqual\nERROR: Method not found: name\nERROR: Method not found: lookup\nERROR: Method not found: lookup\nERROR: Method not found: literal_eval\nFAIL: assertEqual\nERROR: Method not found: name\nERROR: Method not found: lookup\nERROR: Method not found: lookup\nERROR: Method not found: literal_eval\nFAIL: assertEqual\nERROR: Method not found: name\nERROR: Method not found: lookup\nERROR: Method not found: lookup\nERROR: Method not found: literal_eval\nFAIL: assertEqual\nERROR: Method not found: name\nERROR: Method not found: lookup\nERROR: Method not found: lookup\nERROR: Method not found: literal_eval\nFAIL: assertEqual\nERROR: Method not found: name\nERROR: Method not found: lookup\nERROR: Method not found: lookup\nERROR: Method not found: literal_eval\nFAIL: assertEqual\nERROR: Method not found: name\nERROR: Method not found: lookup\nERROR: Method not found: lookup\n  UnicodeNamesTest.test_aliases_names_in_pua_range\nERROR: Method not found: name\nFAIL: assertEqual\n",
       "tags": [],
       "key": "test_ucn.py",
@@ -4990,10 +5062,13 @@
     "test_unicode.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_unicode.py",
       "status": "fail",
-      "stage": "py2aim",
-      "err": "timeout",
+      "stage": "compile",
+      "rc": -11,
+      "err": "ORT ERROR] Cannot read: codecs\n[IMPORT ERROR] Cannot read: itertools\n[IMPORT ERROR] Cannot read: struct\n[IMPORT ERROR] Cannot read: textwrap\n[IMPORT ERROR] Cannot read: unicodedata\n[IMPORT ERROR] Cannot read: warnings\n[IMPORT] Extracting symbols from 24 modules\n[IMPORT] Checking 1072 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 29887, col 32: Unexpected token in statement\n  In:",
+      "out": "",
       "tags": [],
-      "key": "test_unicode.py"
+      "key": "test_unicode.py",
+      "updated": "2026-10-02"
     },
     "test_unicode_file.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_unicode_file.py",
@@ -5283,13 +5358,13 @@
     "test_weakref.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_weakref.py",
       "status": "fail",
-      "stage": "compile",
-      "rc": 124,
-      "err": "arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[SUBDEF] Stack allocation: base=64 + 2 locals * 16 = 96 bytes\n[EMIT] WARNING: Data base address not set\n\ntimeout",
-      "out": "",
+      "stage": "run",
+      "rc": -11,
+      "err": "",
+      "out": "ROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\nERROR: Method not found: ref\n  ReferencesTestCase.test_callback_attribute\nERROR: Method not found: ref\nFAIL: assertIs\nERROR: Method not found: ref\n  ReferencesTestCase.test_callback_attribute_after_deletion\nERROR: Method not found: ref\nERROR: Method not found: gc_collect\nFAIL: assertIsNone\n  ReferencesTestCase.test_set_callback_attribute\nERROR: Method not found: ref\n  ReferencesTestCase.test_callback_gcs\nERROR: Method not found: ref\nERROR: Method not found: gc_collect\n  SubclassableWeakrefTestCase.test_subclass_refs\n",
       "tags": [],
       "key": "test_weakref.py",
-      "updated": "2026-09-30"
+      "updated": "2026-10-02"
     },
     "test_weakset.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_weakset.py",
@@ -5379,10 +5454,13 @@
     "test_xml_etree.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_xml_etree.py",
       "status": "fail",
-      "stage": "py2aim",
-      "err": "timeout",
+      "stage": "transpile",
+      "rc": 1,
+      "err": "transpile: \nParse Error: Expected ')' after 'super('\nParse Error: expected token 85 got 86\nParse Error: Expected '}' after class body\nParse Error: expected token 85 got 3\nParse Error: Expected '}' after class body\nerror: compilation failed",
+      "out": "",
       "tags": [],
-      "key": "test_xml_etree.py"
+      "key": "test_xml_etree.py",
+      "updated": "2026-10-02"
     },
     "test_xml_etree_c.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_xml_etree_c.py",
@@ -5449,10 +5527,13 @@
     "test_zipfile.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_zipfile.py",
       "status": "fail",
-      "stage": "py2aim",
-      "err": "timeout",
+      "stage": "compile",
+      "rc": -11,
+      "err": "h\n[IMPORT ERROR] Cannot read: struct\n[IMPORT ERROR] Cannot read: subprocess\n[IMPORT ERROR] Cannot read: mock\n[IMPORT ERROR] Cannot read: zipfile\n[IMPORT ERROR] Cannot read: functools\n[IMPORT ERROR] Cannot read: random\n[IMPORT] Extracting symbols from 24 modules\n[IMPORT] Checking 1204 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 36089, col 44: Unexpected token in statement\n  In:",
+      "out": "",
       "tags": [],
-      "key": "test_zipfile.py"
+      "key": "test_zipfile.py",
+      "updated": "2026-10-02"
     },
     "test_zipfile64.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_zipfile64.py",
