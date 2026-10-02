@@ -393,11 +393,6 @@ Function.AIMacro.MethodShim {
             ReturnValue(AIMacro.NumSub(a0, a1))
         }
         IfCondition EqualTo(StringCompare(method_name, "add"), 0) ThenBlock: {
-            astor = AIMacro.ListStorage(obj)
-            IfCondition EqualTo(Array.IsArray(astor), 1) ThenBlock: {
-                AIMacro.SetAdd(astor, a0)
-                ReturnValue(Types.GetNone())
-            }
             IfCondition EqualTo(Array.IsArray(obj), 1) ThenBlock: {
                 AIMacro.SetAdd(obj, a0)
                 ReturnValue(Types.GetNone())
@@ -1624,9 +1619,6 @@ Function.AIMacro.MethodShim {
         IfCondition EqualTo(StringCompare(method_name, "getpid"), 0) ThenBlock: {
             ReturnValue(SystemCall(39, 0))
         }
-        IfCondition EqualTo(StringCompare(method_name, "getfilesystemencoding"), 0) ThenBlock: {
-            ReturnValue("utf-8")
-        }
         IfCondition EqualTo(StringCompare(method_name, "unlink"), 0) ThenBlock: {
             up = AIMacro.PathArg(obj, a0)
             ReturnValue(AIMacro.Unlink(up))
@@ -1634,22 +1626,6 @@ Function.AIMacro.MethodShim {
         IfCondition EqualTo(StringCompare(method_name, "mkdir"), 0) ThenBlock: {
             mp = AIMacro.PathArg(obj, a0)
             ReturnValue(AIMacro.Mkdir(mp, a1))
-        }
-        IfCondition EqualTo(StringCompare(method_name, "stat"), 0) ThenBlock: {
-            sp = AIMacro.PathArg(obj, a0)
-            IfCondition EqualTo(AIMacro.LooksLikeString(sp), 0) ThenBlock: {
-                AIMacro.RaiseKind(4, "stat")
-                ReturnValue(0)
-            }
-            sbuf = Allocate(256)
-            src = SystemCall(4, sp, sbuf)
-            IfCondition LessThan(src, 0) ThenBlock: {
-                AIMacro.RaiseKind(4, "stat")
-                ReturnValue(0)
-            }
-            sh = Hash.Create(4)
-            Hash.Set(sh, "st_mode", 33188)
-            ReturnValue(sh)
         }
         IfCondition EqualTo(StringCompare(method_name, "rmdir"), 0) ThenBlock: {
             rp = AIMacro.PathArg(obj, a0)

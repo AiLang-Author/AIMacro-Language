@@ -49,7 +49,6 @@ test_dictviews.py
 test_doctest2.py
 test_eintr.py
 test_email/test_utils.py
-test_enumerate.py
 test_eof.py
 test_errno.py
 test_exception_hierarchy.py
