@@ -2208,12 +2208,9 @@
     },
     "test_html.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_html.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": 1,
-      "err": "",
-      "out": "  HtmlTests.test_escape\nFAIL: assertEqual\nunittest: ran 1 tests, 1 failed\n",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_html.py",
       "updated": "2026-10-02"
     },
@@ -4648,7 +4645,7 @@
       "stage": "run",
       "rc": -11,
       "err": "",
-      "out": "ERROR: Method not found: getpid\n",
+      "out": "",
       "tags": [],
       "key": "test_threadsignals.py",
       "updated": "2026-10-02"

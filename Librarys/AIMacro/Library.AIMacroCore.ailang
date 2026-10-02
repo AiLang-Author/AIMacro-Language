@@ -485,9 +485,14 @@ Function.Lex_ReadString {
                                         buf_pos = Lex_BufPut(Add(Multiply(hv1, 16), hv2), buf_pos)
                                         Lex_Advance()
                                     } ElseBlock: {
-                                        buf_pos = Lex_BufPut(92, buf_pos)
-                                        buf_pos = Lex_BufPut(esc, buf_pos)
-                                        Lex_Advance()
+                                        IfCondition Or(EqualTo(esc, 34), EqualTo(esc, 39)) ThenBlock: {
+                                            buf_pos = Lex_BufPut(esc, buf_pos)
+                                            Lex_Advance()
+                                        } ElseBlock: {
+                                            buf_pos = Lex_BufPut(92, buf_pos)
+                                            buf_pos = Lex_BufPut(esc, buf_pos)
+                                            Lex_Advance()
+                                        }
                                     }
                                 }
                             }

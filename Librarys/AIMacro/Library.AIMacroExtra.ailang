@@ -960,12 +960,9 @@ Function.AIMacro.HtmlEscape {
         n = StringLength(s)
         out = Allocate(Add(Multiply(n, 6), 1))
         oi = 0
-        q = 1
+        q = 0
         IfCondition NotEqual(quote, 0) ThenBlock: {
-            qb = AIMacro.SmartBool(quote)
-            IfCondition EqualTo(qb, 0) ThenBlock: {
-                q = 0
-            }
+            q = 1
         }
         i = 0
         WhileLoop LessThan(i, n) {

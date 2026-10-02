@@ -68,6 +68,7 @@ test_global.py
 test_graphlib.py
 test_grp.py
 test_heapq.py
+test_html.py
 test_htmlparser.py
 test_imghdr.py
 test_imp.py

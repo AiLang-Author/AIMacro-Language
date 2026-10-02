@@ -107,7 +107,6 @@ Function.AIMacro.InitMethodSkip {
         Hash.Set(h, "requires_working_threading", 1)
         Hash.Set(h, "requires_working_socket", 1)
         Hash.Set(h, "requires", 1)
-        Hash.Set(h, "getpid", 1)
         Hash.Set(h, "splitlines", 1)
         Hash.Set(h, "check_sanitizer", 1)
         Hash.Set(h, "get_config_var", 1)
@@ -1268,7 +1267,11 @@ Function.AIMacro.MethodShim {
             ReturnValue(OOP.MethodCall(obj, method_name, args))
         }
         IfCondition EqualTo(StringCompare(method_name, "escape"), 0) ThenBlock: {
-            esc = AIMacro.HtmlEscape(a0, a1)
+            qarg = 1
+            IfCondition GreaterThan(n, 1) ThenBlock: {
+                qarg = AIMacro.SmartBool(a1)
+            }
+            esc = AIMacro.HtmlEscape(a0, qarg)
             ReturnValue(esc)
         }
         IfCondition EqualTo(StringCompare(method_name, "unescape"), 0) ThenBlock: {
@@ -1608,6 +1611,9 @@ Function.AIMacro.MethodShim {
         }
         IfCondition EqualTo(StringCompare(method_name, "map_table_b3"), 0) ThenBlock: {
             ReturnValue(1)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "getpid"), 0) ThenBlock: {
+            ReturnValue(SystemCall(39, 0))
         }
         IfCondition EqualTo(StringCompare(method_name, "unlink"), 0) ThenBlock: {
             up = AIMacro.PathArg(obj, a0)

@@ -392,11 +392,17 @@ Function.Lexer_ReadString {
                                                 }
                                             }
                                         } ElseBlock: {
-                                            SetByte(Lexer.buffer_ptr, lrs_buf_pos, 92)
-                                            lrs_buf_pos = Add(lrs_buf_pos, 1)
-                                            SetByte(Lexer.buffer_ptr, lrs_buf_pos, lrs_esc)
-                                            lrs_buf_pos = Add(lrs_buf_pos, 1)
-                                            Lexer_Advance()
+                                            IfCondition Or(EqualTo(lrs_esc, 34), EqualTo(lrs_esc, 39)) ThenBlock: {
+                                                SetByte(Lexer.buffer_ptr, lrs_buf_pos, lrs_esc)
+                                                lrs_buf_pos = Add(lrs_buf_pos, 1)
+                                                Lexer_Advance()
+                                            } ElseBlock: {
+                                                SetByte(Lexer.buffer_ptr, lrs_buf_pos, 92)
+                                                lrs_buf_pos = Add(lrs_buf_pos, 1)
+                                                SetByte(Lexer.buffer_ptr, lrs_buf_pos, lrs_esc)
+                                                lrs_buf_pos = Add(lrs_buf_pos, 1)
+                                                Lexer_Advance()
+                                            }
                                         }
                                     }
                                 }

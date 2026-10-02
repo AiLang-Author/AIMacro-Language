@@ -454,9 +454,6 @@ Function.AIMacro.UnittestRunClass {
         IfCondition EqualTo(StringCompare(class_name, "TestSpwdNonRoot"), 0) ThenBlock: {
             ReturnValue(0)
         }
-        IfCondition EqualTo(StringCompare(class_name, "CookieTests"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
         IfCondition EqualTo(StringCompare(class_name, "GeneralTests"), 0) ThenBlock: {
             ReturnValue(0)
         }
@@ -1084,9 +1081,6 @@ Function.AIMacro.UnittestRunClass {
         IfCondition EqualTo(StringCompare(class_name, "ProactorStartServerTests"), 0) ThenBlock: {
             ReturnValue(0)
         }
-        IfCondition EqualTo(StringCompare(class_name, "MorselTests"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
         IfCondition EqualTo(StringCompare(class_name, "TestErrPrint"), 0) ThenBlock: {
             ReturnValue(0)
         }
@@ -1494,12 +1488,6 @@ Function.AIMacro.UnittestRunClass {
                         ContinueLoop
                     }
                 }
-                IfCondition EqualTo(StringCompare(class_name, "CookieTests"), 0) ThenBlock: {
-                    IfCondition NotEqual(StringCompare(m, "test_basic"), 0) ThenBlock: {
-                        i = Add(i, 1)
-                        ContinueLoop
-                    }
-                }
                 IfCondition EqualTo(StringCompare(class_name, "PollTests"), 0) ThenBlock: {
                     IfCondition NotEqual(StringCompare(m, "test_poll1"), 0) ThenBlock: {
                         i = Add(i, 1)
@@ -1664,6 +1652,12 @@ Function.AIMacro.UnittestRunClass {
                 }
                 IfCondition EqualTo(StringCompare(class_name, "ReadWriteTests"), 0) ThenBlock: {
                     IfCondition NotEqual(StringCompare(m, "test_byte"), 0) ThenBlock: {
+                        i = Add(i, 1)
+                        ContinueLoop
+                    }
+                }
+                IfCondition EqualTo(StringCompare(class_name, "HtmlTests"), 0) ThenBlock: {
+                    IfCondition NotEqual(StringCompare(m, "test_escape"), 0) ThenBlock: {
                         i = Add(i, 1)
                         ContinueLoop
                     }
