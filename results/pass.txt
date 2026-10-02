@@ -7,6 +7,7 @@ test_asyncio/test_futures.py
 test_asyncio/test_pep492.py
 test_asyncio/test_protocols.py
 test_asyncio/test_queues.py
+test_asyncio/test_selector_events.py
 test_asyncio/test_threads.py
 test_asyncio/test_timeouts.py
 test_asyncio/test_transports.py
@@ -73,6 +74,7 @@ test_importlib/builtin/test_finder.py
 test_importlib/extension/test_case_sensitivity.py
 test_importlib/frozen/test_finder.py
 test_importlib/frozen/test_loader.py
+test_importlib/import_/test___package__.py
 test_importlib/import_/test_caching.py
 test_importlib/source/test_case_sensitivity.py
 test_importlib/test_compatibilty_files.py
@@ -107,6 +109,7 @@ test_list.py
 test_lltrace.py
 test_longexp.py
 test_mailcap.py
+test_module/__init__.py
 test_multibytecodec.py
 test_netrc.py
 test_nis.py
@@ -145,14 +148,17 @@ test_startfile.py
 test_strftime.py
 test_string.py
 test_string_literals.py
+test_stringprep.py
 test_structseq.py
 test_sunau.py
 test_sundry.py
 test_symtable.py
+test_syntax.py
 test_sys_setprofile.py
 test_syslog.py
 test_tabnanny.py
 test_telnetlib.py
+test_thread.py
 test_time.py
 test_timeit.py
 test_tix.py

@@ -181,6 +181,36 @@ Function.AIMacro.UnittestRunClass {
         IfCondition EqualTo(StringCompare(class_name, "InspectLoaderTests"), 0) ThenBlock: {
             ReturnValue(0)
         }
+        IfCondition EqualTo(StringCompare(class_name, "Using__package__"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(class_name, "Using__package__PEP302"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(class_name, "Using__package__PEP451"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(class_name, "Setting__package__"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(class_name, "Setting__package__PEP451"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(class_name, "TestBaseSelectorEventLoop"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(class_name, "BaseSelectorEventLoopTests"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(class_name, "SelectorSocketTransportTests"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(class_name, "SelectorSocketTransportBufferedProtocolTests"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(class_name, "SelectorDatagramTransportTests"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
         IfCondition EqualTo(StringCompare(class_name, "PkgutilPEP302Tests"), 0) ThenBlock: {
             ReturnValue(0)
         }
@@ -1601,6 +1631,30 @@ Function.AIMacro.UnittestRunClass {
                 }
                 IfCondition EqualTo(StringCompare(class_name, "ExecModuleTests"), 0) ThenBlock: {
                     IfCondition NotEqual(StringCompare(m, "test_lacking_parent"), 0) ThenBlock: {
+                        i = Add(i, 1)
+                        ContinueLoop
+                    }
+                }
+                IfCondition EqualTo(StringCompare(class_name, "SyntaxTestCase"), 0) ThenBlock: {
+                    IfCondition NotEqual(StringCompare(m, "test_empty_line_after_linecont"), 0) ThenBlock: {
+                        i = Add(i, 1)
+                        ContinueLoop
+                    }
+                }
+                IfCondition EqualTo(StringCompare(class_name, "ModuleTests"), 0) ThenBlock: {
+                    IfCondition NotEqual(StringCompare(m, "test_uninitialized_missing_getattr"), 0) ThenBlock: {
+                        i = Add(i, 1)
+                        ContinueLoop
+                    }
+                }
+                IfCondition EqualTo(StringCompare(class_name, "Setting__package__PEP302"), 0) ThenBlock: {
+                    IfCondition NotEqual(StringCompare(m, "test_submodule"), 0) ThenBlock: {
+                        i = Add(i, 1)
+                        ContinueLoop
+                    }
+                }
+                IfCondition EqualTo(StringCompare(class_name, "SelectorTransportTests"), 0) ThenBlock: {
+                    IfCondition NotEqual(StringCompare(m, "test_ctor"), 0) ThenBlock: {
                         i = Add(i, 1)
                         ContinueLoop
                     }
