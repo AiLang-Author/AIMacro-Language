@@ -432,13 +432,13 @@
     "test_asyncio/test_windows_utils.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_asyncio/test_windows_utils.py",
       "status": "fail",
-      "stage": "compile",
-      "rc": -11,
-      "err": "\n[IMPORT ERROR] Cannot read: asyncio\n[IMPORT ERROR] Cannot read: asyncio\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 907 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\n[PARSER] Parsed 908 declarations, 83583 total nodes\n[PARSER] SUCCESS\n[SEMANTIC] contract check\n[POOL] Emitting mmap for R15 (269 slots)\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments",
-      "out": "",
+      "stage": "run",
+      "rc": 1,
+      "err": "",
+      "out": "Exception: \n",
       "tags": [],
       "key": "test_asyncio/test_windows_utils.py",
-      "updated": "2026-09-30"
+      "updated": "2026-10-02"
     },
     "test_asyncore.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_asyncore.py",
@@ -500,13 +500,13 @@
     "test_baseexception.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_baseexception.py",
       "status": "fail",
-      "stage": "compile",
+      "stage": "run",
       "rc": -11,
-      "err": "mat\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT ERROR] Cannot read: builtins\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 920 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\n[PARSER] Parsed 921 declarations, 84718 total nodes\n[PARSER] SUCCESS\n[SEMANTIC] contract check\n[POOL] Emitting mmap for R15 (271 slots)\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments",
-      "out": "",
+      "err": "",
+      "out": "  ExceptionClassTests.test_builtins_new_style\nFAIL: assertTrue\n  ExceptionClassTests.test_inheritance\nERROR: Method not found: values\nERROR: Method not found: split\n",
       "tags": [],
       "key": "test_baseexception.py",
-      "updated": "2026-09-30"
+      "updated": "2026-10-02"
     },
     "test_bdb.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_bdb.py",
@@ -1145,13 +1145,13 @@
     "test_crypt.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_crypt.py",
       "status": "fail",
-      "stage": "compile",
-      "rc": -11,
-      "err": "t\n[IMPORT] Loaded: AIMacro.AIMacroFormat\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 911 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\n[PARSER] Parsed 912 declarations, 83697 total nodes\n[PARSER] SUCCESS\n[SEMANTIC] contract check\n[POOL] Emitting mmap for R15 (253 slots)\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments",
-      "out": "",
+      "stage": "run",
+      "rc": 1,
+      "err": "",
+      "out": "Exception: keyword argument\n",
       "tags": [],
       "key": "test_crypt.py",
-      "updated": "2026-09-30"
+      "updated": "2026-10-02"
     },
     "test_csv.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_csv.py",
@@ -1577,12 +1577,9 @@
     },
     "test_email/test_parser.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_email/test_parser.py",
-      "status": "fail",
-      "stage": "compile",
-      "rc": -11,
-      "err": "T] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments",
-      "out": "",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_email/test_parser.py",
       "updated": "2026-10-02"
     },
@@ -1696,14 +1693,11 @@
     },
     "test_exception_group.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_exception_group.py",
-      "status": "fail",
-      "stage": "compile",
-      "rc": -11,
-      "err": "T] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments",
-      "out": "",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_exception_group.py",
-      "updated": "2026-09-30"
+      "updated": "2026-10-02"
     },
     "test_exception_hierarchy.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_exception_hierarchy.py",
@@ -2081,13 +2075,13 @@
     "test_genexps.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_genexps.py",
       "status": "fail",
-      "stage": "compile",
-      "rc": -11,
-      "err": " symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\n[PARSER] Parsed 900 declarations, 81119 total nodes\n[PARSER] SUCCESS\n[SEMANTIC] contract check\n[POOL] Emitting mmap for R15 (245 slots)\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments",
+      "stage": "run",
+      "rc": 0,
+      "err": "no tests ran",
       "out": "",
       "tags": [],
       "key": "test_genexps.py",
-      "updated": "2026-09-30"
+      "updated": "2026-10-02"
     },
     "test_getopt.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_getopt.py",
@@ -2544,13 +2538,13 @@
     "test_importlib/source/test_path_hook.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_importlib/source/test_path_hook.py",
       "status": "fail",
-      "stage": "compile",
-      "rc": -11,
-      "err": " symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\n[PARSER] Parsed 904 declarations, 81504 total nodes\n[PARSER] SUCCESS\n[SEMANTIC] contract check\n[POOL] Emitting mmap for R15 (246 slots)\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments",
-      "out": "",
+      "stage": "run",
+      "rc": 0,
+      "err": "no tests ran",
+      "out": "ERROR: Method not found: import_importlib\nERROR: Method not found: test_both\n",
       "tags": [],
       "key": "test_importlib/source/test_path_hook.py",
-      "updated": "2026-09-30"
+      "updated": "2026-10-02"
     },
     "test_importlib/source/test_source_encoding.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_importlib/source/test_source_encoding.py",
@@ -3261,13 +3255,13 @@
     "test_metaclass.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_metaclass.py",
       "status": "fail",
-      "stage": "compile",
-      "rc": -11,
-      "err": " symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\n[PARSER] Parsed 900 declarations, 81119 total nodes\n[PARSER] SUCCESS\n[SEMANTIC] contract check\n[POOL] Emitting mmap for R15 (245 slots)\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments",
+      "stage": "run",
+      "rc": 0,
+      "err": "no tests ran",
       "out": "",
       "tags": [],
       "key": "test_metaclass.py",
-      "updated": "2026-09-30"
+      "updated": "2026-10-02"
     },
     "test_mimetypes.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_mimetypes.py",
@@ -5368,24 +5362,24 @@
     "test_webbrowser.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_webbrowser.py",
       "status": "fail",
-      "stage": "compile",
-      "rc": -11,
-      "err": "RT ERROR] Cannot read: webbrowser\n[IMPORT ERROR] Cannot read: subprocess\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 946 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\n[PARSER] Parsed 947 declarations, 85179 total nodes\n[PARSER] SUCCESS\n[SEMANTIC] contract check\n[POOL] Emitting mmap for R15 (261 slots)\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments",
-      "out": "",
+      "stage": "run",
+      "rc": 1,
+      "err": "",
+      "out": "Exception: \n",
       "tags": [],
       "key": "test_webbrowser.py",
-      "updated": "2026-09-30"
+      "updated": "2026-10-02"
     },
     "test_winconsoleio.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_winconsoleio.py",
       "status": "fail",
-      "stage": "compile",
-      "rc": -11,
-      "err": "[IMPORT] Loaded: FixedPointTrig\n[IMPORT ERROR] Cannot read: _testconsole\n[IMPORT] Extracting symbols from 17 modules\n[IMPORT] Checking 910 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\n[PARSER] Parsed 911 declarations, 83443 total nodes\n[PARSER] SUCCESS\n[SEMANTIC] contract check\n[POOL] Emitting mmap for R15 (257 slots)\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments",
-      "out": "",
+      "stage": "run",
+      "rc": 1,
+      "err": "",
+      "out": "Exception: \n",
       "tags": [],
       "key": "test_winconsoleio.py",
-      "updated": "2026-09-30"
+      "updated": "2026-10-02"
     },
     "test_winreg.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_winreg.py",

@@ -51,10 +51,12 @@ test_doctest2.py
 test_eintr.py
 test_email/test__encoded_words.py
 test_email/test_asian_codecs.py
+test_email/test_parser.py
 test_email/test_utils.py
 test_enumerate.py
 test_eof.py
 test_errno.py
+test_exception_group.py
 test_exception_hierarchy.py
 test_fcntl.py
 test_fileinput.py
