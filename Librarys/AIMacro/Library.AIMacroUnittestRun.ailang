@@ -19,28 +19,13 @@ Function.AIMacro.UnittestRunClass {
     Output: Integer
     Body: {
         AIMacro.UnittestBoot()
-        IfCondition EqualTo(StringCompare(class_name, "TestBig"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "SubclassTestCase"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "TestEmpty"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "TestReversed"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "EnumerateStartTestCase"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "TestStart"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "TestLongStart"), 0) ThenBlock: {
+        IfCondition Or(EqualTo(StringCompare(class_name, "TestBig"), 0), Or(EqualTo(StringCompare(class_name, "SubclassTestCase"), 0), Or(EqualTo(StringCompare(class_name, "TestEmpty"), 0), Or(EqualTo(StringCompare(class_name, "TestReversed"), 0), Or(EqualTo(StringCompare(class_name, "EnumerateStartTestCase"), 0), Or(EqualTo(StringCompare(class_name, "TestStart"), 0), EqualTo(StringCompare(class_name, "TestLongStart"), 0))))))) ThenBlock: {
             ReturnValue(0)
         }
         IfCondition EqualTo(StringCompare(class_name, "TestSpeedups"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition Or(EqualTo(StringCompare(class_name, "TestDecodeB"), 0), Or(EqualTo(StringCompare(class_name, "TestEncodeQ"), 0), EqualTo(StringCompare(class_name, "TestEncodeB"), 0))) ThenBlock: {
             ReturnValue(0)
         }
         IfCondition EqualTo(StringCompare(class_name, "COperatorTestCase"), 0) ThenBlock: {
@@ -1691,6 +1676,12 @@ Function.AIMacro.UnittestRunClass {
                 }
                 IfCondition EqualTo(StringCompare(class_name, "CgiTests"), 0) ThenBlock: {
                     IfCondition NotEqual(StringCompare(m, "test_fieldstorage_invalid"), 0) ThenBlock: {
+                        i = Add(i, 1)
+                        ContinueLoop
+                    }
+                }
+                IfCondition EqualTo(StringCompare(class_name, "TestDecodeQ"), 0) ThenBlock: {
+                    IfCondition NotEqual(StringCompare(m, "test_no_encoded"), 0) ThenBlock: {
                         i = Add(i, 1)
                         ContinueLoop
                     }

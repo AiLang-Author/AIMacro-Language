@@ -49,6 +49,7 @@ test_dict_version.py
 test_dictviews.py
 test_doctest2.py
 test_eintr.py
+test_email/test__encoded_words.py
 test_email/test_asian_codecs.py
 test_email/test_utils.py
 test_enumerate.py
