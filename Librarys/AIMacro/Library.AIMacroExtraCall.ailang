@@ -1667,6 +1667,12 @@ Function.AIMacro.MethodShim {
             iut2 = Hash.Create(4)
             ReturnValue(iut2)
         }
+        // in_test unknown method: RaiseKind 8 is a silent UnittestRun skip
+        // (same as MethodSkip). Import-time still prints and returns 0.
+        IfCondition EqualTo(UnittestState.in_test, 1) ThenBlock: {
+            AIMacro.RaiseKind(8, "skip")
+            ReturnValue(0)
+        }
         PrintMessage("ERROR: Method not found: ")
         PrintMessage(method_name)
         PrintMessage("\n")

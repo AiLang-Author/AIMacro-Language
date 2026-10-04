@@ -6,6 +6,7 @@ test_asynchat.py
 test_asyncio/test_context.py
 test_asyncio/test_futures.py
 test_asyncio/test_pep492.py
+test_asyncio/test_proactor_events.py
 test_asyncio/test_protocols.py
 test_asyncio/test_queues.py
 test_asyncio/test_selector_events.py
@@ -51,7 +52,11 @@ test_dictviews.py
 test_doctest2.py
 test_eintr.py
 test_email/test__encoded_words.py
+test_email/test__header_value_parser.py
 test_email/test_asian_codecs.py
+test_email/test_contentmanager.py
+test_email/test_defect_handling.py
+test_email/test_generator.py
 test_email/test_parser.py
 test_email/test_utils.py
 test_enumerate.py
@@ -60,11 +65,13 @@ test_errno.py
 test_exception_group.py
 test_exception_hierarchy.py
 test_fcntl.py
+test_file.py
 test_fileinput.py
 test_fileutils.py
 test_flufl.py
 test_fnmatch.py
 test_frozen.py
+test_future_stmt/test_future.py
 test_future_stmt/test_future_flags.py
 test_future_stmt/test_future_multiple_features.py
 test_future_stmt/test_future_multiple_imports.py
@@ -87,6 +94,7 @@ test_importlib/frozen/test_loader.py
 test_importlib/import_/test___package__.py
 test_importlib/import_/test_caching.py
 test_importlib/source/test_case_sensitivity.py
+test_importlib/source/test_file_loader.py
 test_importlib/source/test_source_encoding.py
 test_importlib/test_api.py
 test_importlib/test_compatibilty_files.py
@@ -112,6 +120,7 @@ test_json/test_indent.py
 test_json/test_pass1.py
 test_json/test_pass2.py
 test_json/test_pass3.py
+test_json/test_recursion.py
 test_json/test_scanstring.py
 test_json/test_separators.py
 test_json/test_speedups.py
@@ -154,6 +163,7 @@ test_secrets.py
 test_select.py
 test_selectors.py
 test_set.py
+test_shelve.py
 test_signal.py
 test_slice.py
 test_smtpnet.py
@@ -173,12 +183,15 @@ test_sundry.py
 test_symtable.py
 test_syntax.py
 test_sys_setprofile.py
+test_sysconfig.py
 test_syslog.py
 test_tabnanny.py
 test_telnetlib.py
 test_thread.py
+test_threadedtempfile.py
 test_time.py
 test_timeit.py
+test_timeout.py
 test_tix.py
 test_tomllib/test_data.py
 test_tomllib/test_error.py
@@ -189,6 +202,7 @@ test_tools/test_i18n.py
 test_tools/test_lll.py
 test_tools/test_md5sum.py
 test_tools/test_pdeps.py
+test_tools/test_pindent.py
 test_tools/test_reindent.py
 test_tools/test_sundry.py
 test_ttk_textonly.py
@@ -199,6 +213,7 @@ test_typechecks.py
 test_unary.py
 test_unicode_file.py
 test_unpack.py
+test_unparse.py
 test_urllib2net.py
 test_urllib_response.py
 test_userlist.py
