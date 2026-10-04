@@ -1532,6 +1532,18 @@ Function.Gen_EmitIdent {
             Gen_Emit("Types.GetNone()")
             ReturnValue(0)
         }
+        // Module-level def used as a value (SmartCallN / Array.Push). Nested
+        // defs already leftover above; AddressOf(name) matches Function.name.
+        is_modfn = Gen_NameInArray(name, Gen.func_names)
+        IfCondition EqualTo(is_modfn, 0) ThenBlock: {
+            is_modfn = Gen_NameInArray(name, Gen.module_funcs)
+        }
+        IfCondition EqualTo(is_modfn, 1) ThenBlock: {
+            Gen_Emit("AddressOf(")
+            Gen_Emit(name)
+            Gen_Emit(")")
+            ReturnValue(0)
+        }
         // classattrs is a file-scope Function with no Inputs. Unknown IDENT
         // there (enclosing param, import sentinel) leftover GetNone. FlattenExpr
         // temps (_aim_t*) are locals in this Body — emit them. Do not leftover
@@ -2840,11 +2852,22 @@ Function.Gen_PrescanNames {
             ReturnValue(0)
         }
         IfCondition EqualTo(t0, Node.FUNCTION) ThenBlock: {
+            fname = AST_GetField(node, "name")
             IfCondition EqualTo(nested, 1) ThenBlock: {
-                fname = AST_GetField(node, "name")
                 already = Gen_NameInArray(fname, Gen.known_nested_funcs)
                 IfCondition EqualTo(already, 0) ThenBlock: {
                     Array.Push(Gen.known_nested_funcs, fname)
+                }
+            }
+            ElseBlock: {
+                IfCondition EqualTo(Gen.func_names, 0) ThenBlock: {
+                    Gen.func_names = Array.Create(32)
+                    Gen.module_funcs = Array.Create(32)
+                }
+                already_fn = Gen_NameInArray(fname, Gen.func_names)
+                IfCondition EqualTo(already_fn, 0) ThenBlock: {
+                    Array.Push(Gen.func_names, fname)
+                    Array.Push(Gen.module_funcs, fname)
                 }
             }
             fbody = AST_GetField(node, "body")
