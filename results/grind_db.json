@@ -643,12 +643,9 @@
     },
     "test_call.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_call.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": -11,
-      "err": "",
-      "out": "ERROR: Method not found: MethInstance\nERROR: Method not found: MethInstance\n  FunctionCalls.test_kwargs_order\n  FunctionCalls.test_frames_are_popped_after_failed_calls\n  CFunctionCallsErrorMessages.test_varargs0\n  CFunctionCallsErrorMessages.test_varargs2\n  CFunctionCallsErrorMessages.test_varargs3\n  CFunctionCallsErrorMessages.test_varargs1min\n  CFunctionCallsErrorMessages.test_varargs2min\n  CFunctionCallsErrorMessages.test_varargs1max\n",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_call.py",
       "updated": "2026-10-04"
     },
@@ -2593,12 +2590,9 @@
     },
     "test_importlib/test_metadata_api.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_importlib/test_metadata_api.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": -11,
-      "err": "",
-      "out": "  APITests.test_retrieves_version_of_self\n  APITests.test_retrieves_version_of_distinfo_pkg\n  APITests.test_for_name_does_not_exist\n  APITests.test_name_normalization\n",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_importlib/test_metadata_api.py",
       "updated": "2026-10-04"
     },
@@ -2650,12 +2644,9 @@
     },
     "test_importlib/test_reader.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_importlib/test_reader.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": -11,
-      "err": "",
-      "out": "ERROR: Method not found: Path\nERROR: Method not found: Path\n  MultiplexedPathTest.test_init_no_paths\n  MultiplexedPathTest.test_init_file\n  MultiplexedPathTest.test_iterdir\n  MultiplexedPathTest.test_iterdir_duplicate\n  MultiplexedPathTest.test_open_file\n  MultiplexedPathTest.test_join_path\n",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_importlib/test_reader.py",
       "updated": "2026-10-04"
     },
@@ -3838,12 +3829,9 @@
     },
     "test_re.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_re.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": -11,
-      "err": "",
-      "out": "  ReTests.test_keep_buffer\n  ReTests.test_weakref\n  ReTests.test_search_star_plus\n  ReTests.test_branching\n  ReTests.test_basic_re_sub\nERROR: sub\n  ReTests.test_bug_449964\nERROR: sub\n  ReTests.test_bug_449000\nERROR: sub\n  ReTests.test_bug_1661\n  ReTests.test_bug_3629\n  ReTests.test_sub_template_numeric_escape\n",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_re.py",
       "updated": "2026-10-04"
     },
@@ -4154,7 +4142,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_source_encoding.py",
-      "updated": "2026-10-02"
+      "updated": "2026-10-04"
     },
     "test_spwd.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_spwd.py",
@@ -4533,12 +4521,9 @@
     },
     "test_tcl.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_tcl.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": -11,
-      "err": "",
-      "out": "ERROR: Method not found: split\n  TkinterTest.testFlattenLen\nERROR: Method not found: wantobjects\n  TclTest.testEval\nERROR: Method not found: wantobjects\n  TclTest.test_eval_null_in_result\nERROR: Method not found: wantobjects\n  TclTest.test_eval_surrogates_in_result\nERROR: Method not found: wantobjects\n  TclTest.testEvalException\nERROR: Method not found: wantobjects\n  TclTest.testEvalException2\nERROR: Method not found: wantobjects\n  TclTest.testCall\n",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_tcl.py",
       "updated": "2026-10-04"
     },
@@ -4995,12 +4980,9 @@
     },
     "test_unicodedata.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_unicodedata.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": -11,
-      "err": "",
-      "out": "  UnicodeMethodsTest.test_method_checksum\n  UnicodeFunctionsTest.test_function_checksum\n  UnicodeFunctionsTest.test_name_inverse_lookup\n  UnicodeFunctionsTest.test_digit\n  UnicodeFunctionsTest.test_numeric\n  UnicodeFunctionsTest.test_decimal\n  UnicodeFunctionsTest.test_category\n  UnicodeFunctionsTest.test_bidirectional\n  UnicodeFunctionsTest.test_decomposition\n  UnicodeFunctionsTest.test_mirrored\n  UnicodeFunctionsTest.test_combining\n  UnicodeFunctionsTest.test_pr29\n  UnicodeFunctionsTest.test_issue10254\n  UnicodeFunctionsTest.test_issue29456\n  UnicodeFunctionsTest.test_east_asian_width\n  UnicodeFunctionsTest.test_east_asian_width_9_0_changes\n  UnicodeMiscTest.test_failed_import_during_compiling\n  UnicodeMiscTest.test_decimal_numeric_consistent\n",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_unicodedata.py",
       "updated": "2026-10-04"
     },
@@ -5183,12 +5165,9 @@
     },
     "test_uuid.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_uuid.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": -11,
-      "err": "",
-      "out": "  TestUUIDWithoutExtModule.test_safe_uuid_enum\n  TestUUIDWithoutExtModule.test_UUID\n  TestUUIDWithoutExtModule.test_exceptions\n  TestUUIDWithoutExtModule.test_getnode\n  TestUUIDWithoutExtModule.test_uuid1_eui64\n  TestUUIDWithoutExtModule.test_uuid1\n",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_uuid.py",
       "updated": "2026-10-04"
     },

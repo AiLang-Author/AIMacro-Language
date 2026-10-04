@@ -136,6 +136,18 @@ Function.AIMacro.UnittestRunClass {
         IfCondition Or(EqualTo(StringCompare(class_name, "TestVec2D"), 0), Or(EqualTo(StringCompare(class_name, "TestTNavigator"), 0), EqualTo(StringCompare(class_name, "TestTPen"), 0))) ThenBlock: {
             ReturnValue(0)
         }
+        IfCondition Or(EqualTo(StringCompare(class_name, "CFunctionCallsErrorMessages"), 0), Or(EqualTo(StringCompare(class_name, "TestCallingConventions"), 0), Or(EqualTo(StringCompare(class_name, "TestCallingConventionsInstance"), 0), Or(EqualTo(StringCompare(class_name, "TestCallingConventionsClass"), 0), Or(EqualTo(StringCompare(class_name, "TestCallingConventionsClassInstance"), 0), Or(EqualTo(StringCompare(class_name, "TestCallingConventionsStatic"), 0), EqualTo(StringCompare(class_name, "FastCallTests"), 0))))))) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition Or(EqualTo(StringCompare(class_name, "TestPEP590"), 0), Or(EqualTo(StringCompare(class_name, "TestErrorMessagesUseQualifiedName"), 0), Or(EqualTo(StringCompare(class_name, "LegacyDots"), 0), Or(EqualTo(StringCompare(class_name, "OffSysPathTests"), 0), Or(EqualTo(StringCompare(class_name, "InvalidateCache"), 0), Or(EqualTo(StringCompare(class_name, "NamespaceReaderTest"), 0), EqualTo(StringCompare(class_name, "DebugTests"), 0))))))) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition Or(EqualTo(StringCompare(class_name, "PatternReprTests"), 0), Or(EqualTo(StringCompare(class_name, "ImplementationTest"), 0), Or(EqualTo(StringCompare(class_name, "ExternalTests"), 0), Or(EqualTo(StringCompare(class_name, "UnicodeDatabaseTest"), 0), Or(EqualTo(StringCompare(class_name, "UnicodeFunctionsTest"), 0), Or(EqualTo(StringCompare(class_name, "UnicodeMiscTest"), 0), EqualTo(StringCompare(class_name, "NormalizationTest"), 0))))))) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition Or(EqualTo(StringCompare(class_name, "TestUUIDWithExtModule"), 0), Or(EqualTo(StringCompare(class_name, "TestInternalsWithoutExtModule"), 0), Or(EqualTo(StringCompare(class_name, "TestInternalsWithExtModule"), 0), Or(EqualTo(StringCompare(class_name, "TclTest"), 0), EqualTo(StringCompare(class_name, "BigmemTclTest"), 0))))) ThenBlock: {
+            ReturnValue(0)
+        }
         IfCondition Or(EqualTo(StringCompare(class_name, "TestSendChannelAttrs"), 0), Or(EqualTo(StringCompare(class_name, "TestSendRecv"), 0), Or(EqualTo(StringCompare(class_name, "TestCFail"), 0), Or(EqualTo(StringCompare(class_name, "TestCFloat"), 0), Or(EqualTo(StringCompare(class_name, "TestCScanstring"), 0), Or(EqualTo(StringCompare(class_name, "TestXXLimited"), 0), EqualTo(StringCompare(class_name, "HierarchyTest"), 0))))))) ThenBlock: {
             ReturnValue(0)
         }
@@ -647,6 +659,48 @@ Function.AIMacro.UnittestRunClass {
                 }
                 IfCondition EqualTo(StringCompare(class_name, "BufferSizeTest"), 0) ThenBlock: {
                     IfCondition NotEqual(StringCompare(m, "test_primepat"), 0) ThenBlock: {
+                        i = Add(i, 1)
+                        ContinueLoop
+                    }
+                }
+                IfCondition EqualTo(StringCompare(class_name, "FunctionCalls"), 0) ThenBlock: {
+                    IfCondition NotEqual(StringCompare(m, "test_kwargs_order"), 0) ThenBlock: {
+                        i = Add(i, 1)
+                        ContinueLoop
+                    }
+                }
+                IfCondition EqualTo(StringCompare(class_name, "APITests"), 0) ThenBlock: {
+                    IfCondition NotEqual(StringCompare(m, "test_retrieves_version_of_self"), 0) ThenBlock: {
+                        i = Add(i, 1)
+                        ContinueLoop
+                    }
+                }
+                IfCondition EqualTo(StringCompare(class_name, "MultiplexedPathTest"), 0) ThenBlock: {
+                    IfCondition NotEqual(StringCompare(m, "test_init_no_paths"), 0) ThenBlock: {
+                        i = Add(i, 1)
+                        ContinueLoop
+                    }
+                }
+                IfCondition EqualTo(StringCompare(class_name, "ReTests"), 0) ThenBlock: {
+                    IfCondition NotEqual(StringCompare(m, "test_keep_buffer"), 0) ThenBlock: {
+                        i = Add(i, 1)
+                        ContinueLoop
+                    }
+                }
+                IfCondition EqualTo(StringCompare(class_name, "UnicodeMethodsTest"), 0) ThenBlock: {
+                    IfCondition NotEqual(StringCompare(m, "test_method_checksum"), 0) ThenBlock: {
+                        i = Add(i, 1)
+                        ContinueLoop
+                    }
+                }
+                IfCondition EqualTo(StringCompare(class_name, "TestUUIDWithoutExtModule"), 0) ThenBlock: {
+                    IfCondition NotEqual(StringCompare(m, "test_safe_uuid_enum"), 0) ThenBlock: {
+                        i = Add(i, 1)
+                        ContinueLoop
+                    }
+                }
+                IfCondition EqualTo(StringCompare(class_name, "TkinterTest"), 0) ThenBlock: {
+                    IfCondition NotEqual(StringCompare(m, "testFlattenLen"), 0) ThenBlock: {
                         i = Add(i, 1)
                         ContinueLoop
                     }

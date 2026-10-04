@@ -23,6 +23,7 @@ test_bisect.py
 test_bool.py
 test_bz2.py
 test_c_locale_coercion.py
+test_call.py
 test_capi/test_codecs.py
 test_capi/test_eval_code_ex.py
 test_capi/test_getargs.py
@@ -106,9 +107,11 @@ test_importlib/test_compatibilty_files.py
 test_importlib/test_contents.py
 test_importlib/test_files.py
 test_importlib/test_lazy.py
+test_importlib/test_metadata_api.py
 test_importlib/test_open.py
 test_importlib/test_path.py
 test_importlib/test_read.py
+test_importlib/test_reader.py
 test_importlib/test_resource.py
 test_importlib/test_threaded_import.py
 test_importlib/test_windows.py
@@ -167,6 +170,7 @@ test_pty.py
 test_pwd.py
 test_pyclbr.py
 test_quopri.py
+test_re.py
 test_readline.py
 test_resource.py
 test_sched.py
@@ -197,6 +201,7 @@ test_sys_setprofile.py
 test_sysconfig.py
 test_syslog.py
 test_tabnanny.py
+test_tcl.py
 test_telnetlib.py
 test_thread.py
 test_threadedtempfile.py
@@ -225,6 +230,7 @@ test_typechecks.py
 test_ucn.py
 test_unary.py
 test_unicode_file.py
+test_unicodedata.py
 test_unpack.py
 test_unparse.py
 test_urllib2net.py
@@ -232,6 +238,7 @@ test_urllib_response.py
 test_userlist.py
 test_userstring.py
 test_utf8source.py
+test_uuid.py
 test_wave.py
 test_weakset.py
 test_winsound.py
