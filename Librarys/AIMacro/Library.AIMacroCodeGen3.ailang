@@ -792,10 +792,17 @@ Function.Gen_FlattenExpr {
             ReturnValue(Gen_MakeIdent(temp))
         }
         IfCondition EqualTo(t, Node.LAMBDA) ThenBlock: {
-            ReturnValue(Gen_FlattenLambda(node))
+            ident = Gen_FlattenLambda(node)
+            ReturnValue(ident)
+        }
+        IfCondition EqualTo(t, Node.YIELD_STMT) ThenBlock: {
+            val = ArrayGet(node, 3)
+            ident = Gen_FlattenExpr(val)
+            ReturnValue(ident)
         }
         IfCondition EqualTo(t, Node.INDIRECT_CALL) ThenBlock: {
-            ReturnValue(Gen_FlattenIndirectCall(node))
+            ident = Gen_FlattenIndirectCall(node)
+            ReturnValue(ident)
         }
         IfCondition EqualTo(t, Node.SUPER_CALL) ThenBlock: {
             method = AST_GetField(node, "method")

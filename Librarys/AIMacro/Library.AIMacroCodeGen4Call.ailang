@@ -85,14 +85,24 @@ Function.Gen_EmitLeftoverCall {
             ReturnValue(0)
         }
         IfCondition EqualTo(n, 2) ThenBlock: {
+            i = 0
+            WhileLoop LessThan(i, n) {
+                arg = Array.Get(args, i)
+                hc = 0
+                IfCondition NotEqual(arg, 0) ThenBlock: {
+                    hc = Gen_HasCall(arg)
+                }
+                IfCondition EqualTo(hc, 1) ThenBlock: {
+                    arg = Gen_FlattenExpr(arg)
+                    Array.Set(args, i, arg)
+                }
+                i = Add(i, 1)
+            }
             Gen_Emit("AIMacro.SmartCall2(0")
             i = 0
             WhileLoop LessThan(i, n) {
                 Gen_Emit(", ")
                 arg = Array.Get(args, i)
-                IfCondition EqualTo(Gen_HasCall(arg), 1) ThenBlock: {
-                    arg = Gen_FlattenExpr(arg)
-                }
                 Gen_Expr(arg)
                 i = Add(i, 1)
             }
@@ -100,14 +110,24 @@ Function.Gen_EmitLeftoverCall {
             ReturnValue(0)
         }
         IfCondition EqualTo(n, 3) ThenBlock: {
+            i = 0
+            WhileLoop LessThan(i, n) {
+                arg = Array.Get(args, i)
+                hc = 0
+                IfCondition NotEqual(arg, 0) ThenBlock: {
+                    hc = Gen_HasCall(arg)
+                }
+                IfCondition EqualTo(hc, 1) ThenBlock: {
+                    arg = Gen_FlattenExpr(arg)
+                    Array.Set(args, i, arg)
+                }
+                i = Add(i, 1)
+            }
             Gen_Emit("AIMacro.SmartCall3(0")
             i = 0
             WhileLoop LessThan(i, n) {
                 Gen_Emit(", ")
                 arg = Array.Get(args, i)
-                IfCondition EqualTo(Gen_HasCall(arg), 1) ThenBlock: {
-                    arg = Gen_FlattenExpr(arg)
-                }
                 Gen_Expr(arg)
                 i = Add(i, 1)
             }
@@ -329,13 +349,17 @@ Function.Gen_CallExpr {
                 ReturnValue(0)
             }
             IfCondition EqualTo(n, 1) ThenBlock: {
+                arg = Array.Get(args, 0)
+                hc = 0
+                IfCondition NotEqual(arg, 0) ThenBlock: {
+                    hc = Gen_HasCall(arg)
+                }
+                IfCondition EqualTo(hc, 1) ThenBlock: {
+                    arg = Gen_FlattenExpr(arg)
+                }
                 Gen_Emit("AIMacro.SmartCall1(")
                 Gen_EmitIdent(name)
                 Gen_Emit(", ")
-                arg = Array.Get(args, 0)
-                IfCondition EqualTo(Gen_HasCall(arg), 1) ThenBlock: {
-                    arg = Gen_FlattenExpr(arg)
-                }
                 Gen_Expr(arg)
                 Gen_Emit(")")
                 ReturnValue(0)
@@ -1102,13 +1126,17 @@ Function.Gen_CallExpr {
                     Gen_Emit(")")
                 } ElseBlock: {
                     IfCondition EqualTo(n, 1) ThenBlock: {
+                        arg = Array.Get(args, 0)
+                        hc = 0
+                        IfCondition NotEqual(arg, 0) ThenBlock: {
+                            hc = Gen_HasCall(arg)
+                        }
+                        IfCondition EqualTo(hc, 1) ThenBlock: {
+                            arg = Gen_FlattenExpr(arg)
+                        }
                         Gen_Emit("AIMacro.SmartCall1(")
                         Gen_EmitIdent(name)
                         Gen_Emit(", ")
-                        arg = Array.Get(args, 0)
-                        IfCondition EqualTo(Gen_HasCall(arg), 1) ThenBlock: {
-                            arg = Gen_FlattenExpr(arg)
-                        }
                         Gen_Expr(arg)
                         Gen_Emit(")")
                     } ElseBlock: {
@@ -1122,14 +1150,24 @@ Function.Gen_CallExpr {
                                 ReturnValue(0)
                             }
                         }
+                        i = 0
+                        WhileLoop LessThan(i, n) {
+                            arg = Array.Get(args, i)
+                            hc = 0
+                            IfCondition NotEqual(arg, 0) ThenBlock: {
+                                hc = Gen_HasCall(arg)
+                            }
+                            IfCondition EqualTo(hc, 1) ThenBlock: {
+                                arg = Gen_FlattenExpr(arg)
+                                Array.Set(args, i, arg)
+                            }
+                            i = Add(i, 1)
+                        }
                         Gen_EmitIdent(name)
                         i = 0
                         WhileLoop LessThan(i, n) {
                             Gen_Emit(", ")
                             arg = Array.Get(args, i)
-                            IfCondition EqualTo(Gen_HasCall(arg), 1) ThenBlock: {
-                                arg = Gen_FlattenExpr(arg)
-                            }
                             Gen_Expr(arg)
                             i = Add(i, 1)
                         }

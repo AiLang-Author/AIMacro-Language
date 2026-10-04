@@ -1823,6 +1823,9 @@ Function.Gen_HasCall {
         IfCondition EqualTo(t, Node.LAMBDA) ThenBlock: {
             ReturnValue(1)
         }
+        IfCondition EqualTo(t, Node.YIELD_STMT) ThenBlock: {
+            ReturnValue(1)
+        }
         IfCondition EqualTo(t, Node.INDIRECT_CALL) ThenBlock: {
             ReturnValue(1)
         }

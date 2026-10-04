@@ -91,7 +91,9 @@ Function.Gen_Expr {
             ReturnValue(0)
         }
         IfCondition EqualTo(t, Node.YIELD_STMT) ThenBlock: {
-            Gen_Expr(ArrayGet(node, 3))
+            yv = ArrayGet(node, 3)
+            ident = Gen_FlattenExpr(yv)
+            Gen_Expr(ident)
             ReturnValue(0)
         }
         
