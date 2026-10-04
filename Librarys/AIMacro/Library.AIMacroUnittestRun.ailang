@@ -127,826 +127,121 @@ Function.AIMacro.UnittestRunClass {
         IfCondition EqualTo(StringCompare(class_name, "TestRecvChannelAttrs"), 0) ThenBlock: {
             ReturnValue(0)
         }
-        IfCondition EqualTo(StringCompare(class_name, "TestSendChannelAttrs"), 0) ThenBlock: {
+        IfCondition Or(EqualTo(StringCompare(class_name, "TestSendChannelAttrs"), 0), Or(EqualTo(StringCompare(class_name, "TestSendRecv"), 0), Or(EqualTo(StringCompare(class_name, "TestCFail"), 0), Or(EqualTo(StringCompare(class_name, "TestCFloat"), 0), Or(EqualTo(StringCompare(class_name, "TestCScanstring"), 0), Or(EqualTo(StringCompare(class_name, "TestXXLimited"), 0), EqualTo(StringCompare(class_name, "HierarchyTest"), 0))))))) ThenBlock: {
             ReturnValue(0)
         }
-        IfCondition EqualTo(StringCompare(class_name, "TestSendRecv"), 0) ThenBlock: {
+        IfCondition Or(EqualTo(StringCompare(class_name, "AttributesTest"), 0), Or(EqualTo(StringCompare(class_name, "FileInputTests"), 0), Or(EqualTo(StringCompare(class_name, "Test_fileinput_input"), 0), Or(EqualTo(StringCompare(class_name, "Test_fileinput_close"), 0), Or(EqualTo(StringCompare(class_name, "Test_fileinput_nextfile"), 0), Or(EqualTo(StringCompare(class_name, "Test_fileinput_filename"), 0), EqualTo(StringCompare(class_name, "Test_fileinput_lineno"), 0))))))) ThenBlock: {
             ReturnValue(0)
         }
-        IfCondition EqualTo(StringCompare(class_name, "TestCFail"), 0) ThenBlock: {
+        IfCondition Or(EqualTo(StringCompare(class_name, "Test_fileinput_filelineno"), 0), Or(EqualTo(StringCompare(class_name, "Test_fileinput_fileno"), 0), Or(EqualTo(StringCompare(class_name, "Test_fileinput_isfirstline"), 0), Or(EqualTo(StringCompare(class_name, "Test_fileinput_isstdin"), 0), Or(EqualTo(StringCompare(class_name, "Test_hook_compressed"), 0), Or(EqualTo(StringCompare(class_name, "Test_hook_encoded"), 0), EqualTo(StringCompare(class_name, "MiscTest"), 0))))))) ThenBlock: {
             ReturnValue(0)
         }
-        IfCondition EqualTo(StringCompare(class_name, "TestCFloat"), 0) ThenBlock: {
+        IfCondition Or(EqualTo(StringCompare(class_name, "WaveLowLevelTest"), 0), Or(EqualTo(StringCompare(class_name, "WavePCM8Test"), 0), Or(EqualTo(StringCompare(class_name, "WavePCM16Test"), 0), Or(EqualTo(StringCompare(class_name, "WavePCM24Test"), 0), Or(EqualTo(StringCompare(class_name, "WavePCM32Test"), 0), Or(EqualTo(StringCompare(class_name, "MessageBeepTest"), 0), EqualTo(StringCompare(class_name, "PlaySoundTest"), 0))))))) ThenBlock: {
             ReturnValue(0)
         }
-        IfCondition EqualTo(StringCompare(class_name, "TestCScanstring"), 0) ThenBlock: {
+        IfCondition Or(EqualTo(StringCompare(class_name, "TestAsynchat"), 0), Or(EqualTo(StringCompare(class_name, "TestAsynchat_WithPoll"), 0), Or(EqualTo(StringCompare(class_name, "HTMLParserTestCase"), 0), Or(EqualTo(StringCompare(class_name, "Test_MultibyteCodec"), 0), Or(EqualTo(StringCompare(class_name, "Test_IncrementalEncoder"), 0), Or(EqualTo(StringCompare(class_name, "Test_StreamReader"), 0), EqualTo(StringCompare(class_name, "Test_StreamWriter"), 0))))))) ThenBlock: {
             ReturnValue(0)
         }
-        IfCondition EqualTo(StringCompare(class_name, "TestXXLimited"), 0) ThenBlock: {
+        IfCondition Or(EqualTo(StringCompare(class_name, "TestStateful"), 0), Or(EqualTo(StringCompare(class_name, "TestHZStateful"), 0), Or(EqualTo(StringCompare(class_name, "AifcTest"), 0), Or(EqualTo(StringCompare(class_name, "AifcPCM8Test"), 0), Or(EqualTo(StringCompare(class_name, "AifcPCM16Test"), 0), Or(EqualTo(StringCompare(class_name, "AifcPCM24Test"), 0), EqualTo(StringCompare(class_name, "AifcPCM32Test"), 0))))))) ThenBlock: {
             ReturnValue(0)
         }
-        IfCondition EqualTo(StringCompare(class_name, "HierarchyTest"), 0) ThenBlock: {
+        IfCondition Or(EqualTo(StringCompare(class_name, "AifcULAWTest"), 0), Or(EqualTo(StringCompare(class_name, "AifcALAWTest"), 0), Or(EqualTo(StringCompare(class_name, "AIFCLowLevelTest"), 0), Or(EqualTo(StringCompare(class_name, "Test_Csv"), 0), Or(EqualTo(StringCompare(class_name, "TestDialectRegistry"), 0), Or(EqualTo(StringCompare(class_name, "TestCsvBase"), 0), EqualTo(StringCompare(class_name, "TestDialectExcel"), 0))))))) ThenBlock: {
             ReturnValue(0)
         }
-        IfCondition EqualTo(StringCompare(class_name, "AttributesTest"), 0) ThenBlock: {
+        IfCondition Or(EqualTo(StringCompare(class_name, "TestEscapedExcel"), 0), Or(EqualTo(StringCompare(class_name, "TestDialectUnix"), 0), Or(EqualTo(StringCompare(class_name, "TestQuotedEscapedExcel"), 0), Or(EqualTo(StringCompare(class_name, "TestDictFields"), 0), Or(EqualTo(StringCompare(class_name, "TestArrayWrites"), 0), Or(EqualTo(StringCompare(class_name, "TestDialectValidity"), 0), EqualTo(StringCompare(class_name, "TestSniffer"), 0))))))) ThenBlock: {
             ReturnValue(0)
         }
-        IfCondition EqualTo(StringCompare(class_name, "FileInputTests"), 0) ThenBlock: {
+        IfCondition Or(EqualTo(StringCompare(class_name, "TestLeaks"), 0), Or(EqualTo(StringCompare(class_name, "TestUnicode"), 0), Or(EqualTo(StringCompare(class_name, "KeyOrderingTest"), 0), Or(EqualTo(StringCompare(class_name, "TestSpwdNonRoot"), 0), Or(EqualTo(StringCompare(class_name, "GeneralTests"), 0), Or(EqualTo(StringCompare(class_name, "WriteTests"), 0), EqualTo(StringCompare(class_name, "OptionTests"), 0))))))) ThenBlock: {
             ReturnValue(0)
         }
-        IfCondition EqualTo(StringCompare(class_name, "Test_fileinput_input"), 0) ThenBlock: {
+        IfCondition Or(EqualTo(StringCompare(class_name, "ExpectTests"), 0), Or(EqualTo(StringCompare(class_name, "LocaleConfigurationTests"), 0), Or(EqualTo(StringCompare(class_name, "BaseSelectorTestCase"), 0), Or(EqualTo(StringCompare(class_name, "SelectSelectorTestCase"), 0), Or(EqualTo(StringCompare(class_name, "PollSelectorTestCase"), 0), Or(EqualTo(StringCompare(class_name, "EpollSelectorTestCase"), 0), EqualTo(StringCompare(class_name, "KqueueSelectorTestCase"), 0))))))) ThenBlock: {
             ReturnValue(0)
         }
-        IfCondition EqualTo(StringCompare(class_name, "Test_fileinput_close"), 0) ThenBlock: {
+        IfCondition Or(EqualTo(StringCompare(class_name, "DevpollSelectorTestCase"), 0), Or(EqualTo(StringCompare(class_name, "SunauTest"), 0), Or(EqualTo(StringCompare(class_name, "SunauPCM8Test"), 0), Or(EqualTo(StringCompare(class_name, "SunauPCM16Test"), 0), Or(EqualTo(StringCompare(class_name, "SunauPCM24Test"), 0), Or(EqualTo(StringCompare(class_name, "SunauPCM32Test"), 0), EqualTo(StringCompare(class_name, "SunauULAWTest"), 0))))))) ThenBlock: {
             ReturnValue(0)
         }
-        IfCondition EqualTo(StringCompare(class_name, "Test_fileinput_nextfile"), 0) ThenBlock: {
+        IfCondition Or(EqualTo(StringCompare(class_name, "ArrayBinASCIITest"), 0), Or(EqualTo(StringCompare(class_name, "BytearrayBinASCIITest"), 0), Or(EqualTo(StringCompare(class_name, "MemoryviewBinASCIITest"), 0), Or(EqualTo(StringCompare(class_name, "ChecksumBigBufferTestCase"), 0), Or(EqualTo(StringCompare(class_name, "TestLocale"), 0), Or(EqualTo(StringCompare(class_name, "TestAsctime4dyear"), 0), EqualTo(StringCompare(class_name, "TestStrftime4dyear"), 0))))))) ThenBlock: {
             ReturnValue(0)
         }
-        IfCondition EqualTo(StringCompare(class_name, "Test_fileinput_filename"), 0) ThenBlock: {
+        IfCondition Or(EqualTo(StringCompare(class_name, "TestPytime"), 0), Or(EqualTo(StringCompare(class_name, "CPyTimeTestCase"), 0), Or(EqualTo(StringCompare(class_name, "TestCPyTime"), 0), Or(EqualTo(StringCompare(class_name, "TestOldPyTime"), 0), Or(EqualTo(StringCompare(class_name, "TestTimeWeaklinking"), 0), Or(EqualTo(StringCompare(class_name, "TestCommandLine"), 0), EqualTo(StringCompare(class_name, "TestCEncodeBasestringAscii"), 0))))))) ThenBlock: {
             ReturnValue(0)
         }
-        IfCondition EqualTo(StringCompare(class_name, "Test_fileinput_lineno"), 0) ThenBlock: {
+        IfCondition Or(EqualTo(StringCompare(class_name, "TestCIndent"), 0), Or(EqualTo(StringCompare(class_name, "FinderTests"), 0), Or(EqualTo(StringCompare(class_name, "TestCPass2"), 0), Or(EqualTo(StringCompare(class_name, "TestCPass3"), 0), Or(EqualTo(StringCompare(class_name, "TestCEnum"), 0), Or(EqualTo(StringCompare(class_name, "PyBufferSizeTest"), 0), EqualTo(StringCompare(class_name, "SpecializationStatsTests"), 0))))))) ThenBlock: {
             ReturnValue(0)
         }
-        IfCondition EqualTo(StringCompare(class_name, "Test_fileinput_filelineno"), 0) ThenBlock: {
+        IfCondition Or(EqualTo(StringCompare(class_name, "TestCUnicode"), 0), Or(EqualTo(StringCompare(class_name, "TestBasic"), 0), Or(EqualTo(StringCompare(class_name, "TestVariousIteratorArgs"), 0), Or(EqualTo(StringCompare(class_name, "TestSubclass"), 0), Or(EqualTo(StringCompare(class_name, "TestSequence"), 0), Or(EqualTo(StringCompare(class_name, "ByteTest"), 0), EqualTo(StringCompare(class_name, "UnsignedByteTest"), 0))))))) ThenBlock: {
             ReturnValue(0)
         }
-        IfCondition EqualTo(StringCompare(class_name, "Test_fileinput_fileno"), 0) ThenBlock: {
+        IfCondition Or(EqualTo(StringCompare(class_name, "ShortTest"), 0), Or(EqualTo(StringCompare(class_name, "UnsignedShortTest"), 0), Or(EqualTo(StringCompare(class_name, "IntTest"), 0), Or(EqualTo(StringCompare(class_name, "UnsignedIntTest"), 0), Or(EqualTo(StringCompare(class_name, "LongTest"), 0), Or(EqualTo(StringCompare(class_name, "UnsignedLongTest"), 0), EqualTo(StringCompare(class_name, "LongLongTest"), 0))))))) ThenBlock: {
             ReturnValue(0)
         }
-        IfCondition EqualTo(StringCompare(class_name, "Test_fileinput_isfirstline"), 0) ThenBlock: {
+        IfCondition Or(EqualTo(StringCompare(class_name, "UnsignedLongLongTest"), 0), Or(EqualTo(StringCompare(class_name, "FloatTest"), 0), Or(EqualTo(StringCompare(class_name, "DoubleTest"), 0), Or(EqualTo(StringCompare(class_name, "LargeArrayTest"), 0), Or(EqualTo(StringCompare(class_name, "ArrayReconstructorTest"), 0), Or(EqualTo(StringCompare(class_name, "StringTest"), 0), EqualTo(StringCompare(class_name, "NumberTest"), 0))))))) ThenBlock: {
             ReturnValue(0)
         }
-        IfCondition EqualTo(StringCompare(class_name, "Test_fileinput_isstdin"), 0) ThenBlock: {
+        IfCondition Or(EqualTo(StringCompare(class_name, "IntegerNumberTest"), 0), Or(EqualTo(StringCompare(class_name, "SignedNumberTest"), 0), Or(EqualTo(StringCompare(class_name, "UnsignedNumberTest"), 0), Or(EqualTo(StringCompare(class_name, "FPTest"), 0), Or(EqualTo(StringCompare(class_name, "PyPickleTests"), 0), Or(EqualTo(StringCompare(class_name, "PyUnpicklerTests"), 0), EqualTo(StringCompare(class_name, "PyPicklerTests"), 0))))))) ThenBlock: {
             ReturnValue(0)
         }
-        IfCondition EqualTo(StringCompare(class_name, "Test_hook_compressed"), 0) ThenBlock: {
+        IfCondition Or(EqualTo(StringCompare(class_name, "InMemoryPickleTests"), 0), Or(EqualTo(StringCompare(class_name, "PyPersPicklerTests"), 0), Or(EqualTo(StringCompare(class_name, "PyIdPersPicklerTests"), 0), Or(EqualTo(StringCompare(class_name, "TestInsort"), 0), Or(EqualTo(StringCompare(class_name, "TestErrorHandling"), 0), Or(EqualTo(StringCompare(class_name, "TestDocExample"), 0), EqualTo(StringCompare(class_name, "ReloadTests"), 0))))))) ThenBlock: {
             ReturnValue(0)
         }
-        IfCondition EqualTo(StringCompare(class_name, "Test_hook_encoded"), 0) ThenBlock: {
+        IfCondition Or(EqualTo(StringCompare(class_name, "PEP3147Tests"), 0), Or(EqualTo(StringCompare(class_name, "NullImporterTests"), 0), Or(EqualTo(StringCompare(class_name, "PyPicklerUnpicklerObjectTests"), 0), Or(EqualTo(StringCompare(class_name, "PyDispatchTableTests"), 0), Or(EqualTo(StringCompare(class_name, "PyChainDispatchTableTests"), 0), Or(EqualTo(StringCompare(class_name, "PyPicklerHookTests"), 0), EqualTo(StringCompare(class_name, "MiscTests"), 0))))))) ThenBlock: {
             ReturnValue(0)
         }
-        IfCondition EqualTo(StringCompare(class_name, "MiscTest"), 0) ThenBlock: {
+        IfCondition Or(EqualTo(StringCompare(class_name, "TestAcceleratorImported"), 0), Or(EqualTo(StringCompare(class_name, "SizeofTest"), 0), Or(EqualTo(StringCompare(class_name, "PtyTest"), 0), Or(EqualTo(StringCompare(class_name, "DuckTests"), 0), Or(EqualTo(StringCompare(class_name, "CSubFutureTests"), 0), Or(EqualTo(StringCompare(class_name, "CFutureDoneCallbackTests"), 0), EqualTo(StringCompare(class_name, "CSubFutureDoneCallbackTests"), 0))))))) ThenBlock: {
             ReturnValue(0)
         }
-        IfCondition EqualTo(StringCompare(class_name, "WaveLowLevelTest"), 0) ThenBlock: {
+        IfCondition Or(EqualTo(StringCompare(class_name, "PyFutureDoneCallbackTests"), 0), Or(EqualTo(StringCompare(class_name, "PyFutureInheritanceTests"), 0), Or(EqualTo(StringCompare(class_name, "CFutureInheritanceTests"), 0), Or(EqualTo(StringCompare(class_name, "TestPlistlib"), 0), Or(EqualTo(StringCompare(class_name, "TestBinaryPlistlib"), 0), Or(EqualTo(StringCompare(class_name, "TestKeyedArchive"), 0), EqualTo(StringCompare(class_name, "TestPlutil"), 0))))))) ThenBlock: {
             ReturnValue(0)
         }
-        IfCondition EqualTo(StringCompare(class_name, "WavePCM8Test"), 0) ThenBlock: {
+        IfCondition Or(EqualTo(StringCompare(class_name, "TestSetSubclass"), 0), Or(EqualTo(StringCompare(class_name, "TestFrozenSet"), 0), Or(EqualTo(StringCompare(class_name, "TestFrozenSetSubclass"), 0), Or(EqualTo(StringCompare(class_name, "TestSetSubclassWithSlots"), 0), Or(EqualTo(StringCompare(class_name, "TestFrozenSetSubclassWithSlots"), 0), Or(EqualTo(StringCompare(class_name, "TestBasicOpsEmpty"), 0), EqualTo(StringCompare(class_name, "TestBasicOpsSingleton"), 0))))))) ThenBlock: {
             ReturnValue(0)
         }
-        IfCondition EqualTo(StringCompare(class_name, "WavePCM16Test"), 0) ThenBlock: {
+        IfCondition Or(EqualTo(StringCompare(class_name, "TestBasicOpsTuple"), 0), Or(EqualTo(StringCompare(class_name, "TestBasicOpsTriple"), 0), Or(EqualTo(StringCompare(class_name, "TestBasicOpsString"), 0), Or(EqualTo(StringCompare(class_name, "TestBasicOpsBytes"), 0), Or(EqualTo(StringCompare(class_name, "TestBasicOpsMixedStringBytes"), 0), Or(EqualTo(StringCompare(class_name, "TestExceptionPropagation"), 0), EqualTo(StringCompare(class_name, "TestSetOfSets"), 0))))))) ThenBlock: {
             ReturnValue(0)
         }
-        IfCondition EqualTo(StringCompare(class_name, "WavePCM24Test"), 0) ThenBlock: {
+        IfCondition Or(EqualTo(StringCompare(class_name, "TestBinaryOps"), 0), Or(EqualTo(StringCompare(class_name, "TestUpdateOps"), 0), Or(EqualTo(StringCompare(class_name, "TestMutate"), 0), Or(EqualTo(StringCompare(class_name, "TestSubsetEqualEmpty"), 0), Or(EqualTo(StringCompare(class_name, "TestSubsetEqualNonEmpty"), 0), Or(EqualTo(StringCompare(class_name, "TestSubsetEmptyNonEmpty"), 0), EqualTo(StringCompare(class_name, "TestSubsetPartial"), 0))))))) ThenBlock: {
             ReturnValue(0)
         }
-        IfCondition EqualTo(StringCompare(class_name, "WavePCM32Test"), 0) ThenBlock: {
+        IfCondition Or(EqualTo(StringCompare(class_name, "TestSubsetNonOverlap"), 0), Or(EqualTo(StringCompare(class_name, "TestOnlySetsNumeric"), 0), Or(EqualTo(StringCompare(class_name, "TestOnlySetsDict"), 0), Or(EqualTo(StringCompare(class_name, "TestOnlySetsOperator"), 0), Or(EqualTo(StringCompare(class_name, "TestOnlySetsTuple"), 0), Or(EqualTo(StringCompare(class_name, "TestOnlySetsString"), 0), EqualTo(StringCompare(class_name, "TestOnlySetsGenerator"), 0))))))) ThenBlock: {
             ReturnValue(0)
         }
-        IfCondition EqualTo(StringCompare(class_name, "MessageBeepTest"), 0) ThenBlock: {
+        IfCondition Or(EqualTo(StringCompare(class_name, "TestCopyingEmpty"), 0), Or(EqualTo(StringCompare(class_name, "TestCopyingSingleton"), 0), Or(EqualTo(StringCompare(class_name, "TestCopyingTriple"), 0), Or(EqualTo(StringCompare(class_name, "TestCopyingTuple"), 0), Or(EqualTo(StringCompare(class_name, "TestCopyingNested"), 0), Or(EqualTo(StringCompare(class_name, "TestIdentities"), 0), EqualTo(StringCompare(class_name, "TestWeirdBugs"), 0))))))) ThenBlock: {
             ReturnValue(0)
         }
-        IfCondition EqualTo(StringCompare(class_name, "PlaySoundTest"), 0) ThenBlock: {
+        IfCondition Or(EqualTo(StringCompare(class_name, "TestBinaryOpsMutating_Set_Set"), 0), Or(EqualTo(StringCompare(class_name, "TestBinaryOpsMutating_Subclass_Subclass"), 0), Or(EqualTo(StringCompare(class_name, "TestBinaryOpsMutating_Set_Subclass"), 0), Or(EqualTo(StringCompare(class_name, "TestBinaryOpsMutating_Subclass_Set"), 0), Or(EqualTo(StringCompare(class_name, "TestMethodsMutating_Set_Set"), 0), Or(EqualTo(StringCompare(class_name, "TestMethodsMutating_Subclass_Subclass"), 0), EqualTo(StringCompare(class_name, "TestMethodsMutating_Set_Subclass"), 0))))))) ThenBlock: {
             ReturnValue(0)
         }
-        IfCondition EqualTo(StringCompare(class_name, "TestAsynchat"), 0) ThenBlock: {
+        IfCondition Or(EqualTo(StringCompare(class_name, "TestMethodsMutating_Subclass_Set"), 0), Or(EqualTo(StringCompare(class_name, "TestMethodsMutating_Set_Dict"), 0), Or(EqualTo(StringCompare(class_name, "TestMethodsMutating_Set_List"), 0), Or(EqualTo(StringCompare(class_name, "TestGraphs"), 0), Or(EqualTo(StringCompare(class_name, "GenericTests"), 0), Or(EqualTo(StringCompare(class_name, "WindowsSignalTests"), 0), EqualTo(StringCompare(class_name, "WakeupFDTests"), 0))))))) ThenBlock: {
             ReturnValue(0)
         }
-        IfCondition EqualTo(StringCompare(class_name, "TestAsynchat_WithPoll"), 0) ThenBlock: {
+        IfCondition Or(EqualTo(StringCompare(class_name, "WakeupSignalTests"), 0), Or(EqualTo(StringCompare(class_name, "WakeupSocketSignalTests"), 0), Or(EqualTo(StringCompare(class_name, "SiginterruptTest"), 0), Or(EqualTo(StringCompare(class_name, "ItimerTest"), 0), Or(EqualTo(StringCompare(class_name, "PendingSignalsTests"), 0), Or(EqualTo(StringCompare(class_name, "StressTest"), 0), EqualTo(StringCompare(class_name, "RaiseSignalTest"), 0))))))) ThenBlock: {
             ReturnValue(0)
         }
-        IfCondition EqualTo(StringCompare(class_name, "HTMLParserTestCase"), 0) ThenBlock: {
+        IfCondition Or(EqualTo(StringCompare(class_name, "PidfdSignalTest"), 0), Or(EqualTo(StringCompare(class_name, "IntTestCase"), 0), Or(EqualTo(StringCompare(class_name, "FloatTestCase"), 0), Or(EqualTo(StringCompare(class_name, "ExceptionTestCase"), 0), Or(EqualTo(StringCompare(class_name, "CodeTestCase"), 0), Or(EqualTo(StringCompare(class_name, "ContainerTestCase"), 0), EqualTo(StringCompare(class_name, "BufferTestCase"), 0))))))) ThenBlock: {
             ReturnValue(0)
         }
-        IfCondition EqualTo(StringCompare(class_name, "Test_MultibyteCodec"), 0) ThenBlock: {
+        IfCondition Or(EqualTo(StringCompare(class_name, "LargeValuesTestCase"), 0), Or(EqualTo(StringCompare(class_name, "InstancingTestCase"), 0), Or(EqualTo(StringCompare(class_name, "CompatibilityTestCase"), 0), Or(EqualTo(StringCompare(class_name, "InterningTestCase"), 0), Or(EqualTo(StringCompare(class_name, "CAPI_TestCase"), 0), Or(EqualTo(StringCompare(class_name, "OldAPITests"), 0), EqualTo(StringCompare(class_name, "SpecAPITests"), 0))))))) ThenBlock: {
             ReturnValue(0)
         }
-        IfCondition EqualTo(StringCompare(class_name, "Test_IncrementalEncoder"), 0) ThenBlock: {
+        IfCondition Or(EqualTo(StringCompare(class_name, "BZ2FileTest"), 0), Or(EqualTo(StringCompare(class_name, "BZ2CompressorTest"), 0), Or(EqualTo(StringCompare(class_name, "CompressDecompressTest"), 0), Or(EqualTo(StringCompare(class_name, "OpenTest"), 0), Or(EqualTo(StringCompare(class_name, "DisplayHookTest"), 0), Or(EqualTo(StringCompare(class_name, "ActiveExceptionTests"), 0), EqualTo(StringCompare(class_name, "ExceptHookTest"), 0))))))) ThenBlock: {
             ReturnValue(0)
         }
-        IfCondition EqualTo(StringCompare(class_name, "Test_StreamReader"), 0) ThenBlock: {
+        IfCondition Or(EqualTo(StringCompare(class_name, "UnraisableHookTest"), 0), Or(EqualTo(StringCompare(class_name, "Unsigned_TestCase"), 0), Or(EqualTo(StringCompare(class_name, "Signed_TestCase"), 0), Or(EqualTo(StringCompare(class_name, "LongLong_TestCase"), 0), Or(EqualTo(StringCompare(class_name, "Float_TestCase"), 0), Or(EqualTo(StringCompare(class_name, "Boolean_TestCase"), 0), EqualTo(StringCompare(class_name, "Tuple_TestCase"), 0))))))) ThenBlock: {
             ReturnValue(0)
         }
-        IfCondition EqualTo(StringCompare(class_name, "Test_StreamWriter"), 0) ThenBlock: {
+        IfCondition Or(EqualTo(StringCompare(class_name, "Keywords_TestCase"), 0), Or(EqualTo(StringCompare(class_name, "KeywordOnly_TestCase"), 0), Or(EqualTo(StringCompare(class_name, "PositionalOnlyAndKeywords_TestCase"), 0), Or(EqualTo(StringCompare(class_name, "Bytes_TestCase"), 0), Or(EqualTo(StringCompare(class_name, "String_TestCase"), 0), Or(EqualTo(StringCompare(class_name, "Object_TestCase"), 0), EqualTo(StringCompare(class_name, "SkipitemTest"), 0))))))) ThenBlock: {
             ReturnValue(0)
         }
-        IfCondition EqualTo(StringCompare(class_name, "TestStateful"), 0) ThenBlock: {
+        IfCondition Or(EqualTo(StringCompare(class_name, "ParseTupleAndKeywords_Test"), 0), Or(EqualTo(StringCompare(class_name, "Test_testcapi"), 0), Or(EqualTo(StringCompare(class_name, "ReadZipTests"), 0), Or(EqualTo(StringCompare(class_name, "ReadNamespaceTests"), 0), Or(EqualTo(StringCompare(class_name, "DictSubtypeVersionTests"), 0), Or(EqualTo(StringCompare(class_name, "Frozen_LoaderTests"), 0), EqualTo(StringCompare(class_name, "Source_LoaderTests"), 0))))))) ThenBlock: {
             ReturnValue(0)
         }
-        IfCondition EqualTo(StringCompare(class_name, "TestHZStateful"), 0) ThenBlock: {
+        IfCondition Or(EqualTo(StringCompare(class_name, "StatsTestCase"), 0), Or(EqualTo(StringCompare(class_name, "BaseXYTestCase"), 0), Or(EqualTo(StringCompare(class_name, "TestMain"), 0), Or(EqualTo(StringCompare(class_name, "StrftimeTest"), 0), Or(EqualTo(StringCompare(class_name, "CMathTests"), 0), Or(EqualTo(StringCompare(class_name, "LockTests"), 0), EqualTo(StringCompare(class_name, "CoroutineTests"), 0))))))) ThenBlock: {
             ReturnValue(0)
         }
-        IfCondition EqualTo(StringCompare(class_name, "AifcTest"), 0) ThenBlock: {
+        IfCondition Or(EqualTo(StringCompare(class_name, "QueueBasicTests"), 0), Or(EqualTo(StringCompare(class_name, "QueuePutTests"), 0), Or(EqualTo(StringCompare(class_name, "LifoQueueTests"), 0), Or(EqualTo(StringCompare(class_name, "PriorityQueueTests"), 0), Or(EqualTo(StringCompare(class_name, "QueueJoinTests"), 0), Or(EqualTo(StringCompare(class_name, "LifoQueueJoinTests"), 0), EqualTo(StringCompare(class_name, "PriorityQueueJoinTests"), 0))))))) ThenBlock: {
             ReturnValue(0)
         }
-        IfCondition EqualTo(StringCompare(class_name, "AifcPCM8Test"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "AifcPCM16Test"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "AifcPCM24Test"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "AifcPCM32Test"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "AifcULAWTest"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "AifcALAWTest"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "AIFCLowLevelTest"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "Test_Csv"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "TestDialectRegistry"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "TestCsvBase"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "TestDialectExcel"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "TestEscapedExcel"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "TestDialectUnix"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "TestQuotedEscapedExcel"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "TestDictFields"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "TestArrayWrites"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "TestDialectValidity"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "TestSniffer"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "TestLeaks"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "TestUnicode"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "KeyOrderingTest"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "TestSpwdNonRoot"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "GeneralTests"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "WriteTests"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "OptionTests"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "ExpectTests"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "LocaleConfigurationTests"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "BaseSelectorTestCase"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "SelectSelectorTestCase"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "PollSelectorTestCase"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "EpollSelectorTestCase"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "KqueueSelectorTestCase"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "DevpollSelectorTestCase"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "SunauTest"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "SunauPCM8Test"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "SunauPCM16Test"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "SunauPCM24Test"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "SunauPCM32Test"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "SunauULAWTest"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "ArrayBinASCIITest"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "BytearrayBinASCIITest"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "MemoryviewBinASCIITest"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "ChecksumBigBufferTestCase"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "TestLocale"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "TestAsctime4dyear"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "TestStrftime4dyear"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "TestPytime"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "CPyTimeTestCase"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "TestCPyTime"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "TestOldPyTime"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "TestTimeWeaklinking"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "TestCommandLine"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "TestCEncodeBasestringAscii"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "TestCIndent"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "FinderTests"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "TestCPass2"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "TestCPass3"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "TestCFloat"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "TestCEnum"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "PyBufferSizeTest"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "SpecializationStatsTests"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "TestCUnicode"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "TestBasic"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "TestVariousIteratorArgs"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "TestSubclass"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "TestSequence"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "ByteTest"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "UnsignedByteTest"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "ShortTest"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "UnsignedShortTest"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "IntTest"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "UnsignedIntTest"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "LongTest"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "UnsignedLongTest"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "LongLongTest"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "UnsignedLongLongTest"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "FloatTest"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "DoubleTest"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "LargeArrayTest"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "ArrayReconstructorTest"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "StringTest"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "NumberTest"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "IntegerNumberTest"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "SignedNumberTest"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "UnsignedNumberTest"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "FPTest"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "PyPickleTests"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "PyUnpicklerTests"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "PyPicklerTests"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "InMemoryPickleTests"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "PyPersPicklerTests"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "PyIdPersPicklerTests"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "TestInsort"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "TestErrorHandling"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "TestDocExample"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "ReloadTests"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "PEP3147Tests"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "NullImporterTests"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "PyPicklerUnpicklerObjectTests"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "PyDispatchTableTests"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "PyChainDispatchTableTests"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "PyPicklerHookTests"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "MiscTests"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "TestAcceleratorImported"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "SizeofTest"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "PtyTest"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "DuckTests"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "CSubFutureTests"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "CFutureDoneCallbackTests"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "CSubFutureDoneCallbackTests"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "PyFutureDoneCallbackTests"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "PyFutureInheritanceTests"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "CFutureInheritanceTests"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "TestPlistlib"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "TestBinaryPlistlib"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "TestKeyedArchive"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "TestPlutil"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "TestSetSubclass"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "TestFrozenSet"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "TestFrozenSetSubclass"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "TestSetSubclassWithSlots"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "TestFrozenSetSubclassWithSlots"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "TestBasicOpsEmpty"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "TestBasicOpsSingleton"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "TestBasicOpsTuple"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "TestBasicOpsTriple"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "TestBasicOpsString"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "TestBasicOpsBytes"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "TestBasicOpsMixedStringBytes"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "TestExceptionPropagation"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "TestSetOfSets"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "TestBinaryOps"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "TestUpdateOps"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "TestMutate"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "TestSubsetEqualEmpty"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "TestSubsetEqualNonEmpty"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "TestSubsetEmptyNonEmpty"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "TestSubsetPartial"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "TestSubsetNonOverlap"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "TestOnlySetsNumeric"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "TestOnlySetsDict"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "TestOnlySetsOperator"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "TestOnlySetsTuple"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "TestOnlySetsString"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "TestOnlySetsGenerator"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "TestCopyingEmpty"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "TestCopyingSingleton"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "TestCopyingTriple"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "TestCopyingTuple"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "TestCopyingNested"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "TestIdentities"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "TestWeirdBugs"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "TestBinaryOpsMutating_Set_Set"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "TestBinaryOpsMutating_Subclass_Subclass"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "TestBinaryOpsMutating_Set_Subclass"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "TestBinaryOpsMutating_Subclass_Set"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "TestMethodsMutating_Set_Set"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "TestMethodsMutating_Subclass_Subclass"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "TestMethodsMutating_Set_Subclass"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "TestMethodsMutating_Subclass_Set"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "TestMethodsMutating_Set_Dict"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "TestMethodsMutating_Set_List"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "TestGraphs"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "GenericTests"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "WindowsSignalTests"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "WakeupFDTests"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "WakeupSignalTests"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "WakeupSocketSignalTests"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "SiginterruptTest"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "ItimerTest"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "PendingSignalsTests"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "StressTest"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "RaiseSignalTest"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "PidfdSignalTest"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "IntTestCase"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "FloatTestCase"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "ExceptionTestCase"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "CodeTestCase"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "ContainerTestCase"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "BufferTestCase"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "LargeValuesTestCase"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "InstancingTestCase"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "CompatibilityTestCase"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "InterningTestCase"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "CAPI_TestCase"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "OldAPITests"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "SpecAPITests"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "BZ2FileTest"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "BZ2CompressorTest"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "CompressDecompressTest"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "OpenTest"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "DisplayHookTest"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "ActiveExceptionTests"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "ExceptHookTest"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "UnraisableHookTest"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "Unsigned_TestCase"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "Signed_TestCase"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "LongLong_TestCase"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "Float_TestCase"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "Boolean_TestCase"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "Tuple_TestCase"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "Keywords_TestCase"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "KeywordOnly_TestCase"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "PositionalOnlyAndKeywords_TestCase"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "Bytes_TestCase"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "String_TestCase"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "Object_TestCase"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "SkipitemTest"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "ParseTupleAndKeywords_Test"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "Test_testcapi"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "ReadZipTests"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "ReadNamespaceTests"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "DictSubtypeVersionTests"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "Frozen_LoaderTests"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "Source_LoaderTests"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "StatsTestCase"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "BaseXYTestCase"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "TestMain"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "StrftimeTest"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "SpecializationStatsTests"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "CMathTests"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "LockTests"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "CoroutineTests"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "QueueBasicTests"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "QueuePutTests"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "LifoQueueTests"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "PriorityQueueTests"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "QueueJoinTests"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "LifoQueueJoinTests"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "PriorityQueueJoinTests"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "ProactorStartServerTests"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "TestErrPrint"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "TestNannyNag"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "TestCheck"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "TestProcessTokens"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "TestCommandLine"), 0) ThenBlock: {
+        IfCondition Or(EqualTo(StringCompare(class_name, "ProactorStartServerTests"), 0), Or(EqualTo(StringCompare(class_name, "TestErrPrint"), 0), Or(EqualTo(StringCompare(class_name, "TestNannyNag"), 0), Or(EqualTo(StringCompare(class_name, "TestCheck"), 0), EqualTo(StringCompare(class_name, "TestProcessTokens"), 0))))) ThenBlock: {
             ReturnValue(0)
         }
         UnittestState.scheduled = Add(UnittestState.scheduled, 1)

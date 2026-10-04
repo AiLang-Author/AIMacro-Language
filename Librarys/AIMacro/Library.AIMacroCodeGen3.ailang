@@ -1362,8 +1362,10 @@ Function.Gen_FlattenExpr {
                 Gen_Emit("\n")
                 ReturnValue(Gen_MakeIdent(temp))
             }
-            // OOP MethodCall emits setup statements; do not prefix "temp = "
-            IfCondition EqualTo(is_known, 0) ThenBlock: {
+            // Always statement-safe MethodCall. Prefixing "temp = " before
+            // OOPGen_MethodCall emits `temp = args_var = Array.Create` and
+            // PARSE-SEGVs (json dumps kwargs, ~29k combined line).
+            IfCondition EqualTo(1, 1) ThenBlock: {
                 IfCondition EqualTo(args, 0) ThenBlock: {
                     num_args = 0
                 } ElseBlock: {

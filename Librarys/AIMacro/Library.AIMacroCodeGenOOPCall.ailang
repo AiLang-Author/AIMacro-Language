@@ -296,6 +296,7 @@ Function.OOPGen_MethodCall {
         // Generate args array
         args_var = OOPGen_TempVar("args")
         
+        Gen_EmitIndent()
         Gen_Emit(args_var)
         Gen_Emit(" = Array.Create(")
         Gen_EmitNumber(num_args)
