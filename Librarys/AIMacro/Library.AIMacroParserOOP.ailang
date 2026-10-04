@@ -693,62 +693,113 @@ Function.Parse_AttributeOrMethodCall {
 // =============================================================================
 // SUPER CALL PARSER
 // =============================================================================
-// Syntax: super().method(args)
+// Gold path: super().method(args) with positional args.
+// Leftover: super(cls, self), super(), super().attr, *args / **kwargs.
+
+Function.Parse_SkipSuperArgs {
+    Body: {
+        depth = 1
+        WhileLoop GreaterThan(depth, 0) {
+            t = Parse_Type()
+            IfCondition EqualTo(t, Token.EOF) ThenBlock: {
+                ReturnValue(0)
+            }
+            IfCondition EqualTo(t, Token.LPAREN) ThenBlock: {
+                depth = Add(depth, 1)
+            }
+            IfCondition EqualTo(t, Token.RPAREN) ThenBlock: {
+                depth = Subtract(depth, 1)
+            }
+            Parse_Advance()
+        }
+    }
+}
+
+Function.Parse_SkipArgUnpack {
+    Body: {
+        d = 0
+        WhileLoop EqualTo(1, 1) {
+            t = Parse_Type()
+            IfCondition EqualTo(t, Token.EOF) ThenBlock: {
+                BreakLoop
+            }
+            IfCondition EqualTo(d, 0) ThenBlock: {
+                IfCondition EqualTo(t, Token.COMMA) ThenBlock: {
+                    BreakLoop
+                }
+                IfCondition EqualTo(t, Token.RPAREN) ThenBlock: {
+                    BreakLoop
+                }
+            }
+            IfCondition EqualTo(t, Token.LPAREN) ThenBlock: {
+                d = Add(d, 1)
+            }
+            IfCondition EqualTo(t, Token.LBRACKET) ThenBlock: {
+                d = Add(d, 1)
+            }
+            IfCondition EqualTo(t, Token.LBRACE) ThenBlock: {
+                d = Add(d, 1)
+            }
+            IfCondition EqualTo(t, Token.RPAREN) ThenBlock: {
+                IfCondition GreaterThan(d, 0) ThenBlock: {
+                    d = Subtract(d, 1)
+                }
+            }
+            IfCondition EqualTo(t, Token.RBRACKET) ThenBlock: {
+                IfCondition GreaterThan(d, 0) ThenBlock: {
+                    d = Subtract(d, 1)
+                }
+            }
+            IfCondition EqualTo(t, Token.RBRACE) ThenBlock: {
+                IfCondition GreaterThan(d, 0) ThenBlock: {
+                    d = Subtract(d, 1)
+                }
+            }
+            Parse_Advance()
+        }
+    }
+}
 
 Function.Parse_SuperCall {
     Output: Address
     Body: {
-        // We've seen 'super' - consume it
         Parse_Advance()
         
-        // Expect ()
         is_lparen = Parse_Check(Token.LPAREN)
         IfCondition EqualTo(is_lparen, 0) ThenBlock: {
             Parse_Error("Expected '(' after 'super'")
             ReturnValue(0)
         }
-        Parse_Advance()  // consume '('
+        Parse_Advance()
+        Parse_SkipSuperArgs()
+        Parse_SkipNoise()
         
-        is_rparen = Parse_Check(Token.RPAREN)
-        IfCondition EqualTo(is_rparen, 0) ThenBlock: {
-            Parse_Error("Expected ')' after 'super('")
-            ReturnValue(0)
-        }
-        Parse_Advance()  // consume ')'
+        method_name = 0
+        args = Array.Create(1)
         
-        // Expect .method
         is_dot = Parse_Check(Token.DOT)
-        IfCondition EqualTo(is_dot, 0) ThenBlock: {
-            Parse_Error("Expected '.method' after 'super()'")
-            ReturnValue(0)
+        IfCondition EqualTo(is_dot, 1) ThenBlock: {
+            Parse_Advance()
+            method_name = Parse_ExpectIdent()
+            Parse_SkipNoise()
+            is_lparen = Parse_Check(Token.LPAREN)
+            IfCondition EqualTo(is_lparen, 1) ThenBlock: {
+                Parse_Advance()
+                args = Parse_ArgList()
+                Parse_SkipNoise()
+                is_rparen = Parse_Check(Token.RPAREN)
+                IfCondition EqualTo(is_rparen, 1) ThenBlock: {
+                    Parse_Advance()
+                }
+                ElseBlock: {
+                    Parse_SkipSuperArgs()
+                }
+            }
+            ElseBlock: {
+                method_name = 0
+            }
         }
-        Parse_Advance()  // consume '.'
         
-        method_name = Parse_ExpectIdent()
-        IfCondition EqualTo(method_name, 0) ThenBlock: {
-            Parse_Error("Expected method name after 'super().'")
-            ReturnValue(0)
-        }
-        
-        // Expect (args)
-        is_lparen = Parse_Check(Token.LPAREN)
-        IfCondition EqualTo(is_lparen, 0) ThenBlock: {
-            Parse_Error("Expected '(' after super method name")
-            ReturnValue(0)
-        }
-        Parse_Advance()  // consume '('
-        
-        args = Parse_ArgList()
-        
-        is_rparen = Parse_Check(Token.RPAREN)
-        IfCondition EqualTo(is_rparen, 0) ThenBlock: {
-            Parse_Error("Expected ')' after super method arguments")
-            ReturnValue(0)
-        }
-        Parse_Advance()  // consume ')'
-        
-        // Build SUPER_CALL node
-        // Structure: [type, line, col, method, args]
         node = ArrayCreate(5)
         ArraySet(node, 0, Node.SUPER_CALL)
         ArraySet(node, 1, Parse_Line())
@@ -769,29 +820,44 @@ Function.Parse_ArgList {
     Body: {
         args = Array.Create(8)
         
-        // Empty args?
+        Parse_SkipNoise()
         is_rparen = Parse_Check(Token.RPAREN)
         IfCondition EqualTo(is_rparen, 1) ThenBlock: {
             ReturnValue(args)
         }
         
-        // First argument
-        arg = Parse_Expr()
-        IfCondition NotEqual(arg, 0) ThenBlock: {
-            Array.Push(args, arg)
-        }
-        
-        // Additional arguments
         WhileLoop EqualTo(1, 1) {
-            is_comma = Parse_Check(Token.COMMA)
-            IfCondition EqualTo(is_comma, 0) ThenBlock: {
+            Parse_SkipNoise()
+            t = Parse_Type()
+            IfCondition EqualTo(t, Token.RPAREN) ThenBlock: {
                 BreakLoop
             }
-            Parse_Advance()  // consume ','
-            
-            arg = Parse_Expr()
-            IfCondition NotEqual(arg, 0) ThenBlock: {
-                Array.Push(args, arg)
+            IfCondition EqualTo(t, Token.EOF) ThenBlock: {
+                BreakLoop
+            }
+            IfCondition EqualTo(t, Token.STAR) ThenBlock: {
+                Parse_Advance()
+                Parse_SkipArgUnpack()
+            }
+            ElseBlock: {
+                IfCondition EqualTo(t, Token.POWER) ThenBlock: {
+                    Parse_Advance()
+                    Parse_SkipArgUnpack()
+                }
+                ElseBlock: {
+                    arg = Parse_Expr()
+                    IfCondition NotEqual(arg, 0) ThenBlock: {
+                        Array.Push(args, arg)
+                    }
+                }
+            }
+            Parse_SkipNoise()
+            is_comma = Parse_Check(Token.COMMA)
+            IfCondition EqualTo(is_comma, 1) ThenBlock: {
+                Parse_Advance()
+            }
+            ElseBlock: {
+                BreakLoop
             }
         }
         
