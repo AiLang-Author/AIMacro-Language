@@ -242,6 +242,12 @@ Function.Gen_EmitSmartIndexAccess {
     Body: {
         expr = ArrayGet(node, 3)
         index = ArrayGet(node, 4)
+        IfCondition EqualTo(Gen_HasCall(expr), 1) ThenBlock: {
+            expr = Gen_FlattenExpr(expr)
+        }
+        IfCondition EqualTo(Gen_HasCall(index), 1) ThenBlock: {
+            index = Gen_FlattenExpr(index)
+        }
         
         // Check for dict access
         expr_type = AST_Type(expr)
@@ -1854,12 +1860,12 @@ Function.Gen_FlattenCallArgs {
 Function.Gen_FlattenMethodArgs {
     Input: node: Address
     Body: {
-        // Flatten object if needed
+        // Flatten object if needed. LIST_COMP.sort() was ListSort( t = Array.Create
+        // ... t) → Expected ')' after arguments.
         obj = ArrayGet(node, 3)
         method = ArrayGet(node, 4)
-        obj_type = AST_Type(obj)
         IfCondition EqualTo(Gen_IsStdlibMethod(obj, method), 0) ThenBlock: {
-            IfCondition Or(EqualTo(obj_type, Node.CALL), Or(EqualTo(obj_type, Node.METHOD_CALL), Or(EqualTo(obj_type, Node.INDEX_ACCESS), EqualTo(obj_type, Node.ATTRIBUTE)))) ThenBlock: {
+            IfCondition EqualTo(Gen_HasCall(obj), 1) ThenBlock: {
                 flat_obj = Gen_FlattenExpr(obj)
                 ArraySet(node, 3, flat_obj)
             }

@@ -390,10 +390,12 @@ Function.OOPGen_SuperCall {
         Gen_EmitNumber(num_args)
         Gen_Emit(")\n")
         
-        // Push arguments
+        // Push arguments. METHOD_CALL must flatten first: Array.Push(x,
+        // args = Array.Create) is "Expected ')' after arguments".
         i = 0
         WhileLoop LessThan(i, num_args) {
             arg = Array.Get(args, i)
+            arg = OOPGen_FlattenExpr(arg)
             Gen_EmitIndent()
             Gen_Emit("Array.Push(")
             Gen_Emit(args_var)

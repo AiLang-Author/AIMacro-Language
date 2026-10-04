@@ -677,6 +677,14 @@ Function.Gen_IndexAccess {
     Body: {
         expr = ArrayGet(node, 3)
         index = ArrayGet(node, 4)
+        // x[-n-1] as a statement was DictGen_SmartGet(x, t = NumNeg(n)
+        // NumSub(t, 1)) → Expected ')' after arguments.
+        IfCondition EqualTo(Gen_HasCall(expr), 1) ThenBlock: {
+            expr = Gen_FlattenExpr(expr)
+        }
+        IfCondition EqualTo(Gen_HasCall(index), 1) ThenBlock: {
+            index = Gen_FlattenExpr(index)
+        }
         
         expr_type = AST_Type(expr)
         is_string_access = 0

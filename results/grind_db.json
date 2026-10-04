@@ -315,7 +315,7 @@
       "out": "",
       "tags": [],
       "key": "test_asyncio/test_ssl.py",
-      "updated": "2026-10-03"
+      "updated": "2026-10-04"
     },
     "test_asyncio/test_sslproto.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_asyncio/test_sslproto.py",
@@ -688,12 +688,12 @@
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_capi/test_misc.py",
       "status": "fail",
       "stage": "compile",
-      "rc": -11,
-      "err": "ERROR] Cannot read: re\n[IMPORT ERROR] Cannot read: subprocess\n[IMPORT ERROR] Cannot read: textwrap\n[IMPORT ERROR] Cannot read: threading\n[IMPORT ERROR] Cannot read: weakref\n[IMPORT ERROR] Cannot read: _testinternalcapi\n[IMPORT] Extracting symbols from 24 modules\n[IMPORT] Checking 1040 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 32679, col 52: Expected ')' after arguments\n  In:",
+      "rc": 1,
+      "err": "ALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\nERROR: Variable not found: idents\nCompilation Failed: \n[AST] Freeing 101189 node child-lists...\n[AST] Freed 42241 child-lists (node slots stay in pool)",
       "out": "",
       "tags": [],
       "key": "test_capi/test_misc.py",
-      "updated": "2026-10-03"
+      "updated": "2026-10-04"
     },
     "test_capi/test_structmembers.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_capi/test_structmembers.py",
@@ -1173,11 +1173,11 @@
       "status": "fail",
       "stage": "compile",
       "rc": -11,
-      "err": "MPORT ERROR] Cannot read: traceback\n[IMPORT ERROR] Cannot read: typing\n[IMPORT ERROR] Cannot read: typing\n[IMPORT ERROR] Cannot read: functools\n[IMPORT ERROR] Cannot read: typing\n[IMPORT ERROR] Cannot read: dataclasses\n[IMPORT] Extracting symbols from 24 modules\n[IMPORT] Checking 1388 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 32465, col 53: Expected ')' after arguments\n  In:",
+      "err": "MPORT ERROR] Cannot read: traceback\n[IMPORT ERROR] Cannot read: typing\n[IMPORT ERROR] Cannot read: typing\n[IMPORT ERROR] Cannot read: functools\n[IMPORT ERROR] Cannot read: typing\n[IMPORT ERROR] Cannot read: dataclasses\n[IMPORT] Extracting symbols from 24 modules\n[IMPORT] Checking 1388 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 32616, col 53: Expected ')' after arguments\n  In:",
       "out": "",
       "tags": [],
       "key": "test_dataclasses/__init__.py",
-      "updated": "2026-10-03"
+      "updated": "2026-10-04"
     },
     "test_datetime.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_datetime.py",
@@ -1413,13 +1413,13 @@
     "test_dynamic.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_dynamic.py",
       "status": "fail",
-      "stage": "compile",
-      "rc": -11,
-      "err": "] Loaded: AIMacro.AIMacroExtraCall\n[IMPORT] Loaded: AIMacro.AIMacroExtraStdlib\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT] Loaded: AIMacro.AIMacroSeq\n[IMPORT] Loaded: AIMacro.AIMacroNum\n[IMPORT ERROR] Cannot read: builtins\n[IMPORT] Extracting symbols from 24 modules\n[IMPORT] Checking 944 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 29245, col 87: Expected ')' after arguments\n  In:",
-      "out": "",
+      "stage": "run",
+      "rc": 1,
+      "err": "",
+      "out": "  RebindBuiltinsTests.test_globals_shadow_builtins\n  RebindBuiltinsTests.test_modify_builtins\n  RebindBuiltinsTests.test_modify_builtins_while_generator_active\n  RebindBuiltinsTests.test_modify_builtins_from_leaf_function\n  RebindBuiltinsTests.test_cannot_change_globals_or_builtins_with_eval\nFAIL: assertEqual\n  RebindBuiltinsTests.test_cannot_change_globals_or_builtins_with_exec\nFAIL: assertEqual\n  RebindBuiltinsTests.test_cannot_replace_builtins_dict_while_active\n  RebindBuiltinsTests.test_cannot_replace_builtins_dict_between_calls\n  RebindBuiltinsTests.test_eval_gives_lambda_custom_globals\nFAIL: assertEqual\n  RebindBuiltinsTests.test_load_global_specialization_failure_keeps_oparg\nERROR: Method not found: gettrace\nERROR: Method not found: settrace\n  TestTracing.test_after_specialization\nunittest: ran 11 tests, 3 failed\n",
       "tags": [],
       "key": "test_dynamic.py",
-      "updated": "2026-10-03"
+      "updated": "2026-10-04"
     },
     "test_dynamicclassattribute.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_dynamicclassattribute.py",
@@ -1596,11 +1596,11 @@
       "status": "fail",
       "stage": "compile",
       "rc": -11,
-      "err": "\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT] Loaded: AIMacro.AIMacroSeq\n[IMPORT] Loaded: AIMacro.AIMacroNum\n[IMPORT ERROR] Cannot read: contextlib\n[IMPORT ERROR] Cannot read: ensurepip\n[IMPORT ERROR] Cannot read: ensurepip\n[IMPORT] Extracting symbols from 24 modules\n[IMPORT] Checking 937 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 29262, col 44: Expected ')' after arguments\n  In:",
+      "err": "\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT] Loaded: AIMacro.AIMacroSeq\n[IMPORT] Loaded: AIMacro.AIMacroNum\n[IMPORT ERROR] Cannot read: contextlib\n[IMPORT ERROR] Cannot read: ensurepip\n[IMPORT ERROR] Cannot read: ensurepip\n[IMPORT] Extracting symbols from 24 modules\n[IMPORT] Checking 937 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 29408, col 44: Expected ')' after arguments\n  In:",
       "out": "",
       "tags": [],
       "key": "test_ensurepip.py",
-      "updated": "2026-10-03"
+      "updated": "2026-10-04"
     },
     "test_enum.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_enum.py",
@@ -1836,12 +1836,12 @@
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_format.py",
       "status": "fail",
       "stage": "compile",
-      "rc": -11,
-      "err": "roExtraStdlib\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT] Loaded: AIMacro.AIMacroSeq\n[IMPORT] Loaded: AIMacro.AIMacroNum\n[IMPORT ERROR] Cannot read: locale\n[IMPORT ERROR] Cannot read: re\n[IMPORT ERROR] Cannot read: support\n[IMPORT] Extracting symbols from 24 modules\n[IMPORT] Checking 926 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 30037, col 71: Expected ')' after arguments\n  In:",
+      "rc": 1,
+      "err": "INDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\nERROR: Variable not found: testformat\nCompilation Failed: \n[AST] Freeing 91588 node child-lists...\n[AST] Freed 39032 child-lists (node slots stay in pool)",
       "out": "",
       "tags": [],
       "key": "test_format.py",
-      "updated": "2026-10-03"
+      "updated": "2026-10-04"
     },
     "test_fractions.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_fractions.py",
@@ -1878,11 +1878,11 @@
       "status": "fail",
       "stage": "compile",
       "rc": -11,
-      "err": "AIMacroExtraStdlib\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT] Loaded: AIMacro.AIMacroSeq\n[IMPORT] Loaded: AIMacro.AIMacroNum\n[IMPORT ERROR] Cannot read: ast\n[IMPORT ERROR] Cannot read: re\n[IMPORT ERROR] Cannot read: types\n[IMPORT] Extracting symbols from 24 modules\n[IMPORT] Checking 998 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 33279, col 65: Expected ')' after arguments\n  In:",
+      "err": "AIMacroExtraStdlib\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT] Loaded: AIMacro.AIMacroSeq\n[IMPORT] Loaded: AIMacro.AIMacroNum\n[IMPORT ERROR] Cannot read: ast\n[IMPORT ERROR] Cannot read: re\n[IMPORT ERROR] Cannot read: types\n[IMPORT] Extracting symbols from 24 modules\n[IMPORT] Checking 998 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 33432, col 65: Expected ')' after arguments\n  In:",
       "out": "",
       "tags": [],
       "key": "test_fstring.py",
-      "updated": "2026-10-03"
+      "updated": "2026-10-04"
     },
     "test_ftplib.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_ftplib.py",
@@ -1911,11 +1911,11 @@
       "status": "fail",
       "stage": "compile",
       "rc": -11,
-      "err": "PORT ERROR] Cannot read: threading\n[IMPORT ERROR] Cannot read: typing\n[IMPORT ERROR] Cannot read: weakref\n[IMPORT ERROR] Cannot read: weakref\n[IMPORT ERROR] Cannot read: contextlib\n[IMPORT ERROR] Cannot read: functools\n[IMPORT] Extracting symbols from 24 modules\n[IMPORT] Checking 1338 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 39877, col 61: Expected ')' after arguments\n  In:",
+      "err": "PORT ERROR] Cannot read: threading\n[IMPORT ERROR] Cannot read: typing\n[IMPORT ERROR] Cannot read: weakref\n[IMPORT ERROR] Cannot read: weakref\n[IMPORT ERROR] Cannot read: contextlib\n[IMPORT ERROR] Cannot read: functools\n[IMPORT] Extracting symbols from 24 modules\n[IMPORT] Checking 1338 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 40013, col 61: Expected ')' after arguments\n  In:",
       "out": "",
       "tags": [],
       "key": "test_functools.py",
-      "updated": "2026-10-03"
+      "updated": "2026-10-04"
     },
     "test_future_stmt/__init__.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_future_stmt/__init__.py",
@@ -2020,13 +2020,13 @@
     "test_genericclass.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_genericclass.py",
       "status": "fail",
-      "stage": "compile",
-      "rc": -11,
-      "err": "oaded: AIMacro.AIMacroExtraOS\n[IMPORT] Loaded: AIMacro.AIMacroExtraCall\n[IMPORT] Loaded: AIMacro.AIMacroExtraStdlib\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT] Loaded: AIMacro.AIMacroSeq\n[IMPORT] Loaded: AIMacro.AIMacroNum\n[IMPORT] Extracting symbols from 24 modules\n[IMPORT] Checking 958 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 29326, col 60: Expected ')' after arguments\n  In:",
-      "out": "",
+      "stage": "run",
+      "rc": 1,
+      "err": "",
+      "out": "  TestMROEntry.test_mro_entry_signature\nERROR: index out of range\n  TestMROEntry.test_mro_entry\nERROR: index out of range\n  TestMROEntry.test_mro_entry_none\nERROR: index out of range\n  TestMROEntry.test_mro_entry_with_builtins\nERROR: index out of range\n  TestMROEntry.test_mro_entry_with_builtins_2\nERROR: index out of range\n  TestMROEntry.test_mro_entry_errors\n  TestMROEntry.test_mro_entry_errors_2\n  TestMROEntry.test_mro_entry_metaclass\nERROR: index out of range\n  TestMROEntry.test_mro_entry_type_call\n  TestClassGetitem.test_class_getitem\nERROR: index out of range\n  TestClassGetitem.test_class_getitem_format\nERROR: string indices must be integers\n  TestClassGetitem.test_class_getitem_inheritance\nERROR: string indices must be integers\n  TestClassGetitem.test_class_getitem_inheritance_2\nERROR: string indices must be integers\n  TestClassGetitem.test_class_getitem_classmethod\nERROR: string indices must be integers\n  TestClassGetitem.test_class_getitem_patched\nERROR: string indices must be integers\n  TestClassGetitem.test_class_getitem_with_builtins\nFAIL: assertIs\n  TestClassGetitem.test_class_getitem_errors\n  TestClassGetitem.test_class_getitem_errors_2\n  TestClassGetitem.test_class_getitem_metaclass\nERROR: index out of range\n  TestClassGetitem.test_class_getitem_with_metaclass\nERROR: index out of range\n  TestClassGetitem.test_class_getitem_metaclass_first\nERROR: index out of range\nunittest: ran 21 tests, 16 failed\n",
       "tags": [],
       "key": "test_genericclass.py",
-      "updated": "2026-10-03"
+      "updated": "2026-10-04"
     },
     "test_genericpath.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_genericpath.py",
@@ -3185,13 +3185,13 @@
     "test_memoryview.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_memoryview.py",
       "status": "fail",
-      "stage": "compile",
+      "stage": "run",
       "rc": -11,
-      "err": "l\n[IMPORT] Loaded: AIMacro.AIMacroExtraStdlib\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT] Loaded: AIMacro.AIMacroSeq\n[IMPORT] Loaded: AIMacro.AIMacroNum\n[IMPORT ERROR] Cannot read: weakref\n[IMPORT ERROR] Cannot read: array\n[IMPORT] Extracting symbols from 24 modules\n[IMPORT] Checking 972 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 30553, col 69: Expected ')' after arguments\n  In:",
-      "out": "",
+      "err": "",
+      "out": "ERROR: Method not found: array\nERROR: Method not found: array\n  BaseBytesMemoryTests.test_iter\n  BaseBytesMemoryTests.test_setitem_readonly\n",
       "tags": [],
       "key": "test_memoryview.py",
-      "updated": "2026-10-03"
+      "updated": "2026-10-04"
     },
     "test_metaclass.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_metaclass.py",
@@ -3810,22 +3810,22 @@
       "status": "fail",
       "stage": "compile",
       "rc": -11,
-      "err": "dlib\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT] Loaded: AIMacro.AIMacroSeq\n[IMPORT] Loaded: AIMacro.AIMacroNum\n[IMPORT ERROR] Cannot read: random\n[IMPORT ERROR] Cannot read: warnings\n[IMPORT ERROR] Cannot read: functools\n[IMPORT] Extracting symbols from 24 modules\n[IMPORT] Checking 1002 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 32784, col 58: Expected ')' after arguments\n  In:",
+      "err": "dlib\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT] Loaded: AIMacro.AIMacroSeq\n[IMPORT] Loaded: AIMacro.AIMacroNum\n[IMPORT ERROR] Cannot read: random\n[IMPORT ERROR] Cannot read: warnings\n[IMPORT ERROR] Cannot read: functools\n[IMPORT] Extracting symbols from 24 modules\n[IMPORT] Checking 1002 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 32878, col 58: Expected ')' after arguments\n  In:",
       "out": "",
       "tags": [],
       "key": "test_random.py",
-      "updated": "2026-10-03"
+      "updated": "2026-10-04"
     },
     "test_range.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_range.py",
       "status": "fail",
       "stage": "compile",
-      "rc": -11,
-      "err": " Loaded: AIMacro.AIMacroExtraCall\n[IMPORT] Loaded: AIMacro.AIMacroExtraStdlib\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT] Loaded: AIMacro.AIMacroSeq\n[IMPORT] Loaded: AIMacro.AIMacroNum\n[IMPORT ERROR] Cannot read: itertools\n[IMPORT] Extracting symbols from 24 modules\n[IMPORT] Checking 943 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 29295, col 59: Expected ')' after arguments\n  In:",
+      "rc": 1,
+      "err": "[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\nERROR: Variable not found: range\nCompilation Failed: \n[AST] Freeing 97826 node child-lists...\n[AST] Freed 41185 child-lists (node slots stay in pool)",
       "out": "",
       "tags": [],
       "key": "test_range.py",
-      "updated": "2026-10-03"
+      "updated": "2026-10-04"
     },
     "test_re.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_re.py",
@@ -4129,12 +4129,12 @@
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_sort.py",
       "status": "fail",
       "stage": "compile",
-      "rc": -11,
-      "err": "IMPORT] Loaded: AIMacro.AIMacroExtraStdlib\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT] Loaded: AIMacro.AIMacroSeq\n[IMPORT] Loaded: AIMacro.AIMacroNum\n[IMPORT ERROR] Cannot read: random\n[IMPORT ERROR] Cannot read: functools\n[IMPORT] Extracting symbols from 24 modules\n[IMPORT] Checking 955 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 29465, col 50: Expected ')' after arguments\n  In:",
+      "rc": 1,
+      "err": "[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\nERROR: Variable not found: check\nCompilation Failed: \n[AST] Freeing 89718 node child-lists...\n[AST] Freed 38760 child-lists (node slots stay in pool)",
       "out": "",
       "tags": [],
       "key": "test_sort.py",
-      "updated": "2026-10-03"
+      "updated": "2026-10-04"
     },
     "test_source_encoding.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_source_encoding.py",
@@ -4263,11 +4263,11 @@
       "status": "fail",
       "stage": "compile",
       "rc": -11,
-      "err": "ing\n[IMPORT ERROR] Cannot read: traceback\n[IMPORT ERROR] Cannot read: weakref\n[IMPORT ERROR] Cannot read: sysconfig\n[IMPORT ERROR] Cannot read: functools\n[IMPORT ERROR] Cannot read: _ssl\n[IMPORT ERROR] Cannot read: ssl\n[IMPORT] Extracting symbols from 24 modules\n[IMPORT] Checking 1199 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 36733, col 53: Expected ')' after arguments\n  In:",
+      "err": "ing\n[IMPORT ERROR] Cannot read: traceback\n[IMPORT ERROR] Cannot read: weakref\n[IMPORT ERROR] Cannot read: sysconfig\n[IMPORT ERROR] Cannot read: functools\n[IMPORT ERROR] Cannot read: _ssl\n[IMPORT ERROR] Cannot read: ssl\n[IMPORT] Extracting symbols from 24 modules\n[IMPORT] Checking 1199 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 36873, col 53: Expected ')' after arguments\n  In:",
       "out": "",
       "tags": [],
       "key": "test_ssl.py",
-      "updated": "2026-10-03"
+      "updated": "2026-10-04"
     },
     "test_stable_abi_ctypes.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_stable_abi_ctypes.py",
@@ -5155,13 +5155,13 @@
     "test_uu.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_uu.py",
       "status": "fail",
-      "stage": "compile",
-      "rc": -11,
-      "err": "PORT] Loaded: AIMacro.AIMacroExtraCall\n[IMPORT] Loaded: AIMacro.AIMacroExtraStdlib\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT] Loaded: AIMacro.AIMacroSeq\n[IMPORT] Loaded: AIMacro.AIMacroNum\n[IMPORT ERROR] Cannot read: stat\n[IMPORT] Extracting symbols from 24 modules\n[IMPORT] Checking 923 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 28568, col 61: Expected ')' after arguments\n  In:",
-      "out": "",
+      "stage": "run",
+      "rc": 1,
+      "err": "",
+      "out": "  UUTest.test_truncatedinput\n  UUTest.test_missingbegin\n  UUTest.test_garbage_padding\n  UUTest.test_newlines_escaped\n  UUTest.test_no_directory_traversal\n  UUFileTest.test_decode_filename\nERROR: No such file\n  UUFileTest.test_decodetwice\n  UUFileTest.test_decode_mode\nunittest: ran 8 tests, 1 failed\n",
       "tags": [],
       "key": "test_uu.py",
-      "updated": "2026-10-03"
+      "updated": "2026-10-04"
     },
     "test_uuid.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_uuid.py",
