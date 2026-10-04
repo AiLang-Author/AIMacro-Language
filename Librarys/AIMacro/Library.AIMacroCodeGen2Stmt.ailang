@@ -289,7 +289,12 @@ Function.Gen_Node {
             Gen_Emit("\n")
             ReturnValue(0)
         }
-        
+
+        // Statement C().attr / packed-call args: flatten before Gen_Expr so
+        // ObjectGet/Array.Push never wrap Array.Create.
+        IfCondition EqualTo(Gen_HasCall(node), 1) ThenBlock: {
+            node = Gen_FlattenExpr(node)
+        }
         Gen_EmitIndent()
         Gen_Expr(node)
         Gen_Emit("\n")

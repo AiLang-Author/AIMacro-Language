@@ -19,6 +19,50 @@ LibraryImport.AIMacro.AIMacroCodeGen4Method
 // =============================================================================
 // FUNCTION CALL
 // =============================================================================
+// Flatten HasCall args and missing defaults BEFORE any caller emits
+// "temp = name(". def f(x=g()) plus f() was name( t = Array.Create →
+// Expected ')' after arguments (ensurepip fake_pip, random gamma).
+Function.Gen_PadFlattenDefaults {
+    Input: name: Address
+    Input: args: Address
+    Output: Address
+    Body: {
+        n = 0
+        IfCondition EqualTo(args, 0) ThenBlock: {
+            args = Array.Create(4)
+        } ElseBlock: {
+            n = Array.Size(args)
+        }
+        i = 0
+        WhileLoop LessThan(i, n) {
+            a = Array.Get(args, i)
+            IfCondition And(NotEqual(a, 0), EqualTo(Gen_HasCall(a), 1)) ThenBlock: {
+                Array.Set(args, i, Gen_FlattenExpr(a))
+            }
+            i = Add(i, 1)
+        }
+        defaults = Gen_LookupDefaults(name)
+        IfCondition EqualTo(defaults, 0) ThenBlock: {
+            ReturnValue(args)
+        }
+        n_def = Array.Size(defaults)
+        i = n
+        WhileLoop LessThan(i, n_def) {
+            d = Array.Get(defaults, i)
+            IfCondition EqualTo(d, 0) ThenBlock: {
+                Array.Push(args, 0)
+            } ElseBlock: {
+                IfCondition EqualTo(Gen_HasCall(d), 1) ThenBlock: {
+                    d = Gen_FlattenExpr(d)
+                }
+                Array.Push(args, d)
+            }
+            i = Add(i, 1)
+        }
+        ReturnValue(args)
+    }
+}
+
 Function.Gen_EmitLeftoverCall {
     Input: args: Address
     Body: {
@@ -1112,7 +1156,11 @@ Function.Gen_CallExpr {
             }
             IfCondition LessThan(i, n) ThenBlock: {
                 arg = Array.Get(args, i)
-                Gen_Expr(arg)
+                IfCondition EqualTo(arg, 0) ThenBlock: {
+                    Gen_Emit("Types.GetNone()")
+                } ElseBlock: {
+                    Gen_Expr(arg)
+                }
             } ElseBlock: {
                 d = Array.Get(defaults, i)
                 IfCondition EqualTo(d, 0) ThenBlock: {
@@ -1148,15 +1196,23 @@ Function.Gen_PackedCall {
         Gen_Emit(n_str)
         Gen_Emit(")\n")
         
-        // Emit: Array.Push(__packN, arg) for each arg
+        // Flatten before Array.Push. socket.socket() as a packed arg was
+        // Array.Push(pack, t = Array.Create) → Expected ')' after arguments.
         idx = 0
         WhileLoop LessThan(idx, n) {
+            arg = Array.Get(args, idx)
+            IfCondition And(NotEqual(arg, 0), EqualTo(Gen_HasCall(arg), 1)) ThenBlock: {
+                arg = Gen_FlattenExpr(arg)
+            }
             Gen_EmitIndent()
             Gen_Emit("Array.Push(")
             Gen_Emit(pack_name)
             Gen_Emit(", ")
-            arg = Array.Get(args, idx)
-            Gen_Expr(arg)
+            IfCondition EqualTo(arg, 0) ThenBlock: {
+                Gen_Emit("Types.GetNone()")
+            } ElseBlock: {
+                Gen_Expr(arg)
+            }
             Gen_Emit(")\n")
             idx = Add(idx, 1)
         }

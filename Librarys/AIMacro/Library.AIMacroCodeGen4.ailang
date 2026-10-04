@@ -201,6 +201,9 @@ Function.Gen_Expr {
         }
         
         IfCondition EqualTo(t, Node.CALL) ThenBlock: {
+            cname = ArrayGet(node, 3)
+            cargs = Gen_PadFlattenDefaults(cname, ArrayGet(node, 4))
+            ArraySet(node, 4, cargs)
             Gen_CallExpr(node)
             ReturnValue(0)
         }
@@ -217,6 +220,12 @@ Function.Gen_Expr {
         IfCondition EqualTo(t, Node.ATTRIBUTE) ThenBlock: {
             obj = AST_GetField(node, "object")
             attr = AST_GetField(node, "attr")
+            // C().x: flatten whole attr so ObjectGet never wraps ObjectNewInit.
+            IfCondition EqualTo(Gen_HasCall(obj), 1) ThenBlock: {
+                ident = Gen_FlattenExpr(node)
+                Gen_Expr(ident)
+                ReturnValue(0)
+            }
             IfCondition EqualTo(Gen_EmitStdlibAttr(obj, attr), 1) ThenBlock: {
                 ReturnValue(0)
             }

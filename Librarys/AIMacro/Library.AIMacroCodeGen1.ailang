@@ -1905,6 +1905,12 @@ Function.Gen_EmitEscaped {
                     IfCondition EqualTo(c, 9) ThenBlock: {
                         Gen_Emit("\\t")
                     } ElseBlock: {
+                        IfCondition EqualTo(c, 12) ThenBlock: {
+                            Gen_Emit("\\f")
+                        } ElseBlock: {
+                        IfCondition EqualTo(c, 8) ThenBlock: {
+                            Gen_Emit("\\b")
+                        } ElseBlock: {
                         IfCondition EqualTo(c, 34) ThenBlock: {
                             Gen_Emit("\\\"")
                         } ElseBlock: {
@@ -1917,6 +1923,8 @@ Function.Gen_EmitEscaped {
                                 Gen_Emit(buf)
                                 Deallocate(buf, 2)
                             }
+                        }
+                        }
                         }
                     }
                 }

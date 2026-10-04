@@ -1093,6 +1093,53 @@ Function.Gen_FlattenExpr {
                 Gen_Emit(")\n")
                 ReturnValue(Gen_MakeIdent(temp))
             }
+
+            // Fill HasCall defaults before "temp = name(". fake_pip() with
+            // default ensurepip.version() was fake_pip( t = Array.Create.
+            args = Gen_PadFlattenDefaults(call_name, args)
+            ArraySet(node, 4, args)
+
+            // PackedCall is multi-stmt (Array.Create/Push). Wrapping as
+            // "temp = Array.Create" PARSE-fails; test_wrap_socket(socket()).
+            IfCondition EqualTo(Gen_IsPackedFunc(call_name), 1) ThenBlock: {
+                n_pk = 0
+                IfCondition NotEqual(args, 0) ThenBlock: {
+                    n_pk = Array.Size(args)
+                }
+                pack = Gen_TempName()
+                Gen_EmitIndent()
+                Gen_Emit(pack)
+                Gen_Emit(" = Array.Create(")
+                Gen_EmitNumber(n_pk)
+                Gen_Emit(")\n")
+                si = 0
+                WhileLoop LessThan(si, n_pk) {
+                    sarg = Array.Get(args, si)
+                    Gen_EmitIndent()
+                    Gen_Emit("Array.Push(")
+                    Gen_Emit(pack)
+                    Gen_Emit(", ")
+                    IfCondition EqualTo(sarg, 0) ThenBlock: {
+                        Gen_Emit("Types.GetNone()")
+                    } ElseBlock: {
+                        Gen_Expr(sarg)
+                    }
+                    Gen_Emit(")\n")
+                    si = Add(si, 1)
+                }
+                temp = Gen_TempName()
+                Gen_EmitIndent()
+                Gen_Emit(temp)
+                Gen_Emit(" = ")
+                Gen_Emit(call_name)
+                Gen_Emit("(")
+                Gen_Emit(pack)
+                Gen_Emit(")\n")
+                IfCondition EqualTo(Gen_InvolvesString(node), 1) ThenBlock: {
+                    Gen_MarkStringVar(temp)
+                }
+                ReturnValue(Gen_MakeIdent(temp))
+            }
             
             // Emit this call to a temp
             temp = Gen_TempName()
@@ -1819,6 +1866,8 @@ Function.Gen_FlattenCallArgs {
     Body: {
         args = ArrayGet(node, 4)
         IfCondition EqualTo(args, 0) ThenBlock: {
+            args = Gen_PadFlattenDefaults(ArrayGet(node, 3), args)
+            ArraySet(node, 4, args)
             ReturnValue(0)
         }
         
@@ -1851,6 +1900,8 @@ Function.Gen_FlattenCallArgs {
             
             idx = Add(idx, 1)
         }
+        args = Gen_PadFlattenDefaults(ArrayGet(node, 3), args)
+        ArraySet(node, 4, args)
     }
 }
 
