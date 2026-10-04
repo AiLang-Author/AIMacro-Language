@@ -92,7 +92,7 @@ Function.Gen_ForEnumerate {
         
         // idx_var = 0 (this IS the index variable!)
         Gen_EmitIndent()
-        Gen_EmitIdent(idx_var)
+        Gen_EmitIdentLhs(idx_var)
         Gen_Emit(" = 0\n")
         
         // WhileLoop
@@ -107,7 +107,7 @@ Function.Gen_ForEnumerate {
         
         // val_var = SmartGet(iter, idx_var)
         Gen_EmitIndent()
-        Gen_EmitIdent(val_var)
+        Gen_EmitIdentLhs(val_var)
         Gen_Emit(" = DictGen_SmartGet(iter")
         Gen_Emit(loop_suffix)
         Gen_Emit(", ")
@@ -120,7 +120,7 @@ Function.Gen_ForEnumerate {
         
         // idx_var = Add(idx_var, 1)
         Gen_EmitIndent()
-        Gen_EmitIdent(idx_var)
+        Gen_EmitIdentLhs(idx_var)
         Gen_Emit(" = Add(")
         Gen_EmitIdent(idx_var)
         Gen_Emit(", 1)\n")
@@ -276,7 +276,7 @@ Function.Gen_ForZip {
         
         // var1 = SmartGet(iter1, iteri)
         Gen_EmitIndent()
-        Gen_EmitIdent(var1)
+        Gen_EmitIdentLhs(var1)
         Gen_Emit(" = DictGen_SmartGet(iter1_")
         Gen_Emit(loop_suffix)
         Gen_Emit(", iteri")
@@ -285,7 +285,7 @@ Function.Gen_ForZip {
         
         // var2 = SmartGet(iter2, iteri)
         Gen_EmitIndent()
-        Gen_EmitIdent(var2)
+        Gen_EmitIdentLhs(var2)
         Gen_Emit(" = DictGen_SmartGet(iter2_")
         Gen_Emit(loop_suffix)
         Gen_Emit(", iteri")
@@ -488,7 +488,7 @@ Function.Gen_For {
         
         // Emit: var_name = Array.Get(iter_arr, iter_i)
         Gen_EmitIndent()
-        Gen_EmitIdent(var_name)
+        Gen_EmitIdentLhs(var_name)
         Gen_Emit(" = AIMacro.IterGet(iter")
         Gen_Emit(loop_suffix)
         Gen_Emit(", iteri")
@@ -625,7 +625,7 @@ Function.Gen_ForRange {
         // CRITICAL: Copy loop counter to user variable FIRST
         // This way continue won't skip the increment
         Gen_EmitIndent()
-        Gen_EmitIdent(var_name)
+        Gen_EmitIdentLhs(var_name)
         Gen_Emit(" = lc")
         Gen_Emit(loop_suffix)
         Gen_Emit("\n")

@@ -54,6 +54,7 @@ FixedPool.Gen {
     "pending_freevars": Initialize=0, CanChange=True
     "method_py_names": Initialize=0, CanChange=True
     "module_funcs": Initialize=0, CanChange=True
+    "ailang_keywords": Initialize=0, CanChange=True
 
 }
 
@@ -739,6 +740,203 @@ Function.Gen_IsEnclosingParam {
 }
 
 
+// AILANG lexer keywords that are legal Python identifiers. Bare
+// `Text =` / `Integer =` is a PARSE ERROR; PyMod.Text is legal.
+// Mark only names that actually appear — do not dump this table
+// into every FixedPool.PyMod (isolation/pool cliff).
+Function.Gen_InitAilangKeywords {
+    Body: {
+        IfCondition NotEqual(Gen.ailang_keywords, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        Gen.ailang_keywords = Array.Create(160)
+        Array.Push(Gen.ailang_keywords, "Body")
+        Array.Push(Gen.ailang_keywords, "RunTask")
+        Array.Push(Gen.ailang_keywords, "ReturnValue")
+        Array.Push(Gen.ailang_keywords, "IfCondition")
+        Array.Push(Gen.ailang_keywords, "ThenBlock")
+        Array.Push(Gen.ailang_keywords, "ElseBlock")
+        Array.Push(Gen.ailang_keywords, "TrueBlock")
+        Array.Push(Gen.ailang_keywords, "FalseBlock")
+        Array.Push(Gen.ailang_keywords, "WhileLoop")
+        Array.Push(Gen.ailang_keywords, "UntilCondition")
+        Array.Push(Gen.ailang_keywords, "ForEvery")
+        Array.Push(Gen.ailang_keywords, "TryBlock")
+        Array.Push(Gen.ailang_keywords, "CatchError")
+        Array.Push(Gen.ailang_keywords, "FinallyBlock")
+        Array.Push(Gen.ailang_keywords, "SendMessage")
+        Array.Push(Gen.ailang_keywords, "ReceiveMessage")
+        Array.Push(Gen.ailang_keywords, "EveryInterval")
+        Array.Push(Gen.ailang_keywords, "BreakLoop")
+        Array.Push(Gen.ailang_keywords, "ExitLoop")
+        Array.Push(Gen.ailang_keywords, "HaltProgram")
+        Array.Push(Gen.ailang_keywords, "ContinueLoop")
+        Array.Push(Gen.ailang_keywords, "Debug")
+        Array.Push(Gen.ailang_keywords, "DebugAssert")
+        Array.Push(Gen.ailang_keywords, "DebugTrace")
+        Array.Push(Gen.ailang_keywords, "DebugBreak")
+        Array.Push(Gen.ailang_keywords, "DebugMemory")
+        Array.Push(Gen.ailang_keywords, "DebugPerf")
+        Array.Push(Gen.ailang_keywords, "DebugInspect")
+        Array.Push(Gen.ailang_keywords, "DebugControl")
+        Array.Push(Gen.ailang_keywords, "Fork")
+        Array.Push(Gen.ailang_keywords, "Branch")
+        Array.Push(Gen.ailang_keywords, "Case")
+        Array.Push(Gen.ailang_keywords, "Default")
+        Array.Push(Gen.ailang_keywords, "TruePath")
+        Array.Push(Gen.ailang_keywords, "FalsePath")
+        Array.Push(Gen.ailang_keywords, "FixedPool")
+        Array.Push(Gen.ailang_keywords, "DynamicPool")
+        Array.Push(Gen.ailang_keywords, "TemporalPool")
+        Array.Push(Gen.ailang_keywords, "NeuralPool")
+        Array.Push(Gen.ailang_keywords, "KernelPool")
+        Array.Push(Gen.ailang_keywords, "ActorPool")
+        Array.Push(Gen.ailang_keywords, "SecurityPool")
+        Array.Push(Gen.ailang_keywords, "ConstrainedPool")
+        Array.Push(Gen.ailang_keywords, "FilePool")
+        Array.Push(Gen.ailang_keywords, "LinkagePool")
+        Array.Push(Gen.ailang_keywords, "SubPool")
+        Array.Push(Gen.ailang_keywords, "Initialize")
+        Array.Push(Gen.ailang_keywords, "CanChange")
+        Array.Push(Gen.ailang_keywords, "CanBeNull")
+        Array.Push(Gen.ailang_keywords, "Range")
+        Array.Push(Gen.ailang_keywords, "MaximumLength")
+        Array.Push(Gen.ailang_keywords, "MinimumLength")
+        Array.Push(Gen.ailang_keywords, "ElementType")
+        Array.Push(Gen.ailang_keywords, "Where")
+        Array.Push(Gen.ailang_keywords, "Direction")
+        Array.Push(Gen.ailang_keywords, "InOut")
+        Array.Push(Gen.ailang_keywords, "PoolResize")
+        Array.Push(Gen.ailang_keywords, "PoolMove")
+        Array.Push(Gen.ailang_keywords, "PoolCompact")
+        Array.Push(Gen.ailang_keywords, "PoolAllocate")
+        Array.Push(Gen.ailang_keywords, "PoolFree")
+        Array.Push(Gen.ailang_keywords, "Add")
+        Array.Push(Gen.ailang_keywords, "Subtract")
+        Array.Push(Gen.ailang_keywords, "Multiply")
+        Array.Push(Gen.ailang_keywords, "Divide")
+        Array.Push(Gen.ailang_keywords, "Power")
+        Array.Push(Gen.ailang_keywords, "Modulo")
+        Array.Push(Gen.ailang_keywords, "SquareRoot")
+        Array.Push(Gen.ailang_keywords, "AbsoluteValue")
+        Array.Push(Gen.ailang_keywords, "GreaterThan")
+        Array.Push(Gen.ailang_keywords, "LessThan")
+        Array.Push(Gen.ailang_keywords, "GreaterEqual")
+        Array.Push(Gen.ailang_keywords, "LessEqual")
+        Array.Push(Gen.ailang_keywords, "EqualTo")
+        Array.Push(Gen.ailang_keywords, "NotEqual")
+        Array.Push(Gen.ailang_keywords, "And")
+        Array.Push(Gen.ailang_keywords, "Or")
+        Array.Push(Gen.ailang_keywords, "Not")
+        Array.Push(Gen.ailang_keywords, "Xor")
+        Array.Push(Gen.ailang_keywords, "Implies")
+        Array.Push(Gen.ailang_keywords, "BitwiseAnd")
+        Array.Push(Gen.ailang_keywords, "BitwiseOr")
+        Array.Push(Gen.ailang_keywords, "BitwiseXor")
+        Array.Push(Gen.ailang_keywords, "BitwiseNot")
+        Array.Push(Gen.ailang_keywords, "LeftShift")
+        Array.Push(Gen.ailang_keywords, "RightShift")
+        Array.Push(Gen.ailang_keywords, "Function")
+        Array.Push(Gen.ailang_keywords, "InlineFunction")
+        Array.Push(Gen.ailang_keywords, "ExternalKernelFunction")
+        Array.Push(Gen.ailang_keywords, "SubRoutine")
+        Array.Push(Gen.ailang_keywords, "Lambda")
+        Array.Push(Gen.ailang_keywords, "Apply")
+        Array.Push(Gen.ailang_keywords, "Combinator")
+        Array.Push(Gen.ailang_keywords, "Input")
+        Array.Push(Gen.ailang_keywords, "Output")
+        Array.Push(Gen.ailang_keywords, "Curry")
+        Array.Push(Gen.ailang_keywords, "Uncurry")
+        Array.Push(Gen.ailang_keywords, "Compose")
+        Array.Push(Gen.ailang_keywords, "LibraryImport")
+        Array.Push(Gen.ailang_keywords, "Integer")
+        Array.Push(Gen.ailang_keywords, "FloatingPoint")
+        Array.Push(Gen.ailang_keywords, "Text")
+        Array.Push(Gen.ailang_keywords, "Boolean")
+        Array.Push(Gen.ailang_keywords, "Address")
+        Array.Push(Gen.ailang_keywords, "Map")
+        Array.Push(Gen.ailang_keywords, "Tuple")
+        Array.Push(Gen.ailang_keywords, "Record")
+        Array.Push(Gen.ailang_keywords, "OptionalType")
+        Array.Push(Gen.ailang_keywords, "ConstrainedType")
+        Array.Push(Gen.ailang_keywords, "Any")
+        Array.Push(Gen.ailang_keywords, "Void")
+        Array.Push(Gen.ailang_keywords, "Byte")
+        Array.Push(Gen.ailang_keywords, "Word")
+        Array.Push(Gen.ailang_keywords, "DWord")
+        Array.Push(Gen.ailang_keywords, "QWord")
+        Array.Push(Gen.ailang_keywords, "UInt8")
+        Array.Push(Gen.ailang_keywords, "UInt16")
+        Array.Push(Gen.ailang_keywords, "UInt32")
+        Array.Push(Gen.ailang_keywords, "UInt64")
+        Array.Push(Gen.ailang_keywords, "Int8")
+        Array.Push(Gen.ailang_keywords, "Int16")
+        Array.Push(Gen.ailang_keywords, "Int32")
+        Array.Push(Gen.ailang_keywords, "Int64")
+        Array.Push(Gen.ailang_keywords, "Pointer")
+        Array.Push(Gen.ailang_keywords, "True")
+        Array.Push(Gen.ailang_keywords, "False")
+        Array.Push(Gen.ailang_keywords, "Null")
+        Array.Push(Gen.ailang_keywords, "MacroBlock")
+        Array.Push(Gen.ailang_keywords, "Macro")
+        Array.Push(Gen.ailang_keywords, "RunMacro")
+        Array.Push(Gen.ailang_keywords, "ExpandMacro")
+        Array.Push(Gen.ailang_keywords, "SocketCreate")
+        Array.Push(Gen.ailang_keywords, "SocketBind")
+        Array.Push(Gen.ailang_keywords, "SocketListen")
+        Array.Push(Gen.ailang_keywords, "SocketAccept")
+        Array.Push(Gen.ailang_keywords, "SocketRead")
+        Array.Push(Gen.ailang_keywords, "SocketWrite")
+        Array.Push(Gen.ailang_keywords, "SocketClose")
+        Array.Push(Gen.ailang_keywords, "SocketConnect")
+        Array.Push(Gen.ailang_keywords, "SocketSetOption")
+        Array.Push(Gen.ailang_keywords, "SystemCall")
+        Array.Push(Gen.ailang_keywords, "InlineAsm")
+        Array.Push(Gen.ailang_keywords, "SecurityContext")
+        Array.Push(Gen.ailang_keywords, "WithSecurity")
+        Array.Push(Gen.ailang_keywords, "AllowedOperations")
+        Array.Push(Gen.ailang_keywords, "AtomicCompareSwap")
+        Array.Push(Gen.ailang_keywords, "AtomicAdd")
+        Array.Push(Gen.ailang_keywords, "AtomicExchange")
+        Array.Push(Gen.ailang_keywords, "AtomicRead")
+        Array.Push(Gen.ailang_keywords, "AtomicWrite")
+        Array.Push(Gen.ailang_keywords, "CompilerFence")
+        Array.Push(Gen.ailang_keywords, "FixedMul")
+        Array.Push(Gen.ailang_keywords, "FixedDiv")
+    }
+}
+
+Function.Gen_IsAilangKeyword {
+    Input: name: Address
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(name, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(Gen.ailang_keywords, 0) ThenBlock: {
+            Gen_InitAilangKeywords()
+        }
+        hit = Gen_NameInArray(name, Gen.ailang_keywords)
+        ReturnValue(hit)
+    }
+}
+
+Function.Gen_MarkKeywordIdent {
+    Input: name: Address
+    Body: {
+        IfCondition EqualTo(name, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(AST_Type(name), Node.IDENT) ThenBlock: {
+            name = ArrayGet(name, 3)
+        }
+        is_kw = Gen_IsAilangKeyword(name)
+        IfCondition EqualTo(is_kw, 1) ThenBlock: {
+            Gen_MarkModuleVar(name)
+        }
+    }
+}
+
 // LHS of assignment / unpack: PyMod + param prefix only — never value stubs
 // (NEXT/PREV/KEY/RESULT/match/case must remain writable names).
 Function.Gen_EmitIdentLhs {
@@ -753,16 +951,9 @@ Function.Gen_EmitIdentLhs {
             Gen_Emit(name)
             ReturnValue(0)
         }
-        // AILang keywords as LHS (ObjectSet(Tuple, ...))
-        cmp = StringCompare(name, "Tuple")
-        IfCondition EqualTo(cmp, 0) ThenBlock: {
-            Gen_MarkModuleVar(name)
-            Gen_Emit("PyMod.")
-            Gen_Emit(name)
-            ReturnValue(0)
-        }
-        cmp = StringCompare(name, "Add")
-        IfCondition EqualTo(cmp, 0) ThenBlock: {
+        // AILang keywords as LHS (nested class Text / Integer / Boolean)
+        is_kw = Gen_IsAilangKeyword(name)
+        IfCondition EqualTo(is_kw, 1) ThenBlock: {
             Gen_MarkModuleVar(name)
             Gen_Emit("PyMod.")
             Gen_Emit(name)
@@ -2859,12 +3050,16 @@ Function.Gen_PrescanNames {
             cname = AST_GetField(node, "name")
             OOPGen_RegisterClassName(cname)
             OOPGen.has_classes = 1
+            // Nested class Text/Integer/Boolean hoist binds `Text = "__nest_N_Text"`;
+            // that name must be in FixedPool.PyMod before emit.
+            Gen_MarkKeywordIdent(cname)
             cbody = AST_GetField(node, "body")
             Gen_PrescanNames(cbody, 1)
             ReturnValue(0)
         }
         IfCondition EqualTo(t0, Node.FUNCTION) ThenBlock: {
             fname = AST_GetField(node, "name")
+            Gen_MarkKeywordIdent(fname)
             IfCondition EqualTo(nested, 1) ThenBlock: {
                 already = Gen_NameInArray(fname, Gen.known_nested_funcs)
                 IfCondition EqualTo(already, 0) ThenBlock: {

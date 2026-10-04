@@ -857,7 +857,7 @@ Function.Gen_FlattenExpr {
             tt = AST_Type(target)
             IfCondition EqualTo(tt, Node.IDENT) ThenBlock: {
                 Gen_EmitIndent()
-                Gen_EmitIdent(ArrayGet(target, 3))
+                Gen_EmitIdentLhs(ArrayGet(target, 3))
                 Gen_Emit(" = ")
                 Gen_Expr(flat_val)
                 Gen_Emit("\n")

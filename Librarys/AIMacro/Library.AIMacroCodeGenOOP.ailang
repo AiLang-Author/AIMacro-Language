@@ -611,8 +611,14 @@ Function.OOPGen_ClassDef {
             WhileLoop LessThan(ni, nsz) {
                 orig = Array.Get(nest_from, ni)
                 uname = Array.Get(nest_to, ni)
+                Gen_MarkKeywordIdent(orig)
                 Gen_EmitIndent()
-                Gen_Emit(orig)
+                is_kw = Gen_IsAilangKeyword(orig)
+                IfCondition EqualTo(is_kw, 1) ThenBlock: {
+                    Gen_EmitIdentLhs(orig)
+                } ElseBlock: {
+                    Gen_Emit(orig)
+                }
                 Gen_Emit(" = \"")
                 Gen_Emit(uname)
                 Gen_Emit("\"\n")
@@ -622,7 +628,11 @@ Function.OOPGen_ClassDef {
                 Gen_Emit("\", \"")
                 Gen_Emit(orig)
                 Gen_Emit("\", ")
-                Gen_Emit(orig)
+                IfCondition EqualTo(is_kw, 1) ThenBlock: {
+                    Gen_EmitIdent(orig)
+                } ElseBlock: {
+                    Gen_Emit(orig)
+                }
                 Gen_Emit(")\n")
                 ni = Add(ni, 1)
             }
@@ -1269,8 +1279,41 @@ Function.OOPGen_Assign {
         // Bare name string target (ASSIGNMENT slot 3) → enclosing freevar
         Gen_MarkEnclosingLocal(target)
         
+        tname = target
+        IfCondition EqualTo(AST_Type(target), Node.IDENT) ThenBlock: {
+            tname = ArrayGet(target, 3)
+        }
+        // Leftover EmitIdent is not an lvalue for: nested-def AddressOf
+        // (test_dict g = G()), quoted class names (`"__nest_N_mydict" =`),
+        // or AILANG keywords (Text/Integer/Boolean). Other assigns keep
+        // Gen_EmitIdent so isolation golds stay intern-stable.
+        is_kw = Gen_IsAilangKeyword(tname)
+        is_nest = Gen_NameInArray(tname, Gen.nest_bind_names)
+        IfCondition EqualTo(is_nest, 0) ThenBlock: {
+            is_nest = Gen_NameInArray(tname, Gen.all_nest_from)
+        }
+        is_cls = OOPGen_IsClassName(tname)
+        use_bare = is_kw
+        IfCondition EqualTo(is_nest, 1) ThenBlock: {
+            use_bare = 1
+        }
+        IfCondition EqualTo(is_cls, 1) ThenBlock: {
+            use_bare = 1
+        }
         Gen_EmitIndent()
-        Gen_EmitIdent(target)
+        IfCondition EqualTo(use_bare, 1) ThenBlock: {
+            is_param = Gen_IsParam(tname)
+            IfCondition EqualTo(is_param, 1) ThenBlock: {
+                Gen_Emit("p_")
+            }
+            IfCondition EqualTo(is_kw, 1) ThenBlock: {
+                Gen_MarkModuleVar(tname)
+                Gen_Emit("PyMod.")
+            }
+            Gen_Emit(tname)
+        } ElseBlock: {
+            Gen_EmitIdent(target)
+        }
         Gen_Emit(" = ")
         OOPGen_Expr(value)
         Gen_Emit("\n")

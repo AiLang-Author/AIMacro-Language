@@ -155,7 +155,7 @@ Function.DictGen_Assignment {
         
         // Emit: target = Hash.Create(capacity)
         Gen_EmitIndent()
-        Gen_EmitIdent(target)
+        Gen_EmitIdentLhs(target)
         Gen_Emit(" = Hash.Create(")
         Gen_EmitNumber(capacity)
         Gen_Emit(")\n")
@@ -440,7 +440,7 @@ Function.DictGen_ForKeys {
         
         // var_name = Array.Get(keys, i)
         Gen_EmitIndent()
-        Gen_EmitIdent(var_name)
+        Gen_EmitIdentLhs(var_name)
         Gen_Emit(" = Array.Get(keys")
         Gen_Emit(loop_suffix)
         Gen_Emit(", iteri")
@@ -528,14 +528,14 @@ Function.DictGen_ForItems {
         
         // key_var = Array.Get(pair, 0)
         Gen_EmitIndent()
-        Gen_EmitIdent(key_var)
+        Gen_EmitIdentLhs(key_var)
         Gen_Emit(" = Array.Get(__pair")
         Gen_Emit(loop_suffix)
         Gen_Emit(", 0)\n")
         
         // val_var = Array.Get(pair, 1)
         Gen_EmitIndent()
-        Gen_EmitIdent(val_var)
+        Gen_EmitIdentLhs(val_var)
         Gen_Emit(" = Array.Get(__pair")
         Gen_Emit(loop_suffix)
         Gen_Emit(", 1)\n")

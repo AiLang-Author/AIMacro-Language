@@ -49,8 +49,14 @@ Function.Gen_Node {
                 }
                 Array.Push(OOPGen.class_renames_from, orig)
                 Array.Push(OOPGen.class_renames_to, uname)
+                Gen_MarkKeywordIdent(orig)
                 Gen_EmitIndent()
-                Gen_Emit(orig)
+                is_kw = Gen_IsAilangKeyword(orig)
+                IfCondition EqualTo(is_kw, 1) ThenBlock: {
+                    Gen_EmitIdentLhs(orig)
+                } ElseBlock: {
+                    Gen_Emit(orig)
+                }
                 Gen_Emit(" = \"")
                 Gen_Emit(uname)
                 Gen_Emit("\"\n")
@@ -881,14 +887,14 @@ Function.Gen_TupleFor {
         
         // var1 = SmartGet(pair, 0)
         Gen_EmitIndent()
-        Gen_EmitIdent(var1)
+        Gen_EmitIdentLhs(var1)
         Gen_Emit(" = DictGen_SmartGet(__pair")
         Gen_Emit(loop_suffix)
         Gen_Emit(", 0)\n")
         
         // var2 = SmartGet(pair, 1)
         Gen_EmitIndent()
-        Gen_EmitIdent(var2)
+        Gen_EmitIdentLhs(var2)
         Gen_Emit(" = DictGen_SmartGet(__pair")
         Gen_Emit(loop_suffix)
         Gen_Emit(", 1)\n")
@@ -1134,7 +1140,7 @@ Function.Gen_Try {
                     as_name = ArrayGet(clause, 5)
                     IfCondition NotEqual(as_name, 0) ThenBlock: {
                         Gen_EmitIndent()
-                        Gen_EmitIdent(as_name)
+                        Gen_EmitIdentLhs(as_name)
                         Gen_Emit(" = AIMacro.ExcValue()\n")
                     }
                     Gen_Body(ArrayGet(clause, 4))
@@ -1168,7 +1174,7 @@ Function.Gen_Try {
                         as_name = ArrayGet(clause, 5)
                         IfCondition NotEqual(as_name, 0) ThenBlock: {
                             Gen_EmitIndent()
-                            Gen_EmitIdent(as_name)
+                            Gen_EmitIdentLhs(as_name)
                             Gen_Emit(" = AIMacro.ExcValue()\n")
                         }
                         Gen_Body(ArrayGet(clause, 4))
@@ -1191,7 +1197,7 @@ Function.Gen_Try {
                             as_name = ArrayGet(clause, 5)
                             IfCondition NotEqual(as_name, 0) ThenBlock: {
                                 Gen_EmitIndent()
-                                Gen_EmitIdent(as_name)
+                                Gen_EmitIdentLhs(as_name)
                                 Gen_Emit(" = AIMacro.ExcValue()\n")
                             }
                             Gen_Body(ArrayGet(clause, 4))
