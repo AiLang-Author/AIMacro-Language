@@ -65,15 +65,13 @@ Function.Gen_Program {
         // =========== END PASS 0 ===========
 
         // =========== PRE-SCAN FOR CLASS NAMES ===========
+        IfCondition EqualTo(Gen.known_nested_funcs, 0) ThenBlock: {
+            Gen.known_nested_funcs = Array.Create(64)
+        }
         i = 0
         WhileLoop LessThan(i, n) {
             decl = Array.Get(decls, i)
-            t = AST_Type(decl)
-            IfCondition EqualTo(t, Node.CLASS_DEF) ThenBlock: {
-                class_name = AST_GetField(decl, "name")
-                OOPGen_RegisterClassName(class_name)
-                OOPGen.has_classes = 1
-            }
+            Gen_PrescanNames(decl, 0)
             i = Add(i, 1)
         }
         // =========== END PRE-SCAN ===========

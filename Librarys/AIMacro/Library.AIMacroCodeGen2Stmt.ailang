@@ -73,6 +73,8 @@ Function.Gen_Node {
                 IfCondition EqualTo(has_asg, 1) ThenBlock: {
                     cbi = 0
                     cbn = Array.Size(cbody)
+                    saved_ca = OOPGen.in_classattrs
+                    OOPGen.in_classattrs = 1
                     WhileLoop LessThan(cbi, cbn) {
                         citem = Array.Get(cbody, cbi)
                         IfCondition EqualTo(AST_Type(citem), Node.ASSIGNMENT) ThenBlock: {
@@ -94,6 +96,7 @@ Function.Gen_Node {
                         }
                         cbi = Add(cbi, 1)
                     }
+                    OOPGen.in_classattrs = saved_ca
                 }
                 Gen_MarkCallableVar(orig)
                 ReturnValue(0)

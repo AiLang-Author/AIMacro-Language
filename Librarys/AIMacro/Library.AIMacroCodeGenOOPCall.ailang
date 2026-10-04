@@ -971,6 +971,28 @@ Function.OOPGen_RenameOf {
     }
 }
 
+Function.OOPGen_OrigOf {
+    Input: uname: Address
+    Output: Address
+    Body: {
+        IfCondition Or(EqualTo(uname, 0), EqualTo(OOPGen.class_renames_to, 0)) ThenBlock: {
+            ReturnValue(0)
+        }
+        nsz = Array.Size(OOPGen.class_renames_to)
+        found = 0
+        ni = 0
+        WhileLoop LessThan(ni, nsz) {
+            bn = Array.Get(OOPGen.class_renames_to, ni)
+            cmpn = StringCompare(uname, bn)
+            IfCondition EqualTo(cmpn, 0) ThenBlock: {
+                found = Array.Get(OOPGen.class_renames_from, ni)
+            }
+            ni = Add(ni, 1)
+        }
+        ReturnValue(found)
+    }
+}
+
 Function.OOPGen_ClassMethodAddr {
     Input: name: Address
     Output: Address

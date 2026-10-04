@@ -538,16 +538,6 @@ Function.OOPGen_ClassDef {
         }
         
         num_items = Array.Size(body)
-        i = 0
-        WhileLoop LessThan(i, num_items) {
-            item = Array.Get(body, i)
-            item_type = AST_Type(item)
-            IfCondition EqualTo(item_type, Node.METHOD_DEF) ThenBlock: {
-                OOPGen_MethodImpl(class_name, item)
-            }
-            i = Add(i, 1)
-        }
-
         nest_from = Array.Create(8)
         nest_to = Array.Create(8)
         i = 0
@@ -555,21 +545,39 @@ Function.OOPGen_ClassDef {
             item = Array.Get(body, i)
             IfCondition EqualTo(AST_Type(item), Node.CLASS_DEF) ThenBlock: {
                 orig = AST_GetField(item, "name")
-                uname = StringConcat("__nest_", NumberToString(Gen.lambda_counter))
-                Gen.lambda_counter = Add(Gen.lambda_counter, 1)
-                uname = StringConcat(uname, "_")
-                uname = StringConcat(uname, orig)
-                ArraySet(item, 3, uname)
-                Array.Push(Gen.deferred_classes, item)
-                IfCondition EqualTo(OOPGen.class_renames_from, 0) ThenBlock: {
-                    OOPGen.class_renames_from = Array.Create(32)
-                    OOPGen.class_renames_to = Array.Create(32)
+                already = Gen_NameStartsWith(orig, "__nest_")
+                IfCondition EqualTo(already, 1) ThenBlock: {
+                    uname = orig
+                    rn_orig = OOPGen_OrigOf(uname)
+                    IfCondition NotEqual(rn_orig, 0) ThenBlock: {
+                        orig = rn_orig
+                    }
+                } ElseBlock: {
+                    uname = StringConcat("__nest_", NumberToString(Gen.lambda_counter))
+                    Gen.lambda_counter = Add(Gen.lambda_counter, 1)
+                    uname = StringConcat(uname, "_")
+                    uname = StringConcat(uname, orig)
+                    ArraySet(item, 3, uname)
+                    Array.Push(Gen.deferred_classes, item)
+                    IfCondition EqualTo(OOPGen.class_renames_from, 0) ThenBlock: {
+                        OOPGen.class_renames_from = Array.Create(32)
+                        OOPGen.class_renames_to = Array.Create(32)
+                    }
+                    Array.Push(OOPGen.class_renames_from, orig)
+                    Array.Push(OOPGen.class_renames_to, uname)
+                    OOPGen_RegisterClassName(uname)
                 }
-                Array.Push(OOPGen.class_renames_from, orig)
-                Array.Push(OOPGen.class_renames_to, uname)
                 Array.Push(nest_from, orig)
                 Array.Push(nest_to, uname)
-                OOPGen_RegisterClassName(uname)
+            }
+            i = Add(i, 1)
+        }
+        i = 0
+        WhileLoop LessThan(i, num_items) {
+            item = Array.Get(body, i)
+            item_type = AST_Type(item)
+            IfCondition EqualTo(item_type, Node.METHOD_DEF) ThenBlock: {
+                OOPGen_MethodImpl(class_name, item)
             }
             i = Add(i, 1)
         }

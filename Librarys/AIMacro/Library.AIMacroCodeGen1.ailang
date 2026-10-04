@@ -50,6 +50,7 @@ FixedPool.Gen {
     "nest_bind_funcs": Initialize=0, CanChange=True
     "all_nest_from": Initialize=0, CanChange=True
     "all_nest_to": Initialize=0, CanChange=True
+    "known_nested_funcs": Initialize=0, CanChange=True
     "pending_freevars": Initialize=0, CanChange=True
     "method_py_names": Initialize=0, CanChange=True
     "module_funcs": Initialize=0, CanChange=True
@@ -96,6 +97,7 @@ Function.Gen_Init {
         Gen.nest_bind_funcs = Array.Create(64)
         Gen.all_nest_from = Array.Create(64)
         Gen.all_nest_to = Array.Create(64)
+        Gen.known_nested_funcs = Array.Create(64)
         Gen.pending_freevars = 0
         Gen.method_py_names = Array.Create(64)
         Gen.module_funcs = Array.Create(32)
@@ -1452,6 +1454,13 @@ Function.Gen_EmitIdent {
                 ni = Subtract(ni, 1)
             }
         }
+        // Nested def used before its hoist (forward ref). all_nest_from is
+        // filled at emit; known_nested_funcs is a whole-tree prescan.
+        is_nestf = Gen_NameInArray(name, Gen.known_nested_funcs)
+        IfCondition EqualTo(is_nestf, 1) ThenBlock: {
+            Gen_Emit("Types.GetNone()")
+            ReturnValue(0)
+        }
         // AILang keywords used as Python values (ast.Tuple / ast.Add) — PyMod escape
         cmp = StringCompare(name, "Tuple")
         IfCondition EqualTo(cmp, 0) ThenBlock: {
@@ -1565,6 +1574,12 @@ Function.Gen_LeftoverIdentMapped {
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AddressOf(AIMacro.Exec)") }
         cmp = StringCompare(name, "compile")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AddressOf(AIMacro.PyCompile)") }
+        cmp = StringCompare(name, "range")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AddressOf(AIMacro.Range)") }
+        cmp = StringCompare(name, "dict")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AddressOf(AIMacro.Dict)") }
+        cmp = StringCompare(name, "zip")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AddressOf(AIMacro.Zip)") }
         ReturnValue(0)
     }
 }
@@ -2789,6 +2804,100 @@ Function.Gen_NameInArray {
             i = Add(i, 1)
         }
         ReturnValue(0)
+    }
+}
+
+// Whole-tree CLASS_DEF / nested def names so forward refs compile.
+Function.Gen_PrescanNames {
+    Input: node: Address
+    Input: nested: Integer
+    Body: {
+        IfCondition EqualTo(node, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(Gen.known_nested_funcs, 0) ThenBlock: {
+            Gen.known_nested_funcs = Array.Create(64)
+        }
+        // Stmt lists are Library.Array. AST nodes are ArrayCreate — not IsArray.
+        is_list = Array.IsArray(node)
+        IfCondition EqualTo(is_list, 1) ThenBlock: {
+            n = Array.Size(node)
+            i = 0
+            WhileLoop LessThan(i, n) {
+                child = Array.Get(node, i)
+                Gen_PrescanNames(child, nested)
+                i = Add(i, 1)
+            }
+            ReturnValue(0)
+        }
+        t0 = AST_Type(node)
+        IfCondition EqualTo(t0, Node.CLASS_DEF) ThenBlock: {
+            cname = AST_GetField(node, "name")
+            OOPGen_RegisterClassName(cname)
+            OOPGen.has_classes = 1
+            cbody = AST_GetField(node, "body")
+            Gen_PrescanNames(cbody, 1)
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t0, Node.FUNCTION) ThenBlock: {
+            IfCondition EqualTo(nested, 1) ThenBlock: {
+                fname = AST_GetField(node, "name")
+                already = Gen_NameInArray(fname, Gen.known_nested_funcs)
+                IfCondition EqualTo(already, 0) ThenBlock: {
+                    Array.Push(Gen.known_nested_funcs, fname)
+                }
+            }
+            fbody = AST_GetField(node, "body")
+            Gen_PrescanNames(fbody, 1)
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t0, Node.METHOD_DEF) ThenBlock: {
+            mbody = AST_GetField(node, "body")
+            Gen_PrescanNames(mbody, 1)
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t0, Node.IF_STMT) ThenBlock: {
+            thenb = AST_GetField(node, "then")
+            elseb = AST_GetField(node, "else")
+            Gen_PrescanNames(thenb, nested)
+            Gen_PrescanNames(elseb, nested)
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t0, Node.WHILE_STMT) ThenBlock: {
+            wbody = AST_GetField(node, "body")
+            welse = AST_GetField(node, "else")
+            Gen_PrescanNames(wbody, nested)
+            Gen_PrescanNames(welse, nested)
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t0, Node.FOR_STMT) ThenBlock: {
+            fbody = AST_GetField(node, "body")
+            felse = AST_GetField(node, "else")
+            Gen_PrescanNames(fbody, nested)
+            Gen_PrescanNames(felse, nested)
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t0, Node.TRY_STMT) ThenBlock: {
+            tbody = AST_GetField(node, "body")
+            tex = AST_GetField(node, "excepts")
+            tfin = AST_GetField(node, "finally")
+            telse = ArrayGet(node, 6)
+            Gen_PrescanNames(tbody, nested)
+            Gen_PrescanNames(tex, nested)
+            Gen_PrescanNames(tfin, nested)
+            Gen_PrescanNames(telse, nested)
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t0, Node.EXCEPT_CLAUSE) ThenBlock: {
+            ebody = AST_GetField(node, "body")
+            Gen_PrescanNames(ebody, nested)
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t0, Node.WITH_STMT) ThenBlock: {
+            wtbody = AST_GetField(node, "body")
+            Gen_PrescanNames(wtbody, nested)
+            ReturnValue(0)
+        }
     }
 }
 
