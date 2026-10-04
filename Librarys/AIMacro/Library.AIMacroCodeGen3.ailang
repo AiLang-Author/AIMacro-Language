@@ -1012,15 +1012,27 @@ Function.Gen_FlattenExpr {
                 Gen_Emit(n_str)
                 Gen_Emit(")\n")
                 
-                // Emit: Array.Push(pack, arg) for each arg
+                // Emit: Array.Push(pack, arg). FlattenExpr of METHOD_CALL
+                // from inside FlattenExpr CALL can no-op; hoist HasCall here
+                // before the paren so ObjectGet is not mid-Push.
                 idx = 0
                 WhileLoop LessThan(idx, n) {
+                    arg = Array.Get(args, idx)
+                    IfCondition NotEqual(arg, 0) ThenBlock: {
+                        at = AST_Type(arg)
+                        IfCondition Or(EqualTo(at, Node.METHOD_CALL), Or(EqualTo(at, Node.CALL), EqualTo(at, Node.LIST_LIT))) ThenBlock: {
+                            arg = Gen_FlattenExpr(arg)
+                        }
+                    }
                     Gen_EmitIndent()
                     Gen_Emit("Array.Push(")
                     Gen_Emit(pack_name)
                     Gen_Emit(", ")
-                    arg = Array.Get(args, idx)
-                    Gen_Expr(arg)
+                    IfCondition EqualTo(arg, 0) ThenBlock: {
+                        Gen_Emit("Types.GetNone()")
+                    } ElseBlock: {
+                        Gen_Expr(arg)
+                    }
                     Gen_Emit(")\n")
                     idx = Add(idx, 1)
                 }
@@ -1122,6 +1134,12 @@ Function.Gen_FlattenExpr {
                 si = 0
                 WhileLoop LessThan(si, n_pk) {
                     sarg = Array.Get(args, si)
+                    IfCondition NotEqual(sarg, 0) ThenBlock: {
+                        hc = Gen_HasCall(sarg)
+                        IfCondition EqualTo(hc, 1) ThenBlock: {
+                            sarg = Gen_FlattenExpr(sarg)
+                        }
+                    }
                     Gen_EmitIndent()
                     Gen_Emit("Array.Push(")
                     Gen_Emit(pack)

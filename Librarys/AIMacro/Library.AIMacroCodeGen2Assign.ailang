@@ -535,15 +535,27 @@ Function.Gen_PackedCallAssignment {
         Gen_Emit(n_str)
         Gen_Emit(")\n")
         
-        // Emit: Array.Push(__packN, arg) for each arg
+        // Emit: Array.Push(__packN, arg) for each arg.
+        // Flatten HasCall first: test_wrap_socket(socket.socket(...)) was
+        // Array.Push(pack, t = ObjectGet / MethodCall) → Expected ')'.
         idx = 0
         WhileLoop LessThan(idx, n) {
+            arg = Array.Get(args, idx)
+            IfCondition NotEqual(arg, 0) ThenBlock: {
+                hc = Gen_HasCall(arg)
+                IfCondition EqualTo(hc, 1) ThenBlock: {
+                    arg = Gen_FlattenExpr(arg)
+                }
+            }
             Gen_EmitIndent()
             Gen_Emit("Array.Push(")
             Gen_Emit(pack_name)
             Gen_Emit(", ")
-            arg = Array.Get(args, idx)
-            Gen_Expr(arg)
+            IfCondition EqualTo(arg, 0) ThenBlock: {
+                Gen_Emit("Types.GetNone()")
+            } ElseBlock: {
+                Gen_Expr(arg)
+            }
             Gen_Emit(")\n")
             idx = Add(idx, 1)
         }

@@ -1234,13 +1234,17 @@ Function.Gen_PackedCall {
         Gen_Emit(n_str)
         Gen_Emit(")\n")
         
-        // Flatten before Array.Push. socket.socket() as a packed arg was
-        // Array.Push(pack, t = Array.Create) → Expected ')' after arguments.
+        // Flatten before Array.Push. Nested And(HasCall) dropped the
+        // result (And is not short-circuit; HasCall must live in a local).
+        // socket.socket() as a packed arg was Array.Push(pack, t = ObjectGet).
         idx = 0
         WhileLoop LessThan(idx, n) {
             arg = Array.Get(args, idx)
-            IfCondition And(NotEqual(arg, 0), EqualTo(Gen_HasCall(arg), 1)) ThenBlock: {
-                arg = Gen_FlattenExpr(arg)
+            IfCondition NotEqual(arg, 0) ThenBlock: {
+                hc = Gen_HasCall(arg)
+                IfCondition EqualTo(hc, 1) ThenBlock: {
+                    arg = Gen_FlattenExpr(arg)
+                }
             }
             Gen_EmitIndent()
             Gen_Emit("Array.Push(")
