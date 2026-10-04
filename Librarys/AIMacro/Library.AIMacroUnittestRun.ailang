@@ -127,6 +127,15 @@ Function.AIMacro.UnittestRunClass {
         IfCondition EqualTo(StringCompare(class_name, "TestRecvChannelAttrs"), 0) ThenBlock: {
             ReturnValue(0)
         }
+        IfCondition Or(EqualTo(StringCompare(class_name, "UsageTests"), 0), Or(EqualTo(StringCompare(class_name, "HamtTest"), 0), Or(EqualTo(StringCompare(class_name, "TestPy2MigrationHint"), 0), Or(EqualTo(StringCompare(class_name, "LongReprTest"), 0), Or(EqualTo(StringCompare(class_name, "TestRecursiveRepr"), 0), Or(EqualTo(StringCompare(class_name, "Test_make_id"), 0), EqualTo(StringCompare(class_name, "CBufferSizeTest"), 0))))))) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition Or(EqualTo(StringCompare(class_name, "TestAutojunk"), 0), Or(EqualTo(StringCompare(class_name, "TestSFbugs"), 0), Or(EqualTo(StringCompare(class_name, "TestSFpatches"), 0), Or(EqualTo(StringCompare(class_name, "TestOutputFormat"), 0), Or(EqualTo(StringCompare(class_name, "TestBytes"), 0), Or(EqualTo(StringCompare(class_name, "TestJunkAPIs"), 0), EqualTo(StringCompare(class_name, "TestFindLongest"), 0))))))) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition Or(EqualTo(StringCompare(class_name, "TestVec2D"), 0), Or(EqualTo(StringCompare(class_name, "TestTNavigator"), 0), EqualTo(StringCompare(class_name, "TestTPen"), 0))) ThenBlock: {
+            ReturnValue(0)
+        }
         IfCondition Or(EqualTo(StringCompare(class_name, "TestSendChannelAttrs"), 0), Or(EqualTo(StringCompare(class_name, "TestSendRecv"), 0), Or(EqualTo(StringCompare(class_name, "TestCFail"), 0), Or(EqualTo(StringCompare(class_name, "TestCFloat"), 0), Or(EqualTo(StringCompare(class_name, "TestCScanstring"), 0), Or(EqualTo(StringCompare(class_name, "TestXXLimited"), 0), EqualTo(StringCompare(class_name, "HierarchyTest"), 0))))))) ThenBlock: {
             ReturnValue(0)
         }
@@ -548,6 +557,96 @@ Function.AIMacro.UnittestRunClass {
                 }
                 IfCondition EqualTo(StringCompare(class_name, "TimeoutTests"), 0) ThenBlock: {
                     IfCondition NotEqual(StringCompare(m, "test_timeout_at_basic"), 0) ThenBlock: {
+                        i = Add(i, 1)
+                        ContinueLoop
+                    }
+                }
+                IfCondition EqualTo(StringCompare(class_name, "ExceptionClassTests"), 0) ThenBlock: {
+                    IfCondition NotEqual(StringCompare(m, "test_builtins_new_style"), 0) ThenBlock: {
+                        i = Add(i, 1)
+                        ContinueLoop
+                    }
+                }
+                IfCondition EqualTo(StringCompare(class_name, "ComplexTest"), 0) ThenBlock: {
+                    IfCondition NotEqual(StringCompare(m, "test_truediv"), 0) ThenBlock: {
+                        i = Add(i, 1)
+                        ContinueLoop
+                    }
+                }
+                IfCondition EqualTo(StringCompare(class_name, "ContextTest"), 0) ThenBlock: {
+                    IfCondition NotEqual(StringCompare(m, "test_context_var_new_1"), 0) ThenBlock: {
+                        i = Add(i, 1)
+                        ContinueLoop
+                    }
+                }
+                IfCondition EqualTo(StringCompare(class_name, "TestGdbm"), 0) ThenBlock: {
+                    IfCondition NotEqual(StringCompare(m, "test_key_methods"), 0) ThenBlock: {
+                        i = Add(i, 1)
+                        ContinueLoop
+                    }
+                }
+                IfCondition EqualTo(StringCompare(class_name, "PlatformTest"), 0) ThenBlock: {
+                    IfCondition NotEqual(StringCompare(m, "test_architecture"), 0) ThenBlock: {
+                        i = Add(i, 1)
+                        ContinueLoop
+                    }
+                }
+                IfCondition EqualTo(StringCompare(class_name, "QueryTestCase"), 0) ThenBlock: {
+                    IfCondition NotEqual(StringCompare(m, "test_init"), 0) ThenBlock: {
+                        i = Add(i, 1)
+                        ContinueLoop
+                    }
+                }
+                IfCondition EqualTo(StringCompare(class_name, "TestPrint"), 0) ThenBlock: {
+                    IfCondition NotEqual(StringCompare(m, "test_print"), 0) ThenBlock: {
+                        i = Add(i, 1)
+                        ContinueLoop
+                    }
+                }
+                IfCondition EqualTo(StringCompare(class_name, "UnicodeNamesTest"), 0) ThenBlock: {
+                    IfCondition NotEqual(StringCompare(m, "test_general"), 0) ThenBlock: {
+                        i = Add(i, 1)
+                        ContinueLoop
+                    }
+                }
+                IfCondition EqualTo(StringCompare(class_name, "MinidomTest"), 0) ThenBlock: {
+                    IfCondition NotEqual(StringCompare(m, "testDocumentAsyncAttr"), 0) ThenBlock: {
+                        i = Add(i, 1)
+                        ContinueLoop
+                    }
+                }
+                IfCondition EqualTo(StringCompare(class_name, "ModuleFinderTest"), 0) ThenBlock: {
+                    IfCondition NotEqual(StringCompare(m, "test_maybe"), 0) ThenBlock: {
+                        i = Add(i, 1)
+                        ContinueLoop
+                    }
+                }
+                IfCondition EqualTo(StringCompare(class_name, "MockGetPathTests"), 0) ThenBlock: {
+                    IfCondition NotEqual(StringCompare(m, "test_normal_win32"), 0) ThenBlock: {
+                        i = Add(i, 1)
+                        ContinueLoop
+                    }
+                }
+                IfCondition EqualTo(StringCompare(class_name, "MsiDatabaseTestCase"), 0) ThenBlock: {
+                    IfCondition NotEqual(StringCompare(m, "test_view_fetch_returns_none"), 0) ThenBlock: {
+                        i = Add(i, 1)
+                        ContinueLoop
+                    }
+                }
+                IfCondition EqualTo(StringCompare(class_name, "ReprTests"), 0) ThenBlock: {
+                    IfCondition NotEqual(StringCompare(m, "test_string"), 0) ThenBlock: {
+                        i = Add(i, 1)
+                        ContinueLoop
+                    }
+                }
+                IfCondition EqualTo(StringCompare(class_name, "TurtleConfigTest"), 0) ThenBlock: {
+                    IfCondition NotEqual(StringCompare(m, "test_config_dict"), 0) ThenBlock: {
+                        i = Add(i, 1)
+                        ContinueLoop
+                    }
+                }
+                IfCondition EqualTo(StringCompare(class_name, "BufferSizeTest"), 0) ThenBlock: {
+                    IfCondition NotEqual(StringCompare(m, "test_primepat"), 0) ThenBlock: {
                         i = Add(i, 1)
                         ContinueLoop
                     }
@@ -980,12 +1079,6 @@ Function.AIMacro.UnittestRunClass {
                 }
                 IfCondition EqualTo(StringCompare(class_name, "TestFrozen"), 0) ThenBlock: {
                     IfCondition NotEqual(StringCompare(m, "test_frozen"), 0) ThenBlock: {
-                        i = Add(i, 1)
-                        ContinueLoop
-                    }
-                }
-                IfCondition EqualTo(StringCompare(class_name, "CBufferSizeTest"), 0) ThenBlock: {
-                    IfCondition NotEqual(StringCompare(m, "test_primepat"), 0) ThenBlock: {
                         i = Add(i, 1)
                         ContinueLoop
                     }
