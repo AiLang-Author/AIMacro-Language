@@ -156,6 +156,10 @@ Function.Gen_Program {
                 Gen_MarkBodyAssignVars(ArrayGet(decl, 5))
                 Gen_MarkBodyAssignVars(ArrayGet(decl, 6))
             }
+            IfCondition EqualTo(t, Node.WITH_STMT) ThenBlock: {
+                wbody = ArrayGet(decl, 5)
+                Gen_MarkBodyAssignVars(wbody)
+            }
             i = Add(i, 1)
         }
         n_mod = Array.Size(Gen.module_vars)
@@ -549,6 +553,47 @@ Function.Gen_MarkStarImport {
             Gen_MarkModuleVar("AF_INET6")
             Gen_MarkModuleVar("AF_UNIX")
         }
+        cmp = StringCompare(module_name, "itertools")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_MarkModuleVar("accumulate")
+            Gen_MarkImportStub("accumulate")
+            Gen_MarkModuleVar("chain")
+            Gen_MarkImportStub("chain")
+            Gen_MarkModuleVar("combinations")
+            Gen_MarkImportStub("combinations")
+            Gen_MarkModuleVar("combinations_with_replacement")
+            Gen_MarkImportStub("combinations_with_replacement")
+            Gen_MarkModuleVar("compress")
+            Gen_MarkImportStub("compress")
+            Gen_MarkModuleVar("count")
+            Gen_MarkImportStub("count")
+            Gen_MarkModuleVar("cycle")
+            Gen_MarkImportStub("cycle")
+            Gen_MarkModuleVar("dropwhile")
+            Gen_MarkImportStub("dropwhile")
+            Gen_MarkModuleVar("filterfalse")
+            Gen_MarkImportStub("filterfalse")
+            Gen_MarkModuleVar("groupby")
+            Gen_MarkImportStub("groupby")
+            Gen_MarkModuleVar("islice")
+            Gen_MarkImportStub("islice")
+            Gen_MarkModuleVar("pairwise")
+            Gen_MarkImportStub("pairwise")
+            Gen_MarkModuleVar("permutations")
+            Gen_MarkImportStub("permutations")
+            Gen_MarkModuleVar("product")
+            Gen_MarkImportStub("product")
+            Gen_MarkModuleVar("repeat")
+            Gen_MarkImportStub("repeat")
+            Gen_MarkModuleVar("starmap")
+            Gen_MarkImportStub("starmap")
+            Gen_MarkModuleVar("takewhile")
+            Gen_MarkImportStub("takewhile")
+            Gen_MarkModuleVar("tee")
+            Gen_MarkImportStub("tee")
+            Gen_MarkModuleVar("zip_longest")
+            Gen_MarkImportStub("zip_longest")
+        }
         ReturnValue(0)
     }
 }
@@ -685,6 +730,10 @@ Function.Gen_MarkBodyAssignVars {
                 }
                 Gen_MarkBodyAssignVars(ArrayGet(stmt, 5))
                 Gen_MarkBodyAssignVars(ArrayGet(stmt, 6))
+            }
+            IfCondition EqualTo(st, Node.WITH_STMT) ThenBlock: {
+                wbody = ArrayGet(stmt, 5)
+                Gen_MarkBodyAssignVars(wbody)
             }
             i = Add(i, 1)
         }
