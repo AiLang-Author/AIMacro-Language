@@ -563,7 +563,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_bisect.py",
-      "updated": "2026-10-02"
+      "updated": "2026-10-03"
     },
     "test_bool.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_bool.py",
@@ -571,7 +571,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_bool.py",
-      "updated": "2026-10-02"
+      "updated": "2026-10-03"
     },
     "test_buffer.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_buffer.py",
@@ -710,7 +710,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_capi/test_structmembers.py",
-      "updated": "2026-10-02"
+      "updated": "2026-10-03"
     },
     "test_capi/test_unicode.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_capi/test_unicode.py",
@@ -729,7 +729,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_cgi.py",
-      "updated": "2026-10-02"
+      "updated": "2026-10-03"
     },
     "test_cgitb.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_cgitb.py",
@@ -1337,7 +1337,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_dict_version.py",
-      "updated": "2026-10-02"
+      "updated": "2026-10-03"
     },
     "test_dictcomps.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_dictcomps.py",
@@ -1477,7 +1477,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_email/test__encoded_words.py",
-      "updated": "2026-10-02"
+      "updated": "2026-10-03"
     },
     "test_email/test__header_value_parser.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_email/test__header_value_parser.py",
@@ -1496,7 +1496,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_email/test_asian_codecs.py",
-      "updated": "2026-10-02"
+      "updated": "2026-10-03"
     },
     "test_email/test_contentmanager.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_email/test_contentmanager.py",
@@ -1581,7 +1581,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_email/test_parser.py",
-      "updated": "2026-10-02"
+      "updated": "2026-10-03"
     },
     "test_email/test_pickleable.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_email/test_pickleable.py",
@@ -1652,7 +1652,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_enumerate.py",
-      "updated": "2026-10-02"
+      "updated": "2026-10-03"
     },
     "test_eof.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_eof.py",
@@ -1697,7 +1697,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_exception_group.py",
-      "updated": "2026-10-02"
+      "updated": "2026-10-03"
     },
     "test_exception_hierarchy.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_exception_hierarchy.py",
@@ -2204,7 +2204,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_heapq.py",
-      "updated": "2026-10-02"
+      "updated": "2026-10-03"
     },
     "test_hmac.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_hmac.py",
@@ -2223,7 +2223,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_html.py",
-      "updated": "2026-10-02"
+      "updated": "2026-10-03"
     },
     "test_htmlparser.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_htmlparser.py",
@@ -2766,7 +2766,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_index.py",
-      "updated": "2026-10-02"
+      "updated": "2026-10-03"
     },
     "test_inspect.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_inspect.py",
@@ -2785,7 +2785,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_int.py",
-      "updated": "2026-10-02"
+      "updated": "2026-10-03"
     },
     "test_int_literal.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_int_literal.py",
@@ -3021,7 +3021,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_json/test_speedups.py",
-      "updated": "2026-10-02"
+      "updated": "2026-10-03"
     },
     "test_json/test_tool.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_json/test_tool.py",
@@ -3116,7 +3116,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_list.py",
-      "updated": "2026-10-02"
+      "updated": "2026-10-03"
     },
     "test_listcomps.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_listcomps.py",
@@ -3406,14 +3406,11 @@
     },
     "test_opcache.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_opcache.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": 1,
-      "err": "",
-      "out": "  TestLoadAttrCache.test_descriptor_added_after_optimization\nFAIL: assertEqual\nunittest: ran 1 tests, 1 failed\n",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_opcache.py",
-      "updated": "2026-10-02"
+      "updated": "2026-10-03"
     },
     "test_opcodes.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_opcodes.py",
@@ -3437,7 +3434,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_operator.py",
-      "updated": "2026-10-02"
+      "updated": "2026-10-03"
     },
     "test_optparse.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_optparse.py",

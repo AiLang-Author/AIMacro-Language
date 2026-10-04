@@ -52,67 +52,16 @@ Function.AIMacro.UnittestRunClass {
         IfCondition Or(EqualTo(StringCompare(class_name, "TestDocExampleC"), 0), Or(EqualTo(StringCompare(class_name, "CPythonBuiltinDictTests"), 0), Or(EqualTo(StringCompare(class_name, "CPythonOrderedDictTests"), 0), Or(EqualTo(StringCompare(class_name, "PurePythonOrderedDictSubclassTests"), 0), Or(EqualTo(StringCompare(class_name, "CPythonOrderedDictSubclassTests"), 0), Or(EqualTo(StringCompare(class_name, "PurePythonOrderedDictWithSlotsCopyingTests"), 0), EqualTo(StringCompare(class_name, "CPythonOrderedDictWithSlotsCopyingTests"), 0))))))) ThenBlock: {
             ReturnValue(0)
         }
-        IfCondition EqualTo(StringCompare(class_name, "PurePythonGeneralMappingTests"), 0) ThenBlock: {
+        IfCondition Or(EqualTo(StringCompare(class_name, "PurePythonGeneralMappingTests"), 0), Or(EqualTo(StringCompare(class_name, "CPythonGeneralMappingTests"), 0), Or(EqualTo(StringCompare(class_name, "PurePythonSubclassMappingTests"), 0), Or(EqualTo(StringCompare(class_name, "CPythonSubclassMappingTests"), 0), Or(EqualTo(StringCompare(class_name, "PySimpleLRUCacheTests"), 0), Or(EqualTo(StringCompare(class_name, "CSimpleLRUCacheTests"), 0), EqualTo(StringCompare(class_name, "UTF8ValidatorTest"), 0))))))) ThenBlock: {
             ReturnValue(0)
         }
-        IfCondition EqualTo(StringCompare(class_name, "CPythonGeneralMappingTests"), 0) ThenBlock: {
+        IfCondition Or(EqualTo(StringCompare(class_name, "BytesSourceEncodingTest"), 0), Or(EqualTo(StringCompare(class_name, "FileSourceEncodingTest"), 0), Or(EqualTo(StringCompare(class_name, "LoaderTests"), 0), Or(EqualTo(StringCompare(class_name, "InspectLoaderTests"), 0), Or(EqualTo(StringCompare(class_name, "Using__package__"), 0), Or(EqualTo(StringCompare(class_name, "Using__package__PEP302"), 0), EqualTo(StringCompare(class_name, "Using__package__PEP451"), 0))))))) ThenBlock: {
             ReturnValue(0)
         }
-        IfCondition EqualTo(StringCompare(class_name, "PurePythonSubclassMappingTests"), 0) ThenBlock: {
+        IfCondition Or(EqualTo(StringCompare(class_name, "Setting__package__"), 0), Or(EqualTo(StringCompare(class_name, "Setting__package__PEP451"), 0), Or(EqualTo(StringCompare(class_name, "TestBaseSelectorEventLoop"), 0), Or(EqualTo(StringCompare(class_name, "BaseSelectorEventLoopTests"), 0), Or(EqualTo(StringCompare(class_name, "SelectorSocketTransportTests"), 0), Or(EqualTo(StringCompare(class_name, "SelectorSocketTransportBufferedProtocolTests"), 0), EqualTo(StringCompare(class_name, "SelectorDatagramTransportTests"), 0))))))) ThenBlock: {
             ReturnValue(0)
         }
-        IfCondition EqualTo(StringCompare(class_name, "CPythonSubclassMappingTests"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "PySimpleLRUCacheTests"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "CSimpleLRUCacheTests"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "UTF8ValidatorTest"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "BytesSourceEncodingTest"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "FileSourceEncodingTest"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "LoaderTests"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "InspectLoaderTests"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "Using__package__"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "Using__package__PEP302"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "Using__package__PEP451"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "Setting__package__"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "Setting__package__PEP451"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "TestBaseSelectorEventLoop"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "BaseSelectorEventLoopTests"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "SelectorSocketTransportTests"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "SelectorSocketTransportBufferedProtocolTests"), 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(StringCompare(class_name, "SelectorDatagramTransportTests"), 0) ThenBlock: {
+        IfCondition Or(EqualTo(StringCompare(class_name, "TestLoadMethodCache"), 0), EqualTo(StringCompare(class_name, "TestCallCache"), 0)) ThenBlock: {
             ReturnValue(0)
         }
         IfCondition EqualTo(StringCompare(class_name, "TestWarnings"), 0) ThenBlock: {
@@ -1374,18 +1323,6 @@ Function.AIMacro.UnittestRunClass {
                         ContinueLoop
                     }
                 }
-                IfCondition EqualTo(StringCompare(class_name, "IsCloseTests"), 0) ThenBlock: {
-                    IfCondition NotEqual(StringCompare(m, "test_reject_complex_tolerances"), 0) ThenBlock: {
-                        i = Add(i, 1)
-                        ContinueLoop
-                    }
-                }
-                IfCondition EqualTo(StringCompare(class_name, "SelectorStartServerTests"), 0) ThenBlock: {
-                    IfCondition NotEqual(StringCompare(m, "test_start_server_1"), 0) ThenBlock: {
-                        i = Add(i, 1)
-                        ContinueLoop
-                    }
-                }
                 IfCondition EqualTo(StringCompare(class_name, "PipeTests"), 0) ThenBlock: {
                     IfCondition NotEqual(StringCompare(m, "test_pipe_overlapped"), 0) ThenBlock: {
                         i = Add(i, 1)
@@ -1602,6 +1539,12 @@ Function.AIMacro.UnittestRunClass {
                         ContinueLoop
                     }
                 }
+                IfCondition EqualTo(StringCompare(class_name, "TestLoadAttrCache"), 0) ThenBlock: {
+                    IfCondition NotEqual(StringCompare(m, "test_load_shadowing_slot_should_raise_type_error"), 0) ThenBlock: {
+                        i = Add(i, 1)
+                        ContinueLoop
+                    }
+                }
                 IfCondition EqualTo(StringCompare(class_name, "TestFormatWitnesses"), 0) ThenBlock: {
                     IfCondition NotEqual(StringCompare(m, "test_format_witnesses"), 0) ThenBlock: {
                         i = Add(i, 1)
@@ -1640,12 +1583,6 @@ Function.AIMacro.UnittestRunClass {
                 }
                 IfCondition EqualTo(StringCompare(class_name, "BinASCIITest"), 0) ThenBlock: {
                     IfCondition NotEqual(StringCompare(m, "test_crc32"), 0) ThenBlock: {
-                        i = Add(i, 1)
-                        ContinueLoop
-                    }
-                }
-                IfCondition EqualTo(StringCompare(class_name, "TestPathfixFunctional"), 0) ThenBlock: {
-                    IfCondition NotEqual(StringCompare(m, "test_pathfix"), 0) ThenBlock: {
                         i = Add(i, 1)
                         ContinueLoop
                     }
@@ -1712,24 +1649,6 @@ Function.AIMacro.UnittestRunClass {
                 }
                 IfCondition EqualTo(StringCompare(class_name, "ListTest"), 0) ThenBlock: {
                     IfCondition NotEqual(StringCompare(m, "test_len"), 0) ThenBlock: {
-                        i = Add(i, 1)
-                        ContinueLoop
-                    }
-                }
-                IfCondition EqualTo(StringCompare(class_name, "TestPyTest"), 0) ThenBlock: {
-                    IfCondition NotEqual(StringCompare(m, "test_pyjson"), 0) ThenBlock: {
-                        i = Add(i, 1)
-                        ContinueLoop
-                    }
-                }
-                IfCondition EqualTo(StringCompare(class_name, "PopenTest"), 0) ThenBlock: {
-                    IfCondition NotEqual(StringCompare(m, "test_popen"), 0) ThenBlock: {
-                        i = Add(i, 1)
-                        ContinueLoop
-                    }
-                }
-                IfCondition EqualTo(StringCompare(class_name, "IoctlTests"), 0) ThenBlock: {
-                    IfCondition NotEqual(StringCompare(m, "test_ioctl"), 0) ThenBlock: {
                         i = Add(i, 1)
                         ContinueLoop
                     }

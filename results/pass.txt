@@ -122,6 +122,7 @@ test_module/__init__.py
 test_multibytecodec.py
 test_netrc.py
 test_nis.py
+test_opcache.py
 test_opcodes.py
 test_openpty.py
 test_operator.py
