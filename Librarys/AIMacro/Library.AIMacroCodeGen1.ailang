@@ -787,6 +787,12 @@ Function.Gen_EmitIdent {
         }
         // Packed __init__ unpacks hex/bytes/int as locals; they shadow PyMod/builtins
         IfCondition EqualTo(Gen_IsEnclosingParam(name), 1) ThenBlock: {
+            // classattrs is a file-scope Function with no Inputs; enclosing
+            // param locals were never declared there (FakePip.__version__ = version).
+            IfCondition EqualTo(OOPGen.in_classattrs, 1) ThenBlock: {
+                Gen_Emit("Types.GetNone()")
+                ReturnValue(0)
+            }
             Gen_Emit(name)
             ReturnValue(0)
         }
@@ -1516,6 +1522,16 @@ Function.Gen_EmitIdent {
         IfCondition EqualTo(cmp, 0) ThenBlock: {
             Gen_Emit("Types.GetNone()")
             ReturnValue(0)
+        }
+        // classattrs is a file-scope Function with no Inputs. Unknown IDENT
+        // there (enclosing param, import sentinel) leftover GetNone. FlattenExpr
+        // temps (_aim_t*) are locals in this Body — emit them. Do not leftover
+        // ordinary locals in method/function bodies.
+        IfCondition EqualTo(OOPGen.in_classattrs, 1) ThenBlock: {
+            IfCondition EqualTo(Gen_NameStartsWith(name, "_aim_t"), 0) ThenBlock: {
+                Gen_Emit("Types.GetNone()")
+                ReturnValue(0)
+            }
         }
         Gen_Emit(name)
     }
