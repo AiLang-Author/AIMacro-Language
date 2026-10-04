@@ -553,7 +553,7 @@ Function.Parse_ArgList {
                     col = Parse_Col()
                     Parse_Advance()
                     arg = Parse_CompForBody(first_arg, line, col)
-                    Parse_CompIterExtra(first_arg, line, col)
+                    Parse_CompIterExtra(arg)
                     Array.Push(args, arg)
                     BreakLoop
                 }
@@ -629,7 +629,7 @@ Function.Parse_CompForBody {
             Parse_Advance()
             cond = Parse_Or()
         }
-        node = AST_Create(Node.LIST_COMP, 5)
+        node = AST_Create(Node.LIST_COMP, 6)
         ArraySet(node, 1, line)
         ArraySet(node, 2, col)
         ArraySet(node, 3, first)
@@ -637,24 +637,40 @@ Function.Parse_CompForBody {
         ArraySet(node, 5, iterable)
         ArraySet(node, 6, cond)
         ArraySet(node, 7, var2)
+        extras = Array.Create(4)
+        ArraySet(node, 8, extras)
         ReturnValue(node)
     }
 }
 
-// Consume extra for/if clauses (Python comp_iter) after the first for-body.
-// Parse coverage only — nested LIST_COMP / conds are discarded; AST keeps first for.
+// Extra for/if after the first for-body. Keep extra for-vars on slot 8 so
+// codegen can declare them (AST still emits only the first for loop).
 Function.Parse_CompIterExtra {
-    Input: first: Address
-    Input: line: Integer
-    Input: col: Integer
+    Input: node: Address
     Output: Integer
     Body: {
+        extras = ArrayGet(node, 8)
+        IfCondition EqualTo(extras, 0) ThenBlock: {
+            extras = Array.Create(4)
+            ArraySet(node, 8, extras)
+        }
+        elt = ArrayGet(node, 3)
+        line = ArrayGet(node, 1)
+        col = ArrayGet(node, 2)
         Parse_SkipNoise()
         WhileLoop Or(EqualTo(Parse_Match(Token.FOR), 1), EqualTo(Parse_Match(Token.IF), 1)) {
             IfCondition EqualTo(Parse_Match(Token.FOR), 1) ThenBlock: {
                 Parse_Advance()
                 Parse_SkipNoise()
-                discard = Parse_CompForBody(first, line, col)
+                extra_node = Parse_CompForBody(elt, line, col)
+                v1 = ArrayGet(extra_node, 4)
+                IfCondition NotEqual(v1, 0) ThenBlock: {
+                    Array.Push(extras, v1)
+                }
+                v2 = ArrayGet(extra_node, 7)
+                IfCondition NotEqual(v2, 0) ThenBlock: {
+                    Array.Push(extras, v2)
+                }
             } ElseBlock: {
                 Parse_Advance()
                 Parse_SkipNoise()
@@ -676,7 +692,7 @@ Function.Parse_CompAfter {
     Body: {
         Parse_Advance()  // for
         node = Parse_CompForBody(first, line, col)
-        Parse_CompIterExtra(first, line, col)
+        Parse_CompIterExtra(node)
         Parse_Consume(close_tok)
         ReturnValue(node)
     }

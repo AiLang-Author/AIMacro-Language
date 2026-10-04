@@ -1251,11 +1251,30 @@ Function.Gen_With {
         Gen_Emit(ctx)
         Gen_Emit(")\n")
         IfCondition NotEqual(as_name, 0) ThenBlock: {
-            Gen_EmitIndent()
-            Gen_Emit(as_name)
-            Gen_Emit(" = ")
-            Gen_Emit(ctx)
-            Gen_Emit("\n")
+            nn = Array.Size(as_name)
+            IfCondition EqualTo(nn, 1) ThenBlock: {
+                nm = Array.Get(as_name, 0)
+                Gen_EmitIndent()
+                Gen_Emit(nm)
+                Gen_Emit(" = ")
+                Gen_Emit(ctx)
+                Gen_Emit("\n")
+                Gen_MarkEnclosingLocal(nm)
+            } ElseBlock: {
+                wi = 0
+                WhileLoop LessThan(wi, nn) {
+                    nm = Array.Get(as_name, wi)
+                    Gen_EmitIndent()
+                    Gen_Emit(nm)
+                    Gen_Emit(" = AIMacro.IterGet(")
+                    Gen_Emit(ctx)
+                    Gen_Emit(", ")
+                    Gen_EmitNumber(wi)
+                    Gen_Emit(")\n")
+                    Gen_MarkEnclosingLocal(nm)
+                    wi = Add(wi, 1)
+                }
+            }
         }
         Gen.try_depth = Add(Gen.try_depth, 1)
         Gen_Body(body)

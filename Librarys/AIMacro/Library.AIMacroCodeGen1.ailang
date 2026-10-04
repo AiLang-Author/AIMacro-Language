@@ -1592,6 +1592,8 @@ Function.Gen_LeftoverIdentMapped {
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AddressOf(AIMacro.Dict)") }
         cmp = StringCompare(name, "zip")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AddressOf(AIMacro.Zip)") }
+        cmp = StringCompare(name, "filter")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AddressOf(AIMacro.NoOp)") }
         ReturnValue(0)
     }
 }

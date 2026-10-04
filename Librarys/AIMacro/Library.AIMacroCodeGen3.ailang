@@ -1164,10 +1164,24 @@ Function.Gen_FlattenExpr {
             iterable = ArrayGet(node, 5)
             cond = ArrayGet(node, 6)
             var2 = ArrayGet(node, 7)
+            extras = ArrayGet(node, 8)
             temp = Gen_TempName()
             Gen_EmitIndent()
             Gen_Emit(temp)
             Gen_Emit(" = Array.Create(8)\n")
+            IfCondition NotEqual(extras, 0) ThenBlock: {
+                en = Array.Size(extras)
+                ei = 0
+                WhileLoop LessThan(ei, en) {
+                    ev = Array.Get(extras, ei)
+                    IfCondition NotEqual(ev, 0) ThenBlock: {
+                        Gen_EmitIndent()
+                        Gen_EmitIdentLhs(ev)
+                        Gen_Emit(" = Types.GetNone()\n")
+                    }
+                    ei = Add(ei, 1)
+                }
+            }
             loop_suffix = Gen_LoopEnter()
             iter_has_call = Gen_HasCall(iterable)
             IfCondition EqualTo(iter_has_call, 1) ThenBlock: {

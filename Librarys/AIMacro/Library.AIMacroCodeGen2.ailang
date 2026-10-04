@@ -157,6 +157,16 @@ Function.Gen_Program {
                 Gen_MarkBodyAssignVars(ArrayGet(decl, 6))
             }
             IfCondition EqualTo(t, Node.WITH_STMT) ThenBlock: {
+                as_name = ArrayGet(decl, 4)
+                IfCondition NotEqual(as_name, 0) ThenBlock: {
+                    an = Array.Size(as_name)
+                    ai = 0
+                    WhileLoop LessThan(ai, an) {
+                        nm = Array.Get(as_name, ai)
+                        Gen_MarkModuleVar(nm)
+                        ai = Add(ai, 1)
+                    }
+                }
                 wbody = ArrayGet(decl, 5)
                 Gen_MarkBodyAssignVars(wbody)
             }
@@ -593,6 +603,39 @@ Function.Gen_MarkStarImport {
             Gen_MarkImportStub("tee")
             Gen_MarkModuleVar("zip_longest")
             Gen_MarkImportStub("zip_longest")
+        }
+        cmp = StringCompare(module_name, "winreg")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_MarkModuleVar("HKEY_CLASSES_ROOT")
+            Gen_MarkImportStub("HKEY_CLASSES_ROOT")
+            Gen_MarkModuleVar("HKEY_CURRENT_USER")
+            Gen_MarkImportStub("HKEY_CURRENT_USER")
+            Gen_MarkModuleVar("HKEY_LOCAL_MACHINE")
+            Gen_MarkImportStub("HKEY_LOCAL_MACHINE")
+            Gen_MarkModuleVar("HKEY_USERS")
+            Gen_MarkImportStub("HKEY_USERS")
+            Gen_MarkModuleVar("HKEY_CURRENT_CONFIG")
+            Gen_MarkImportStub("HKEY_CURRENT_CONFIG")
+            Gen_MarkModuleVar("KEY_READ")
+            Gen_MarkImportStub("KEY_READ")
+            Gen_MarkModuleVar("KEY_WRITE")
+            Gen_MarkImportStub("KEY_WRITE")
+            Gen_MarkModuleVar("KEY_ALL_ACCESS")
+            Gen_MarkImportStub("KEY_ALL_ACCESS")
+            Gen_MarkModuleVar("REG_SZ")
+            Gen_MarkImportStub("REG_SZ")
+            Gen_MarkModuleVar("REG_DWORD")
+            Gen_MarkImportStub("REG_DWORD")
+            Gen_MarkModuleVar("REG_QWORD")
+            Gen_MarkImportStub("REG_QWORD")
+            Gen_MarkModuleVar("REG_BINARY")
+            Gen_MarkImportStub("REG_BINARY")
+            Gen_MarkModuleVar("REG_EXPAND_SZ")
+            Gen_MarkImportStub("REG_EXPAND_SZ")
+            Gen_MarkModuleVar("REG_MULTI_SZ")
+            Gen_MarkImportStub("REG_MULTI_SZ")
+            Gen_MarkModuleVar("REG_NONE")
+            Gen_MarkImportStub("REG_NONE")
         }
         ReturnValue(0)
     }
