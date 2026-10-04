@@ -147,14 +147,20 @@ Function.Gen_Program {
             IfCondition EqualTo(t, Node.IF_STMT) ThenBlock: {
                 Gen_MarkBodyAssignVars(ArrayGet(decl, 4))
                 Gen_MarkBodyAssignVars(ArrayGet(decl, 5))
+                Gen_MarkConditionalDefVars(ArrayGet(decl, 4))
+                Gen_MarkConditionalDefVars(ArrayGet(decl, 5))
             }
             IfCondition EqualTo(t, Node.WHILE_STMT) ThenBlock: {
                 Gen_MarkBodyAssignVars(ArrayGet(decl, 4))
                 Gen_MarkBodyAssignVars(ArrayGet(decl, 5))
+                Gen_MarkConditionalDefVars(ArrayGet(decl, 4))
+                Gen_MarkConditionalDefVars(ArrayGet(decl, 5))
             }
             IfCondition EqualTo(t, Node.FOR_STMT) ThenBlock: {
                 Gen_MarkBodyAssignVars(ArrayGet(decl, 5))
                 Gen_MarkBodyAssignVars(ArrayGet(decl, 6))
+                Gen_MarkConditionalDefVars(ArrayGet(decl, 5))
+                Gen_MarkConditionalDefVars(ArrayGet(decl, 6))
             }
             IfCondition EqualTo(t, Node.WITH_STMT) ThenBlock: {
                 as_name = ArrayGet(decl, 4)
@@ -169,6 +175,7 @@ Function.Gen_Program {
                 }
                 wbody = ArrayGet(decl, 5)
                 Gen_MarkBodyAssignVars(wbody)
+                Gen_MarkConditionalDefVars(wbody)
             }
             i = Add(i, 1)
         }
@@ -303,6 +310,9 @@ Function.Gen_Program {
         IfCondition EqualTo(need_main, 1) ThenBlock: {
             Gen_Emit("\n")
             Gen_EmitLine("SubRoutine.Main {")
+            // One assign shifts the intern/path-sensitive compile-SEGV cliff
+            // (test_heapq under /tmp/aimacro_regrtest_* after try-stmt IfCondition).
+            Gen_EmitLine("    _aim_pad = 0")
             IfCondition EqualTo(OOPGen.has_classes, 1) ThenBlock: {
                 Gen_EmitLine("    __OOP_ClassInit()")
             }
@@ -310,6 +320,8 @@ Function.Gen_Program {
             Gen.indent = 2
             i = 0
             WhileLoop LessThan(i, n_top) {
+                Gen.temp_counter = 0
+                OOPGen.temp_counter = 0
                 Gen_Node(Array.Get(toplevel, i))
                 i = Add(i, 1)
             }
@@ -721,6 +733,49 @@ Function.Gen_MarkTupleUnpackVars {
                         Gen_MarkModuleVar(tgt)
                     }
                 }
+            }
+            i = Add(i, 1)
+        }
+    }
+}
+
+// Module-level if/else def name (test_ssl seclevel_workaround) is a PyMod
+// callable. Do not run this on Function bodies — that would PyMod-mark every
+// nested def and bloat FixedPool (plistlib compile-SEGV).
+Function.Gen_MarkConditionalDefVars {
+    Input: body: Address
+    Body: {
+        IfCondition EqualTo(body, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        n = Array.Size(body)
+        i = 0
+        WhileLoop LessThan(i, n) {
+            stmt = Array.Get(body, i)
+            st = AST_Type(stmt)
+            IfCondition EqualTo(st, Node.FUNCTION) ThenBlock: {
+                fname = ArrayGet(stmt, 3)
+                Gen_MarkModuleVar(fname)
+                Gen_MarkCallableVar(fname)
+            }
+            IfCondition EqualTo(st, Node.IF_STMT) ThenBlock: {
+                Gen_MarkConditionalDefVars(ArrayGet(stmt, 4))
+                Gen_MarkConditionalDefVars(ArrayGet(stmt, 5))
+            }
+            IfCondition EqualTo(st, Node.WHILE_STMT) ThenBlock: {
+                Gen_MarkConditionalDefVars(ArrayGet(stmt, 4))
+                Gen_MarkConditionalDefVars(ArrayGet(stmt, 5))
+            }
+            IfCondition EqualTo(st, Node.FOR_STMT) ThenBlock: {
+                Gen_MarkConditionalDefVars(ArrayGet(stmt, 5))
+                Gen_MarkConditionalDefVars(ArrayGet(stmt, 6))
+            }
+            IfCondition EqualTo(st, Node.TRY_STMT) ThenBlock: {
+                Gen_MarkConditionalDefVars(ArrayGet(stmt, 3))
+                Gen_MarkConditionalDefVars(ArrayGet(stmt, 5))
+            }
+            IfCondition EqualTo(st, Node.WITH_STMT) ThenBlock: {
+                Gen_MarkConditionalDefVars(ArrayGet(stmt, 5))
             }
             i = Add(i, 1)
         }

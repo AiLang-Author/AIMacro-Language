@@ -848,6 +848,11 @@ Function.Gen_EmitIdent {
             Gen_EmitNumber(3)
             ReturnValue(0)
         }
+        cmp = StringCompare(name, "WindowsError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(3)
+            ReturnValue(0)
+        }
         cmp = StringCompare(name, "FileNotFoundError")
         IfCondition EqualTo(cmp, 0) ThenBlock: {
             Gen_EmitNumber(4)
@@ -2455,6 +2460,8 @@ Function.Gen_MapExcKind {
         cmp = StringCompare(name, "OSError")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(3) }
         cmp = StringCompare(name, "IOError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(3) }
+        cmp = StringCompare(name, "WindowsError")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(3) }
         cmp = StringCompare(name, "FileNotFoundError")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(4) }

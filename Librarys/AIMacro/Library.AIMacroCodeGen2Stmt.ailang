@@ -137,7 +137,7 @@ Function.Gen_Node {
                 Array.Push(Gen.nest_bind_funcs, uname)
                 Array.Push(Gen.all_nest_from, orig)
                 Array.Push(Gen.all_nest_to, uname)
-                Gen_Emit(orig)
+                Gen_EmitIdentLhs(orig)
                 Gen_Emit(" = AddressOf(")
                 Gen_Emit(uname)
                 Gen_Emit(")\n")
@@ -543,13 +543,14 @@ Function.Gen_Body {
             OOPGen.temp_counter = 0
             stmt = Array.Get(stmts, i)
             IfCondition GreaterThan(Gen.try_depth, 0) ThenBlock: {
+                // IfCondition (no empty FalseBlock) skips remaining try stmts
+                // after raise. Fork+empty FalseBlock was ~2 AST nodes extra
+                // per stmt; test_ssl Main sat on a 165556-node compile SEGV cliff.
                 Gen_EmitIndent()
-                Gen_Emit("Fork EqualTo(AIMacro.ExcPending(), 0) TrueBlock: {\n")
+                Gen_Emit("IfCondition EqualTo(AIMacro.ExcPending(), 0) ThenBlock: {\n")
                 Gen.indent = Add(Gen.indent, 1)
                 Gen_Node(stmt)
                 Gen.indent = Subtract(Gen.indent, 1)
-                Gen_EmitIndent()
-                Gen_Emit("} FalseBlock: {\n")
                 Gen_EmitIndent()
                 Gen_Emit("}\n")
             } ElseBlock: {
