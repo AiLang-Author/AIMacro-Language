@@ -731,6 +731,16 @@ Function.OOPGen_ClassDef {
         }
         
         attr_fn = StringConcat(class_name, "___classattrs")
+        IfCondition NotEqual(OOPGen.classattrs_fns, 0) ThenBlock: {
+            suf = 2
+            taken = Gen_NameInArray(attr_fn, OOPGen.classattrs_fns)
+            WhileLoop EqualTo(taken, 1) {
+                attr_fn = StringConcat(class_name, "___classattrs_")
+                attr_fn = StringConcat(attr_fn, NumberToString(suf))
+                suf = Add(suf, 1)
+                taken = Gen_NameInArray(attr_fn, OOPGen.classattrs_fns)
+            }
+        }
         has_attr = 0
         IfCondition GreaterThan(Array.Size(nest_from), 0) ThenBlock: {
             has_attr = 1

@@ -338,8 +338,8 @@ Function.Gen_Function {
         // Set type annotation context for this function
         TypeAnno_EnterFunction(name)
         
-        // Call the packed handler for more than 6 functions in a call
-        IfCondition And(EqualTo(star, 0), GreaterThan(num_params, 6)) ThenBlock: {
+        // SysV max 6 Inputs. *args/**kwargs still count (dis.tricky).
+        IfCondition GreaterThan(num_params, 6) ThenBlock: {
             Gen_PackedFunction(name, params, body, ret_type, num_params)
             TypeAnno_ExitFunction()
             ReturnValue(0)
@@ -525,7 +525,16 @@ Function.Gen_PackedFunction {
             later_u = 0
         }
         Gen_EmitUnboundLocals(body, 0, later_u)
+        has_yield = Gen_StmtsHaveYield(body)
+        IfCondition EqualTo(has_yield, 1) ThenBlock: {
+            Gen_EmitIndent()
+            Gen_Emit("__yields = AIMacro.EmptyList()\n")
+        }
         Gen_Body(body)
+        IfCondition EqualTo(has_yield, 1) ThenBlock: {
+            Gen_EmitIndent()
+            Gen_Emit("ReturnValue(__yields)\n")
+        }
         Gen.indent = Subtract(Gen.indent, 2)
         
         Gen_EmitLine("    }")
