@@ -352,9 +352,24 @@ Function.Gen_CallExpr {
                 }
                 ic = Add(ic, 1)
             }
+            // Known function / param kwargs stay KwArgError (isolation gold
+            // x(sep=), factory(kw=)). Leftover import constructors with no
+            // LookupParams unwrap KW_ARG values as positionals: n<=3
+            // Trace(count=0, trace=0, countfuncs=1) SmartCall3 like n>3
+            // packed SmartCallN, instead of raising in setUp (in_test=0).
             IfCondition EqualTo(has_kw_c, 1) ThenBlock: {
-                Gen_Emit("AIMacro.KwArgError()")
-                ReturnValue(0)
+                keep_kwerr = 0
+                IfCondition Or(EqualTo(Gen_IsParam(name), 1), EqualTo(Gen_IsEnclosingParam(name), 1)) ThenBlock: {
+                    keep_kwerr = 1
+                }
+                lp_kw = Gen_LookupParams(name)
+                IfCondition NotEqual(lp_kw, 0) ThenBlock: {
+                    keep_kwerr = 1
+                }
+                IfCondition EqualTo(keep_kwerr, 1) ThenBlock: {
+                    Gen_Emit("AIMacro.KwArgError()")
+                    ReturnValue(0)
+                }
             }
             IfCondition EqualTo(n, 0) ThenBlock: {
                 Gen_Emit("AIMacro.SmartCall(")
