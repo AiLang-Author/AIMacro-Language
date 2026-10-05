@@ -1497,6 +1497,14 @@ Function.Gen_FlattenExpr {
                 Gen_Emit("\n")
                 ReturnValue(Gen_MakeIdent(temp))
             }
+            cmp_gt = StringCompare(method, "gettrace")
+            cmp_st = StringCompare(method, "settrace")
+            IfCondition Or(EqualTo(cmp_gt, 0), EqualTo(cmp_st, 0)) ThenBlock: {
+                Gen_EmitIndent()
+                Gen_Emit(temp)
+                Gen_Emit(" = Types.GetNone()\n")
+                ReturnValue(Gen_MakeIdent(temp))
+            }
             // Always statement-safe MethodCall. Prefixing "temp = " before
             // OOPGen_MethodCall emits `temp = args_var = Array.Create` and
             // PARSE-SEGVs (json dumps kwargs, ~29k combined line).

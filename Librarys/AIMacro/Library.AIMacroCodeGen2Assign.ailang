@@ -341,6 +341,14 @@ Function.Gen_Assignment {
             }
             
             // =========== OOP METHOD CALL (non-builtin) ===========
+            cmp_gt = StringCompare(method, "gettrace")
+            cmp_st = StringCompare(method, "settrace")
+            IfCondition Or(EqualTo(cmp_gt, 0), EqualTo(cmp_st, 0)) ThenBlock: {
+                Gen_EmitIndent()
+                Gen_EmitIdentLhs(target)
+                Gen_Emit(" = Types.GetNone()\n")
+                ReturnValue(0)
+            }
             // Flatten receiver (incl. (files(p)/name).open) before MethodCall(
             IfCondition EqualTo(Gen_HasCall(obj), 1) ThenBlock: {
                 obj = Gen_FlattenExpr(obj)

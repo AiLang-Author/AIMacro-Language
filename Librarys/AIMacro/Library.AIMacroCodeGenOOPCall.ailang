@@ -28,6 +28,12 @@ Function.OOPGen_MethodCall {
         IfCondition EqualTo(Gen_HasCall(obj), 1) ThenBlock: {
             obj = Gen_FlattenExpr(obj)
         }
+        cmp_gt = StringCompare(method, "gettrace")
+        cmp_st = StringCompare(method, "settrace")
+        IfCondition Or(EqualTo(cmp_gt, 0), EqualTo(cmp_st, 0)) ThenBlock: {
+            Gen_Emit("Types.GetNone()")
+            ReturnValue(0)
+        }
         // bytes.maketrans / getopt.getopt go OOP (unknown obj) and SIGSEGV
         cmp_mt = StringCompare(method, "maketrans")
         IfCondition EqualTo(cmp_mt, 0) ThenBlock: {
