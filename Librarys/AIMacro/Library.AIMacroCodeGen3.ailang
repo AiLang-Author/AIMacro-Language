@@ -1469,6 +1469,8 @@ Function.Gen_FlattenExpr {
             IfCondition EqualTo(cmp, 0) ThenBlock: { is_known = 1 }
             cmp = StringCompare(method, "startswith")
             IfCondition EqualTo(cmp, 0) ThenBlock: { is_known = 1 }
+            cmp = StringCompare(method, "endswith")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { is_known = 1 }
             cmp = StringCompare(method, "islower")
             IfCondition EqualTo(cmp, 0) ThenBlock: { is_known = 1 }
             cmp = StringCompare(method, "isupper")
@@ -1504,6 +1506,27 @@ Function.Gen_FlattenExpr {
                 Gen_Emit(temp)
                 Gen_Emit(" = Types.GetNone()\n")
                 ReturnValue(Gen_MakeIdent(temp))
+            }
+            cmp_ew = StringCompare(method, "endswith")
+            IfCondition EqualTo(cmp_ew, 0) ThenBlock: {
+                Gen_EmitIndent()
+                Gen_Emit(temp)
+                Gen_Emit(" = String.EndsWith(")
+                Gen_Expr(flat_obj)
+                Gen_Emit(", ")
+                IfCondition And(NotEqual(args, 0), GreaterThan(Array.Size(args), 0)) ThenBlock: {
+                    Gen_Expr(Array.Get(args, 0))
+                } ElseBlock: {
+                    Gen_Emit("\"\"")
+                }
+                Gen_Emit(")\n")
+                bt = Gen_TempName()
+                Gen_EmitIndent()
+                Gen_Emit(bt)
+                Gen_Emit(" = AIMacro.Bool(")
+                Gen_Emit(temp)
+                Gen_Emit(")\n")
+                ReturnValue(Gen_MakeIdent(bt))
             }
             // Always statement-safe MethodCall. Prefixing "temp = " before
             // OOPGen_MethodCall emits `temp = args_var = Array.Create` and

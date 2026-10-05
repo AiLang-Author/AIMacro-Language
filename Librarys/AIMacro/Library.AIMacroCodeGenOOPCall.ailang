@@ -168,6 +168,17 @@ Function.OOPGen_MethodCall {
             Gen_Emit(")")
             ReturnValue(0)
         }
+        cmp_ew = StringCompare(method, "endswith")
+        IfCondition EqualTo(cmp_ew, 0) ThenBlock: {
+            Gen_Emit("String.EndsWith(")
+            OOPGen_Expr(obj)
+            Gen_Emit(", ")
+            IfCondition And(NotEqual(args, 0), GreaterThan(Array.Size(args), 0)) ThenBlock: {
+                OOPGen_Expr(Array.Get(args, 0))
+            } ElseBlock: { Gen_Emit("\"\"") }
+            Gen_Emit(")")
+            ReturnValue(0)
+        }
         cmp_il = StringCompare(method, "islower")
         IfCondition EqualTo(cmp_il, 0) ThenBlock: {
             Gen_Emit("AIMacro.Bool(String.IsLower(")
