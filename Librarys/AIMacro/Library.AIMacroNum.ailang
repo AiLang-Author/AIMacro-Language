@@ -2207,26 +2207,33 @@ Function.AIMacro.RaiseKind {
     Input: kind: Integer
     Input: msg: Address
     Body: {
-        Plex.Init()
-        node = Plex.Alloc(Add(20000, kind))
-        Plex.Set(node, 0, msg)
-        Plex.Set(node, 1, kind)
-        Plex.RingSingleton(node, 0)
-        IfCondition And(NotEqual(AIMacroExc.value, 0), EqualTo(Plex.IsLive(AIMacroExc.value), 1)) ThenBlock: {
-            Plex.RingInsertAfter(AIMacroExc.value, node, 0)
-        }
-        h = Hash.Create(8)
-        Hash.Set(h, "__class__", kind)
-        Hash.Set(h, "__cause__", Types.GetNone())
-        Hash.Set(h, "__context__", Types.GetNone())
-        Hash.Set(h, "__suppress_context__", AIMacro.FalseVal())
-        Hash.Set(h, "args", msg)
-        AIMacroExc.pending = 1
-        AIMacroExc.kind = kind
-        AIMacroExc.msg = msg
-        AIMacroExc.value = h
-        IfCondition EqualTo(AIMacroExc.depth, 0) ThenBlock: {
-            AIMacro.ExcAbort()
+        // Kind 8 (in-test leftover skip) stays skip. Open/Unlink of a
+        // missing file after leftover unlink(0) used to overwrite it
+        // with kind 4 "No such file" (test_trace coverage CLI).
+        pend8 = AIMacroExc.pending
+        kind8 = AIMacroExc.kind
+        IfCondition Or(NotEqual(pend8, 1), NotEqual(kind8, 8)) ThenBlock: {
+            Plex.Init()
+            node = Plex.Alloc(Add(20000, kind))
+            Plex.Set(node, 0, msg)
+            Plex.Set(node, 1, kind)
+            Plex.RingSingleton(node, 0)
+            IfCondition And(NotEqual(AIMacroExc.value, 0), EqualTo(Plex.IsLive(AIMacroExc.value), 1)) ThenBlock: {
+                Plex.RingInsertAfter(AIMacroExc.value, node, 0)
+            }
+            h = Hash.Create(8)
+            Hash.Set(h, "__class__", kind)
+            Hash.Set(h, "__cause__", Types.GetNone())
+            Hash.Set(h, "__context__", Types.GetNone())
+            Hash.Set(h, "__suppress_context__", AIMacro.FalseVal())
+            Hash.Set(h, "args", msg)
+            AIMacroExc.pending = 1
+            AIMacroExc.kind = kind
+            AIMacroExc.msg = msg
+            AIMacroExc.value = h
+            IfCondition EqualTo(AIMacroExc.depth, 0) ThenBlock: {
+                AIMacro.ExcAbort()
+            }
         }
     }
 }

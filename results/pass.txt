@@ -226,6 +226,7 @@ test_tools/test_pdeps.py
 test_tools/test_pindent.py
 test_tools/test_reindent.py
 test_tools/test_sundry.py
+test_trace.py
 test_ttk_textonly.py
 test_tuple.py
 test_turtle.py
