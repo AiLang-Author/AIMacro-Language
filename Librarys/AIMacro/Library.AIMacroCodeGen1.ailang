@@ -569,6 +569,328 @@ Function.Gen_EmitNonlocalParamCells {
     }
 }
 
+// Nested Function freevar reads with no `nonlocal` keyword
+// (`return value` in __nest_N_inner). Intersection of enclosing
+// assigns/params with nested IDENT uses → PyMod cells. Only nested
+// FUNCTION (nested==1) so method-level golds stay intern-stable.
+Function.Gen_CellNameSkip {
+    Input: name: Address
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(name, 0) ThenBlock: {
+            ReturnValue(1)
+        }
+        cmp = StringCompare(name, "self")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            ReturnValue(1)
+        }
+        cmp = StringCompare(name, "cls")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            ReturnValue(1)
+        }
+        IfCondition EqualTo(Gen_NameStartsWith(name, "_aim_"), 1) ThenBlock: {
+            ReturnValue(1)
+        }
+        ReturnValue(Gen_UnboundSkip(name, 0))
+    }
+}
+
+Function.Gen_MarkFreevarCell {
+    Input: name: Address
+    Body: {
+        IfCondition EqualTo(name, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        skip = Gen_CellNameSkip(name)
+        IfCondition EqualTo(skip, 1) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(Gen.nonlocal_vars, 0) ThenBlock: {
+            Gen.nonlocal_vars = Array.Create(32)
+        }
+        Gen_MarkModuleVar(name)
+        already = Gen_NameInArray(name, Gen.nonlocal_vars)
+        IfCondition EqualTo(already, 0) ThenBlock: {
+            Array.Push(Gen.nonlocal_vars, name)
+        }
+    }
+}
+
+Function.Gen_CollectDirectAssigns {
+    Input: node: Address
+    Input: out: Address
+    Body: {
+        IfCondition Or(EqualTo(node, 0), EqualTo(out, 0)) ThenBlock: {
+            ReturnValue(0)
+        }
+        is_list = Array.IsArray(node)
+        IfCondition EqualTo(is_list, 1) ThenBlock: {
+            n = Array.Size(node)
+            i = 0
+            WhileLoop LessThan(i, n) {
+                child = Array.Get(node, i)
+                Gen_CollectDirectAssigns(child, out)
+                i = Add(i, 1)
+            }
+            ReturnValue(0)
+        }
+        t = AST_Type(node)
+        IfCondition EqualTo(t, Node.FUNCTION) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t, Node.CLASS_DEF) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t, Node.METHOD_DEF) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t, Node.LAMBDA) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t, Node.ASSIGNMENT) ThenBlock: {
+            tgt = ArrayGet(node, 3)
+            tt = AST_Type(tgt)
+            IfCondition EqualTo(tt, Node.IDENT) ThenBlock: {
+                tgt = ArrayGet(tgt, 3)
+            }
+            Gen_NoteAssignName(tgt, out)
+            Gen_CollectDirectAssigns(ArrayGet(node, 4), out)
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t, Node.NAMED_EXPR) ThenBlock: {
+            tgt = ArrayGet(node, 3)
+            tt = AST_Type(tgt)
+            IfCondition EqualTo(tt, Node.IDENT) ThenBlock: {
+                tgt = ArrayGet(tgt, 3)
+            }
+            Gen_NoteAssignName(tgt, out)
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t, Node.AUG_ASSIGN) ThenBlock: {
+            Gen_NoteAssignName(ArrayGet(node, 3), out)
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t, Node.FOR_STMT) ThenBlock: {
+            loop_var = ArrayGet(node, 3)
+            IfCondition EqualTo(AST_Type(loop_var), Node.IDENT) ThenBlock: {
+                loop_var = ArrayGet(loop_var, 3)
+            }
+            Gen_NoteAssignName(loop_var, out)
+            Gen_CollectDirectAssigns(ArrayGet(node, 5), out)
+            Gen_CollectDirectAssigns(ArrayGet(node, 6), out)
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t, Node.TUPLE_UNPACK) ThenBlock: {
+            tgs = ArrayGet(node, 3)
+            is_tgs = Array.IsArray(tgs)
+            IfCondition EqualTo(is_tgs, 1) ThenBlock: {
+                ti = 0
+                tn = Array.Size(tgs)
+                WhileLoop LessThan(ti, tn) {
+                    tg = Array.Get(tgs, ti)
+                    tg_t = AST_Type(tg)
+                    IfCondition EqualTo(tg_t, Node.IDENT) ThenBlock: {
+                        Gen_NoteAssignName(ArrayGet(tg, 3), out)
+                    } ElseBlock: {
+                        IfCondition NotEqual(tg_t, Node.ATTRIBUTE) ThenBlock: {
+                            IfCondition NotEqual(tg_t, Node.INDEX_ACCESS) ThenBlock: {
+                                Gen_NoteAssignName(tg, out)
+                            }
+                        }
+                    }
+                    ti = Add(ti, 1)
+                }
+            }
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t, Node.WITH_STMT) ThenBlock: {
+            as_name = ArrayGet(node, 4)
+            as_list = Array.IsArray(as_name)
+            IfCondition EqualTo(as_list, 1) ThenBlock: {
+                ai = 0
+                an = Array.Size(as_name)
+                WhileLoop LessThan(ai, an) {
+                    Gen_NoteAssignName(Array.Get(as_name, ai), out)
+                    ai = Add(ai, 1)
+                }
+            } ElseBlock: {
+                Gen_NoteAssignName(as_name, out)
+            }
+            Gen_CollectDirectAssigns(ArrayGet(node, 5), out)
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t, Node.EXCEPT_CLAUSE) ThenBlock: {
+            Gen_NoteAssignName(ArrayGet(node, 5), out)
+            Gen_CollectDirectAssigns(ArrayGet(node, 4), out)
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t, Node.IF_STMT) ThenBlock: {
+            Gen_CollectDirectAssigns(ArrayGet(node, 4), out)
+            Gen_CollectDirectAssigns(ArrayGet(node, 5), out)
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t, Node.WHILE_STMT) ThenBlock: {
+            Gen_CollectDirectAssigns(ArrayGet(node, 4), out)
+            Gen_CollectDirectAssigns(ArrayGet(node, 5), out)
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t, Node.TRY_STMT) ThenBlock: {
+            Gen_CollectDirectAssigns(ArrayGet(node, 3), out)
+            Gen_CollectDirectAssigns(ArrayGet(node, 4), out)
+            Gen_CollectDirectAssigns(ArrayGet(node, 5), out)
+            Gen_CollectDirectAssigns(ArrayGet(node, 6), out)
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t, Node.EXPR_STMT) ThenBlock: {
+            Gen_CollectDirectAssigns(ArrayGet(node, 3), out)
+            ReturnValue(0)
+        }
+    }
+}
+
+Function.Gen_HarvestNestedFreeUses {
+    Input: node: Address
+    Input: out: Address
+    Body: {
+        IfCondition Or(EqualTo(node, 0), EqualTo(out, 0)) ThenBlock: {
+            ReturnValue(0)
+        }
+        is_list = Array.IsArray(node)
+        IfCondition EqualTo(is_list, 1) ThenBlock: {
+            n = Array.Size(node)
+            i = 0
+            WhileLoop LessThan(i, n) {
+                child = Array.Get(node, i)
+                Gen_HarvestNestedFreeUses(child, out)
+                i = Add(i, 1)
+            }
+            ReturnValue(0)
+        }
+        t = AST_Type(node)
+        IfCondition EqualTo(t, Node.FUNCTION) ThenBlock: {
+            fbody = ArrayGet(node, 5)
+            fparams = ArrayGet(node, 4)
+            assigned = Array.Create(32)
+            Gen_CollectDirectAssigns(fbody, assigned)
+            IfCondition NotEqual(fparams, 0) ThenBlock: {
+                is_parr = Array.IsArray(fparams)
+                IfCondition EqualTo(is_parr, 1) ThenBlock: {
+                    pi = 0
+                    pn = Array.Size(fparams)
+                    WhileLoop LessThan(pi, pn) {
+                        pname = Array.Get(fparams, pi)
+                        pt = AST_Type(pname)
+                        IfCondition EqualTo(pt, Node.IDENT) ThenBlock: {
+                            pname = ArrayGet(pname, 3)
+                        }
+                        Gen_NoteAssignName(pname, assigned)
+                        pi = Add(pi, 1)
+                    }
+                }
+            }
+            uses = Array.Create(16)
+            Gen_WalkUnbound(fbody, assigned, uses, 0)
+            ui = 0
+            un = Array.Size(uses)
+            WhileLoop LessThan(ui, un) {
+                uname = Array.Get(uses, ui)
+                seen = Gen_NameInArray(uname, out)
+                IfCondition EqualTo(seen, 0) ThenBlock: {
+                    Array.Push(out, uname)
+                }
+                ui = Add(ui, 1)
+            }
+            Array.Destroy(uses)
+            Array.Destroy(assigned)
+            Gen_HarvestNestedFreeUses(fbody, out)
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t, Node.CLASS_DEF) ThenBlock: {
+            cbody = AST_GetField(node, "body")
+            Gen_HarvestNestedFreeUses(cbody, out)
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t, Node.METHOD_DEF) ThenBlock: {
+            mbody = AST_GetField(node, "body")
+            Gen_HarvestNestedFreeUses(mbody, out)
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t, Node.IF_STMT) ThenBlock: {
+            Gen_HarvestNestedFreeUses(ArrayGet(node, 4), out)
+            Gen_HarvestNestedFreeUses(ArrayGet(node, 5), out)
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t, Node.WHILE_STMT) ThenBlock: {
+            Gen_HarvestNestedFreeUses(ArrayGet(node, 4), out)
+            Gen_HarvestNestedFreeUses(ArrayGet(node, 5), out)
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t, Node.FOR_STMT) ThenBlock: {
+            Gen_HarvestNestedFreeUses(ArrayGet(node, 5), out)
+            Gen_HarvestNestedFreeUses(ArrayGet(node, 6), out)
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t, Node.TRY_STMT) ThenBlock: {
+            Gen_HarvestNestedFreeUses(ArrayGet(node, 3), out)
+            Gen_HarvestNestedFreeUses(ArrayGet(node, 4), out)
+            Gen_HarvestNestedFreeUses(ArrayGet(node, 5), out)
+            Gen_HarvestNestedFreeUses(ArrayGet(node, 6), out)
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t, Node.EXCEPT_CLAUSE) ThenBlock: {
+            Gen_HarvestNestedFreeUses(ArrayGet(node, 4), out)
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t, Node.WITH_STMT) ThenBlock: {
+            Gen_HarvestNestedFreeUses(ArrayGet(node, 5), out)
+            ReturnValue(0)
+        }
+    }
+}
+
+Function.Gen_PrescanFreevarCells {
+    Input: node: Address
+    Body: {
+        IfCondition EqualTo(node, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        body = ArrayGet(node, 5)
+        params = ArrayGet(node, 4)
+        enc = Array.Create(32)
+        Gen_CollectDirectAssigns(body, enc)
+        IfCondition NotEqual(params, 0) ThenBlock: {
+            is_parr = Array.IsArray(params)
+            IfCondition EqualTo(is_parr, 1) ThenBlock: {
+                pi = 0
+                pn = Array.Size(params)
+                WhileLoop LessThan(pi, pn) {
+                    pname = Array.Get(params, pi)
+                    pt = AST_Type(pname)
+                    IfCondition EqualTo(pt, Node.IDENT) ThenBlock: {
+                        pname = ArrayGet(pname, 3)
+                    }
+                    Gen_NoteAssignName(pname, enc)
+                    pi = Add(pi, 1)
+                }
+            }
+        }
+        uses = Array.Create(16)
+        Gen_HarvestNestedFreeUses(body, uses)
+        ui = 0
+        un = Array.Size(uses)
+        WhileLoop LessThan(ui, un) {
+            uname = Array.Get(uses, ui)
+            in_enc = Gen_NameInArray(uname, enc)
+            IfCondition EqualTo(in_enc, 1) ThenBlock: {
+                Gen_MarkFreevarCell(uname)
+            }
+            ui = Add(ui, 1)
+        }
+        Array.Destroy(uses)
+        Array.Destroy(enc)
+    }
+}
+
 Function.Gen_IsImportStub {
     Input: name: Address
     Output: Integer
@@ -3203,6 +3525,9 @@ Function.Gen_PrescanNames {
                     Array.Push(Gen.func_names, fname)
                     Array.Push(Gen.module_funcs, fname)
                 }
+            }
+            IfCondition EqualTo(nested, 1) ThenBlock: {
+                Gen_PrescanFreevarCells(node)
             }
             fbody = AST_GetField(node, "body")
             Gen_PrescanNames(fbody, 1)
