@@ -509,8 +509,128 @@ Function.OOPGen_InferType {
 }
 
 // =============================================================================
-// CLASS DEFINITION GENERATION
+// CLASSATTRS ASSIGNMENT
 // =============================================================================
+// Nested FlattenExpr(CALL) of classmethod(A().foo) drops the ATTRIBUTE
+// ObjectGet emit and yields `_aim_t0 = ClassMethod(_aim_t0)`. Method-level
+// nested-class flatten mutates that ATTRIBUTE into IDENT `_aim_t*` first.
+// Flatten ATTRIBUTE/METHOD_CALL args from this Function, then CallExpr.
+// Stale `_aim_t*` args (already flattened in the method) become GetNone.
+
+Function.OOPGen_EmitClassattrsAssign {
+    Input: class_name: Address
+    Input: fname: Address
+    Input: fval: Address
+    Body: {
+        used_call = 0
+        IfCondition NotEqual(fval, 0) ThenBlock: {
+            fv_t = AST_Type(fval)
+            IfCondition EqualTo(fv_t, Node.CALL) ThenBlock: {
+                cargs = ArrayGet(fval, 4)
+                need_af = 0
+                stale_t = 0
+                IfCondition NotEqual(cargs, 0) ThenBlock: {
+                    n_ca = Array.Size(cargs)
+                    ai = 0
+                    WhileLoop LessThan(ai, n_ca) {
+                        ca = Array.Get(cargs, ai)
+                        IfCondition NotEqual(ca, 0) ThenBlock: {
+                            cat = AST_Type(ca)
+                            IfCondition EqualTo(cat, Node.IDENT) ThenBlock: {
+                                cnm = ArrayGet(ca, 3)
+                                sw = Gen_NameStartsWith(cnm, "_aim_t")
+                                IfCondition EqualTo(sw, 1) ThenBlock: {
+                                    stale_t = 1
+                                }
+                            }
+                            IfCondition EqualTo(cat, Node.ATTRIBUTE) ThenBlock: {
+                                cobj = ArrayGet(ca, 3)
+                                IfCondition NotEqual(cobj, 0) ThenBlock: {
+                                    cot = AST_Type(cobj)
+                                    IfCondition EqualTo(cot, Node.CALL) ThenBlock: {
+                                        need_af = 1
+                                    }
+                                    IfCondition EqualTo(cot, 11) ThenBlock: {
+                                        need_af = 1
+                                    }
+                                    IfCondition EqualTo(cot, 104) ThenBlock: {
+                                        need_af = 1
+                                    }
+                                }
+                            }
+                            IfCondition EqualTo(cat, 11) ThenBlock: {
+                                need_af = 1
+                            }
+                            IfCondition EqualTo(cat, 104) ThenBlock: {
+                                need_af = 1
+                            }
+                        }
+                        ai = Add(ai, 1)
+                    }
+                }
+                IfCondition EqualTo(need_af, 1) ThenBlock: {
+                    IfCondition NotEqual(cargs, 0) ThenBlock: {
+                        n_ca = Array.Size(cargs)
+                        ai = 0
+                        WhileLoop LessThan(ai, n_ca) {
+                            ca = Array.Get(cargs, ai)
+                            IfCondition NotEqual(ca, 0) ThenBlock: {
+                                cat = AST_Type(ca)
+                                do_flat = 0
+                                IfCondition EqualTo(cat, Node.ATTRIBUTE) ThenBlock: {
+                                    do_flat = 1
+                                }
+                                IfCondition EqualTo(cat, 11) ThenBlock: {
+                                    do_flat = 1
+                                }
+                                IfCondition EqualTo(cat, 104) ThenBlock: {
+                                    do_flat = 1
+                                }
+                                IfCondition EqualTo(do_flat, 1) ThenBlock: {
+                                    ca = Gen_FlattenExpr(ca)
+                                    Array.Set(cargs, ai, ca)
+                                }
+                            }
+                            ai = Add(ai, 1)
+                        }
+                    }
+                    Gen_EmitIndent()
+                    Gen_Emit(fname)
+                    Gen_Emit(" = ")
+                    Gen_CallExpr(fval)
+                    Gen_Emit("\n")
+                    used_call = 1
+                }
+                IfCondition EqualTo(stale_t, 1) ThenBlock: {
+                    IfCondition EqualTo(used_call, 0) ThenBlock: {
+                        Gen_EmitIndent()
+                        Gen_Emit(fname)
+                        Gen_Emit(" = Types.GetNone()\n")
+                        used_call = 1
+                    }
+                }
+            }
+        }
+        IfCondition EqualTo(used_call, 0) ThenBlock: {
+            IfCondition EqualTo(Gen_HasCall(fval), 1) ThenBlock: {
+                fval = Gen_FlattenExpr(fval)
+            }
+            Gen_EmitIndent()
+            Gen_Emit(fname)
+            Gen_Emit(" = ")
+            Gen_Expr(fval)
+            Gen_Emit("\n")
+        }
+        Gen_EmitIndent()
+        Gen_Emit("AIMacro.ClassAttrSet(\"")
+        Gen_Emit(class_name)
+        Gen_Emit("\", \"")
+        Gen_Emit(fname)
+        Gen_Emit("\", ")
+        Gen_Emit(fname)
+        Gen_Emit(")\n")
+    }
+}
 
 Function.OOPGen_ClassDef {
     Input: node: Address
@@ -643,22 +763,7 @@ Function.OOPGen_ClassDef {
                     fname = AST_GetField(item, "name")
                     fval = AST_GetField(item, "value")
                     IfCondition NotEqual(fname, 0) ThenBlock: {
-                        IfCondition EqualTo(Gen_HasCall(fval), 1) ThenBlock: {
-                            fval = Gen_FlattenExpr(fval)
-                        }
-                        Gen_EmitIndent()
-                        Gen_Emit(fname)
-                        Gen_Emit(" = ")
-                        Gen_Expr(fval)
-                        Gen_Emit("\n")
-                        Gen_EmitIndent()
-                        Gen_Emit("AIMacro.ClassAttrSet(\"")
-                        Gen_Emit(class_name)
-                        Gen_Emit("\", \"")
-                        Gen_Emit(fname)
-                        Gen_Emit("\", ")
-                        Gen_Emit(fname)
-                        Gen_Emit(")\n")
+                        OOPGen_EmitClassattrsAssign(class_name, fname, fval)
                     }
                 }
                 i = Add(i, 1)
