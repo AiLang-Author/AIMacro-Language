@@ -1708,6 +1708,11 @@ Function.Gen_EmitIdent {
             Gen_EmitNumber(22)
             ReturnValue(0)
         }
+        cmp = StringCompare(name, "FloatingPointError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            Gen_EmitNumber(22)
+            ReturnValue(0)
+        }
         cmp = StringCompare(name, "SyntaxError")
         IfCondition EqualTo(cmp, 0) ThenBlock: {
             Gen_EmitNumber(24)
@@ -3260,6 +3265,8 @@ Function.Gen_MapExcKind {
         cmp = StringCompare(name, "RecursionError")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(6) }
         cmp = StringCompare(name, "ArithmeticError")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(22) }
+        cmp = StringCompare(name, "FloatingPointError")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(22) }
         cmp = StringCompare(name, "SyntaxError")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(24) }

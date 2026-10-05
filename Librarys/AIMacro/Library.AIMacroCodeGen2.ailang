@@ -135,6 +135,17 @@ Function.Gen_Program {
             }
             IfCondition EqualTo(t, Node.TRY_STMT) ThenBlock: {
                 Gen_MarkTryAssignVars(decl)
+                // Module-level try/except/else def (test_io byteslike) is a
+                // PyMod callable, same as if/else def (test_ssl). Isolation
+                // golds have no module-level try def.
+                tb = ArrayGet(decl, 3)
+                Gen_MarkConditionalDefVars(tb)
+                tex = ArrayGet(decl, 4)
+                Gen_MarkConditionalDefVars(tex)
+                tfin = ArrayGet(decl, 5)
+                Gen_MarkConditionalDefVars(tfin)
+                telse = ArrayGet(decl, 6)
+                Gen_MarkConditionalDefVars(telse)
             }
             IfCondition EqualTo(t, Node.FUNCTION) ThenBlock: {
                 Gen_MarkBodyAssignVars(ArrayGet(decl, 5))
@@ -849,8 +860,20 @@ Function.Gen_MarkConditionalDefVars {
                 Gen_MarkConditionalDefVars(ArrayGet(stmt, 6))
             }
             IfCondition EqualTo(st, Node.TRY_STMT) ThenBlock: {
-                Gen_MarkConditionalDefVars(ArrayGet(stmt, 3))
-                Gen_MarkConditionalDefVars(ArrayGet(stmt, 5))
+                // body / excepts / finally / else. excepts is EXCEPT_CLAUSE list
+                // (test_io byteslike lives in except and else).
+                tb = ArrayGet(stmt, 3)
+                Gen_MarkConditionalDefVars(tb)
+                tex = ArrayGet(stmt, 4)
+                Gen_MarkConditionalDefVars(tex)
+                tfin = ArrayGet(stmt, 5)
+                Gen_MarkConditionalDefVars(tfin)
+                telse = ArrayGet(stmt, 6)
+                Gen_MarkConditionalDefVars(telse)
+            }
+            IfCondition EqualTo(st, Node.EXCEPT_CLAUSE) ThenBlock: {
+                eb = ArrayGet(stmt, 4)
+                Gen_MarkConditionalDefVars(eb)
             }
             IfCondition EqualTo(st, Node.WITH_STMT) ThenBlock: {
                 Gen_MarkConditionalDefVars(ArrayGet(stmt, 5))
