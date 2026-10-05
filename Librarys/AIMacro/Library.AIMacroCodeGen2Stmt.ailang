@@ -222,6 +222,7 @@ Function.Gen_Node {
             ReturnValue(0)
         }
         IfCondition EqualTo(t, Node.NONLOCAL_STMT) ThenBlock: {
+            Gen_MarkNonlocalStmtNames(node)
             ReturnValue(0)
         }
         
@@ -419,6 +420,7 @@ Function.Gen_Function {
         
         enc_saved = Gen_PushEnclosingParams(params)
         Gen.indent = Add(Gen.indent, 2)
+        Gen_EmitNonlocalParamCells(Gen.param_names, 1)
         Gen_EmitFreevarLocals()
         // Nested Function use-before-later-assign (`print(y); y = 1`).
         // Freevars with no later assign stay SnapshotFreevars (intern-safe).
@@ -509,6 +511,7 @@ Function.Gen_PackedFunction {
         
         // Generate body
         Gen.indent = Add(Gen.indent, 2)
+        Gen_EmitNonlocalParamCells(Gen.param_names, 1)
         Gen_EmitUnboundLocals(body, 0, 1)
         Gen_Body(body)
         Gen.indent = Subtract(Gen.indent, 2)

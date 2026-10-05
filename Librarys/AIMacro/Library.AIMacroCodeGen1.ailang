@@ -40,6 +40,7 @@ FixedPool.Gen {
     "bound_append_names": Initialize=0, CanChange=True
     "bound_append_selves": Initialize=0, CanChange=True
     "module_vars": Initialize=0, CanChange=True
+    "nonlocal_vars": Initialize=0, CanChange=True
     "import_stubs": Initialize=0, CanChange=True
     "enclosing_params": Initialize=0, CanChange=True
     "enclosing_locals": Initialize=0, CanChange=True
@@ -88,6 +89,7 @@ Function.Gen_Init {
         Gen.bound_append_names = Array.Create(16)
         Gen.bound_append_selves = Array.Create(16)
         Gen.module_vars = Array.Create(64)
+        Gen.nonlocal_vars = Array.Create(32)
         Gen.import_stubs = Array.Create(32)
         Gen.enclosing_params = Array.Create(32)
         Gen.enclosing_locals = Array.Create(32)
@@ -142,6 +144,9 @@ Function.Gen_Free {
         }
         IfCondition NotEqual(Gen.module_vars, 0) ThenBlock: {
             Array.Destroy(Gen.module_vars)
+        }
+        IfCondition NotEqual(Gen.nonlocal_vars, 0) ThenBlock: {
+            Array.Destroy(Gen.nonlocal_vars)
         }
         IfCondition NotEqual(Gen.import_stubs, 0) ThenBlock: {
             Array.Destroy(Gen.import_stubs)
@@ -496,6 +501,69 @@ Function.Gen_MarkGlobalStmtNames {
                 nm = ArrayGet(nm, 3)
             }
             Gen_MarkModuleVar(nm)
+            i = Add(i, 1)
+        }
+    }
+}
+
+Function.Gen_MarkNonlocalStmtNames {
+    Input: node: Address
+    Body: {
+        IfCondition EqualTo(node, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(Gen.nonlocal_vars, 0) ThenBlock: {
+            Gen.nonlocal_vars = Array.Create(32)
+        }
+        names = ArrayGet(node, 3)
+        IfCondition EqualTo(names, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        is_list = Array.IsArray(names)
+        IfCondition EqualTo(is_list, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        n = Array.Size(names)
+        i = 0
+        WhileLoop LessThan(i, n) {
+            nm = Array.Get(names, i)
+            tt = AST_Type(nm)
+            IfCondition EqualTo(tt, Node.IDENT) ThenBlock: {
+                nm = ArrayGet(nm, 3)
+            }
+            Gen_MarkModuleVar(nm)
+            already = Gen_NameInArray(nm, Gen.nonlocal_vars)
+            IfCondition EqualTo(already, 0) ThenBlock: {
+                Array.Push(Gen.nonlocal_vars, nm)
+            }
+            i = Add(i, 1)
+        }
+    }
+}
+
+Function.Gen_EmitNonlocalParamCells {
+    Input: names: Address
+    Input: use_p: Integer
+    Body: {
+        IfCondition Or(EqualTo(names, 0), EqualTo(Gen.nonlocal_vars, 0)) ThenBlock: {
+            ReturnValue(0)
+        }
+        n = Array.Size(names)
+        i = 0
+        WhileLoop LessThan(i, n) {
+            name = Array.Get(names, i)
+            is_nl = Gen_NameInArray(name, Gen.nonlocal_vars)
+            IfCondition EqualTo(is_nl, 1) ThenBlock: {
+                Gen_EmitIndent()
+                Gen_Emit("PyMod.")
+                Gen_Emit(name)
+                Gen_Emit(" = ")
+                IfCondition EqualTo(use_p, 1) ThenBlock: {
+                    Gen_Emit("p_")
+                }
+                Gen_Emit(name)
+                Gen_Emit("\n")
+            }
             i = Add(i, 1)
         }
     }
@@ -1648,6 +1716,14 @@ Function.Gen_EmitIdent {
             Gen_EmitNumber(3)
             ReturnValue(0)
         }
+        // Cell names (global/nonlocal) win over nested-def hoist (`x += 1`
+        // must not become AddressOf(__nest_N_x) when PyMod.x is the cell).
+        is_mod = Gen_IsModuleVar(name)
+        IfCondition EqualTo(is_mod, 1) ThenBlock: {
+            Gen_Emit("PyMod.")
+            Gen_Emit(name)
+            ReturnValue(0)
+        }
         // Nested-def hoist: use AddressOf(__nest_N_name) across functions
         IfCondition NotEqual(Gen.nest_bind_names, 0) ThenBlock: {
             nsz = Array.Size(Gen.nest_bind_names)
@@ -1697,13 +1773,6 @@ Function.Gen_EmitIdent {
         cmp = StringCompare(name, "Add")
         IfCondition EqualTo(cmp, 0) ThenBlock: {
             Gen_MarkModuleVar(name)
-            Gen_Emit("PyMod.")
-            Gen_Emit(name)
-            ReturnValue(0)
-        }
-        // File-scope names live in FixedPool.PyMod so Functions can see them
-        is_mod = Gen_IsModuleVar(name)
-        IfCondition EqualTo(is_mod, 1) ThenBlock: {
             Gen_Emit("PyMod.")
             Gen_Emit(name)
             ReturnValue(0)
@@ -3188,6 +3257,10 @@ Function.Gen_PrescanNames {
         }
         IfCondition EqualTo(t0, Node.GLOBAL_STMT) ThenBlock: {
             Gen_MarkGlobalStmtNames(node)
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t0, Node.NONLOCAL_STMT) ThenBlock: {
+            Gen_MarkNonlocalStmtNames(node)
             ReturnValue(0)
         }
     }

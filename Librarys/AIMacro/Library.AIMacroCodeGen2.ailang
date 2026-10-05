@@ -866,6 +866,9 @@ Function.Gen_MarkBodyAssignVars {
             IfCondition EqualTo(st, Node.GLOBAL_STMT) ThenBlock: {
                 Gen_MarkGlobalStmtNames(stmt)
             }
+            IfCondition EqualTo(st, Node.NONLOCAL_STMT) ThenBlock: {
+                Gen_MarkNonlocalStmtNames(stmt)
+            }
             i = Add(i, 1)
         }
     }

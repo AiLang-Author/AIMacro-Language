@@ -911,6 +911,7 @@ Function.OOPGen_MethodImpl {
                 ei = Add(ei, 1)
             }
             enc_saved = Gen_PushEnclosingParams(enc_names)
+            Gen_EmitNonlocalParamCells(enc_names, 0)
             Gen_EmitUnboundLocals(body, enc_names, 0)
             Array.Destroy(enc_names)
             has_yield = Gen_StmtsHaveYield(body)
