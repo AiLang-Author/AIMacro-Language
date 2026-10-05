@@ -64,6 +64,7 @@ test_email/test_asian_codecs.py
 test_email/test_contentmanager.py
 test_email/test_defect_handling.py
 test_email/test_generator.py
+test_email/test_headerregistry.py
 test_email/test_parser.py
 test_email/test_utils.py
 test_ensurepip.py
@@ -102,6 +103,7 @@ test_importlib/frozen/test_finder.py
 test_importlib/frozen/test_loader.py
 test_importlib/import_/test___package__.py
 test_importlib/import_/test_caching.py
+test_importlib/import_/test_path.py
 test_importlib/source/test_case_sensitivity.py
 test_importlib/source/test_file_loader.py
 test_importlib/source/test_source_encoding.py
@@ -122,6 +124,7 @@ test_importlib/test_zip.py
 test_index.py
 test_int.py
 test_iterlen.py
+test_json/test_decode.py
 test_json/test_default.py
 test_json/test_encode_basestring_ascii.py
 test_json/test_enum.py
@@ -162,6 +165,7 @@ test_peg_generator/test_grammar_validator.py
 test_pickle.py
 test_picklebuffer.py
 test_pickletools.py
+test_pkg.py
 test_pkgutil.py
 test_platform.py
 test_plistlib.py
@@ -189,6 +193,7 @@ test_smtpnet.py
 test_sndhdr.py
 test_source_encoding.py
 test_sqlite3/test_backup.py
+test_sqlite3/test_dump.py
 test_sqlite3/test_hooks.py
 test_stable_abi_ctypes.py
 test_startfile.py
@@ -243,13 +248,16 @@ test_urllib2net.py
 test_urllib_response.py
 test_userlist.py
 test_userstring.py
+test_utf8_mode.py
 test_utf8source.py
+test_uu.py
 test_uuid.py
 test_wave.py
 test_weakset.py
 test_winsound.py
 test_xdrlib.py
 test_xml_dom_minicompat.py
+test_xml_etree_c.py
 test_xmlrpc_net.py
 test_xxlimited.py
 test_xxtestfuzz.py

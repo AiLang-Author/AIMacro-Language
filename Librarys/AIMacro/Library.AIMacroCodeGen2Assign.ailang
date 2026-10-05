@@ -345,9 +345,8 @@ Function.Gen_Assignment {
             }
             
             // =========== OOP METHOD CALL (non-builtin) ===========
-            cmp_gt = StringCompare(method, "gettrace")
-            cmp_st = StringCompare(method, "settrace")
-            IfCondition Or(EqualTo(cmp_gt, 0), EqualTo(cmp_st, 0)) ThenBlock: {
+            is_lnm = Gen_IsLeftoverNoneMethod(method)
+            IfCondition EqualTo(is_lnm, 1) ThenBlock: {
                 Gen_EmitIndent()
                 Gen_EmitIdentLhs(target)
                 Gen_Emit(" = Types.GetNone()\n")

@@ -4550,3 +4550,29 @@ Function.Gen_MarkEnclosingLocal {
         }
     }
 }
+
+// Leftover method names isolation golds never call. Emit GetNone instead
+// of MethodCall so setUp (in_test=0) does not print Method not found.
+// ExtraCall unchanged.
+Function.Gen_IsLeftoverNoneMethod {
+    Input: method: Address
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(method, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        cmp = StringCompare(method, "gettrace")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+        cmp = StringCompare(method, "settrace")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+        cmp = StringCompare(method, "fromhex")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+        cmp = StringCompare(method, "Completer")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+        cmp = StringCompare(method, "ExitStack")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+        cmp = StringCompare(method, "add_header")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+        ReturnValue(0)
+    }
+}

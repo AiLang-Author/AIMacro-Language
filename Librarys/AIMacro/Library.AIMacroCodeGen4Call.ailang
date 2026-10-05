@@ -371,6 +371,11 @@ Function.Gen_CallExpr {
                     ReturnValue(0)
                 }
             }
+            is_lnm = Gen_IsLeftoverNoneMethod(name)
+            IfCondition EqualTo(is_lnm, 1) ThenBlock: {
+                Gen_Emit("Types.GetNone()")
+                ReturnValue(0)
+            }
             IfCondition EqualTo(n, 0) ThenBlock: {
                 Gen_Emit("AIMacro.SmartCall(")
                 Gen_EmitIdent(name)
