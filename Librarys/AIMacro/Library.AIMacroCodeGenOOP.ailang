@@ -525,8 +525,25 @@ Function.OOPGen_EmitClassattrsAssign {
         used_call = 0
         IfCondition NotEqual(fval, 0) ThenBlock: {
             fv_t = AST_Type(fval)
+            is_cm = 0
+            cargs = 0
             IfCondition EqualTo(fv_t, Node.CALL) ThenBlock: {
+                is_cm = 1
                 cargs = ArrayGet(fval, 4)
+            }
+            IfCondition EqualTo(fv_t, Node.METHOD_CALL) ThenBlock: {
+                is_cm = 1
+                cargs = ArrayGet(fval, 5)
+            }
+            IfCondition EqualTo(fv_t, 11) ThenBlock: {
+                is_cm = 1
+                cargs = ArrayGet(fval, 5)
+            }
+            IfCondition EqualTo(fv_t, 104) ThenBlock: {
+                is_cm = 1
+                cargs = ArrayGet(fval, 5)
+            }
+            IfCondition EqualTo(is_cm, 1) ThenBlock: {
                 need_af = 0
                 stale_t = 0
                 IfCondition NotEqual(cargs, 0) ThenBlock: {
@@ -594,12 +611,23 @@ Function.OOPGen_EmitClassattrsAssign {
                             ai = Add(ai, 1)
                         }
                     }
-                    Gen_EmitIndent()
-                    Gen_Emit(fname)
-                    Gen_Emit(" = ")
-                    Gen_CallExpr(fval)
-                    Gen_Emit("\n")
-                    used_call = 1
+                    IfCondition EqualTo(fv_t, Node.CALL) ThenBlock: {
+                        Gen_EmitIndent()
+                        Gen_Emit(fname)
+                        Gen_Emit(" = ")
+                        Gen_CallExpr(fval)
+                        Gen_Emit("\n")
+                        used_call = 1
+                    }
+                    IfCondition EqualTo(used_call, 0) ThenBlock: {
+                        fval = Gen_FlattenExpr(fval)
+                        Gen_EmitIndent()
+                        Gen_Emit(fname)
+                        Gen_Emit(" = ")
+                        Gen_Expr(fval)
+                        Gen_Emit("\n")
+                        used_call = 1
+                    }
                 }
                 IfCondition EqualTo(stale_t, 1) ThenBlock: {
                     IfCondition EqualTo(used_call, 0) ThenBlock: {

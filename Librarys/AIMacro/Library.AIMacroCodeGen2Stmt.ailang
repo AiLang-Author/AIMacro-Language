@@ -723,11 +723,32 @@ Function.Gen_UnpackOne {
             Gen_IndexAssign(inode)
             ReturnValue(0)
         }
-        Gen_EmitIndent()
-        Gen_EmitIdentLhs(target)
-        Gen_Emit(" = ")
-        Gen_Expr(val)
-        Gen_Emit("\n")
+        IfCondition EqualTo(tt, Node.SLICE_ACCESS) ThenBlock: {
+            snode = AST_Create(Node.SLICE_ASSIGN, 5)
+            ArraySet(snode, 3, ArrayGet(target, 3))
+            ArraySet(snode, 4, ArrayGet(target, 4))
+            ArraySet(snode, 5, ArrayGet(target, 5))
+            ArraySet(snode, 6, ArrayGet(target, 6))
+            ArraySet(snode, 7, val)
+            Gen_SliceAssign(snode)
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(tt, Node.STARRED) ThenBlock: {
+            sn = ArrayGet(target, 3)
+            IfCondition NotEqual(sn, 0) ThenBlock: {
+                IfCondition EqualTo(AST_Type(sn), Node.IDENT) ThenBlock: {
+                    Gen_EmitIndent()
+                    Gen_EmitIdentLhs(ArrayGet(sn, 3))
+                    Gen_Emit(" = ")
+                    Gen_Expr(val)
+                    Gen_Emit("\n")
+                }
+            }
+            ReturnValue(0)
+        }
+        // Nested tuple / unknown: do not EmitIdentLhs the node
+        // (type byte becomes PyMod.<BEL> and fails the lexer).
+        ReturnValue(0)
     }
 }
 

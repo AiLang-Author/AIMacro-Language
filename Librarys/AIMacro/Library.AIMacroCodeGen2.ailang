@@ -751,19 +751,10 @@ Function.Gen_MarkTupleUnpackVars {
             IfCondition EqualTo(tt, Node.IDENT) ThenBlock: {
                 Gen_MarkModuleVar(ArrayGet(tgt, 3))
             }
-            // ATTRIBUTE / INDEX_ACCESS: not a module binding
-            IfCondition EqualTo(tt, Node.ATTRIBUTE) ThenBlock: {
-                // skip
-            } ElseBlock: {
-                IfCondition EqualTo(tt, Node.INDEX_ACCESS) ThenBlock: {
-                    // skip
-                } ElseBlock: {
-                    IfCondition NotEqual(tt, Node.IDENT) ThenBlock: {
-                        // bare name string (AST_Type not a node)
-                        Gen_MarkModuleVar(tgt)
-                    }
-                }
-            }
+            // ATTRIBUTE / INDEX / SLICE / nested tuple / STARRED are
+            // not module names. MarkModuleVar of the node copies the
+            // little-endian type byte as a 1-char key (BEL/EOT) and
+            // the lexer rejects it (test_gc garbage[:], test_strptime (*_, offset)).
             i = Add(i, 1)
         }
     }
