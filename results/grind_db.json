@@ -799,14 +799,11 @@
     },
     "test_cmd_line_script.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_cmd_line_script.py",
-      "status": "fail",
-      "stage": "compile",
-      "rc": 1,
-      "err": "] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\nERROR: Variable not found: _make_test_zip_pkg\nCompilation Failed: \n[AST] Freeing 93804 node child-lists...\n[AST] Freed 40051 child-lists (node slots stay in pool)",
-      "out": "",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_cmd_line_script.py",
-      "updated": "2026-10-03"
+      "updated": "2026-10-04"
     },
     "test_code.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_code.py",
@@ -1192,14 +1189,11 @@
     },
     "test_dbm.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_dbm.py",
-      "status": "fail",
-      "stage": "compile",
-      "rc": 1,
-      "err": "nts\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\nERROR: Variable not found: d\nCompilation Failed: \n[AST] Freeing 85829 node child-lists...\n[AST] Freed 37358 child-lists (node slots stay in pool)",
-      "out": "",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_dbm.py",
-      "updated": "2026-10-03"
+      "updated": "2026-10-04"
     },
     "test_dbm_dumb.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_dbm_dumb.py",
@@ -1593,12 +1587,9 @@
     },
     "test_ensurepip.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_ensurepip.py",
-      "status": "fail",
-      "stage": "compile",
-      "rc": -11,
-      "err": "\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT] Loaded: AIMacro.AIMacroSeq\n[IMPORT] Loaded: AIMacro.AIMacroNum\n[IMPORT ERROR] Cannot read: contextlib\n[IMPORT ERROR] Cannot read: ensurepip\n[IMPORT ERROR] Cannot read: ensurepip\n[IMPORT] Extracting symbols from 24 modules\n[IMPORT] Checking 937 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 29408, col 44: Expected ')' after arguments\n  In:",
-      "out": "",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_ensurepip.py",
       "updated": "2026-10-04"
     },
@@ -3520,14 +3511,11 @@
     },
     "test_pickle.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_pickle.py",
-      "status": "fail",
-      "stage": "compile",
-      "rc": 1,
-      "err": "ts\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[SUBDEF] Stack allocation: base=64 + 30 locals * 16 = 544 bytes\nERROR: Variable not found: CustomCPicklerClass\nCompilation Failed: \n[AST] Freeing 91469 node child-lists...\n[AST] Freed 39483 child-lists (node slots stay in pool)",
-      "out": "",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_pickle.py",
-      "updated": "2026-10-03"
+      "updated": "2026-10-04"
     },
     "test_picklebuffer.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_picklebuffer.py",
@@ -4714,14 +4702,11 @@
     },
     "test_tools/test_freeze.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_tools/test_freeze.py",
-      "status": "fail",
-      "stage": "compile",
-      "rc": 1,
-      "err": "CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\nERROR: Variable not found: helper\nCompilation Failed: \n[AST] Freeing 81847 node child-lists...\n[AST] Freed 36292 child-lists (node slots stay in pool)",
-      "out": "",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_tools/test_freeze.py",
-      "updated": "2026-09-30"
+      "updated": "2026-10-04"
     },
     "test_tools/test_gprof2html.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_tools/test_gprof2html.py",
