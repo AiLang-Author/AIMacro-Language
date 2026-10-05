@@ -196,6 +196,8 @@ Function.Gen_Assignment {
             IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
             cmp = StringCompare(method, "endswith")
             IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
+            cmp = StringCompare(method, "splitext")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
             cmp = StringCompare(method, "islower")
             IfCondition EqualTo(cmp, 0) ThenBlock: { is_builtin = 1 }
             cmp = StringCompare(method, "isupper")
