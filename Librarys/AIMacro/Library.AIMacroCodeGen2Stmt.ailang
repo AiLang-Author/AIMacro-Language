@@ -218,7 +218,7 @@ Function.Gen_Node {
             ReturnValue(0)
         }
         IfCondition EqualTo(t, Node.GLOBAL_STMT) ThenBlock: {
-            // AILang has no dynamic global cell; parse coverage no-op
+            Gen_MarkGlobalStmtNames(node)
             ReturnValue(0)
         }
         IfCondition EqualTo(t, Node.NONLOCAL_STMT) ThenBlock: {

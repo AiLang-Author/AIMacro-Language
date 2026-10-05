@@ -472,6 +472,35 @@ Function.Gen_MarkModuleVar {
         Array.Push(Gen.module_vars, copy)
     }
 }
+
+Function.Gen_MarkGlobalStmtNames {
+    Input: node: Address
+    Body: {
+        IfCondition EqualTo(node, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        names = ArrayGet(node, 3)
+        IfCondition EqualTo(names, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        is_list = Array.IsArray(names)
+        IfCondition EqualTo(is_list, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        n = Array.Size(names)
+        i = 0
+        WhileLoop LessThan(i, n) {
+            nm = Array.Get(names, i)
+            tt = AST_Type(nm)
+            IfCondition EqualTo(tt, Node.IDENT) ThenBlock: {
+                nm = ArrayGet(nm, 3)
+            }
+            Gen_MarkModuleVar(nm)
+            i = Add(i, 1)
+        }
+    }
+}
+
 Function.Gen_IsImportStub {
     Input: name: Address
     Output: Integer
@@ -3155,6 +3184,10 @@ Function.Gen_PrescanNames {
         IfCondition EqualTo(t0, Node.WITH_STMT) ThenBlock: {
             wtbody = AST_GetField(node, "body")
             Gen_PrescanNames(wtbody, nested)
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t0, Node.GLOBAL_STMT) ThenBlock: {
+            Gen_MarkGlobalStmtNames(node)
             ReturnValue(0)
         }
     }

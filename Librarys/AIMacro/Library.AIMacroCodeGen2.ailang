@@ -863,6 +863,9 @@ Function.Gen_MarkBodyAssignVars {
                 wbody = ArrayGet(stmt, 5)
                 Gen_MarkBodyAssignVars(wbody)
             }
+            IfCondition EqualTo(st, Node.GLOBAL_STMT) ThenBlock: {
+                Gen_MarkGlobalStmtNames(stmt)
+            }
             i = Add(i, 1)
         }
     }
