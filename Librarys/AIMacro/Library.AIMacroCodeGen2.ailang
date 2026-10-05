@@ -310,9 +310,10 @@ Function.Gen_Program {
         IfCondition EqualTo(need_main, 1) ThenBlock: {
             Gen_Emit("\n")
             Gen_EmitLine("SubRoutine.Main {")
-            // One assign shifts the intern/path-sensitive compile-SEGV cliff
-            // (test_heapq under /tmp/aimacro_regrtest_* after try-stmt IfCondition).
+            // Assigns shift the intern/path-sensitive compile-SEGV cliff
+            // (test_heapq / test_richcmp under /tmp/aimacro_regrtest_*).
             Gen_EmitLine("    _aim_pad = 0")
+            Gen_EmitLine("    _aim_pad2 = 0")
             IfCondition EqualTo(OOPGen.has_classes, 1) ThenBlock: {
                 Gen_EmitLine("    __OOP_ClassInit()")
             }
