@@ -916,6 +916,49 @@ Function.OOPGen_HasField {
     }
 }
 
+// IDENT defaults like config=config1 / feature_version=highest are class
+// attrs. Bare names VNF in the packed MethodImpl Function. Leftover/module
+// names stay OOPGen_Expr (isolation). _aim_t* temps from FlattenExpr stay.
+Function.OOPGen_PackedDefaultIsClassAttr {
+    Input: name: Address
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(name, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(Gen_NameStartsWith(name, "_aim_"), 1) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(Gen_UnboundSkip(name, 0), 1) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(Gen_IsAilangKeyword(name), 1) ThenBlock: {
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "None")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "True")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "False")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "NotImplemented")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        cmp = StringCompare(name, "Ellipsis")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        ReturnValue(1)
+    }
+}
+
 // =============================================================================
 // METHOD IMPLEMENTATION GENERATION
 // =============================================================================
@@ -1014,6 +1057,35 @@ Function.OOPGen_MethodImpl {
                 IfCondition And(EqualTo(pkind, 0), And(NotEqual(dnode, 0), EqualTo(Gen_HasCall(dnode), 1))) ThenBlock: {
                     dnode = Gen_FlattenExpr(dnode)
                 }
+                use_og = 0
+                og_name = 0
+                IfCondition And(EqualTo(pkind, 0), And(NotEqual(dnode, 0), GreaterThan(i, 0))) ThenBlock: {
+                    IfCondition EqualTo(AST_Type(dnode), Node.IDENT) ThenBlock: {
+                        og_name = ArrayGet(dnode, 3)
+                        IfCondition EqualTo(OOPGen_PackedDefaultIsClassAttr(og_name), 1) ThenBlock: {
+                            IfCondition NotEqual(OOPGen.current_receiver, 0) ThenBlock: {
+                                use_og = 1
+                            }
+                        }
+                    }
+                }
+                IfCondition EqualTo(use_og, 1) ThenBlock: {
+                    tname = Gen_TempName()
+                    Gen_EmitIndent()
+                    Gen_Emit(tname)
+                    Gen_Emit(" = AIMacro.ObjectGet(")
+                    Gen_Emit(OOPGen.current_receiver)
+                    Gen_Emit(", \"")
+                    Gen_Emit(og_name)
+                    Gen_Emit("\")\n")
+                    Gen_EmitIndent()
+                    Gen_Emit(param_name)
+                    Gen_Emit(" = AIMacro.PackedGet(p__args, ")
+                    Gen_EmitNumber(i)
+                    Gen_Emit(", ")
+                    Gen_Emit(tname)
+                    Gen_Emit(")\n")
+                } ElseBlock: {
                 Gen_EmitIndent()
                 Gen_Emit(param_name)
                 IfCondition EqualTo(pkind, 1) ThenBlock: {
@@ -1034,6 +1106,7 @@ Function.OOPGen_MethodImpl {
                         }
                         Gen_Emit(")\n")
                     }
+                }
                 }
                 i = Add(i, 1)
             }
