@@ -848,6 +848,116 @@ Function.Gen_HarvestNestedFreeUses {
     }
 }
 
+// CALL name-string callees in this body (orig_kill()), not nested defs.
+// WalkUnbound skips callees so encoded_words does not GetNone print.
+Function.Gen_HarvestCallCallees {
+    Input: node: Address
+    Input: out: Address
+    Body: {
+        IfCondition Or(EqualTo(node, 0), EqualTo(out, 0)) ThenBlock: {
+            ReturnValue(0)
+        }
+        is_list = Array.IsArray(node)
+        IfCondition EqualTo(is_list, 1) ThenBlock: {
+            n = Array.Size(node)
+            i = 0
+            WhileLoop LessThan(i, n) {
+                Gen_HarvestCallCallees(Array.Get(node, i), out)
+                i = Add(i, 1)
+            }
+            ReturnValue(0)
+        }
+        t = AST_Type(node)
+        IfCondition EqualTo(t, Node.FUNCTION) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t, Node.CLASS_DEF) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t, Node.METHOD_DEF) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t, Node.LAMBDA) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t, Node.CALL) ThenBlock: {
+            callee = ArrayGet(node, 3)
+            IfCondition EqualTo(Array.IsArray(callee), 0) ThenBlock: {
+                IfCondition NotEqual(callee, 0) ThenBlock: {
+                    IfCondition EqualTo(Gen_NameInArray(callee, out), 0) ThenBlock: {
+                        Array.Push(out, callee)
+                    }
+                }
+            } ElseBlock: {
+                Gen_HarvestCallCallees(callee, out)
+            }
+            Gen_HarvestCallCallees(ArrayGet(node, 4), out)
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t, Node.INDIRECT_CALL) ThenBlock: {
+            Gen_HarvestCallCallees(ArrayGet(node, 3), out)
+            Gen_HarvestCallCallees(ArrayGet(node, 4), out)
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t, Node.EXPR_STMT) ThenBlock: {
+            Gen_HarvestCallCallees(ArrayGet(node, 3), out)
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t, Node.ASSIGNMENT) ThenBlock: {
+            Gen_HarvestCallCallees(ArrayGet(node, 4), out)
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t, Node.RETURN_STMT) ThenBlock: {
+            Gen_HarvestCallCallees(ArrayGet(node, 3), out)
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t, Node.IF_STMT) ThenBlock: {
+            Gen_HarvestCallCallees(ArrayGet(node, 3), out)
+            Gen_HarvestCallCallees(ArrayGet(node, 4), out)
+            Gen_HarvestCallCallees(ArrayGet(node, 5), out)
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t, Node.WHILE_STMT) ThenBlock: {
+            Gen_HarvestCallCallees(ArrayGet(node, 3), out)
+            Gen_HarvestCallCallees(ArrayGet(node, 4), out)
+            Gen_HarvestCallCallees(ArrayGet(node, 5), out)
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t, Node.FOR_STMT) ThenBlock: {
+            Gen_HarvestCallCallees(ArrayGet(node, 4), out)
+            Gen_HarvestCallCallees(ArrayGet(node, 5), out)
+            Gen_HarvestCallCallees(ArrayGet(node, 6), out)
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t, Node.TRY_STMT) ThenBlock: {
+            Gen_HarvestCallCallees(ArrayGet(node, 3), out)
+            Gen_HarvestCallCallees(ArrayGet(node, 4), out)
+            Gen_HarvestCallCallees(ArrayGet(node, 5), out)
+            Gen_HarvestCallCallees(ArrayGet(node, 6), out)
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t, Node.EXCEPT_CLAUSE) ThenBlock: {
+            Gen_HarvestCallCallees(ArrayGet(node, 4), out)
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t, Node.WITH_STMT) ThenBlock: {
+            Gen_HarvestCallCallees(ArrayGet(node, 3), out)
+            Gen_HarvestCallCallees(ArrayGet(node, 5), out)
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t, 11) ThenBlock: {
+            Gen_HarvestCallCallees(ArrayGet(node, 3), out)
+            Gen_HarvestCallCallees(ArrayGet(node, 5), out)
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t, 104) ThenBlock: {
+            Gen_HarvestCallCallees(ArrayGet(node, 3), out)
+            Gen_HarvestCallCallees(ArrayGet(node, 5), out)
+            ReturnValue(0)
+        }
+    }
+}
+
 Function.Gen_PrescanFreevarCells {
     Input: node: Address
     Body: {
@@ -3617,6 +3727,21 @@ Function.Gen_CollectIdentsFromNode {
             }
             ReturnValue(0)
         }
+        // CALL slot 3 is a callee name string (orig_kill()), not an IDENT node.
+        // WalkUnbound skips callees so encoded_words does not GetNone print;
+        // snapshot intersects this with enclosing_locals only.
+        IfCondition EqualTo(t, Node.CALL) ThenBlock: {
+            IfCondition GreaterThan(n, 3) ThenBlock: {
+                callee = Array.Get(node, 3)
+                IfCondition EqualTo(Array.IsArray(callee), 0) ThenBlock: {
+                    IfCondition NotEqual(callee, 0) ThenBlock: {
+                        IfCondition EqualTo(Gen_NameInArray(callee, out), 0) ThenBlock: {
+                            Array.Push(out, callee)
+                        }
+                    }
+                }
+            }
+        }
         // Recurse slots; treat list-of-nodes vs single child node
         i = 1
         WhileLoop LessThan(i, n) {
@@ -3720,7 +3845,8 @@ Function.Gen_PushDeferredFunction {
     Input: node: Address
     Body: {
         nest_params = ArrayGet(node, 4)
-        fv = Gen_SnapshotFreevarsAll(nest_params)
+        nest_body = ArrayGet(node, 5)
+        fv = Gen_SnapshotFreevarsAll(nest_params, nest_body)
         Array.Push(Gen.deferred_functions, node)
         Array.Push(Gen.deferred_freevars, fv)
         Array.Push(Gen.deferred_nest_names, Gen_CopyAddrArray(Gen.nest_bind_names))
@@ -3730,9 +3856,28 @@ Function.Gen_PushDeferredFunction {
 
 Function.Gen_SnapshotFreevarsAll {
     Input: nest_params: Address
+    Input: nest_body: Address
     Output: Address
     Body: {
         fv = Array.Create(8)
+        refs = Array.Create(32)
+        IfCondition NotEqual(nest_body, 0) ThenBlock: {
+            assigned_r = Array.Create(8)
+            unbound_r = Array.Create(16)
+            Gen_WalkUnbound(nest_body, assigned_r, unbound_r, 0)
+            ui = 0
+            un = Array.Size(unbound_r)
+            WhileLoop LessThan(ui, un) {
+                uname = Array.Get(unbound_r, ui)
+                IfCondition EqualTo(Gen_NameInArray(uname, refs), 0) ThenBlock: {
+                    Array.Push(refs, uname)
+                }
+                ui = Add(ui, 1)
+            }
+            Array.Destroy(unbound_r)
+            Array.Destroy(assigned_r)
+            Gen_HarvestCallCallees(nest_body, refs)
+        }
         // Outer function params (e.g. maxsize) — Gen.param_names at defer time
         IfCondition NotEqual(Gen.param_names, 0) ThenBlock: {
             n = Array.Size(Gen.param_names)
@@ -3780,6 +3925,8 @@ Function.Gen_SnapshotFreevarsAll {
                 i = Add(i, 1)
             }
         }
+        // Method/enclosing assigns used in the nested body (orig_kill as CALL
+        // callee; addr as IDENT arg). Dumping every assign intern-SEGVs plistlib.
         IfCondition NotEqual(Gen.enclosing_locals, 0) ThenBlock: {
             n = Array.Size(Gen.enclosing_locals)
             i = 0
@@ -3787,14 +3934,22 @@ Function.Gen_SnapshotFreevarsAll {
                 name = Array.Get(Gen.enclosing_locals, i)
                 skip = Gen_NameInArray(name, nest_params)
                 IfCondition EqualTo(skip, 0) ThenBlock: {
-                    dup = Gen_NameInArray(name, fv)
-                    IfCondition EqualTo(dup, 0) ThenBlock: {
-                        Array.Push(fv, name)
+                    IfCondition EqualTo(Gen_NameStartsWith(name, "_aim_"), 0) ThenBlock: {
+                        IfCondition EqualTo(Gen_IsModuleVar(name), 0) ThenBlock: {
+                            used = Gen_NameInArray(name, refs)
+                            IfCondition EqualTo(used, 1) ThenBlock: {
+                                dup = Gen_NameInArray(name, fv)
+                                IfCondition EqualTo(dup, 0) ThenBlock: {
+                                    Array.Push(fv, name)
+                                }
+                            }
+                        }
                     }
                 }
                 i = Add(i, 1)
             }
         }
+        Array.Destroy(refs)
         ReturnValue(fv)
     }
 }
@@ -4193,6 +4348,10 @@ Function.Gen_WalkUnbound {
             Gen_WalkUnbound(ArrayGet(node, 5), assigned, unbound, extra_skip)
             ReturnValue(0)
         }
+        IfCondition EqualTo(t, Node.EXPR_STMT) ThenBlock: {
+            Gen_WalkUnbound(ArrayGet(node, 3), assigned, unbound, extra_skip)
+            ReturnValue(0)
+        }
         IfCondition EqualTo(t, Node.RETURN_STMT) ThenBlock: {
             Gen_WalkUnbound(ArrayGet(node, 3), assigned, unbound, extra_skip)
             ReturnValue(0)
@@ -4353,19 +4512,26 @@ Function.Gen_TruncateEnclosing {
 }
 
 
+Function.Gen_LoadEnclosingLocals {
+    Input: body: Address
+    Body: {
+        IfCondition EqualTo(Gen.enclosing_locals, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        Array.Clear(Gen.enclosing_locals)
+        IfCondition NotEqual(body, 0) ThenBlock: {
+            Gen_CollectDirectAssigns(body, Gen.enclosing_locals)
+        }
+    }
+}
+
 Function.Gen_MarkEnclosingLocal {
     Input: name: Address
     Body: {
         IfCondition EqualTo(name, 0) ThenBlock: {
             ReturnValue(0)
         }
-        // Assigned locals are freevars for nested defs; they must not join
-        // enclosing_params (packed/method Inputs emit as bare names).
-        IfCondition EqualTo(Gen.enclosing_params, 0) ThenBlock: {
-            ReturnValue(0)
-        }
-        esz = Array.Size(Gen.enclosing_params)
-        IfCondition EqualTo(esz, 0) ThenBlock: {
+        IfCondition EqualTo(Gen_NameStartsWith(name, "_aim_"), 1) ThenBlock: {
             ReturnValue(0)
         }
         IfCondition EqualTo(Gen.enclosing_locals, 0) ThenBlock: {

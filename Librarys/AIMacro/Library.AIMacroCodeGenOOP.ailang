@@ -936,6 +936,7 @@ Function.OOPGen_MethodImpl {
         IfCondition NotEqual(Gen.enclosing_locals, 0) ThenBlock: {
             Array.Clear(Gen.enclosing_locals)
         }
+        Gen_LoadEnclosingLocals(body)
         
         // Build function name: ClassName_methodName
         func_name = StringConcat(class_name, "_")
