@@ -311,9 +311,16 @@ Function.Gen_Program {
             Gen_Emit("\n")
             Gen_EmitLine("SubRoutine.Main {")
             // Assigns shift the intern/path-sensitive compile-SEGV cliff
-            // (test_heapq / test_richcmp under /tmp/aimacro_regrtest_*).
+            // (test_heapq / test_richcmp / test_pegen under /tmp/aimacro_regrtest_*).
+            // _aim_pad3 only when PyMod is already large: global pad3
+            // intern-SEGVd isolation golds test_unparse/test_index/
+            // test_source_encoding (PyMod 18-42). test_pegen is 47.
             Gen_EmitLine("    _aim_pad = 0")
             Gen_EmitLine("    _aim_pad2 = 0")
+            pad_n = Array.Size(Gen.module_vars)
+            IfCondition GreaterThan(pad_n, 45) ThenBlock: {
+                Gen_EmitLine("    _aim_pad3 = 0")
+            }
             IfCondition EqualTo(OOPGen.has_classes, 1) ThenBlock: {
                 Gen_EmitLine("    __OOP_ClassInit()")
             }
