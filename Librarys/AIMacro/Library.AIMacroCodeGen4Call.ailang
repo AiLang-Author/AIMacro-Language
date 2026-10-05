@@ -37,7 +37,21 @@ Function.Gen_PadFlattenDefaults {
         WhileLoop LessThan(i, n) {
             a = Array.Get(args, i)
             IfCondition And(NotEqual(a, 0), EqualTo(Gen_HasCall(a), 1)) ThenBlock: {
-                Array.Set(args, i, Gen_FlattenExpr(a))
+                skip_flat = 0
+                IfCondition EqualTo(OOPGen.in_classattrs, 1) ThenBlock: {
+                    at = AST_Type(a)
+                    IfCondition EqualTo(at, Node.CALL) ThenBlock: {
+                        iname = ArrayGet(a, 3)
+                        ic = OOPGen_IsClassName(iname)
+                        ip = Gen_IsPackedFunc(iname)
+                        IfCondition And(EqualTo(ic, 0), EqualTo(ip, 0)) ThenBlock: {
+                            skip_flat = 1
+                        }
+                    }
+                }
+                IfCondition EqualTo(skip_flat, 0) ThenBlock: {
+                    Array.Set(args, i, Gen_FlattenExpr(a))
+                }
             }
             i = Add(i, 1)
         }
@@ -729,12 +743,20 @@ Function.Gen_CallExpr {
             IfCondition EqualTo(a0, 0) ThenBlock: {
                 Gen_Emit("AIMacro.EmptyList()")
             } ElseBlock: {
-                IfCondition EqualTo(Gen_HasCall(a0), 1) ThenBlock: {
-                    a0 = Gen_FlattenExpr(a0)
+                a0t = AST_Type(a0)
+                in_ca = OOPGen.in_classattrs
+                IfCondition And(EqualTo(in_ca, 1), EqualTo(a0t, Node.CALL)) ThenBlock: {
+                    Gen_Emit("AIMacro.ListFrom(")
+                    Gen_Expr(a0)
+                    Gen_Emit(")")
+                } ElseBlock: {
+                    IfCondition EqualTo(Gen_HasCall(a0), 1) ThenBlock: {
+                        a0 = Gen_FlattenExpr(a0)
+                    }
+                    Gen_Emit("AIMacro.ListFrom(")
+                    Gen_Expr(a0)
+                    Gen_Emit(")")
                 }
-                Gen_Emit("AIMacro.ListFrom(")
-                Gen_Expr(a0)
-                Gen_Emit(")")
             }
             ReturnValue(0)
         }

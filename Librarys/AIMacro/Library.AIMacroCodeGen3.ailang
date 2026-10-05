@@ -1056,15 +1056,30 @@ Function.Gen_FlattenExpr {
                 ReturnValue(Gen_MakeIdent(result_temp))
             }
             
-            // Normal call - flatten args, then extract to temp
+            // Normal call. Classattrs: leave simple CALL args as CALL so
+            // CallExpr emits ListFrom(locals()) as one expression. Extracting
+            // to a temp from FlattenExpr dropped the inner emit and produced
+            // `_aim_t0 = ListFrom(_aim_t0)`. Method bodies keep extracting.
             args = ArrayGet(node, 4)
             IfCondition NotEqual(args, 0) ThenBlock: {
                 n = Array.Size(args)
                 idx = 0
                 WhileLoop LessThan(idx, n) {
                     arg = Array.Get(args, idx)
-                    flat_arg = Gen_FlattenExpr(arg)
-                    Array.Set(args, idx, flat_arg)
+                    at = AST_Type(arg)
+                    skip_call = 0
+                    IfCondition And(EqualTo(at, Node.CALL), EqualTo(OOPGen.in_classattrs, 1)) ThenBlock: {
+                        iname = ArrayGet(arg, 3)
+                        ic = OOPGen_IsClassName(iname)
+                        ip = Gen_IsPackedFunc(iname)
+                        IfCondition And(EqualTo(ic, 0), EqualTo(ip, 0)) ThenBlock: {
+                            skip_call = 1
+                        }
+                    }
+                    IfCondition EqualTo(skip_call, 0) ThenBlock: {
+                        flat_arg = Gen_FlattenExpr(arg)
+                        Array.Set(args, idx, flat_arg)
+                    }
                     idx = Add(idx, 1)
                 }
             }
