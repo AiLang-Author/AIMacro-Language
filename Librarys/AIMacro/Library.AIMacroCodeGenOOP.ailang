@@ -1054,7 +1054,23 @@ Function.OOPGen_MethodImpl {
                 param_name = ArrayGet(param, 0)
                 pkind = ArrayGet(param, 4)
                 dnode = ArrayGet(param, 2)
-                IfCondition And(EqualTo(pkind, 0), And(NotEqual(dnode, 0), EqualTo(Gen_HasCall(dnode), 1))) ThenBlock: {
+                // Flatten HasCall defaults and one-level ATTRIBUTE
+                // (struct.pack / logging.NOTSET). HasCall is 0 when the
+                // object is a bare IDENT, and PackedGet(ObjectGet) nested
+                // is Expected ')'. Chained a.b.c (file_loader
+                // PycInvalidationMode.TIMESTAMP) stays nested: FlattenExpr
+                // of that chain intern-SEGVs isolation gold file_loader.
+                need_flat = 0
+                IfCondition And(EqualTo(pkind, 0), NotEqual(dnode, 0)) ThenBlock: {
+                    need_flat = Gen_HasCall(dnode)
+                    IfCondition EqualTo(AST_Type(dnode), Node.ATTRIBUTE) ThenBlock: {
+                        attr_obj = ArrayGet(dnode, 3)
+                        IfCondition And(NotEqual(attr_obj, 0), EqualTo(AST_Type(attr_obj), Node.IDENT)) ThenBlock: {
+                            need_flat = 1
+                        }
+                    }
+                }
+                IfCondition EqualTo(need_flat, 1) ThenBlock: {
                     dnode = Gen_FlattenExpr(dnode)
                 }
                 use_og = 0
