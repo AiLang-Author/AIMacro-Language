@@ -911,6 +911,7 @@ Function.OOPGen_MethodImpl {
                 ei = Add(ei, 1)
             }
             enc_saved = Gen_PushEnclosingParams(enc_names)
+            Gen_EmitUnboundLocals(body, enc_names)
             Array.Destroy(enc_names)
             has_yield = Gen_StmtsHaveYield(body)
             IfCondition EqualTo(has_yield, 1) ThenBlock: {

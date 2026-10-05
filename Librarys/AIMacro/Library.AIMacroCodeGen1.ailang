@@ -2339,6 +2339,33 @@ Function.Gen_NameStartsWith {
     }
 }
 
+Function.Gen_NameEndsWith {
+    Input: name: Address
+    Input: suffix: Address
+    Output: Integer
+    Body: {
+        IfCondition Or(EqualTo(name, 0), EqualTo(suffix, 0)) ThenBlock: {
+            ReturnValue(0)
+        }
+        nlen = StringLength(name)
+        slen = StringLength(suffix)
+        IfCondition GreaterThan(slen, nlen) ThenBlock: {
+            ReturnValue(0)
+        }
+        off = Subtract(nlen, slen)
+        i = 0
+        WhileLoop LessThan(i, slen) {
+            nb = GetByte(name, Add(off, i))
+            sb = GetByte(suffix, i)
+            IfCondition NotEqual(nb, sb) ThenBlock: {
+                ReturnValue(0)
+            }
+            i = Add(i, 1)
+        }
+        ReturnValue(1)
+    }
+}
+
 Function.Gen_IsOsPath {
     Input: obj: Address
     Output: Integer
@@ -3361,6 +3388,500 @@ Function.Gen_EmitFreevarLocals {
             }
             fi = Add(fi, 1)
         }
+    }
+}
+
+// Use-before-first-assign locals. CALL slot 3 / ASSIGNMENT slot 3 are
+// name strings; BINARY_OP slot 4 / UNARY_OP slot 3 are Token ints.
+// Walking those as AST nodes transpile-SEGVs isolation gold test_bisect.
+Function.Gen_UnboundSkip {
+    Input: name: Address
+    Input: extra_skip: Address
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(name, 0) ThenBlock: {
+            ReturnValue(1)
+        }
+        IfCondition EqualTo(Gen_IsParam(name), 1) ThenBlock: {
+            ReturnValue(1)
+        }
+        IfCondition NotEqual(extra_skip, 0) ThenBlock: {
+            in_extra = Gen_NameInArray(name, extra_skip)
+            IfCondition EqualTo(in_extra, 1) ThenBlock: {
+                ReturnValue(1)
+            }
+        }
+        IfCondition EqualTo(Gen_IsModuleVar(name), 1) ThenBlock: {
+            ReturnValue(1)
+        }
+        mapped = Gen_LeftoverIdentMapped(name)
+        IfCondition NotEqual(mapped, 0) ThenBlock: {
+            ReturnValue(1)
+        }
+        IfCondition EqualTo(Gen_IsImportStub(name), 1) ThenBlock: {
+            ReturnValue(1)
+        }
+        IfCondition EqualTo(OOPGen_IsClassName(name), 1) ThenBlock: {
+            ReturnValue(1)
+        }
+        IfCondition EqualTo(Gen_NameInArray(name, Gen.known_nested_funcs), 1) ThenBlock: {
+            ReturnValue(1)
+        }
+        IfCondition EqualTo(Gen_NameInArray(name, Gen.func_names), 1) ThenBlock: {
+            ReturnValue(1)
+        }
+        IfCondition EqualTo(Gen_NameInArray(name, Gen.module_funcs), 1) ThenBlock: {
+            ReturnValue(1)
+        }
+        IfCondition EqualTo(Gen_NameStartsWith(name, "_aim_pad"), 1) ThenBlock: {
+            ReturnValue(1)
+        }
+        IfCondition EqualTo(Gen_NameStartsWith(name, "__oop_args"), 1) ThenBlock: {
+            ReturnValue(1)
+        }
+        IfCondition NotEqual(Gen.pending_freevars, 0) ThenBlock: {
+            in_fv = Gen_NameInArray(name, Gen.pending_freevars)
+            IfCondition EqualTo(in_fv, 1) ThenBlock: {
+                ReturnValue(1)
+            }
+        }
+        cmp = StringCompare(name, "next")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+        cmp = StringCompare(name, "list")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+        cmp = StringCompare(name, "id")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+        cmp = StringCompare(name, "reversed")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+        cmp = StringCompare(name, "iter")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+        cmp = StringCompare(name, "len")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+        cmp = StringCompare(name, "str")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+        cmp = StringCompare(name, "int")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+        cmp = StringCompare(name, "bool")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+        cmp = StringCompare(name, "type")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+        cmp = StringCompare(name, "object")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+        cmp = StringCompare(name, "super")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+        cmp = StringCompare(name, "property")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+        cmp = StringCompare(name, "classmethod")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+        cmp = StringCompare(name, "staticmethod")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+        cmp = StringCompare(name, "enumerate")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+        cmp = StringCompare(name, "map")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+        cmp = StringCompare(name, "min")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+        cmp = StringCompare(name, "max")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+        cmp = StringCompare(name, "sum")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+        cmp = StringCompare(name, "abs")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+        cmp = StringCompare(name, "sorted")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+        cmp = StringCompare(name, "any")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+        cmp = StringCompare(name, "all")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+        cmp = StringCompare(name, "getattr")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+        cmp = StringCompare(name, "setattr")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+        cmp = StringCompare(name, "hasattr")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+        cmp = StringCompare(name, "isinstance")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+        cmp = StringCompare(name, "issubclass")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+        cmp = StringCompare(name, "callable")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+        cmp = StringCompare(name, "hash")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+        cmp = StringCompare(name, "repr")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+        cmp = StringCompare(name, "format")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+        cmp = StringCompare(name, "bytes")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+        cmp = StringCompare(name, "bytearray")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+        cmp = StringCompare(name, "set")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+        cmp = StringCompare(name, "frozenset")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+        cmp = StringCompare(name, "tuple")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+        cmp = StringCompare(name, "slice")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+        cmp = StringCompare(name, "chr")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+        cmp = StringCompare(name, "ord")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+        cmp = StringCompare(name, "__reversed__")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+        cmp = StringCompare(name, "NotImplemented")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+        IfCondition EqualTo(Gen_NameEndsWith(name, "Error"), 1) ThenBlock: {
+            ReturnValue(1)
+        }
+        IfCondition EqualTo(Gen_NameEndsWith(name, "Warning"), 1) ThenBlock: {
+            ReturnValue(1)
+        }
+        cmp = StringCompare(name, "Exception")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            ReturnValue(1)
+        }
+        cmp = StringCompare(name, "StopIteration")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            ReturnValue(1)
+        }
+        cmp = StringCompare(name, "KeyboardInterrupt")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            ReturnValue(1)
+        }
+        cmp = StringCompare(name, "SystemExit")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            ReturnValue(1)
+        }
+        cmp = StringCompare(name, "StopAsyncIteration")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            ReturnValue(1)
+        }
+        cmp = StringCompare(name, "GeneratorExit")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            ReturnValue(1)
+        }
+        ReturnValue(0)
+    }
+}
+
+Function.Gen_NoteUnboundName {
+    Input: name: Address
+    Input: assigned: Address
+    Input: unbound: Address
+    Input: extra_skip: Address
+    Body: {
+        skip = Gen_UnboundSkip(name, extra_skip)
+        IfCondition EqualTo(skip, 1) ThenBlock: {
+            ReturnValue(0)
+        }
+        seen_a = Gen_NameInArray(name, assigned)
+        IfCondition EqualTo(seen_a, 1) ThenBlock: {
+            ReturnValue(0)
+        }
+        seen_u = Gen_NameInArray(name, unbound)
+        IfCondition EqualTo(seen_u, 1) ThenBlock: {
+            ReturnValue(0)
+        }
+        Array.Push(unbound, name)
+    }
+}
+
+Function.Gen_NoteAssignName {
+    Input: name: Address
+    Input: assigned: Address
+    Body: {
+        IfCondition EqualTo(name, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        seen = Gen_NameInArray(name, assigned)
+        IfCondition EqualTo(seen, 0) ThenBlock: {
+            Array.Push(assigned, name)
+        }
+    }
+}
+
+Function.Gen_WalkUnbound {
+    Input: node: Address
+    Input: assigned: Address
+    Input: unbound: Address
+    Input: extra_skip: Address
+    Body: {
+        IfCondition EqualTo(node, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        is_list = Array.IsArray(node)
+        IfCondition EqualTo(is_list, 1) ThenBlock: {
+            n = Array.Size(node)
+            i = 0
+            WhileLoop LessThan(i, n) {
+                child = Array.Get(node, i)
+                Gen_WalkUnbound(child, assigned, unbound, extra_skip)
+                i = Add(i, 1)
+            }
+            ReturnValue(0)
+        }
+        t = AST_Type(node)
+        IfCondition EqualTo(t, Node.FUNCTION) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t, Node.CLASS_DEF) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t, Node.METHOD_DEF) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t, Node.LAMBDA) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t, Node.LIST_COMP) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t, Node.IDENT) ThenBlock: {
+            nm = ArrayGet(node, 3)
+            Gen_NoteUnboundName(nm, assigned, unbound, extra_skip)
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t, Node.ASSIGNMENT) ThenBlock: {
+            Gen_WalkUnbound(ArrayGet(node, 4), assigned, unbound, extra_skip)
+            Gen_NoteAssignName(ArrayGet(node, 3), assigned)
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t, Node.NAMED_EXPR) ThenBlock: {
+            Gen_WalkUnbound(ArrayGet(node, 4), assigned, unbound, extra_skip)
+            tgt = ArrayGet(node, 3)
+            tt = AST_Type(tgt)
+            IfCondition EqualTo(tt, Node.IDENT) ThenBlock: {
+                Gen_NoteAssignName(ArrayGet(tgt, 3), assigned)
+            } ElseBlock: {
+                Gen_NoteAssignName(tgt, assigned)
+            }
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t, Node.AUG_ASSIGN) ThenBlock: {
+            Gen_NoteUnboundName(ArrayGet(node, 3), assigned, unbound, extra_skip)
+            Gen_WalkUnbound(ArrayGet(node, 5), assigned, unbound, extra_skip)
+            Gen_NoteAssignName(ArrayGet(node, 3), assigned)
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t, Node.CALL) ThenBlock: {
+            // Callee slot 3 is a name string (print, ValueError). Do not
+            // GetNone it: isolation gold encoded_words intern-SEGVs.
+            Gen_WalkUnbound(ArrayGet(node, 4), assigned, unbound, extra_skip)
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t, Node.INDIRECT_CALL) ThenBlock: {
+            Gen_WalkUnbound(ArrayGet(node, 3), assigned, unbound, extra_skip)
+            Gen_WalkUnbound(ArrayGet(node, 4), assigned, unbound, extra_skip)
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t, 11) ThenBlock: {
+            Gen_WalkUnbound(ArrayGet(node, 3), assigned, unbound, extra_skip)
+            Gen_WalkUnbound(ArrayGet(node, 5), assigned, unbound, extra_skip)
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t, 104) ThenBlock: {
+            Gen_WalkUnbound(ArrayGet(node, 3), assigned, unbound, extra_skip)
+            Gen_WalkUnbound(ArrayGet(node, 5), assigned, unbound, extra_skip)
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t, Node.ATTRIBUTE) ThenBlock: {
+            Gen_WalkUnbound(ArrayGet(node, 3), assigned, unbound, extra_skip)
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t, Node.ATTR_ASSIGN) ThenBlock: {
+            Gen_WalkUnbound(ArrayGet(node, 3), assigned, unbound, extra_skip)
+            Gen_WalkUnbound(ArrayGet(node, 5), assigned, unbound, extra_skip)
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t, Node.BINARY_OP) ThenBlock: {
+            Gen_WalkUnbound(ArrayGet(node, 3), assigned, unbound, extra_skip)
+            Gen_WalkUnbound(ArrayGet(node, 5), assigned, unbound, extra_skip)
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t, Node.STR_EQ) ThenBlock: {
+            Gen_WalkUnbound(ArrayGet(node, 3), assigned, unbound, extra_skip)
+            Gen_WalkUnbound(ArrayGet(node, 5), assigned, unbound, extra_skip)
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t, Node.STR_NE) ThenBlock: {
+            Gen_WalkUnbound(ArrayGet(node, 3), assigned, unbound, extra_skip)
+            Gen_WalkUnbound(ArrayGet(node, 5), assigned, unbound, extra_skip)
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t, Node.UNARY_OP) ThenBlock: {
+            Gen_WalkUnbound(ArrayGet(node, 4), assigned, unbound, extra_skip)
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t, Node.IF_STMT) ThenBlock: {
+            Gen_WalkUnbound(ArrayGet(node, 3), assigned, unbound, extra_skip)
+            Gen_WalkUnbound(ArrayGet(node, 4), assigned, unbound, extra_skip)
+            Gen_WalkUnbound(ArrayGet(node, 5), assigned, unbound, extra_skip)
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t, Node.WHILE_STMT) ThenBlock: {
+            Gen_WalkUnbound(ArrayGet(node, 3), assigned, unbound, extra_skip)
+            Gen_WalkUnbound(ArrayGet(node, 4), assigned, unbound, extra_skip)
+            Gen_WalkUnbound(ArrayGet(node, 5), assigned, unbound, extra_skip)
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t, Node.FOR_STMT) ThenBlock: {
+            Gen_WalkUnbound(ArrayGet(node, 4), assigned, unbound, extra_skip)
+            Gen_NoteAssignName(ArrayGet(node, 3), assigned)
+            Gen_WalkUnbound(ArrayGet(node, 5), assigned, unbound, extra_skip)
+            Gen_WalkUnbound(ArrayGet(node, 6), assigned, unbound, extra_skip)
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t, Node.TRY_STMT) ThenBlock: {
+            Gen_WalkUnbound(ArrayGet(node, 3), assigned, unbound, extra_skip)
+            Gen_WalkUnbound(ArrayGet(node, 4), assigned, unbound, extra_skip)
+            Gen_WalkUnbound(ArrayGet(node, 5), assigned, unbound, extra_skip)
+            Gen_WalkUnbound(ArrayGet(node, 6), assigned, unbound, extra_skip)
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t, Node.EXCEPT_CLAUSE) ThenBlock: {
+            // Type slot is KeyError/ValueError, not a local.
+            Gen_NoteAssignName(ArrayGet(node, 5), assigned)
+            Gen_WalkUnbound(ArrayGet(node, 4), assigned, unbound, extra_skip)
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t, Node.WITH_STMT) ThenBlock: {
+            Gen_WalkUnbound(ArrayGet(node, 3), assigned, unbound, extra_skip)
+            as_name = ArrayGet(node, 4)
+            as_list = Array.IsArray(as_name)
+            IfCondition EqualTo(as_list, 1) ThenBlock: {
+                ai = 0
+                an = Array.Size(as_name)
+                WhileLoop LessThan(ai, an) {
+                    Gen_NoteAssignName(Array.Get(as_name, ai), assigned)
+                    ai = Add(ai, 1)
+                }
+            } ElseBlock: {
+                Gen_NoteAssignName(as_name, assigned)
+            }
+            Gen_WalkUnbound(ArrayGet(node, 5), assigned, unbound, extra_skip)
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t, Node.RETURN_STMT) ThenBlock: {
+            Gen_WalkUnbound(ArrayGet(node, 3), assigned, unbound, extra_skip)
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t, Node.RAISE_STMT) ThenBlock: {
+            Gen_WalkUnbound(ArrayGet(node, 3), assigned, unbound, extra_skip)
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t, Node.ASSERT_STMT) ThenBlock: {
+            Gen_WalkUnbound(ArrayGet(node, 3), assigned, unbound, extra_skip)
+            Gen_WalkUnbound(ArrayGet(node, 4), assigned, unbound, extra_skip)
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t, Node.YIELD_STMT) ThenBlock: {
+            Gen_WalkUnbound(ArrayGet(node, 3), assigned, unbound, extra_skip)
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t, Node.DEL_STMT) ThenBlock: {
+            Gen_WalkUnbound(ArrayGet(node, 3), assigned, unbound, extra_skip)
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t, Node.INDEX_ACCESS) ThenBlock: {
+            Gen_WalkUnbound(ArrayGet(node, 3), assigned, unbound, extra_skip)
+            Gen_WalkUnbound(ArrayGet(node, 4), assigned, unbound, extra_skip)
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t, Node.INDEX_ASSIGN) ThenBlock: {
+            Gen_WalkUnbound(ArrayGet(node, 3), assigned, unbound, extra_skip)
+            Gen_WalkUnbound(ArrayGet(node, 4), assigned, unbound, extra_skip)
+            Gen_WalkUnbound(ArrayGet(node, 5), assigned, unbound, extra_skip)
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t, Node.SLICE_ACCESS) ThenBlock: {
+            Gen_WalkUnbound(ArrayGet(node, 3), assigned, unbound, extra_skip)
+            Gen_WalkUnbound(ArrayGet(node, 4), assigned, unbound, extra_skip)
+            Gen_WalkUnbound(ArrayGet(node, 5), assigned, unbound, extra_skip)
+            Gen_WalkUnbound(ArrayGet(node, 6), assigned, unbound, extra_skip)
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t, Node.LIST_LIT) ThenBlock: {
+            Gen_WalkUnbound(ArrayGet(node, 3), assigned, unbound, extra_skip)
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t, Node.TUPLE_LIT) ThenBlock: {
+            Gen_WalkUnbound(ArrayGet(node, 3), assigned, unbound, extra_skip)
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t, Node.DICT_LIT) ThenBlock: {
+            Gen_WalkUnbound(ArrayGet(node, 3), assigned, unbound, extra_skip)
+            Gen_WalkUnbound(ArrayGet(node, 4), assigned, unbound, extra_skip)
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t, Node.TERNARY) ThenBlock: {
+            Gen_WalkUnbound(ArrayGet(node, 3), assigned, unbound, extra_skip)
+            Gen_WalkUnbound(ArrayGet(node, 4), assigned, unbound, extra_skip)
+            Gen_WalkUnbound(ArrayGet(node, 5), assigned, unbound, extra_skip)
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t, Node.KW_ARG) ThenBlock: {
+            Gen_WalkUnbound(ArrayGet(node, 4), assigned, unbound, extra_skip)
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t, Node.STARRED) ThenBlock: {
+            Gen_WalkUnbound(ArrayGet(node, 3), assigned, unbound, extra_skip)
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t, Node.SUPER_CALL) ThenBlock: {
+            Gen_WalkUnbound(ArrayGet(node, 4), assigned, unbound, extra_skip)
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t, Node.TUPLE_UNPACK) ThenBlock: {
+            Gen_WalkUnbound(ArrayGet(node, 4), assigned, unbound, extra_skip)
+            tgs = ArrayGet(node, 3)
+            is_tgs = Array.IsArray(tgs)
+            IfCondition EqualTo(is_tgs, 1) ThenBlock: {
+                ti = 0
+                tn = Array.Size(tgs)
+                WhileLoop LessThan(ti, tn) {
+                    tg = Array.Get(tgs, ti)
+                    tg_t = AST_Type(tg)
+                    IfCondition EqualTo(tg_t, Node.IDENT) ThenBlock: {
+                        Gen_NoteAssignName(ArrayGet(tg, 3), assigned)
+                    } ElseBlock: {
+                        Gen_WalkUnbound(tg, assigned, unbound, extra_skip)
+                    }
+                    ti = Add(ti, 1)
+                }
+            }
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t, Node.CHAIN_COMPARE) ThenBlock: {
+            // slot 4 is Library.Array of Token ints — not nodes
+            Gen_WalkUnbound(ArrayGet(node, 3), assigned, unbound, extra_skip)
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t, Node.EXPR_STMT) ThenBlock: {
+            Gen_WalkUnbound(ArrayGet(node, 3), assigned, unbound, extra_skip)
+            ReturnValue(0)
+        }
+    }
+}
+
+Function.Gen_EmitUnboundLocals {
+    Input: body: Address
+    Input: extra_skip: Address
+    Body: {
+        assigned = Array.Create(32)
+        unbound = Array.Create(16)
+        Gen_WalkUnbound(body, assigned, unbound, extra_skip)
+        n = Array.Size(unbound)
+        i = 0
+        WhileLoop LessThan(i, n) {
+            name = Array.Get(unbound, i)
+            Gen_EmitIndent()
+            Gen_Emit(name)
+            Gen_Emit(" = Types.GetNone()\n")
+            i = Add(i, 1)
+        }
+        Array.Destroy(assigned)
+        Array.Destroy(unbound)
     }
 }
 
