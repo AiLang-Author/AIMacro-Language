@@ -3867,6 +3867,7 @@ Function.Gen_WalkUnbound {
 Function.Gen_EmitUnboundLocals {
     Input: body: Address
     Input: extra_skip: Address
+    Input: later_only: Integer
     Body: {
         assigned = Array.Create(32)
         unbound = Array.Create(16)
@@ -3875,9 +3876,15 @@ Function.Gen_EmitUnboundLocals {
         i = 0
         WhileLoop LessThan(i, n) {
             name = Array.Get(unbound, i)
-            Gen_EmitIndent()
-            Gen_Emit(name)
-            Gen_Emit(" = Types.GetNone()\n")
+            emit = 1
+            IfCondition EqualTo(later_only, 1) ThenBlock: {
+                emit = Gen_NameInArray(name, assigned)
+            }
+            IfCondition EqualTo(emit, 1) ThenBlock: {
+                Gen_EmitIndent()
+                Gen_Emit(name)
+                Gen_Emit(" = Types.GetNone()\n")
+            }
             i = Add(i, 1)
         }
         Array.Destroy(assigned)
