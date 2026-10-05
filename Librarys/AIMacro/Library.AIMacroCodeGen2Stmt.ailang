@@ -426,10 +426,12 @@ Function.Gen_Function {
         // Nested Function use-before-later-assign (`print(y); y = 1`).
         // Deferred nested/lambda: GetNone IDENT freevars with no later assign
         // (shutil lambda: x, sslproto addr). CALL callees stay Snapshot.
-        later_u = 1
-        IfCondition NotEqual(Gen.pending_freevars, 0) ThenBlock: {
-            later_u = 0
-        }
+        // Module-level leftover IDENT never assigned (test_code misshappen
+        // a/d/q/p): pending_freevars is 0 so later_only=1 skipped GetNone
+        // and ailang.x VNFd. Nested still snapshot an array, so this is
+        // later_only=0 for both. Do not leftover-GetNone `_aim_t*` in
+        // Gen_EmitIdent; WalkUnbound skips CALL callees.
+        later_u = 0
         Gen_EmitUnboundLocals(body, 0, later_u)
         has_yield = Gen_StmtsHaveYield(body)
         IfCondition EqualTo(has_yield, 1) ThenBlock: {
@@ -520,10 +522,7 @@ Function.Gen_PackedFunction {
         Gen.indent = Add(Gen.indent, 2)
         Gen_EmitNonlocalParamCells(Gen.param_names, 1)
         Gen_EmitFreevarLocals()
-        later_u = 1
-        IfCondition NotEqual(Gen.pending_freevars, 0) ThenBlock: {
-            later_u = 0
-        }
+        later_u = 0
         Gen_EmitUnboundLocals(body, 0, later_u)
         has_yield = Gen_StmtsHaveYield(body)
         IfCondition EqualTo(has_yield, 1) ThenBlock: {

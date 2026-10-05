@@ -1278,6 +1278,25 @@ Function.Gen_FlattenExpr {
                 Gen_Emit(" = DictGen_SmartGet(__pair")
                 Gen_Emit(loop_suffix)
                 Gen_Emit(", 1)\n")
+                rest = ArrayGet(node, 9)
+                IfCondition NotEqual(rest, 0) ThenBlock: {
+                    ri = 0
+                    rn = Array.Size(rest)
+                    WhileLoop LessThan(ri, rn) {
+                        rname = Array.Get(rest, ri)
+                        IfCondition NotEqual(rname, 0) ThenBlock: {
+                            ridx = Add(ri, 2)
+                            Gen_EmitIndent()
+                            Gen_EmitIdentLhs(rname)
+                            Gen_Emit(" = DictGen_SmartGet(__pair")
+                            Gen_Emit(loop_suffix)
+                            Gen_Emit(", ")
+                            Gen_EmitNumber(ridx)
+                            Gen_Emit(")\n")
+                        }
+                        ri = Add(ri, 1)
+                    }
+                }
             } ElseBlock: {
                 Gen_EmitIndent()
                 Gen_EmitIdentLhs(var_name)
