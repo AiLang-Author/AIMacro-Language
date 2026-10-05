@@ -2032,7 +2032,9 @@ Function.Gen_HasCall {
             ReturnValue(1)
         }
         IfCondition EqualTo(t, Node.NAMED_EXPR) ThenBlock: {
-            ReturnValue(Gen_HasCall(ArrayGet(node, 4)))
+            // Always flatten: `y := 0` has no call, but must bind y
+            // (test_named_expressions assignment_06 z := (y := (x := 0))).
+            ReturnValue(1)
         }
         IfCondition EqualTo(t, Node.STARRED) ThenBlock: {
             ReturnValue(Gen_HasCall(ArrayGet(node, 3)))
