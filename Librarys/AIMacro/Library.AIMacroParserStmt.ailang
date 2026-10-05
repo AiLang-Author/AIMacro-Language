@@ -607,8 +607,9 @@ Function.Parse_While {
 }
 
 
-// Consume one for/comp unpack target: IDENT or nested (target, ...).
+// Consume one for/comp unpack target: IDENT, *IDENT, or nested (target, ...).
 // Returns first IDENT name for AST binding; nested structure is parse-coverage only.
+// Leading STAR (*args / *_) is skipped; the IDENT is the bound name.
 Function.Parse_ConsumeForTarget {
     Output: Address
     Body: {
@@ -647,6 +648,11 @@ Function.Parse_ConsumeForTarget {
             }
             Parse_SkipNoise()
             ReturnValue(first)
+        }
+        is_star = Parse_Match(Token.STAR)
+        IfCondition EqualTo(is_star, 1) ThenBlock: {
+            Parse_Advance()
+            Parse_SkipNoise()
         }
         p = Parse_Val()
         name = Parse_CopyStr(p)
