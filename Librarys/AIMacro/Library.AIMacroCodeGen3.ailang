@@ -806,6 +806,15 @@ Function.Gen_FlattenExpr {
         }
         IfCondition EqualTo(t, Node.SUPER_CALL) ThenBlock: {
             method = AST_GetField(node, "method")
+            // Leftover super(), super().attr, super(cls, obj): method is 0.
+            // Gen_Emit(0) transpile-SEGVs (test_super bare super()).
+            IfCondition Or(EqualTo(method, 0), EqualTo(OOPGen.current_class, 0)) ThenBlock: {
+                temp = Gen_TempName()
+                Gen_EmitIndent()
+                Gen_Emit(temp)
+                Gen_Emit(" = Types.GetNone()\n")
+                ReturnValue(Gen_MakeIdent(temp))
+            }
             args = AST_GetField(node, "args")
             num_args = 0
             IfCondition NotEqual(args, 0) ThenBlock: {

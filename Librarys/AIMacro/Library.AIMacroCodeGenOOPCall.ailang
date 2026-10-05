@@ -370,8 +370,8 @@ Function.OOPGen_SuperCall {
     Body: {
         method = AST_GetField(expr, "method")
         args = AST_GetField(expr, "args")
-        IfCondition EqualTo(method, 0) ThenBlock: {
-            Gen_Emit("0")
+        IfCondition Or(EqualTo(method, 0), EqualTo(OOPGen.current_class, 0)) ThenBlock: {
+            Gen_Emit("Types.GetNone()")
             ReturnValue(0)
         }
         
