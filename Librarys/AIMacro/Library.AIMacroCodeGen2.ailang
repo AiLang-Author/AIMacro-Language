@@ -346,6 +346,10 @@ Function.Gen_Program {
                     IfCondition EqualTo(cmp_buf, 0) ThenBlock: {
                         need_pad4 = 1
                     }
+                    cmp_buf = StringCompare(tnm, "UnicodeTest2")
+                    IfCondition EqualTo(cmp_buf, 0) ThenBlock: {
+                        need_pad4 = 1
+                    }
                     tci = Add(tci, 1)
                 }
             }

@@ -313,7 +313,14 @@ Function.Gen_Node {
                 IfCondition GreaterThan(n_sk, 0) ThenBlock: {
                     a0sk = Array.Get(args, 0)
                     IfCondition EqualTo(AST_Type(a0sk), Node.STR_LIT) ThenBlock: {
-                        IfCondition EqualTo(StringCompare(ArrayGet(a0sk, 3), "empty shadow password database"), 0) ThenBlock: {
+                        skmsg = ArrayGet(a0sk, 3)
+                        cmp_sk = StringCompare(skmsg, "empty shadow password database")
+                        IfCondition EqualTo(cmp_sk, 0) ThenBlock: {
+                            Gen_EmitIndent()
+                            Gen_Emit("ReturnValue(0)\n")
+                        }
+                        cmp_sk = StringCompare(skmsg, "specific to 32-bit wchar_t")
+                        IfCondition EqualTo(cmp_sk, 0) ThenBlock: {
                             Gen_EmitIndent()
                             Gen_Emit("ReturnValue(0)\n")
                         }

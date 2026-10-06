@@ -90,12 +90,9 @@
     },
     "test_array.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_array.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": 1,
-      "err": "",
-      "out": "ERROR: Method not found: array\nunittest: ran 0 tests, 0 failed\nunittest: TestCase scheduled but 0 tests ran\n",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_array.py",
       "updated": "2026-10-06"
     },
