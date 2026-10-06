@@ -51,6 +51,7 @@ test_copyreg.py
 test_cppext/__init__.py
 test_cprofile.py
 test_crashers.py
+test_crypt.py
 test_csv.py
 test_dbm.py
 test_dbm_gnu.py

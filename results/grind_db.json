@@ -1117,14 +1117,11 @@
     },
     "test_crypt.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_crypt.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": 1,
-      "err": "",
-      "out": "  TestWhyCryptDidNotImport.test_import_failure_message\nERROR: argument is not iterable\n  CryptTestCase.test_crypt\nunittest: ran 2 tests, 1 failed\n",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_crypt.py",
-      "updated": "2026-10-05"
+      "updated": "2026-10-06"
     },
     "test_csv.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_csv.py",

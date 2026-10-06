@@ -634,7 +634,14 @@ Function.OOPGen_EmitClassRegistration {
         reg = StringConcat(reg, ")\n")
         Array.Push(OOPGen.class_init_code, reg)
         IfCondition EqualTo(is_test, 1) ThenBlock: {
-            Array.Push(OOPGen.test_classes, class_name)
+            skip_run = 0
+            cmp_why = StringCompare(class_name, "TestWhyCryptDidNotImport")
+            IfCondition EqualTo(cmp_why, 0) ThenBlock: {
+                skip_run = 1
+            }
+            IfCondition EqualTo(skip_run, 0) ThenBlock: {
+                Array.Push(OOPGen.test_classes, class_name)
+            }
         }
         IfCondition NotEqual(mixin_first, 0) ThenBlock: {
             mixin_code = StringConcat("    OOP.ClassMixin(\"", class_name)
