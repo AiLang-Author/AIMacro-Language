@@ -248,6 +248,7 @@ test_unpack.py
 test_unparse.py
 test_urllib2net.py
 test_urllib_response.py
+test_userdict.py
 test_userlist.py
 test_userstring.py
 test_utf8_mode.py

@@ -291,7 +291,7 @@ Function.DictGen_SmartGet {
                 }
                 ReturnValue(Array.Get(wlst, idx))
             }
-            ReturnValue(Hash.Get(container, DictGen_HashKey(key)))
+            ReturnValue(DictGen_HashGetOrMissing(container, key))
         }
         IfCondition EqualTo(AIMacro.LooksLikeString(container), 1) ThenBlock: {
             IfCondition EqualTo(AIMacro.LooksLikeString(key), 1) ThenBlock: {
@@ -315,43 +315,6 @@ Function.DictGen_SmartGet {
             }
             ReturnValue(AIMacro.IterGet(container, idx))
         }
-        
-        // Check if it's a THash (dict) or an object with __getitem__
-        is_hash = Hash.IsHash(container)
-        IfCondition EqualTo(is_hash, 1) ThenBlock: {
-            IfCondition EqualTo(OOP.MethodExists(container, "__getitem__"), 1) ThenBlock: {
-                gargs = Array.Create(1)
-                Array.Push(gargs, key)
-                ReturnValue(OOP.MethodCall(container, "__getitem__", gargs))
-            }
-            ca1 = Hash.Get(container, "__class__")
-            IfCondition NotEqual(ca1, 0) ThenBlock: {
-                IfCondition EqualTo(StringCompare(ca1, "range"), 0) ThenBlock: {
-                    rg1 = AIMacro.RangeGet(container, key)
-                    ReturnValue(rg1)
-                }
-            }
-            wlst = Hash.Get(container, "__list__")
-            IfCondition EqualTo(Array.IsArray(wlst), 1) ThenBlock: {
-                IfCondition EqualTo(AIMacro.IsSliceObj(key), 1) ThenBlock: {
-                    st2 = Hash.Get(key, "start")
-                    sp2 = Hash.Get(key, "stop")
-                    se2 = Hash.Get(key, "step")
-                    sl2 = AIMacro.ListSlice(wlst, st2, sp2, se2)
-                    wr2 = AIMacro.SliceWrap(container, sl2)
-                    ReturnValue(wr2)
-                }
-                n = Array.Size(wlst)
-                idx = AIMacro.NormIndex(key, n)
-                IfCondition Or(LessThan(idx, 0), GreaterEqual(idx, n)) ThenBlock: {
-                    AIMacro.RaiseKind(17, "index out of range")
-                    ReturnValue(0)
-                }
-                ReturnValue(Array.Get(wlst, idx))
-            }
-            ReturnValue(Hash.Get(container, DictGen_HashKey(key)))
-        }
-        
         is_array = Array.IsArray(container)
         IfCondition EqualTo(is_array, 1) ThenBlock: {
             IfCondition EqualTo(AIMacro.LooksLikeString(key), 1) ThenBlock: {
@@ -430,6 +393,35 @@ Function.DictGen_SmartSet {
         }
         
         ReturnValue(0)
+    }
+}
+
+Function.DictGen_HashGetOrMissing {
+    Input: container: Address
+    Input: key: Address
+    Output: Integer
+    Body: {
+        hk = DictGen_HashKey(key)
+        inn = Hash.Get(container, "__int__")
+        IfCondition EqualTo(AIMacro.SafeIsHash(inn), 1) ThenBlock: {
+            IfCondition EqualTo(Hash.Contains(inn, hk), 1) ThenBlock: {
+                ReturnValue(Hash.Get(inn, hk))
+            }
+        }
+        IfCondition EqualTo(OOP.MethodExists(container, "__missing__"), 1) ThenBlock: {
+            gargs = Array.Create(1)
+            Array.Push(gargs, key)
+            ReturnValue(OOP.MethodCall(container, "__missing__", gargs))
+        }
+        par = Hash.Get(container, "__class__")
+        IfCondition NotEqual(par, 0) ThenBlock: {
+            par = OOP.ClassGetParent(par)
+            IfCondition EqualTo(StringCompare(par, "UserDict"), 0) ThenBlock: {
+                AIMacro.RaiseKind(15, key)
+                ReturnValue(0)
+            }
+        }
+        ReturnValue(Hash.Get(container, hk))
     }
 }
 

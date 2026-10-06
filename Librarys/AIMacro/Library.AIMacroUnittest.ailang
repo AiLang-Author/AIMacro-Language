@@ -714,6 +714,8 @@ Function.AIMacro.UnittestBoot {
         OOP.ClassDefine("BaseException", 0)
         OOP.ClassDefine("enumerate", 0)
         OOP.ClassDefine("UserList", "list")
+        OOP.ClassDefine("UserDict", "dict")
+        OOP.ClassMethod("UserDict", "__contains__", AddressOf(AIMacro.FalseVal))
         OOP.ClassDefine("Formatter", 0)
         OOP.ClassDefine("Template", 0)
         OOP.ClassMethod("Formatter", "__init__", AddressOf(AIMacro.NoOp))

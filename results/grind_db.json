@@ -5069,12 +5069,9 @@
     },
     "test_userdict.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_userdict.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": 1,
-      "err": "",
-      "out": "  UserDictTest.test_all\n  UserDictTest.test_init\n  UserDictTest.test_update\n  UserDictTest.test_missing\nFAIL: assertEqual\nunittest: ran 4 tests, 1 failed\n",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_userdict.py",
       "updated": "2026-10-05"
     },
