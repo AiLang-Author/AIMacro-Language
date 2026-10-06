@@ -1130,7 +1130,7 @@ Function.AIMacro.EnumerateFrom {
     Output: Address
     Body: {
         IfCondition Or(EqualTo(iterable, 0), EqualTo(AIMacro.IsNone(iterable), 1)) ThenBlock: {
-            AIMacro.RaiseKind(5, "enumerate() arg is not iterable")
+            AIMacro.RaiseKind(8, "enumerate() arg is not iterable")
             h0 = Hash.Create(8)
             Hash.Set(h0, "__class__", AddressOf(AIMacro.Enumerate))
             Hash.Set(h0, "__items__", AIMacro.EmptyList())
