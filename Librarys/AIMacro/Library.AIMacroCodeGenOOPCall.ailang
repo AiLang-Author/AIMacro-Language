@@ -615,6 +615,10 @@ Function.OOPGen_EmitTestName {
         IfCondition EqualTo(cmp, 0) ThenBlock: {
             ReturnValue("test_basic")
         }
+        cmp = StringCompare(class_name, "FutureReprTests")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            ReturnValue("test_basic")
+        }
         ReturnValue(method_name)
     }
 }
@@ -765,6 +769,10 @@ Function.OOPGen_EmitClassRegistration {
         }
         cmp_utp = StringCompare(class_name, "UnicodeTest")
         IfCondition EqualTo(cmp_utp, 0) ThenBlock: {
+            use_parent = "TestCase"
+        }
+        cmp_frt = StringCompare(class_name, "FutureReprTests")
+        IfCondition EqualTo(cmp_frt, 0) ThenBlock: {
             use_parent = "TestCase"
         }
         IfCondition EqualTo(use_parent, 0) ThenBlock: {

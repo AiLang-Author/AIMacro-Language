@@ -7,6 +7,7 @@ test_asynchat.py
 test_asyncio/test_context.py
 test_asyncio/test_events.py
 test_asyncio/test_futures.py
+test_asyncio/test_futures2.py
 test_asyncio/test_locks.py
 test_asyncio/test_pep492.py
 test_asyncio/test_proactor_events.py
