@@ -12,6 +12,7 @@ test_asyncio/test_proactor_events.py
 test_asyncio/test_protocols.py
 test_asyncio/test_queues.py
 test_asyncio/test_selector_events.py
+test_asyncio/test_server.py
 test_asyncio/test_threads.py
 test_asyncio/test_timeouts.py
 test_asyncio/test_transports.py

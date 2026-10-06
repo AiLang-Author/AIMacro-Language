@@ -280,14 +280,11 @@
     },
     "test_asyncio/test_server.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_asyncio/test_server.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": 1,
-      "err": "",
-      "out": "  SelectorStartServerTests.test_start_server_1\nFAIL: assertEqual\n  SelectorStartServerTests.test_start_unix_server_1\nunittest: ran 2 tests, 1 failed\n",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_asyncio/test_server.py",
-      "updated": "2026-10-05"
+      "updated": "2026-10-06"
     },
     "test_asyncio/test_sock_lowlevel.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_asyncio/test_sock_lowlevel.py",

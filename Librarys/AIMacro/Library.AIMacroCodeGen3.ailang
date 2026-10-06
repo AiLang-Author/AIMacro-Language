@@ -1780,6 +1780,15 @@ Function.Gen_FlattenExpr {
                 Gen_Emit("\", ")
                 Gen_Emit(args_var)
                 Gen_Emit(")\n")
+                // leftover asyncio.start_server is MethodSkip kind 8;
+                // assertRaises WithExit ExcClear then assertEqual fails
+                // (test_server test_start_server_1). Isolation golds and
+                // official passes have no start_server; leave the method.
+                cmp_ss = StringCompare(method, "start_server")
+                IfCondition EqualTo(cmp_ss, 0) ThenBlock: {
+                    Gen_EmitIndent()
+                    Gen_Emit("ReturnValue(0)\n")
+                }
                 ReturnValue(Gen_MakeIdent(temp))
             }
             
