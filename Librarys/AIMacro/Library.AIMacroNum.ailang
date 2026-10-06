@@ -1643,7 +1643,7 @@ Function.AIMacro.NumNe {
 Function.AIMacro.OrderUnsupported {
     Output: Address
     Body: {
-        AIMacro.RaiseKind(5, "not supported")
+        AIMacro.RaiseKind(8, "not supported")
         ReturnValue(AIMacro.GetNotImpl())
     }
 }

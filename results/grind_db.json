@@ -183,12 +183,9 @@
     },
     "test_asyncio/test_events.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_asyncio/test_events.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": 1,
-      "err": "",
-      "out": "ERROR: Method not found: Mock\n  HandleTests.test_handle\nERROR: Method not found: Mock\n  HandleTests.test_callback_with_exception\nERROR: Method not found: Mock\n  HandleTests.test_handle_weakref\nERROR: Method not found: Mock\n  HandleTests.test_handle_repr\nERROR: Method not found: Mock\n  HandleTests.test_handle_repr_debug\nERROR: Method not found: Mock\n  HandleTests.test_handle_source_traceback\nERROR: Method not found: Mock\n  HandleTests.test_coroutine_like_object_debug_formatting\nERROR: Method not found: Mock\n  TimerTests.test_when\nERROR: Method not found: Mock\n  TimerTests.test_timer\nERROR: Method not found: Mock\n  TimerTests.test_timer_repr\nERROR: Method not found: Mock\n  TimerTests.test_timer_repr_debug\nERROR: Method not found: Mock\n  TimerTests.test_timer_comparison\nERROR: not supported\n  AbstractEventLoopTests.test_not_implemented\n  AbstractEventLoopTests.test_not_implemented_async\n  PolicyTests.test_event_loop_policy\n  PolicyTests.test_get_event_loop\n  PolicyTests.test_get_event_loop_calls_set_event_loop\n  PolicyTests.test_get_event_loop_after_set_none\n  PolicyTests.test_get_event_loop_thread\n  PolicyTests.test_new_event_loop\n  PolicyTests.test_set_event_loop\n  PolicyTests.test_get_event_loop_policy\n  PolicyTests.test_set_event_loop_policy\nERROR: Method not found: new_event_loop\nERROR: Method not found: set_event_loop\nERROR: Method not found: SafeChildWatcher\nERROR: Method not found: attach_loop\nERROR: Method not found: set_child_watcher\n  TestPyGetEventLoop.test_get_event_loop_returns_running_loop\nERROR: Method not found: set_child_watcher\nERROR: Method not found: set_event_loop\nERROR: Method not found: new_event_loop\nERROR: Method not found: set_event_loop\nERROR: Method not found: SafeChildWatcher\nERROR: Method not found: attach_loop\nERROR: Method not found: set_child_watcher\n  TestPyGetEventLoop.test_get_event_loop_returns_running_loop2\nERROR: Method not found: set_child_watcher\nERROR: Method not found: set_event_loop\n  TestServer.test_get_loop\n  TestAbstractServer.test_wait_closed\n  TestAbstractServer.test_get_loop\nunittest: ran 28 tests, 1 failed\n",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_asyncio/test_events.py",
       "updated": "2026-10-05"
     },

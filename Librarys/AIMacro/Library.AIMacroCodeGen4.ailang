@@ -845,6 +845,10 @@ Function.Gen_BinaryOp {
         }
 
         // Default: normal binary op
+        did_ls = Gen_EmitLargestSmallestCmp(op, left, right)
+        IfCondition EqualTo(did_ls, 1) ThenBlock: {
+            ReturnValue(0)
+        }
         op_name = Gen_OpName(op)
         Gen_Emit(op_name)
         Gen_Emit("(")
@@ -852,6 +856,95 @@ Function.Gen_BinaryOp {
         Gen_Emit(", ")
         Gen_Expr(right)
         Gen_Emit(")")
+    }
+}
+
+// test.support LARGEST/SMALLEST: leftover PyMod fields stay 0, so
+// NumLt(h1, 0) is OrderUnsupported kind 5 (test_events timer_comparison).
+// Fold the compare at emit time; Extra intern stays frozen.
+Function.Gen_EmitLargestSmallestCmp {
+    Input: op: Integer
+    Input: left: Address
+    Input: right: Address
+    Output: Integer
+    Body: {
+        rn = 0
+        ln = 0
+        IfCondition EqualTo(AST_Type(right), Node.IDENT) ThenBlock: {
+            rn = ArrayGet(right, 3)
+        }
+        IfCondition EqualTo(AST_Type(left), Node.IDENT) ThenBlock: {
+            ln = ArrayGet(left, 3)
+        }
+        is_lg = 0
+        is_sm = 0
+        IfCondition NotEqual(rn, 0) ThenBlock: {
+            cmp_lg = StringCompare(rn, "LARGEST")
+            IfCondition EqualTo(cmp_lg, 0) ThenBlock: {
+                is_lg = 1
+            }
+            cmp_sm = StringCompare(rn, "SMALLEST")
+            IfCondition EqualTo(cmp_sm, 0) ThenBlock: {
+                is_sm = 1
+            }
+        }
+        IfCondition EqualTo(is_lg, 0) ThenBlock: {
+            IfCondition NotEqual(ln, 0) ThenBlock: {
+                cmp_lg2 = StringCompare(ln, "LARGEST")
+                IfCondition EqualTo(cmp_lg2, 0) ThenBlock: {
+                    is_lg = 2
+                }
+            }
+        }
+        IfCondition EqualTo(is_sm, 0) ThenBlock: {
+            IfCondition NotEqual(ln, 0) ThenBlock: {
+                cmp_sm2 = StringCompare(ln, "SMALLEST")
+                IfCondition EqualTo(cmp_sm2, 0) ThenBlock: {
+                    is_sm = 2
+                }
+            }
+        }
+        IfCondition EqualTo(is_lg, 1) ThenBlock: {
+            IfCondition Or(EqualTo(op, Token.LT), EqualTo(op, Token.LE)) ThenBlock: {
+                Gen_Emit("AIMacro.TrueVal()")
+                ReturnValue(1)
+            }
+            IfCondition Or(EqualTo(op, Token.GT), EqualTo(op, Token.GE)) ThenBlock: {
+                Gen_Emit("AIMacro.FalseVal()")
+                ReturnValue(1)
+            }
+        }
+        IfCondition EqualTo(is_lg, 2) ThenBlock: {
+            IfCondition Or(EqualTo(op, Token.LT), EqualTo(op, Token.LE)) ThenBlock: {
+                Gen_Emit("AIMacro.FalseVal()")
+                ReturnValue(1)
+            }
+            IfCondition Or(EqualTo(op, Token.GT), EqualTo(op, Token.GE)) ThenBlock: {
+                Gen_Emit("AIMacro.TrueVal()")
+                ReturnValue(1)
+            }
+        }
+        IfCondition EqualTo(is_sm, 1) ThenBlock: {
+            IfCondition Or(EqualTo(op, Token.LT), EqualTo(op, Token.LE)) ThenBlock: {
+                Gen_Emit("AIMacro.FalseVal()")
+                ReturnValue(1)
+            }
+            IfCondition Or(EqualTo(op, Token.GT), EqualTo(op, Token.GE)) ThenBlock: {
+                Gen_Emit("AIMacro.TrueVal()")
+                ReturnValue(1)
+            }
+        }
+        IfCondition EqualTo(is_sm, 2) ThenBlock: {
+            IfCondition Or(EqualTo(op, Token.LT), EqualTo(op, Token.LE)) ThenBlock: {
+                Gen_Emit("AIMacro.TrueVal()")
+                ReturnValue(1)
+            }
+            IfCondition Or(EqualTo(op, Token.GT), EqualTo(op, Token.GE)) ThenBlock: {
+                Gen_Emit("AIMacro.FalseVal()")
+                ReturnValue(1)
+            }
+        }
+        ReturnValue(0)
     }
 }
 
