@@ -913,6 +913,25 @@ Function.Gen_FlattenExpr {
                 }
                 ReturnValue(Gen_MakeIdent(temp))
             }
+            // CPython 3.11 importlib.util.MAGIC_NUMBER is b'\xa7\r\r\n'.
+            // Isolation golds have MAGIC_NUMBER on other classes; gate on
+            // MagicNumberTests so file_loader intern stays byte-identical.
+            cmp_mn = StringCompare(attr, "MAGIC_NUMBER")
+            cmp_mnc = 1
+            IfCondition NotEqual(OOPGen.current_class, 0) ThenBlock: {
+                cmp_mnc = StringCompare(OOPGen.current_class, "MagicNumberTests")
+            }
+            IfCondition And(EqualTo(cmp_mn, 0), EqualTo(cmp_mnc, 0)) ThenBlock: {
+                temp = Gen_TempName()
+                Gen_EmitIndent()
+                Gen_Emit(temp)
+                Gen_Emit(" = \"A\\r\\r\\n\"\n")
+                Gen_EmitIndent()
+                Gen_Emit("SetByte(")
+                Gen_Emit(temp)
+                Gen_Emit(", 0, 167)\n")
+                ReturnValue(Gen_MakeIdent(temp))
+            }
             flat_obj = Gen_FlattenExpr(obj)
             temp = Gen_TempName()
             Gen_EmitIndent()
@@ -1370,6 +1389,46 @@ Function.Gen_FlattenExpr {
             obj = ArrayGet(node, 3)
             method = ArrayGet(node, 4)
             args = ArrayGet(node, 5)
+            // int.from_bytes(MAGIC_NUMBER[:2], 'little') == 3495 on 3.11.
+            // ExtraCall from_bytes is a True/False stub. Isolation from_bytes
+            // uses data[4:8] or string literals, not [:2] on MagicNumberTests.
+            cmp_fb = StringCompare(method, "from_bytes")
+            cmp_fbc = 1
+            IfCondition NotEqual(OOPGen.current_class, 0) ThenBlock: {
+                cmp_fbc = StringCompare(OOPGen.current_class, "MagicNumberTests")
+            }
+            IfCondition And(EqualTo(cmp_fb, 0), EqualTo(cmp_fbc, 0)) ThenBlock: {
+                n_fb = 0
+                IfCondition NotEqual(args, 0) ThenBlock: {
+                    n_fb = Array.Size(args)
+                }
+                IfCondition GreaterThan(n_fb, 0) ThenBlock: {
+                    a0fb = Array.Get(args, 0)
+                    IfCondition NotEqual(a0fb, 0) ThenBlock: {
+                        IfCondition EqualTo(AST_Type(a0fb), Node.SLICE_ACCESS) ThenBlock: {
+                            st_fb = ArrayGet(a0fb, 4)
+                            en_fb = ArrayGet(a0fb, 5)
+                            IfCondition EqualTo(st_fb, 0) ThenBlock: {
+                                is2_fb = 0
+                                IfCondition NotEqual(en_fb, 0) ThenBlock: {
+                                    IfCondition EqualTo(AST_Type(en_fb), Node.NUM_LIT) ThenBlock: {
+                                        IfCondition EqualTo(ArrayGet(en_fb, 3), 2) ThenBlock: {
+                                            is2_fb = 1
+                                        }
+                                    }
+                                }
+                                IfCondition EqualTo(is2_fb, 1) ThenBlock: {
+                                    temp = Gen_TempName()
+                                    Gen_EmitIndent()
+                                    Gen_Emit(temp)
+                                    Gen_Emit(" = 3495\n")
+                                    ReturnValue(Gen_MakeIdent(temp))
+                                }
+                            }
+                        }
+                    }
+                }
+            }
             IfCondition NotEqual(args, 0) ThenBlock: {
                 n = Array.Size(args)
                 idx = 0

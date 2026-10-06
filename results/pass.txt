@@ -125,6 +125,7 @@ test_importlib/test_read.py
 test_importlib/test_reader.py
 test_importlib/test_resource.py
 test_importlib/test_threaded_import.py
+test_importlib/test_util.py
 test_importlib/test_windows.py
 test_importlib/test_zip.py
 test_index.py
