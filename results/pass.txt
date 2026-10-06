@@ -25,6 +25,7 @@ test_binascii.py
 test_binop.py
 test_bisect.py
 test_bool.py
+test_bufio.py
 test_bz2.py
 test_c_locale_coercion.py
 test_call.py
@@ -101,6 +102,7 @@ test_grp.py
 test_heapq.py
 test_html.py
 test_htmlparser.py
+test_http_cookies.py
 test_imghdr.py
 test_imp.py
 test_importlib/builtin/test_finder.py

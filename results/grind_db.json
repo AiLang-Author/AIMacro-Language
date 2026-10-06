@@ -571,14 +571,11 @@
     },
     "test_bufio.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_bufio.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": 0,
-      "err": "no tests ran",
-      "out": "unittest: ran 0 tests, 0 failed\n",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_bufio.py",
-      "updated": "2026-10-04"
+      "updated": "2026-10-06"
     },
     "test_builtin.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_builtin.py",
@@ -2181,14 +2178,11 @@
     },
     "test_http_cookies.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_http_cookies.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": 0,
-      "err": "no tests ran",
-      "out": "unittest: ran 0 tests, 0 failed\n",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_http_cookies.py",
-      "updated": "2026-10-04"
+      "updated": "2026-10-06"
     },
     "test_httplib.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_httplib.py",

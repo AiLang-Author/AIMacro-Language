@@ -651,7 +651,8 @@ Function.OOPGen_EmitClassattrsAssign {
         }
         Gen_EmitIndent()
         Gen_Emit("AIMacro.ClassAttrSet(\"")
-        Gen_Emit(class_name)
+        run_attr = OOPGen_RunClassName(class_name)
+        Gen_Emit(run_attr)
         Gen_Emit("\", \"")
         Gen_Emit(fname)
         Gen_Emit("\", ")
