@@ -1837,13 +1837,26 @@ Function.Gen_FlattenExpr {
                 }
                 Gen_EmitIndent()
                 Gen_Emit(temp)
-                Gen_Emit(" = AIMacro.MethodCall(")
-                Gen_Expr(flat_obj)
-                Gen_Emit(", \"")
-                Gen_Emit(method)
-                Gen_Emit("\", ")
-                Gen_Emit(args_var)
-                Gen_Emit(")\n")
+                // leftover select.poll is not MethodSkip; SmartCallN(0)
+                // is kind 8 skip. Gated on PollTests (isolation 0).
+                cmp_poll = StringCompare(method, "poll")
+                cmp_pc = 1
+                IfCondition NotEqual(OOPGen.current_class, 0) ThenBlock: {
+                    cmp_pc = StringCompare(OOPGen.current_class, "PollTests")
+                }
+                IfCondition And(EqualTo(cmp_poll, 0), EqualTo(cmp_pc, 0)) ThenBlock: {
+                    Gen_Emit(" = AIMacro.SmartCallN(0, ")
+                    Gen_Emit(args_var)
+                    Gen_Emit(")\n")
+                } ElseBlock: {
+                    Gen_Emit(" = AIMacro.MethodCall(")
+                    Gen_Expr(flat_obj)
+                    Gen_Emit(", \"")
+                    Gen_Emit(method)
+                    Gen_Emit("\", ")
+                    Gen_Emit(args_var)
+                    Gen_Emit(")\n")
+                }
                 // leftover asyncio.start_server is MethodSkip kind 8;
                 // assertRaises WithExit ExcClear then assertEqual fails
                 // (test_server test_start_server_1). Isolation golds and

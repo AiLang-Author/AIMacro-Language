@@ -179,6 +179,7 @@ test_pkg.py
 test_pkgutil.py
 test_platform.py
 test_plistlib.py
+test_poll.py
 test_pprint.py
 test_print.py
 test_profile.py

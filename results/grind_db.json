@@ -97,7 +97,7 @@
       "out": "ERROR: Method not found: array\nunittest: ran 0 tests, 0 failed\nunittest: TestCase scheduled but 0 tests ran\n",
       "tags": [],
       "key": "test_array.py",
-      "updated": "2026-10-04"
+      "updated": "2026-10-06"
     },
     "test_asdl_parser.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_asdl_parser.py",
@@ -206,7 +206,7 @@
       "out": "unittest: ran 0 tests, 0 failed\nunittest: TestCase scheduled but 0 tests ran\n",
       "tags": [],
       "key": "test_asyncio/test_futures2.py",
-      "updated": "2026-10-04"
+      "updated": "2026-10-06"
     },
     "test_asyncio/test_locks.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_asyncio/test_locks.py",
@@ -1397,13 +1397,13 @@
     "test_dynamicclassattribute.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_dynamicclassattribute.py",
       "status": "fail",
-      "stage": "compile",
-      "rc": 1,
-      "err": "\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\nERROR: Variable not found: spam\nCompilation Failed: \n[AST] Freeing 85322 node child-lists...\n[AST] Freed 37288 child-lists (node slots stay in pool)",
-      "out": "",
+      "stage": "run",
+      "rc": 0,
+      "err": "no tests ran",
+      "out": "unittest: ran 0 tests, 0 failed\n",
       "tags": [],
       "key": "test_dynamicclassattribute.py",
-      "updated": "2026-09-30"
+      "updated": "2026-10-06"
     },
     "test_eintr.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_eintr.py",
@@ -1678,13 +1678,13 @@
     "test_faulthandler.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_faulthandler.py",
       "status": "fail",
-      "stage": "compile",
+      "stage": "run",
       "rc": 1,
-      "err": "] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\nERROR: Variable not found: expected_traceback\nCompilation Failed: \n[AST] Freeing 89930 node child-lists...\n[AST] Freed 38920 child-lists (node slots stay in pool)",
-      "out": "",
+      "err": "",
+      "out": "Exception: \n",
       "tags": [],
       "key": "test_faulthandler.py",
-      "updated": "2026-10-02"
+      "updated": "2026-10-06"
     },
     "test_fcntl.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_fcntl.py",
@@ -1759,7 +1759,7 @@
       "out": "",
       "tags": [],
       "key": "test_finalization.py",
-      "updated": "2026-10-03"
+      "updated": "2026-10-06"
     },
     "test_float.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_float.py",
@@ -2169,12 +2169,12 @@
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_http_cookiejar.py",
       "status": "fail",
       "stage": "compile",
-      "rc": 1,
-      "err": "INDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\nERROR: Variable not found: _interact\nCompilation Failed: \n[AST] Freeing 106530 node child-lists...\n[AST] Freed 43747 child-lists (node slots stay in pool)",
+      "rc": -11,
+      "err": "T] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments",
       "out": "",
       "tags": [],
       "key": "test_http_cookiejar.py",
-      "updated": "2026-10-03"
+      "updated": "2026-10-06"
     },
     "test_http_cookies.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_http_cookies.py",
@@ -3539,14 +3539,11 @@
     },
     "test_poll.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_poll.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": 1,
-      "err": "",
-      "out": "unittest: ran 0 tests, 0 failed\nunittest: TestCase scheduled but 0 tests ran\n",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_poll.py",
-      "updated": "2026-10-05"
+      "updated": "2026-10-06"
     },
     "test_popen.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_popen.py",

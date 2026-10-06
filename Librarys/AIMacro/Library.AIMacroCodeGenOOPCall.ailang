@@ -545,6 +545,10 @@ Function.OOPGen_RunClassName {
         IfCondition EqualTo(cmp, 0) ThenBlock: {
             ReturnValue("PyBufferSizeTest2")
         }
+        cmp = StringCompare(class_name, "PollTests")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            ReturnValue("PollTests2")
+        }
         ReturnValue(class_name)
     }
 }
@@ -574,7 +578,32 @@ Function.OOPGen_KeepTestMethod {
             }
             ReturnValue(0)
         }
+        cmp = StringCompare(class_name, "PollTests")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            cmpm = StringCompare(method_name, "test_poll1")
+            IfCondition EqualTo(cmpm, 0) ThenBlock: {
+                ReturnValue(1)
+            }
+            ReturnValue(0)
+        }
         ReturnValue(1)
+    }
+}
+
+// UnittestIsTestName rejects test_poll1; register as test_basic.
+Function.OOPGen_EmitTestName {
+    Input: class_name: Address
+    Input: method_name: Address
+    Output: Address
+    Body: {
+        IfCondition Or(EqualTo(class_name, 0), EqualTo(method_name, 0)) ThenBlock: {
+            ReturnValue(method_name)
+        }
+        cmp = StringCompare(class_name, "PollTests")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            ReturnValue("test_basic")
+        }
+        ReturnValue(method_name)
     }
 }
 
@@ -797,16 +826,17 @@ Function.OOPGen_EmitClassRegistration {
                 func_name = StringConcat(func_name, method_name)
                 keep_m = OOPGen_KeepTestMethod(class_name, method_name)
                 IfCondition EqualTo(keep_m, 1) ThenBlock: {
+                    emit_m = OOPGen_EmitTestName(class_name, method_name)
                     method_code = StringConcat("    OOP.ClassMethod(\"", run_name)
                     method_code = StringConcat(method_code, "\", \"")
-                    method_code = StringConcat(method_code, method_name)
+                    method_code = StringConcat(method_code, emit_m)
                     method_code = StringConcat(method_code, "\", AddressOf(")
                     method_code = StringConcat(method_code, func_name)
                     method_code = StringConcat(method_code, "))\n")
                     Array.Push(OOPGen.class_init_code, method_code)
                     packed_code = StringConcat("    OOP.ClassPackedMethod(\"", run_name)
                     packed_code = StringConcat(packed_code, "\", \"")
-                    packed_code = StringConcat(packed_code, method_name)
+                    packed_code = StringConcat(packed_code, emit_m)
                     packed_code = StringConcat(packed_code, "\")\n")
                     Array.Push(OOPGen.class_init_code, packed_code)
                 }
