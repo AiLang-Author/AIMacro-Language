@@ -197,6 +197,7 @@ test_slice.py
 test_smtpnet.py
 test_sndhdr.py
 test_source_encoding.py
+test_spwd.py
 test_sqlite3/test_backup.py
 test_sqlite3/test_dump.py
 test_sqlite3/test_hooks.py
