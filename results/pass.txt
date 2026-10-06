@@ -19,6 +19,7 @@ test_asyncio/test_waitfor.py
 test_atexit.py
 test_augassign.py
 test_base64.py
+test_baseexception.py
 test_binascii.py
 test_binop.py
 test_bisect.py

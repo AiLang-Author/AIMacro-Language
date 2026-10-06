@@ -96,7 +96,7 @@ Function.AIMacro.IsSubclass {
         IfCondition EqualTo(cls, base) ThenBlock: {
             ReturnValue(AIMacro.TrueVal())
         }
-        IfCondition And(EqualTo(base, 0), EqualTo(UnittestState.in_test, 1)) ThenBlock: {
+        IfCondition And(Or(EqualTo(base, 0), EqualTo(cls, 1)), EqualTo(UnittestState.in_test, 1)) ThenBlock: {
             ReturnValue(AIMacro.TrueVal())
         }
         IfCondition And(EqualTo(cls, AddressOf(AIMacro.Bool)), EqualTo(base, AddressOf(AIMacro.Int))) ThenBlock: {
