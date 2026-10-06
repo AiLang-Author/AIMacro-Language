@@ -4659,3 +4659,46 @@ Function.Gen_IsLeftoverNoneMethod {
         ReturnValue(0)
     }
 }
+
+// leftover rlcompleter.Completer(ns) — hash with use_main_ns
+Function.Gen_EmitCompleterObj {
+    Input: args: Address
+    Output: Address
+    Body: {
+        temp = Gen_TempName()
+        Gen_EmitIndent()
+        Gen_Emit(temp)
+        Gen_Emit(" = Hash.Create(4)\n")
+        use_main = 1
+        n_a = 0
+        IfCondition NotEqual(args, 0) ThenBlock: {
+            n_a = Array.Size(args)
+        }
+        IfCondition GreaterThan(n_a, 0) ThenBlock: {
+            a0 = Array.Get(args, 0)
+            is_none = 0
+            IfCondition NotEqual(a0, 0) ThenBlock: {
+                IfCondition EqualTo(AST_Type(a0), Node.IDENT) ThenBlock: {
+                    n0 = ArrayGet(a0, 3)
+                    IfCondition EqualTo(StringCompare(n0, "None"), 0) ThenBlock: {
+                        is_none = 1
+                    }
+                }
+            }
+            IfCondition EqualTo(is_none, 0) ThenBlock: {
+                use_main = 0
+            }
+        }
+        Gen_EmitIndent()
+        Gen_Emit("Hash.Set(")
+        Gen_Emit(temp)
+        Gen_Emit(", \"use_main_ns\", ")
+        IfCondition EqualTo(use_main, 1) ThenBlock: {
+            Gen_Emit("AIMacro.TrueVal()")
+        } ElseBlock: {
+            Gen_Emit("AIMacro.FalseVal()")
+        }
+        Gen_Emit(")\n")
+        ReturnValue(temp)
+    }
+}

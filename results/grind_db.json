@@ -3860,14 +3860,11 @@
     },
     "test_rlcompleter.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_rlcompleter.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": 1,
-      "err": "",
-      "out": "ERROR: Method not found: complete\n  TestRlcompleter.test_namespace\nFAIL: assertTrue\nunittest: ran 1 tests, 1 failed\n",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_rlcompleter.py",
-      "updated": "2026-10-05"
+      "updated": "2026-10-06"
     },
     "test_robotparser.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_robotparser.py",

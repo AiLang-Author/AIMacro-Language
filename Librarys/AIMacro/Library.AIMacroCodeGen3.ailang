@@ -1516,6 +1516,10 @@ Function.Gen_FlattenExpr {
                 Gen_Emit("\n")
                 ReturnValue(Gen_MakeIdent(temp))
             }
+            IfCondition EqualTo(StringCompare(method, "Completer"), 0) ThenBlock: {
+                ctmp = Gen_EmitCompleterObj(args)
+                ReturnValue(Gen_MakeIdent(ctmp))
+            }
             is_lnm = Gen_IsLeftoverNoneMethod(method)
             IfCondition EqualTo(is_lnm, 1) ThenBlock: {
                 Gen_EmitIndent()

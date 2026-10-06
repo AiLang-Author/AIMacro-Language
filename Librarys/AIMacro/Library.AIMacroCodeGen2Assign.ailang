@@ -345,6 +345,15 @@ Function.Gen_Assignment {
             }
             
             // =========== OOP METHOD CALL (non-builtin) ===========
+            IfCondition EqualTo(StringCompare(method, "Completer"), 0) ThenBlock: {
+                ctmp = Gen_EmitCompleterObj(args)
+                Gen_EmitIndent()
+                Gen_EmitIdentLhs(target)
+                Gen_Emit(" = ")
+                Gen_Emit(ctmp)
+                Gen_Emit("\n")
+                ReturnValue(0)
+            }
             is_lnm = Gen_IsLeftoverNoneMethod(method)
             IfCondition EqualTo(is_lnm, 1) ThenBlock: {
                 Gen_EmitIndent()
