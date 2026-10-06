@@ -1108,6 +1108,11 @@ Function.Gen_FlattenExpr {
                 }
             }
 
+            fold_ee = Gen_EmitEvalExecFold(call_name, args)
+            IfCondition NotEqual(fold_ee, 0) ThenBlock: {
+                ReturnValue(fold_ee)
+            }
+
             // Class ctor: OOPGen_InstanceCreation emits multi-stmt; must NOT
             // wrap as "temp = <stmts>" (illegal). Capture returned inst name.
             is_class = OOPGen_IsClassName(call_name)

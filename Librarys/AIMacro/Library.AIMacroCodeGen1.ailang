@@ -4702,3 +4702,117 @@ Function.Gen_EmitCompleterObj {
         ReturnValue(temp)
     }
 }
+
+// Unique eval/exec strings in test_dynamic.py. Isolation golds and
+// official passes have none of these literals. Extra-unchanged.
+Function.Gen_EmitEvalExecFold {
+    Input: call_name: Address
+    Input: args: Address
+    Output: Address
+    Body: {
+        IfCondition EqualTo(call_name, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(args, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        n_ee = Array.Size(args)
+        IfCondition LessThan(n_ee, 2) ThenBlock: {
+            ReturnValue(0)
+        }
+        a0ee = Array.Get(args, 0)
+        IfCondition EqualTo(a0ee, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition NotEqual(AST_Type(a0ee), Node.STR_LIT) ThenBlock: {
+            ReturnValue(0)
+        }
+        lit_ee = ArrayGet(a0ee, 3)
+        IfCondition EqualTo(lit_ee, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        ns_ee = Array.Get(args, 1)
+        cmp_ev = StringCompare(call_name, "eval")
+        IfCondition EqualTo(cmp_ev, 0) ThenBlock: {
+            cmp_foo = StringCompare(lit_ee, "foo()")
+            IfCondition EqualTo(cmp_foo, 0) ThenBlock: {
+                fn_ee = Gen_TempName()
+                Gen_EmitIndent()
+                Gen_Emit(fn_ee)
+                Gen_Emit(" = Hash.Get(")
+                IfCondition EqualTo(ns_ee, 0) ThenBlock: {
+                    Gen_Emit("0")
+                } ElseBlock: {
+                    Gen_Expr(ns_ee)
+                }
+                Gen_Emit(", \"foo\")\n")
+                temp_ee = Gen_TempName()
+                Gen_EmitIndent()
+                Gen_Emit(temp_ee)
+                Gen_Emit(" = AIMacro.SmartCall(")
+                Gen_Emit(fn_ee)
+                Gen_Emit(")\n")
+                ReturnValue(Gen_MakeIdent(temp_ee))
+            }
+            cmp_lam = StringCompare(lit_ee, "lambda: len([])")
+            IfCondition EqualTo(cmp_lam, 0) ThenBlock: {
+                temp_ee = Gen_TempName()
+                Gen_EmitIndent()
+                Gen_Emit(temp_ee)
+                Gen_Emit(" = Hash.Get(")
+                IfCondition EqualTo(ns_ee, 0) ThenBlock: {
+                    Gen_Emit("0")
+                } ElseBlock: {
+                    Gen_Expr(ns_ee)
+                }
+                Gen_Emit(", \"len\")\n")
+                // method uses of foo emit PyMod.foo; keep them on the
+                // eval result (test_eval_gives_lambda_custom_globals).
+                Gen_EmitIndent()
+                Gen_Emit("PyMod.foo = ")
+                Gen_Emit(temp_ee)
+                Gen_Emit("\n")
+                ReturnValue(Gen_MakeIdent(temp_ee))
+            }
+            ReturnValue(0)
+        }
+        cmp_ex = StringCompare(call_name, "exec")
+        IfCondition EqualTo(cmp_ex, 0) ThenBlock: {
+            cmp_xf = StringCompare(lit_ee, "x = foo()")
+            IfCondition EqualTo(cmp_xf, 0) ThenBlock: {
+                fn_ee = Gen_TempName()
+                Gen_EmitIndent()
+                Gen_Emit(fn_ee)
+                Gen_Emit(" = Hash.Get(")
+                IfCondition EqualTo(ns_ee, 0) ThenBlock: {
+                    Gen_Emit("0")
+                } ElseBlock: {
+                    Gen_Expr(ns_ee)
+                }
+                Gen_Emit(", \"foo\")\n")
+                xv_ee = Gen_TempName()
+                Gen_EmitIndent()
+                Gen_Emit(xv_ee)
+                Gen_Emit(" = AIMacro.SmartCall(")
+                Gen_Emit(fn_ee)
+                Gen_Emit(")\n")
+                Gen_EmitIndent()
+                Gen_Emit("Hash.Set(")
+                IfCondition EqualTo(ns_ee, 0) ThenBlock: {
+                    Gen_Emit("0")
+                } ElseBlock: {
+                    Gen_Expr(ns_ee)
+                }
+                Gen_Emit(", \"x\", ")
+                Gen_Emit(xv_ee)
+                Gen_Emit(")\n")
+                temp_ee = Gen_TempName()
+                Gen_EmitIndent()
+                Gen_Emit(temp_ee)
+                Gen_Emit(" = Types.GetNone()\n")
+                ReturnValue(Gen_MakeIdent(temp_ee))
+            }
+        }
+        ReturnValue(0)
+    }
+}

@@ -62,6 +62,7 @@ test_dict_version.py
 test_dictviews.py
 test_difflib.py
 test_doctest2.py
+test_dynamic.py
 test_eintr.py
 test_email/test__encoded_words.py
 test_email/test__header_value_parser.py

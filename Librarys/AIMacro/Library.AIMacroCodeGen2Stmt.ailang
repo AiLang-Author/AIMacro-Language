@@ -272,6 +272,10 @@ Function.Gen_Node {
             IfCondition NotEqual(cargs, 0) ThenBlock: {
                 cn = Array.Size(cargs)
             }
+            fold_ee = Gen_EmitEvalExecFold(cname, cargs)
+            IfCondition NotEqual(fold_ee, 0) ThenBlock: {
+                ReturnValue(0)
+            }
             IfCondition GreaterThan(cn, 3) ThenBlock: {
                 Gen_EmitPackedSmartCall(cname, cargs)
                 Gen_Emit("\n")

@@ -700,7 +700,7 @@
       "out": "unittest: ran 0 tests, 0 failed\nunittest: TestCase scheduled but 0 tests ran\n",
       "tags": [],
       "key": "test_capi/test_unicode.py",
-      "updated": "2026-10-05"
+      "updated": "2026-10-06"
     },
     "test_cgi.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_cgi.py",
@@ -1391,14 +1391,11 @@
     },
     "test_dynamic.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_dynamic.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": 1,
-      "err": "",
-      "out": "  RebindBuiltinsTests.test_globals_shadow_builtins\n  RebindBuiltinsTests.test_modify_builtins\n  RebindBuiltinsTests.test_modify_builtins_while_generator_active\n  RebindBuiltinsTests.test_modify_builtins_from_leaf_function\n  RebindBuiltinsTests.test_cannot_change_globals_or_builtins_with_eval\nFAIL: assertEqual\n  RebindBuiltinsTests.test_cannot_change_globals_or_builtins_with_exec\nFAIL: assertEqual\n  RebindBuiltinsTests.test_cannot_replace_builtins_dict_while_active\n  RebindBuiltinsTests.test_cannot_replace_builtins_dict_between_calls\n  RebindBuiltinsTests.test_eval_gives_lambda_custom_globals\nFAIL: assertEqual\n  RebindBuiltinsTests.test_load_global_specialization_failure_keeps_oparg\n  TestTracing.test_after_specialization\nunittest: ran 11 tests, 3 failed\n",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_dynamic.py",
-      "updated": "2026-10-05"
+      "updated": "2026-10-06"
     },
     "test_dynamicclassattribute.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_dynamicclassattribute.py",
@@ -2656,7 +2653,7 @@
       "out": "ERROR: Method not found: import_importlib\nERROR: Method not found: import_importlib\nERROR: Method not found: import_importlib\nERROR: Method not found: import_importlib\nERROR: Method not found: test_both\nERROR: Method not found: test_both\nERROR: Method not found: test_both\nERROR: Method not found: test_both\nERROR: Method not found: test_both\nERROR: Method not found: test_both\nERROR: Method not found: test_both\nERROR: Method not found: test_both\nERROR: Method not found: test_both\n  MagicNumberTests.test_length\nFAIL: assertEqual\n  MagicNumberTests.test_incorporates_rn\nFAIL: assertTrue\n  MagicNumberTests.test_magic_number\nFAIL: assertEqual\nunittest: ran 3 tests, 3 failed\n",
       "tags": [],
       "key": "test_importlib/test_util.py",
-      "updated": "2026-10-05"
+      "updated": "2026-10-06"
     },
     "test_importlib/test_windows.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_importlib/test_windows.py",
@@ -2942,7 +2939,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_json/test_unicode.py",
-      "updated": "2026-10-05"
+      "updated": "2026-10-06"
     },
     "test_keyword.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_keyword.py",
@@ -3677,13 +3674,13 @@
     "test_pulldom.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_pulldom.py",
       "status": "fail",
-      "stage": "run",
-      "rc": 1,
-      "err": "",
-      "out": "  PullDOMTestCase.test_parse\n  PullDOMTestCase.test_parse_semantics\n  PullDOMTestCase.test_expandItem\nFAIL: assertIsNone\n  PullDOMTestCase.test_comment\n  PullDOMTestCase.test_end_document\n  PullDOMTestCase.test_external_ges_default\n  ThoroughTestCase.test_thorough_parse\n  ThoroughTestCase.test_sax2dom_fail\nERROR: StopIteration\n  ThoroughTestCase.test_thorough_sax2dom\nERROR: StopIteration\n  SAX2DOMTestCase.test_basic\n  SAX2DOMTestCase.testSAX2DOM\nunittest: ran 11 tests, 3 failed\n",
+      "stage": "compile",
+      "rc": -11,
+      "err": "T] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments",
+      "out": "",
       "tags": [],
       "key": "test_pulldom.py",
-      "updated": "2026-10-05"
+      "updated": "2026-10-06"
     },
     "test_pwd.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_pwd.py",
@@ -4183,7 +4180,7 @@
       "out": "und: connect\nERROR: Method not found: cursor\nERROR: Method not found: connect\nERROR: Method not found: cursor\n  TransactionTests.test_replace_starts_transaction\nERROR: Method not found: connect\nERROR: Method not found: cursor\nERROR: Method not found: connect\nERROR: Method not found: cursor\n  TransactionTests.test_toggle_auto_commit\nERROR: Method not found: connect\nERROR: Method not found: cursor\nERROR: Method not found: connect\nERROR: Method not found: cursor\n  TransactionTests.test_raise_timeout\nERROR: Method not found: connect\nERROR: Method not found: cursor\nERROR: Method not found: connect\nERROR: Method not found: cursor\n  TransactionTests.test_locking\nERROR: Method not found: connect\nERROR: Method not found: cursor\nERROR: Method not found: connect\nERROR: Method not found: cursor\n  TransactionTests.test_rollback_cursor_consistency\nERROR: Method not found: connect\nERROR: Method not found: cursor\nERROR: Method not found: connect\nERROR: Method not found: cursor\n  TransactionTests.test_multiple_cursors_and_iternext\nERROR: Method not found: connect\nERROR: Method not found: cursor\nERROR: Method not found: cursor\nERROR: Method not found: execute\nERROR: Method not found: executemany\nERROR: Method not found: execute\nERROR: Method not found: execute\nERROR: Method not found: rollback\nERROR: Method not found: execute\n  RollbackTests.test_no_duplicate_rows_after_rollback_del_cursor\nERROR: enumerate() arg is not iterable\nERROR: Method not found: connect\nERROR: Method not found: cursor\nERROR: Method not found: cursor\nERROR: Method not found: execute\nERROR: Method not found: executemany\nERROR: Method not found: execute\nERROR: Method not found: execute\nERROR: Method not found: rollback\nERROR: Method not found: execute\n  RollbackTests.test_no_duplicate_rows_after_rollback_close_cursor\nERROR: enumerate() arg is not iterable\nERROR: Method not found: connect\nERROR: Method not found: cursor\nERROR: Method not found: cursor\nERROR: Method not found: execute\nERROR: Method not found: executemany\nERROR: Method not found: execute\nERROR: Method not found: execute\nERROR: Method not found: rollback\nERROR: Method not found: execute\n  RollbackTests.test_no_duplicate_rows_after_rollback_new_query\nERROR: Method not found: connect\nERROR: Method not found: cursor\n  SpecialCommandTests.test_drop_table\nERROR: Method not found: connect\nERROR: Method not found: cursor\n  SpecialCommandTests.test_pragma\nERROR: Method not found: connect\n  TransactionalDDL.test_ddl_does_not_autostart_transaction\nERROR: Method not found: connect\n  TransactionalDDL.test_immediate_transactional_ddl\nERROR: Method not found: connect\n  TransactionalDDL.test_transactional_ddl\n  IsolationLevelFromInit.test_isolation_level_default\n  IsolationLevelFromInit.test_isolation_level_begin\n  IsolationLevelFromInit.test_isolation_level_deferred\n  IsolationLevelFromInit.test_isolation_level_immediate\n  IsolationLevelFromInit.test_isolation_level_exclusive\n  IsolationLevelFromInit.test_isolation_level_none\nERROR: Method not found: connect\nERROR: Method not found: execute\nERROR: Method not found: set_trace_callback\n  IsolationLevelPostInit.test_isolation_level_default\nERROR: Method not found: connect\nERROR: Method not found: execute\nERROR: Method not found: set_trace_callback\n  IsolationLevelPostInit.test_isolation_level_begin\nERROR: Method not found: connect\nERROR: Method not found: execute\nERROR: Method not found: set_trace_callback\n  IsolationLevelPostInit.test_isolation_level_deferrred\nERROR: Method not found: connect\nERROR: Method not found: execute\nERROR: Method not found: set_trace_callback\n  IsolationLevelPostInit.test_isolation_level_immediate\nERROR: Method not found: connect\nERROR: Method not found: execute\nERROR: Method not found: set_trace_callback\n  IsolationLevelPostInit.test_isolation_level_exclusive\nERROR: Method not found: connect\nERROR: Method not found: execute\nERROR: Method not found: set_trace_callback\n  IsolationLevelPostInit.test_isolation_level_none\nunittest: ran 30 tests, 2 failed\n",
       "tags": [],
       "key": "test_sqlite3/test_transactions.py",
-      "updated": "2026-10-05"
+      "updated": "2026-10-06"
     },
     "test_sqlite3/test_types.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_sqlite3/test_types.py",
@@ -4499,12 +4496,12 @@
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_textwrap.py",
       "status": "fail",
       "stage": "run",
-      "rc": 1,
-      "err": "",
-      "out": "  WrapTestCase.test_simple\n  WrapTestCase.test_empty_string_with_initial_indent\n  WrapTestCase.test_whitespace\n  WrapTestCase.test_fix_sentence_endings\n  WrapTestCase.test_wrap_short\n  WrapTestCase.test_wrap_short_1line\n  WrapTestCase.test_hyphenated\n  WrapTestCase.test_hyphenated_numbers\n  WrapTestCase.test_em_dash\n  WrapTestCase.test_unix_options\n  WrapTestCase.test_funky_hyphens\n  WrapTestCase.test_punct_hyphens\n  WrapTestCase.test_funky_parens\n  WrapTestCase.test_drop_whitespace_false\n  WrapTestCase.test_drop_whitespace_false_whitespace_only\n  WrapTestCase.test_drop_whitespace_false_whitespace_only_with_indent\n  WrapTestCase.test_drop_whitespace_whitespace_only\n  WrapTestCase.test_drop_whitespace_leading_whitespace\n  WrapTestCase.test_drop_whitespace_whitespace_line\n  WrapTestCase.test_drop_whitespace_whitespace_only_with_indent\n  WrapTestCase.test_drop_whitespace_whitespace_indent\n  WrapTestCase.test_split\n  WrapTestCase.test_break_on_hyphens\n  WrapTestCase.test_bad_width\n  WrapTestCase.test_no_split_at_umlaut\n  WrapTestCase.test_umlaut_followed_by_dash\n  WrapTestCase.test_non_breaking_space\n  WrapTestCase.test_narrow_non_breaking_space\n  MaxLinesTestCase.test_simple\n  MaxLinesTestCase.test_spaces\n  MaxLinesTestCase.test_placeholder\n  MaxLinesTestCase.test_placeholder_backtrack\n  LongWordTestCase.test_break_long\n  LongWordTestCase.test_nobreak_long\n  LongWordTestCase.test_max_lines_long\n  LongWordWithHyphensTestCase.test_break_long_words_on_hyphen\n  LongWordWithHyphensTestCase.test_break_long_words_not_on_hyphen\n  LongWordWithHyphensTestCase.test_break_on_hyphen_but_not_long_words\n  LongWordWithHyphensTestCase.test_do_not_break_long_words_or_on_hyphens\n  IndentTestCases.test_fill\n  IndentTestCases.test_initial_indent\n  IndentTestCases.test_subsequent_indent\n  DedentTestCase.test_dedent_nomargin\n  DedentTestCase.test_dedent_even\n  DedentTestCase.test_dedent_uneven\n  DedentTestCase.test_dedent_declining\n  DedentTestCase.test_dedent_preserve_internal_tabs\n  DedentTestCase.test_dedent_preserve_margin_tabs\n  IndentTestCase.test_indent_nomargin_default\n  IndentTestCase.test_indent_nomargin_explicit_default\n  IndentTestCase.test_indent_nomargin_all_lines\n  IndentTestCase.test_indent_no_lines\n  IndentTestCase.test_roundtrip_spaces\n  IndentTestCase.test_roundtrip_tabs\n  IndentTestCase.test_roundtrip_mixed\n  IndentTestCase.test_indent_default\nERROR: object is not iterable\n  IndentTestCase.test_indent_explicit_default\nERROR: object is not iterable\n  IndentTestCase.test_indent_all_lines\nERROR: object is not iterable\n  IndentTestCase.test_indent_empty_lines\nERROR: object is not iterable\n  ShortenTestCase.test_simple\n  ShortenTestCase.test_placeholder\n  ShortenTestCase.test_whitespace\n  ShortenTestCase.test_width_too_small_for_placeholder\n  ShortenTestCase.test_first_word_too_long_but_placeholder_fits\nunittest: ran 64 tests, 4 failed\n",
+      "rc": 124,
+      "err": "timeouttimeout",
+      "out": "",
       "tags": [],
       "key": "test_textwrap.py",
-      "updated": "2026-10-05"
+      "updated": "2026-10-06"
     },
     "test_thread.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_thread.py",
@@ -4883,13 +4880,13 @@
     "test_unicode.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_unicode.py",
       "status": "fail",
-      "stage": "run",
-      "rc": 1,
-      "err": "",
-      "out": "  StringModuleTest.test_formatter_parser\n  StringModuleTest.test_formatter_field_name_split\n  StringModuleTest.test_str_subclass_attr\nFAIL: assertEqual\nFAIL: assertEqual\nunittest: ran 3 tests, 2 failed\n",
+      "stage": "compile",
+      "rc": -11,
+      "err": "s\n[IMPORT ERROR] Cannot read: struct\n[IMPORT ERROR] Cannot read: textwrap\n[IMPORT ERROR] Cannot read: unicodedata\n[IMPORT ERROR] Cannot read: warnings\n[IMPORT] Extracting symbols from 24 modules\n[IMPORT] Checking 1073 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\n[PARSER] Parsed 1074 declarations, 137266 total nodes\n[PARSER] SUCCESS\n[SEMANTIC] contract check\n[POOL] Emitting mmap for R15 (381 slots)",
+      "out": "",
       "tags": [],
       "key": "test_unicode.py",
-      "updated": "2026-10-05"
+      "updated": "2026-10-06"
     },
     "test_unicode_file.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_unicode_file.py",
