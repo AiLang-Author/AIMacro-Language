@@ -168,16 +168,18 @@ Function.Gen_LookupDefaults {
     Input: name: Address
     Output: Address
     Body: {
-        IfCondition Or(EqualTo(name, 0), EqualTo(Gen.func_names, 0)) ThenBlock: {
+        resolved = Gen_ResolveNestFunc(name)
+        IfCondition Or(EqualTo(resolved, 0), EqualTo(Gen.func_names, 0)) ThenBlock: {
             ReturnValue(0)
         }
         n = Array.Size(Gen.func_names)
         i = 0
         WhileLoop LessThan(i, n) {
             fn = Array.Get(Gen.func_names, i)
-            cmp = StringCompare(fn, name)
+            cmp = StringCompare(fn, resolved)
             IfCondition EqualTo(cmp, 0) ThenBlock: {
-                ReturnValue(Array.Get(Gen.func_defaults, i))
+                found_d = Array.Get(Gen.func_defaults, i)
+                ReturnValue(found_d)
             }
             i = Add(i, 1)
         }
@@ -185,11 +187,51 @@ Function.Gen_LookupDefaults {
     }
 }
 
+// Local f bound to hoisted Function.__nest_N_f. LookupParams/Defaults
+// are keyed on the nest name, not the Python name.
+Function.Gen_ResolveNestFunc {
+    Input: name: Address
+    Output: Address
+    Body: {
+        IfCondition EqualTo(name, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition NotEqual(Gen.nest_bind_names, 0) ThenBlock: {
+            nsz = Array.Size(Gen.nest_bind_names)
+            ni = Subtract(nsz, 1)
+            WhileLoop GreaterEqual(ni, 0) {
+                bn = Array.Get(Gen.nest_bind_names, ni)
+                cmpn = StringCompare(name, bn)
+                IfCondition EqualTo(cmpn, 0) ThenBlock: {
+                    found_n = Array.Get(Gen.nest_bind_funcs, ni)
+                    ReturnValue(found_n)
+                }
+                ni = Subtract(ni, 1)
+            }
+        }
+        IfCondition NotEqual(Gen.all_nest_from, 0) ThenBlock: {
+            nsz = Array.Size(Gen.all_nest_from)
+            ni = Subtract(nsz, 1)
+            WhileLoop GreaterEqual(ni, 0) {
+                bn = Array.Get(Gen.all_nest_from, ni)
+                cmpn = StringCompare(name, bn)
+                IfCondition EqualTo(cmpn, 0) ThenBlock: {
+                    found_n = Array.Get(Gen.all_nest_to, ni)
+                    ReturnValue(found_n)
+                }
+                ni = Subtract(ni, 1)
+            }
+        }
+        ReturnValue(name)
+    }
+}
+
 Function.Gen_LookupParams {
     Input: name: Address
     Output: Address
     Body: {
-        IfCondition Or(EqualTo(name, 0), EqualTo(Gen.func_names, 0)) ThenBlock: {
+        resolved = Gen_ResolveNestFunc(name)
+        IfCondition Or(EqualTo(resolved, 0), EqualTo(Gen.func_names, 0)) ThenBlock: {
             ReturnValue(0)
         }
         IfCondition EqualTo(Gen.func_params, 0) ThenBlock: {
@@ -199,10 +241,11 @@ Function.Gen_LookupParams {
         i = 0
         WhileLoop LessThan(i, n) {
             fn = Array.Get(Gen.func_names, i)
-            cmp = StringCompare(fn, name)
+            cmp = StringCompare(fn, resolved)
             IfCondition EqualTo(cmp, 0) ThenBlock: {
                 IfCondition LessThan(i, Array.Size(Gen.func_params)) ThenBlock: {
-                    ReturnValue(Array.Get(Gen.func_params, i))
+                    found_p = Array.Get(Gen.func_params, i)
+                    ReturnValue(found_p)
                 }
                 ReturnValue(0)
             }
@@ -3858,6 +3901,22 @@ Function.Gen_PushDeferredFunction {
         Array.Push(Gen.deferred_freevars, fv)
         Array.Push(Gen.deferred_nest_names, Gen_CopyAddrArray(Gen.nest_bind_names))
         Array.Push(Gen.deferred_nest_funcs, Gen_CopyAddrArray(Gen.nest_bind_funcs))
+        // Register params/defaults now so CALL f() in the enclosing
+        // method can pad omitted defaults before this Function is
+        // emitted (test_locks nested f(lock=None, cond=None)).
+        nest_name = ArrayGet(node, 3)
+        nest_defs = ArrayGet(node, 7)
+        nest_star = ArrayGet(node, 8)
+        nest_va = 0
+        IfCondition NotEqual(nest_star, 0) ThenBlock: {
+            nest_va = Array.Size(nest_params)
+        }
+        IfCondition NotEqual(nest_name, 0) ThenBlock: {
+            Array.Push(Gen.func_names, nest_name)
+            Array.Push(Gen.func_defaults, nest_defs)
+            Array.Push(Gen.func_params, nest_params)
+            Array.Push(Gen.func_varargs, nest_va)
+        }
     }
 }
 

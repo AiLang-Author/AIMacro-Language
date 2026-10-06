@@ -376,6 +376,108 @@ Function.Gen_CallExpr {
                 Gen_Emit("Types.GetNone()")
                 ReturnValue(0)
             }
+            // Nested f(lock=None, cond=None) called as f() used leftover
+            // SmartCall() with no args; p_lock was register garbage so
+            // `if lock is None` was false and assertIs(cond._lock, lock)
+            // failed (test_asyncio/test_locks test_explicit_lock).
+            nest_fn = Gen_ResolveNestFunc(name)
+            params_d = Gen_LookupParams(nest_fn)
+            n_need = 0
+            IfCondition NotEqual(params_d, 0) ThenBlock: {
+                n_need = Array.Size(params_d)
+            }
+            IfCondition GreaterThan(n_need, n) ThenBlock: {
+                defs_d = Gen_LookupDefaults(nest_fn)
+                IfCondition GreaterThan(n_need, 3) ThenBlock: {
+                    pack_d = Gen_TempName()
+                    Gen_EmitIndent()
+                    Gen_Emit(pack_d)
+                    Gen_Emit(" = Array.Create(")
+                    Gen_EmitNumber(n_need)
+                    Gen_Emit(")\n")
+                    di = 0
+                    WhileLoop LessThan(di, n_need) {
+                        Gen_EmitIndent()
+                        Gen_Emit("Array.Push(")
+                        Gen_Emit(pack_d)
+                        Gen_Emit(", ")
+                        IfCondition LessThan(di, n) ThenBlock: {
+                            darg = Array.Get(args, di)
+                            IfCondition EqualTo(Gen_HasCall(darg), 1) ThenBlock: {
+                                darg = Gen_FlattenExpr(darg)
+                            }
+                            Gen_Expr(darg)
+                        } ElseBlock: {
+                            dnode = 0
+                            dsz = 0
+                            IfCondition NotEqual(defs_d, 0) ThenBlock: {
+                                dsz = Array.Size(defs_d)
+                            }
+                            IfCondition LessThan(di, dsz) ThenBlock: {
+                                dnode = Array.Get(defs_d, di)
+                            }
+                            IfCondition EqualTo(dnode, 0) ThenBlock: {
+                                Gen_Emit("Types.GetNone()")
+                            } ElseBlock: {
+                                IfCondition EqualTo(Gen_HasCall(dnode), 1) ThenBlock: {
+                                    dnode = Gen_FlattenExpr(dnode)
+                                }
+                                Gen_Expr(dnode)
+                            }
+                        }
+                        Gen_Emit(")\n")
+                        di = Add(di, 1)
+                    }
+                    Gen_Emit("AIMacro.SmartCallN(")
+                    Gen_EmitIdent(name)
+                    Gen_Emit(", ")
+                    Gen_Emit(pack_d)
+                    Gen_Emit(")")
+                    ReturnValue(0)
+                }
+                Gen_Emit("AIMacro.SmartCall")
+                IfCondition EqualTo(n_need, 1) ThenBlock: {
+                    Gen_Emit("1(")
+                }
+                IfCondition EqualTo(n_need, 2) ThenBlock: {
+                    Gen_Emit("2(")
+                }
+                IfCondition EqualTo(n_need, 3) ThenBlock: {
+                    Gen_Emit("3(")
+                }
+                Gen_EmitIdent(name)
+                di = 0
+                WhileLoop LessThan(di, n_need) {
+                    Gen_Emit(", ")
+                    IfCondition LessThan(di, n) ThenBlock: {
+                        darg = Array.Get(args, di)
+                        IfCondition EqualTo(Gen_HasCall(darg), 1) ThenBlock: {
+                            darg = Gen_FlattenExpr(darg)
+                        }
+                        Gen_Expr(darg)
+                    } ElseBlock: {
+                        dnode = 0
+                        dsz = 0
+                        IfCondition NotEqual(defs_d, 0) ThenBlock: {
+                            dsz = Array.Size(defs_d)
+                        }
+                        IfCondition LessThan(di, dsz) ThenBlock: {
+                            dnode = Array.Get(defs_d, di)
+                        }
+                        IfCondition EqualTo(dnode, 0) ThenBlock: {
+                            Gen_Emit("Types.GetNone()")
+                        } ElseBlock: {
+                            IfCondition EqualTo(Gen_HasCall(dnode), 1) ThenBlock: {
+                                dnode = Gen_FlattenExpr(dnode)
+                            }
+                            Gen_Expr(dnode)
+                        }
+                    }
+                    di = Add(di, 1)
+                }
+                Gen_Emit(")")
+                ReturnValue(0)
+            }
             IfCondition EqualTo(n, 0) ThenBlock: {
                 Gen_Emit("AIMacro.SmartCall(")
                 Gen_EmitIdent(name)

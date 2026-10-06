@@ -213,12 +213,9 @@
     },
     "test_asyncio/test_locks.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_asyncio/test_locks.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": 1,
-      "err": "",
-      "out": "  EventTests.test_repr\n  EventTests.test_wait\n  EventTests.test_wait_on_set\n  EventTests.test_wait_cancel\n  EventTests.test_clear\n  EventTests.test_clear_with_waiters\n  ConditionTests.test_wait\n  ConditionTests.test_wait_cancel\n  ConditionTests.test_wait_cancel_contested\n  ConditionTests.test_wait_cancel_after_notify\n  ConditionTests.test_wait_unacquired\n  ConditionTests.test_wait_for_unacquired\n  ConditionTests.test_notify\n  ConditionTests.test_notify_all\n  ConditionTests.test_notify_unacquired\n  ConditionTests.test_notify_all_unacquired\n  ConditionTests.test_repr\n  ConditionTests.test_explicit_lock\nFAIL: assertIs\n  ConditionTests.test_ambiguous_loops\n  ConditionTests.test_timeout_in_block\n  SemaphoreTests.test_initial_value_zero\n  SemaphoreTests.test_repr\n  SemaphoreTests.test_semaphore\n  SemaphoreTests.test_semaphore_value\n  SemaphoreTests.test_acquire\n  SemaphoreTests.test_acquire_cancel\n  SemaphoreTests.test_acquire_cancel_before_awoken\n  SemaphoreTests.test_acquire_hang\n  SemaphoreTests.test_acquire_no_hang\n  SemaphoreTests.test_release_not_acquired\n  SemaphoreTests.test_release_no_waiters\n  SemaphoreTests.test_acquire_fifo_order\n  SemaphoreTests.test_acquire_fifo_order_2\n  SemaphoreTests.test_acquire_fifo_order_3\n  BarrierTests.test_barrier\n  BarrierTests.test_repr\n  BarrierTests.test_barrier_parties\n  BarrierTests.test_filling_one_task\n  BarrierTests.test_filling_one_task_twice\n  BarrierTests.test_filling_task_by_task\n  BarrierTests.test_filling_tasks_wait_twice\n  BarrierTests.test_filling_tasks_check_return_value\n  BarrierTests.test_draining_state\n  BarrierTests.test_blocking_tasks_while_draining\n  BarrierTests.test_filling_tasks_cancel_one\n  BarrierTests.test_reset_barrier\n  BarrierTests.test_reset_barrier_while_tasks_waiting\n  BarrierTests.test_reset_barrier_when_tasks_half_draining\n  BarrierTests.test_reset_barrier_when_tasks_half_draining_half_blocking\n  BarrierTests.test_reset_barrier_while_tasks_waiting_and_waiting_again\n  BarrierTests.test_reset_barrier_while_tasks_draining\n  BarrierTests.test_abort_barrier\n  BarrierTests.test_abort_barrier_when_tasks_half_draining_half_blocking\n  BarrierTests.test_abort_barrier_when_exception\n  BarrierTests.test_abort_barrier_when_exception_then_resetting\nunittest: ran 55 tests, 1 failed\n",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_asyncio/test_locks.py",
       "updated": "2026-10-05"
     },
