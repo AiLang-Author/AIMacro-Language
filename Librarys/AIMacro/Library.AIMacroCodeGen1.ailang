@@ -3367,6 +3367,30 @@ Function.Gen_MapExcKind {
     }
 }
 
+// make_scanner.__module__ etc (test_json TestPyTest.test_pyjson)
+Function.Gen_JsonModuleOf {
+    Input: fname: Address
+    Output: Address
+    Body: {
+        IfCondition EqualTo(fname, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        cmp = StringCompare(fname, "make_scanner")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            ReturnValue("json.scanner")
+        }
+        cmp = StringCompare(fname, "scanstring")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            ReturnValue("json.decoder")
+        }
+        cmp = StringCompare(fname, "encode_basestring_ascii")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            ReturnValue("json.encoder")
+        }
+        ReturnValue(0)
+    }
+}
+
 Function.Gen_EmitStdlibAttr {
     Input: obj: Address
     Input: attr: Address

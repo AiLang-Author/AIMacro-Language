@@ -127,6 +127,7 @@ test_importlib/test_zip.py
 test_index.py
 test_int.py
 test_iterlen.py
+test_json/__init__.py
 test_json/test_decode.py
 test_json/test_default.py
 test_json/test_encode_basestring_ascii.py

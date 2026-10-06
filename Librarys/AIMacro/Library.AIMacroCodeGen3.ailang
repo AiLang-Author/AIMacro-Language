@@ -885,6 +885,21 @@ Function.Gen_FlattenExpr {
         IfCondition EqualTo(t, Node.ATTRIBUTE) ThenBlock: {
             obj = ArrayGet(node, 3)
             attr = ArrayGet(node, 4)
+            IfCondition EqualTo(StringCompare(attr, "__module__"), 0) ThenBlock: {
+                IfCondition EqualTo(AST_Type(obj), Node.ATTRIBUTE) ThenBlock: {
+                    inner_m = ArrayGet(obj, 4)
+                    jmod = Gen_JsonModuleOf(inner_m)
+                    IfCondition NotEqual(jmod, 0) ThenBlock: {
+                        temp = Gen_TempName()
+                        Gen_EmitIndent()
+                        Gen_Emit(temp)
+                        Gen_Emit(" = \"")
+                        Gen_Emit(jmod)
+                        Gen_Emit("\"\n")
+                        ReturnValue(Gen_MakeIdent(temp))
+                    }
+                }
+            }
             IfCondition EqualTo(Gen_IsStdlibAttr(obj, attr), 1) ThenBlock: {
                 temp = Gen_TempName()
                 Gen_EmitIndent()

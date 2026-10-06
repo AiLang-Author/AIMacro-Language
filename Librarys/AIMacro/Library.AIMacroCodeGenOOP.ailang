@@ -1627,6 +1627,18 @@ Function.OOPGen_AttrAccess {
             Gen_EmitStdlibAttr(obj, attr)
             ReturnValue(0)
         }
+        IfCondition EqualTo(StringCompare(attr, "__module__"), 0) ThenBlock: {
+            IfCondition EqualTo(AST_Type(obj), Node.ATTRIBUTE) ThenBlock: {
+                inner = AST_GetField(obj, "attr")
+                jmod = Gen_JsonModuleOf(inner)
+                IfCondition NotEqual(jmod, 0) ThenBlock: {
+                    Gen_Emit("\"")
+                    Gen_Emit(jmod)
+                    Gen_Emit("\"")
+                    ReturnValue(0)
+                }
+            }
+        }
         
         cmp_contains = StringCompare(attr, "__contains__")
         cmp_copy = StringCompare(attr, "copy")
