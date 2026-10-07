@@ -15,6 +15,7 @@ test_asyncio/test_protocols.py
 test_asyncio/test_queues.py
 test_asyncio/test_selector_events.py
 test_asyncio/test_server.py
+test_asyncio/test_ssl.py
 test_asyncio/test_threads.py
 test_asyncio/test_timeouts.py
 test_asyncio/test_transports.py
@@ -158,6 +159,7 @@ test_list.py
 test_lltrace.py
 test_longexp.py
 test_mailcap.py
+test_mimetypes.py
 test_minidom.py
 test_module/__init__.py
 test_modulefinder.py
@@ -222,6 +224,7 @@ test_sunau.py
 test_sundry.py
 test_symtable.py
 test_syntax.py
+test_sys.py
 test_sys_setprofile.py
 test_sysconfig.py
 test_syslog.py

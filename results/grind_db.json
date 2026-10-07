@@ -293,14 +293,11 @@
     },
     "test_asyncio/test_ssl.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_asyncio/test_ssl.py",
-      "status": "fail",
-      "stage": "transpile",
-      "rc": -11,
-      "err": "transpile:",
-      "out": "",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_asyncio/test_ssl.py",
-      "updated": "2026-10-04"
+      "updated": "2026-10-06"
     },
     "test_asyncio/test_sslproto.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_asyncio/test_sslproto.py",
@@ -3152,14 +3149,11 @@
     },
     "test_mimetypes.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_mimetypes.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": -11,
-      "err": "",
-      "out": "ERROR: Method not found: MimeTypes\n  MimeTypesTestCase.test_case_sensitivity\nERROR: Method not found: MimeTypes\n  MimeTypesTestCase.test_default_data\nERROR: Method not found: MimeTypes\n  MimeTypesTestCase.test_data_urls\nERROR: Method not found: MimeTypes\n  MimeTypesTestCase.test_file_parsing\nERROR: Method not found: MimeTypes\n  MimeTypesTestCase.test_read_mime_types\n",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_mimetypes.py",
-      "updated": "2026-10-04"
+      "updated": "2026-10-06"
     },
     "test_minidom.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_minidom.py",
@@ -4381,14 +4375,11 @@
     },
     "test_sys.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_sys.py",
-      "status": "fail",
-      "stage": "transpile",
-      "rc": -11,
-      "err": "transpile:",
-      "out": "",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_sys.py",
-      "updated": "2026-10-03"
+      "updated": "2026-10-06"
     },
     "test_sys_setprofile.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_sys_setprofile.py",
