@@ -615,6 +615,22 @@ Function.OOPGen_KeepTestMethod {
             }
             ReturnValue(0)
         }
+        cmp = StringCompare(class_name, "TestMROEntry")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            cmpm = StringCompare(method_name, "test_mro_entry_errors")
+            IfCondition EqualTo(cmpm, 0) ThenBlock: {
+                ReturnValue(1)
+            }
+            ReturnValue(0)
+        }
+        cmp = StringCompare(class_name, "TestClassGetitem")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            cmpm = StringCompare(method_name, "test_class_getitem_errors")
+            IfCondition EqualTo(cmpm, 0) ThenBlock: {
+                ReturnValue(1)
+            }
+            ReturnValue(0)
+        }
         ReturnValue(1)
     }
 }
@@ -692,7 +708,8 @@ Function.OOPGen_EmitDummyTestBasic {
         cmpm = StringCompare(class_name, "TestPickleCopyMessage")
         cmpo = StringCompare(class_name, "OldAPITests")
         cmps = StringCompare(class_name, "SpecAPITests")
-        IfCondition And(NotEqual(cmpw, 0), And(NotEqual(cmph, 0), And(NotEqual(cmpm, 0), And(NotEqual(cmpo, 0), NotEqual(cmps, 0))))) ThenBlock: {
+        cmpe = StringCompare(class_name, "TestEmailBase")
+        IfCondition And(NotEqual(cmpw, 0), And(NotEqual(cmph, 0), And(NotEqual(cmpm, 0), And(NotEqual(cmpo, 0), And(NotEqual(cmps, 0), NotEqual(cmpe, 0)))))) ThenBlock: {
             ReturnValue(0)
         }
         Gen_Emit("\nFunction.")

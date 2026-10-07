@@ -173,7 +173,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_asyncio/test_context.py",
-      "updated": "2026-10-06"
+      "updated": "2026-10-07"
     },
     "test_asyncio/test_events.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_asyncio/test_events.py",
@@ -221,7 +221,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_asyncio/test_proactor_events.py",
-      "updated": "2026-10-06"
+      "updated": "2026-10-07"
     },
     "test_asyncio/test_protocols.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_asyncio/test_protocols.py",
@@ -533,7 +533,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_bisect.py",
-      "updated": "2026-10-06"
+      "updated": "2026-10-07"
     },
     "test_bool.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_bool.py",
@@ -541,7 +541,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_bool.py",
-      "updated": "2026-10-06"
+      "updated": "2026-10-07"
     },
     "test_buffer.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_buffer.py",
@@ -590,7 +590,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_bz2.py",
-      "updated": "2026-10-06"
+      "updated": "2026-10-07"
     },
     "test_c_locale_coercion.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_c_locale_coercion.py",
@@ -671,7 +671,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_capi/test_structmembers.py",
-      "updated": "2026-10-06"
+      "updated": "2026-10-07"
     },
     "test_capi/test_unicode.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_capi/test_unicode.py",
@@ -690,7 +690,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_cgi.py",
-      "updated": "2026-10-06"
+      "updated": "2026-10-07"
     },
     "test_cgitb.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_cgitb.py",
@@ -994,7 +994,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_complex.py",
-      "updated": "2026-10-06"
+      "updated": "2026-10-07"
     },
     "test_configparser.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_configparser.py",
@@ -1021,7 +1021,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_context.py",
-      "updated": "2026-10-06"
+      "updated": "2026-10-07"
     },
     "test_contextlib.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_contextlib.py",
@@ -1108,7 +1108,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_csv.py",
-      "updated": "2026-10-06"
+      "updated": "2026-10-07"
     },
     "test_ctypes.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_ctypes.py",
@@ -1179,7 +1179,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_dbm_gnu.py",
-      "updated": "2026-10-06"
+      "updated": "2026-10-07"
     },
     "test_dbm_ndbm.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_dbm_ndbm.py",
@@ -1393,14 +1393,11 @@
     },
     "test_email/__init__.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_email/__init__.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": 1,
-      "err": "",
-      "out": "unittest: ran 0 tests, 0 failed\nunittest: TestCase scheduled but 0 tests ran\n",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_email/__init__.py",
-      "updated": "2026-10-04"
+      "updated": "2026-10-07"
     },
     "test_email/test__encoded_words.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_email/test__encoded_words.py",
@@ -1505,7 +1502,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_email/test_pickleable.py",
-      "updated": "2026-10-06"
+      "updated": "2026-10-07"
     },
     "test_email/test_policy.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_email/test_policy.py",
@@ -1956,14 +1953,11 @@
     },
     "test_genericclass.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_genericclass.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": 1,
-      "err": "",
-      "out": "  TestMROEntry.test_mro_entry_signature\nERROR: index out of range\n  TestMROEntry.test_mro_entry\nERROR: index out of range\n  TestMROEntry.test_mro_entry_none\nERROR: index out of range\n  TestMROEntry.test_mro_entry_with_builtins\nERROR: index out of range\n  TestMROEntry.test_mro_entry_with_builtins_2\nERROR: index out of range\n  TestMROEntry.test_mro_entry_errors\n  TestMROEntry.test_mro_entry_errors_2\n  TestMROEntry.test_mro_entry_metaclass\nERROR: index out of range\n  TestMROEntry.test_mro_entry_type_call\n  TestClassGetitem.test_class_getitem\nERROR: index out of range\n  TestClassGetitem.test_class_getitem_format\nERROR: string indices must be integers\n  TestClassGetitem.test_class_getitem_inheritance\nERROR: string indices must be integers\n  TestClassGetitem.test_class_getitem_inheritance_2\nERROR: string indices must be integers\n  TestClassGetitem.test_class_getitem_classmethod\nERROR: string indices must be integers\n  TestClassGetitem.test_class_getitem_patched\nERROR: string indices must be integers\n  TestClassGetitem.test_class_getitem_with_builtins\nFAIL: assertIs\n  TestClassGetitem.test_class_getitem_errors\n  TestClassGetitem.test_class_getitem_errors_2\n  TestClassGetitem.test_class_getitem_metaclass\nERROR: index out of range\n  TestClassGetitem.test_class_getitem_with_metaclass\nERROR: index out of range\n  TestClassGetitem.test_class_getitem_metaclass_first\nERROR: index out of range\nunittest: ran 21 tests, 16 failed\n",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_genericclass.py",
-      "updated": "2026-10-05"
+      "updated": "2026-10-07"
     },
     "test_genericpath.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_genericpath.py",
@@ -5107,7 +5101,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_webbrowser.py",
-      "updated": "2026-10-06"
+      "updated": "2026-10-07"
     },
     "test_winconsoleio.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_winconsoleio.py",

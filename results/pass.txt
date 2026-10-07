@@ -72,6 +72,7 @@ test_doctest2.py
 test_dtrace.py
 test_dynamic.py
 test_eintr.py
+test_email/__init__.py
 test_email/test__encoded_words.py
 test_email/test__header_value_parser.py
 test_email/test_asian_codecs.py
@@ -103,6 +104,7 @@ test_future_stmt/test_future_multiple_features.py
 test_future_stmt/test_future_multiple_imports.py
 test_future_stmt/test_future_single_import.py
 test_generator_stop.py
+test_genericclass.py
 test_getopt.py
 test_getpass.py
 test_getpath.py
