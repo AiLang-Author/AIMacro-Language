@@ -1245,6 +1245,18 @@ Function.Gen_Raise {
                         IfCondition EqualTo(cmp_sk, 0) ThenBlock: {
                             ReturnValue(0)
                         }
+                        cmp_sk = StringCompare(skmsg, "This Python does not have universal newline support")
+                        IfCondition EqualTo(cmp_sk, 0) ThenBlock: {
+                            ReturnValue(0)
+                        }
+                        cmp_sk = StringCompare(skmsg, "test_CLI requires subprocess support.")
+                        IfCondition EqualTo(cmp_sk, 0) ThenBlock: {
+                            ReturnValue(0)
+                        }
+                        cmp_sk = StringCompare(skmsg, "correctly-rounded string->float conversions not available on this system")
+                        IfCondition EqualTo(cmp_sk, 0) ThenBlock: {
+                            ReturnValue(0)
+                        }
                     }
                 }
             }

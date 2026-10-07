@@ -66,6 +66,7 @@ test_deque.py
 test_dict_version.py
 test_dictviews.py
 test_difflib.py
+test_doctest.py
 test_doctest2.py
 test_dtrace.py
 test_dynamic.py
@@ -268,6 +269,7 @@ test_ucn.py
 test_unary.py
 test_unicode_file.py
 test_unicodedata.py
+test_univnewlines.py
 test_unpack.py
 test_unparse.py
 test_urllib2net.py

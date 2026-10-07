@@ -1335,14 +1335,11 @@
     },
     "test_doctest.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_doctest.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": 1,
-      "err": "",
-      "out": "Exception: \n",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_doctest.py",
-      "updated": "2026-10-04"
+      "updated": "2026-10-06"
     },
     "test_doctest2.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_doctest2.py",
@@ -4252,12 +4249,12 @@
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_strtod.py",
       "status": "fail",
       "stage": "run",
-      "rc": 1,
-      "err": "",
-      "out": "Exception: \n",
+      "rc": 124,
+      "err": "timeout",
+      "out": "ERROR: Method not found: compile\n  StrtodTests.test_halfway_cases\n  StrtodTests.test_short_halfway_cases\n  StrtodTests.test_underflow_boundary\n  StrtodTests.test_bigcomp\n  StrtodTests.test_oversized_digit_strings\n  StrtodTests.test_particular\n  StrtodTests.test_parsing\n  StrtodTests.test_boundaries\n",
       "tags": [],
       "key": "test_strtod.py",
-      "updated": "2026-10-04"
+      "updated": "2026-10-06"
     },
     "test_struct.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_struct.py",
@@ -4888,14 +4885,11 @@
     },
     "test_univnewlines.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_univnewlines.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": 1,
-      "err": "",
-      "out": "Exception: \n",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_univnewlines.py",
-      "updated": "2026-10-04"
+      "updated": "2026-10-06"
     },
     "test_unpack.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_unpack.py",
@@ -4930,10 +4924,10 @@
       "stage": "run",
       "rc": 1,
       "err": "",
-      "out": "Exception: \n",
+      "out": "Exception: No such file\n",
       "tags": [],
       "key": "test_urllib.py",
-      "updated": "2026-10-04"
+      "updated": "2026-10-06"
     },
     "test_urllib2.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_urllib2.py",
