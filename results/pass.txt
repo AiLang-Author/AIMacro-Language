@@ -282,6 +282,7 @@ test_utf8source.py
 test_uu.py
 test_uuid.py
 test_wait3.py
+test_wait4.py
 test_wave.py
 test_weakset.py
 test_winsound.py
