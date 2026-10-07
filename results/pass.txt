@@ -71,6 +71,7 @@ test_doctest.py
 test_doctest2.py
 test_dtrace.py
 test_dynamic.py
+test_dynamicclassattribute.py
 test_eintr.py
 test_email/__init__.py
 test_email/test__encoded_words.py
@@ -118,15 +119,21 @@ test_http_cookies.py
 test_imghdr.py
 test_imp.py
 test_importlib/builtin/test_finder.py
+test_importlib/builtin/test_loader.py
 test_importlib/extension/test_case_sensitivity.py
+test_importlib/extension/test_path_hook.py
 test_importlib/frozen/test_finder.py
 test_importlib/frozen/test_loader.py
 test_importlib/import_/test___package__.py
 test_importlib/import_/test_api.py
 test_importlib/import_/test_caching.py
+test_importlib/import_/test_fromlist.py
+test_importlib/import_/test_meta_path.py
+test_importlib/import_/test_packages.py
 test_importlib/import_/test_path.py
 test_importlib/source/test_case_sensitivity.py
 test_importlib/source/test_file_loader.py
+test_importlib/source/test_path_hook.py
 test_importlib/source/test_source_encoding.py
 test_importlib/test_api.py
 test_importlib/test_compatibilty_files.py
@@ -139,6 +146,7 @@ test_importlib/test_path.py
 test_importlib/test_read.py
 test_importlib/test_reader.py
 test_importlib/test_resource.py
+test_importlib/test_spec.py
 test_importlib/test_threaded_import.py
 test_importlib/test_util.py
 test_importlib/test_windows.py
@@ -235,6 +243,7 @@ test_string.py
 test_string_literals.py
 test_stringprep.py
 test_structseq.py
+test_subclassinit.py
 test_sunau.py
 test_sundry.py
 test_symtable.py

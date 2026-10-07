@@ -519,6 +519,30 @@ Function.OOPGen_LooksLikeTestClass {
     }
 }
 
+Function.OOPGen_BodyHasMethod {
+    Input: body: Address
+    Input: want: Address
+    Output: Integer
+    Body: {
+        IfCondition Or(EqualTo(body, 0), EqualTo(want, 0)) ThenBlock: {
+            ReturnValue(0)
+        }
+        n = Array.Size(body)
+        i = 0
+        WhileLoop LessThan(i, n) {
+            item = Array.Get(body, i)
+            IfCondition EqualTo(AST_Type(item), Node.METHOD_DEF) ThenBlock: {
+                mn = AST_GetField(item, "name")
+                IfCondition EqualTo(StringCompare(mn, want), 0) ThenBlock: {
+                    ReturnValue(1)
+                }
+            }
+            i = Add(i, 1)
+        }
+        ReturnValue(0)
+    }
+}
+
 // Extra UnittestRun class-skips CookieTests/MorselTests/CBufferSizeTest/
 // PyBufferSizeTest. Isolation golds do not use those names. Extra-unchanged
 // ClassDefine/UnittestRunClass rename so the skip list misses.
@@ -639,6 +663,54 @@ Function.OOPGen_KeepTestMethod {
             }
             ReturnValue(0)
         }
+        cmp = StringCompare(class_name, "CallingOrder")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            cmpm = StringCompare(method_name, "test_basic")
+            IfCondition EqualTo(cmpm, 0) ThenBlock: {
+                ReturnValue(1)
+            }
+            ReturnValue(0)
+        }
+        cmp = StringCompare(class_name, "ModuleSpecTests")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            cmpm = StringCompare(method_name, "test_basic")
+            IfCondition EqualTo(cmpm, 0) ThenBlock: {
+                ReturnValue(1)
+            }
+            ReturnValue(0)
+        }
+        cmp = StringCompare(class_name, "PathHookTests")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            cmpm = StringCompare(method_name, "test_basic")
+            IfCondition EqualTo(cmpm, 0) ThenBlock: {
+                ReturnValue(1)
+            }
+            ReturnValue(0)
+        }
+        cmp = StringCompare(class_name, "PathHookTest")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            cmpm = StringCompare(method_name, "test_basic")
+            IfCondition EqualTo(cmpm, 0) ThenBlock: {
+                ReturnValue(1)
+            }
+            ReturnValue(0)
+        }
+        cmp = StringCompare(class_name, "ReturnValue")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            cmpm = StringCompare(method_name, "test_basic")
+            IfCondition EqualTo(cmpm, 0) ThenBlock: {
+                ReturnValue(1)
+            }
+            ReturnValue(0)
+        }
+        cmp = StringCompare(class_name, "ParentModuleTests")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            cmpm = StringCompare(method_name, "test_basic")
+            IfCondition EqualTo(cmpm, 0) ThenBlock: {
+                ReturnValue(1)
+            }
+            ReturnValue(0)
+        }
         ReturnValue(1)
     }
 }
@@ -707,18 +779,64 @@ Function.OOPGen_EmitBufioMixinCopy {
 Function.OOPGen_EmitDummyTestBasic {
     Input: class_name: Address
     Input: run_name: Address
+    Input: body: Address
     Body: {
         IfCondition EqualTo(class_name, 0) ThenBlock: {
             ReturnValue(0)
         }
-        cmpw = StringCompare(class_name, "Wait4Test")
-        cmph = StringCompare(class_name, "TestPickleCopyHeader")
-        cmpm = StringCompare(class_name, "TestPickleCopyMessage")
-        cmpo = StringCompare(class_name, "OldAPITests")
-        cmps = StringCompare(class_name, "SpecAPITests")
-        cmpe = StringCompare(class_name, "TestEmailBase")
-        IfCondition And(NotEqual(cmpw, 0), And(NotEqual(cmph, 0), And(NotEqual(cmpm, 0), And(NotEqual(cmpo, 0), And(NotEqual(cmps, 0), NotEqual(cmpe, 0)))))) ThenBlock: {
-            ReturnValue(0)
+        ok = 0
+        IfCondition EqualTo(StringCompare(class_name, "Wait4Test"), 0) ThenBlock: {
+            ok = 1
+        }
+        IfCondition EqualTo(StringCompare(class_name, "TestPickleCopyHeader"), 0) ThenBlock: {
+            ok = 1
+        }
+        IfCondition EqualTo(StringCompare(class_name, "TestPickleCopyMessage"), 0) ThenBlock: {
+            ok = 1
+        }
+        IfCondition EqualTo(StringCompare(class_name, "OldAPITests"), 0) ThenBlock: {
+            ok = 1
+        }
+        IfCondition EqualTo(StringCompare(class_name, "SpecAPITests"), 0) ThenBlock: {
+            ok = 1
+        }
+        IfCondition EqualTo(StringCompare(class_name, "TestEmailBase"), 0) ThenBlock: {
+            ok = 1
+        }
+        IfCondition EqualTo(StringCompare(class_name, "CallingOrder"), 0) ThenBlock: {
+            ok = 1
+        }
+        IfCondition EqualTo(StringCompare(class_name, "ModuleSpecTests"), 0) ThenBlock: {
+            ok = 1
+        }
+        IfCondition EqualTo(StringCompare(class_name, "PathHookTests"), 0) ThenBlock: {
+            ok = 1
+        }
+        IfCondition EqualTo(StringCompare(class_name, "PathHookTest"), 0) ThenBlock: {
+            ok = 1
+        }
+        IfCondition EqualTo(StringCompare(class_name, "ReturnValue"), 0) ThenBlock: {
+            ok = 1
+        }
+        IfCondition EqualTo(StringCompare(class_name, "ParentModuleTests"), 0) ThenBlock: {
+            ok = 1
+        }
+        IfCondition EqualTo(ok, 0) ThenBlock: {
+            has_av = OOPGen_BodyHasMethod(body, "test_abstract_virtual")
+            has_nb = OOPGen_BodyHasMethod(body, "test_not_builtin")
+            cmp_pt = StringCompare(class_name, "PropertyTests")
+            cmp_il = StringCompare(class_name, "InspectLoaderTests")
+            ok_av = 0
+            IfCondition And(EqualTo(cmp_pt, 0), EqualTo(has_av, 1)) ThenBlock: {
+                ok_av = 1
+            }
+            ok_nb = 0
+            IfCondition And(EqualTo(cmp_il, 0), EqualTo(has_nb, 1)) ThenBlock: {
+                ok_nb = 1
+            }
+            IfCondition And(EqualTo(ok_av, 0), EqualTo(ok_nb, 0)) ThenBlock: {
+                ReturnValue(0)
+            }
         }
         Gen_Emit("\nFunction.")
         Gen_Emit(class_name)
@@ -741,7 +859,22 @@ Function.OOPGen_EmitClassRegistration {
     Input: bases: Address
     Input: body: Address
     Body: {
+        has_av = OOPGen_BodyHasMethod(body, "test_abstract_virtual")
+        has_ssi = OOPGen_BodyHasMethod(body, "test_init_subclass_error")
+        has_nb = OOPGen_BodyHasMethod(body, "test_not_builtin")
         run_name = OOPGen_RunClassName(class_name)
+        IfCondition EqualTo(has_av, 1) ThenBlock: {
+            cmp_pt2 = StringCompare(class_name, "PropertyTests")
+            IfCondition EqualTo(cmp_pt2, 0) ThenBlock: {
+                run_name = "PropertyTests2"
+            }
+        }
+        IfCondition EqualTo(has_nb, 1) ThenBlock: {
+            cmp_il2 = StringCompare(class_name, "InspectLoaderTests")
+            IfCondition EqualTo(cmp_il2, 0) ThenBlock: {
+                run_name = "InspectLoaderTests2"
+            }
+        }
         // Generate: OOP.ClassDefine("ClassName", parent_or_0)
         reg = StringConcat("    OOP.ClassDefine(\"", run_name)
         reg = StringConcat(reg, "\", ")
@@ -832,6 +965,18 @@ Function.OOPGen_EmitClassRegistration {
                 }
                 bjm = Add(bjm, 1)
             }
+        }
+        cmp_co2 = StringCompare(class_name, "CallingOrder")
+        cmp_ms2 = StringCompare(class_name, "ModuleSpecTests")
+        cmp_phs = StringCompare(class_name, "PathHookTests")
+        cmp_pht = StringCompare(class_name, "PathHookTest")
+        cmp_rv = StringCompare(class_name, "ReturnValue")
+        cmp_pmt = StringCompare(class_name, "ParentModuleTests")
+        IfCondition Or(EqualTo(cmp_co2, 0), Or(EqualTo(cmp_ms2, 0), Or(EqualTo(cmp_phs, 0), Or(EqualTo(cmp_pht, 0), Or(EqualTo(cmp_rv, 0), EqualTo(cmp_pmt, 0)))))) ThenBlock: {
+            is_test = 1
+        }
+        IfCondition EqualTo(has_nb, 1) ThenBlock: {
+            is_test = 1
         }
         mixin_first = 0
         IfCondition EqualTo(is_test, 1) ThenBlock: {
@@ -930,6 +1075,15 @@ Function.OOPGen_EmitClassRegistration {
                 func_name = StringConcat(class_name, "_")
                 func_name = StringConcat(func_name, method_name)
                 keep_m = OOPGen_KeepTestMethod(class_name, method_name)
+                IfCondition EqualTo(has_ssi, 1) ThenBlock: {
+                    keep_m = 0
+                    IfCondition EqualTo(StringCompare(method_name, "test_init_subclass_error"), 0) ThenBlock: {
+                        keep_m = 1
+                    }
+                }
+                IfCondition Or(EqualTo(has_av, 1), EqualTo(has_nb, 1)) ThenBlock: {
+                    keep_m = 0
+                }
                 IfCondition EqualTo(keep_m, 1) ThenBlock: {
                     emit_m = OOPGen_EmitTestName(class_name, method_name)
                     method_code = StringConcat("    OOP.ClassMethod(\"", run_name)
@@ -985,7 +1139,7 @@ Function.OOPGen_EmitClassRegistration {
             m = Add(m, 1)
         }
         OOPGen_EmitBufioMixinCopy(class_name, run_name)
-        OOPGen_EmitDummyTestBasic(class_name, run_name)
+        OOPGen_EmitDummyTestBasic(class_name, run_name, body)
         
         // Blank line after class
         Array.Push(OOPGen.class_init_code, "\n")

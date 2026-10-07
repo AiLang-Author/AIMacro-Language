@@ -262,12 +262,12 @@
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_asyncio/test_sendfile.py",
       "status": "fail",
       "stage": "run",
-      "rc": 0,
-      "err": "no tests ran",
-      "out": "",
+      "rc": 1,
+      "err": "",
+      "out": "Exception: \n",
       "tags": [],
       "key": "test_asyncio/test_sendfile.py",
-      "updated": "2026-10-04"
+      "updated": "2026-10-07"
     },
     "test_asyncio/test_server.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_asyncio/test_server.py",
@@ -1375,14 +1375,11 @@
     },
     "test_dynamicclassattribute.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_dynamicclassattribute.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": 0,
-      "err": "no tests ran",
-      "out": "unittest: ran 0 tests, 0 failed\n",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_dynamicclassattribute.py",
-      "updated": "2026-10-06"
+      "updated": "2026-10-07"
     },
     "test_eintr.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_eintr.py",
@@ -2240,14 +2237,11 @@
     },
     "test_importlib/builtin/test_loader.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_importlib/builtin/test_loader.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": 0,
-      "err": "no tests ran",
-      "out": "ERROR: Method not found: import_importlib\nERROR: Method not found: test_both\nERROR: Method not found: test_both\nunittest: ran 0 tests, 0 failed\n",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_importlib/builtin/test_loader.py",
-      "updated": "2026-10-04"
+      "updated": "2026-10-07"
     },
     "test_importlib/extension/test_case_sensitivity.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_importlib/extension/test_case_sensitivity.py",
@@ -2280,14 +2274,11 @@
     },
     "test_importlib/extension/test_path_hook.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_importlib/extension/test_path_hook.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": 0,
-      "err": "no tests ran",
-      "out": "ERROR: Method not found: import_importlib\nERROR: Method not found: test_both\n",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_importlib/extension/test_path_hook.py",
-      "updated": "2026-10-04"
+      "updated": "2026-10-07"
     },
     "test_importlib/frozen/test_finder.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_importlib/frozen/test_finder.py",
@@ -2303,7 +2294,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_importlib/frozen/test_loader.py",
-      "updated": "2026-10-02"
+      "updated": "2026-10-07"
     },
     "test_importlib/import_/test___loader__.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_importlib/import_/test___loader__.py",
@@ -2342,36 +2333,27 @@
     },
     "test_importlib/import_/test_fromlist.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_importlib/import_/test_fromlist.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": 0,
-      "err": "no tests ran",
-      "out": "ERROR: Method not found: test_both\nERROR: Method not found: test_both\n",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_importlib/import_/test_fromlist.py",
-      "updated": "2026-10-04"
+      "updated": "2026-10-07"
     },
     "test_importlib/import_/test_meta_path.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_importlib/import_/test_meta_path.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": 0,
-      "err": "no tests ran",
-      "out": "ERROR: Method not found: test_both\nERROR: Method not found: test_both\nERROR: Method not found: test_both\n",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_importlib/import_/test_meta_path.py",
-      "updated": "2026-10-04"
+      "updated": "2026-10-07"
     },
     "test_importlib/import_/test_packages.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_importlib/import_/test_packages.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": 0,
-      "err": "no tests ran",
-      "out": "ERROR: Method not found: test_both\n",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_importlib/import_/test_packages.py",
-      "updated": "2026-10-04"
+      "updated": "2026-10-07"
     },
     "test_importlib/import_/test_path.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_importlib/import_/test_path.py",
@@ -2421,14 +2403,11 @@
     },
     "test_importlib/source/test_path_hook.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_importlib/source/test_path_hook.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": 0,
-      "err": "no tests ran",
-      "out": "ERROR: Method not found: import_importlib\nERROR: Method not found: test_both\n",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_importlib/source/test_path_hook.py",
-      "updated": "2026-10-04"
+      "updated": "2026-10-07"
     },
     "test_importlib/source/test_source_encoding.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_importlib/source/test_source_encoding.py",
@@ -2582,14 +2561,11 @@
     },
     "test_importlib/test_spec.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_importlib/test_spec.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": 0,
-      "err": "no tests ran",
-      "out": "ERROR: Method not found: import_importlib\nERROR: Method not found: import_importlib\nERROR: Method not found: import_importlib\nERROR: Method not found: test_both\nERROR: Method not found: test_both\nERROR: Method not found: test_both\nERROR: Method not found: test_both\n",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_importlib/test_spec.py",
-      "updated": "2026-10-04"
+      "updated": "2026-10-07"
     },
     "test_importlib/test_threaded_import.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_importlib/test_threaded_import.py",
@@ -3593,7 +3569,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_property.py",
-      "updated": "2026-10-02"
+      "updated": "2026-10-07"
     },
     "test_pstats.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_pstats.py",
@@ -4256,14 +4232,11 @@
     },
     "test_subclassinit.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_subclassinit.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": 1,
-      "err": "",
-      "out": "  Test.test_init_subclass\nFAIL: assertTrue\n  Test.test_init_subclass_dict\nFAIL: assertTrue\n  Test.test_init_subclass_kwargs\nFAIL: assertEqual\n  Test.test_init_subclass_error\n  Test.test_init_subclass_wrong\n  Test.test_init_subclass_skipped\nFAIL: assertIs\n  Test.test_init_subclass_diamond\nFAIL: assertEqual\n  Test.test_set_name\nFAIL: assertEqual\n  Test.test_set_name_metaclass\nFAIL: assertEqual\n  Test.test_set_name_error\n  Test.test_set_name_wrong\n  Test.test_set_name_lookup\n  Test.test_set_name_init_subclass\nFAIL: assertIs\n  Test.test_set_name_modifying_dict\nFAIL: assertEqual\n  Test.test_errors_changed_pep487\nFAIL: assertEqual\nunittest: ran 15 tests, 10 failed\n",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_subclassinit.py",
-      "updated": "2026-10-05"
+      "updated": "2026-10-07"
     },
     "test_subprocess.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_subprocess.py",
@@ -5049,7 +5022,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_wait4.py",
-      "updated": "2026-10-06"
+      "updated": "2026-10-07"
     },
     "test_warnings/__init__.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_warnings/__init__.py",
