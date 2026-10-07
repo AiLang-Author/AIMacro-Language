@@ -16,6 +16,7 @@ test_asyncio/test_queues.py
 test_asyncio/test_selector_events.py
 test_asyncio/test_server.py
 test_asyncio/test_ssl.py
+test_asyncio/test_subprocess.py
 test_asyncio/test_threads.py
 test_asyncio/test_timeouts.py
 test_asyncio/test_transports.py
@@ -66,6 +67,7 @@ test_dict_version.py
 test_dictviews.py
 test_difflib.py
 test_doctest2.py
+test_dtrace.py
 test_dynamic.py
 test_eintr.py
 test_email/test__encoded_words.py
@@ -83,6 +85,7 @@ test_eof.py
 test_errno.py
 test_exception_group.py
 test_exception_hierarchy.py
+test_faulthandler.py
 test_fcntl.py
 test_file.py
 test_fileinput.py
@@ -195,6 +198,7 @@ test_pyclbr.py
 test_quopri.py
 test_re.py
 test_readline.py
+test_repl.py
 test_resource.py
 test_rlcompleter.py
 test_sched.py

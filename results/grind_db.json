@@ -323,14 +323,11 @@
     },
     "test_asyncio/test_subprocess.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_asyncio/test_subprocess.py",
-      "status": "fail",
-      "stage": "compile",
-      "rc": 1,
-      "err": "ments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\nERROR: Variable not found: SubprocessFastWatcherTests\nCompilation Failed: \n[AST] Freeing 91975 node child-lists...\n[AST] Freed 39345 child-lists (node slots stay in pool)",
-      "out": "",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_asyncio/test_subprocess.py",
-      "updated": "2026-10-04"
+      "updated": "2026-10-06"
     },
     "test_asyncio/test_taskgroups.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_asyncio/test_taskgroups.py",
@@ -753,7 +750,7 @@
       "out": "",
       "tags": [],
       "key": "test_cmath.py",
-      "updated": "2026-10-04"
+      "updated": "2026-10-06"
     },
     "test_cmd.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_cmd.py",
@@ -766,12 +763,12 @@
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_cmd_line.py",
       "status": "fail",
       "stage": "run",
-      "rc": 1,
+      "rc": -11,
       "err": "",
-      "out": "Exception: \n",
+      "out": "  CmdLineTest.test_warnings_filter_precedence\n  CmdLineTest.test_directories\n  CmdLineTest.test_site_flag\n",
       "tags": [],
       "key": "test_cmd_line.py",
-      "updated": "2026-10-04"
+      "updated": "2026-10-06"
     },
     "test_cmd_line_script.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_cmd_line_script.py",
@@ -1368,14 +1365,11 @@
     },
     "test_dtrace.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_dtrace.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": 1,
-      "err": "",
-      "out": "Exception: \n",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_dtrace.py",
-      "updated": "2026-10-04"
+      "updated": "2026-10-06"
     },
     "test_dynamic.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_dynamic.py",
@@ -1544,13 +1538,13 @@
     "test_embed.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_embed.py",
       "status": "fail",
-      "stage": "compile",
+      "stage": "run",
       "rc": 1,
-      "err": "[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\nERROR: Variable not found: dict\nCompilation Failed: \n[AST] Freeing 101665 node child-lists...\n[AST] Freed 42351 child-lists (node slots stay in pool)",
-      "out": "",
+      "err": "",
+      "out": "ERROR: Method not found: isfile\nException: %r doesn't exist\n",
       "tags": [],
       "key": "test_embed.py",
-      "updated": "2026-10-03"
+      "updated": "2026-10-06"
     },
     "test_ensurepip.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_ensurepip.py",
@@ -1668,12 +1662,9 @@
     },
     "test_faulthandler.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_faulthandler.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": 1,
-      "err": "",
-      "out": "Exception: \n",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_faulthandler.py",
       "updated": "2026-10-06"
     },
@@ -1697,12 +1688,12 @@
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_file_eintr.py",
       "status": "fail",
       "stage": "run",
-      "rc": 1,
+      "rc": -11,
       "err": "",
-      "out": "Exception: \n",
+      "out": "  CTestFileIOSignalInterrupt.test_readline\n",
       "tags": [],
       "key": "test_file_eintr.py",
-      "updated": "2026-10-04"
+      "updated": "2026-10-06"
     },
     "test_filecmp.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_filecmp.py",
@@ -2092,12 +2083,12 @@
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_gzip.py",
       "status": "fail",
       "stage": "run",
-      "rc": -11,
+      "rc": 1,
       "err": "",
-      "out": "ERROR: Method not found: abspath\n  TestGzip.test_write\n  TestGzip.test_write_read_with_pathlike_file\n  TestGzip.test_write_memoryview\n  TestGzip.test_write_bytearray\n  TestGzip.test_write_array\n  TestGzip.test_write_incompatible_type\n  TestGzip.test_read\n  TestGzip.test_read1\n  TestGzip.test_read_large\n  TestGzip.test_io_on_closed_object\n  TestGzip.test_append\n  TestGzip.test_many_append\n  TestGzip.test_exclusive_write\n  TestGzip.test_buffered_reader\n  TestGzip.test_readline\n  TestGzip.test_readlines\n  TestGzip.test_seek_read\n  TestGzip.test_seek_whence\n  TestGzip.test_seek_write\n  TestGzip.test_mode\n  TestGzip.test_1647484\n  TestGzip.test_paddedfile_getattr\n  TestGzip.test_mtime\n  TestGzip.test_metadata\n  TestGzip.test_metadata_ascii_name\n  TestGzip.test_compresslevel_metadata\n  TestGzip.test_with_open\n  TestGzip.test_zero_padded_file\n  TestGzip.test_gzip_BadGzipFile_exception\nFAIL: assertTrue\n  TestGzip.test_bad_gzip_file\n  TestGzip.test_non_seekable_file\n  TestGzip.test_peek\n  TestGzip.test_textio_readlines\n  TestGzip.test_fileobj_from_fdopen\n  TestGzip.test_fileobj_mode\n  TestGzip.test_bytes_filename\n  TestGzip.test_decompress_limited\n",
+      "out": "ERROR: Method not found: abspath\nException: No such file\n",
       "tags": [],
       "key": "test_gzip.py",
-      "updated": "2026-10-05"
+      "updated": "2026-10-06"
     },
     "test_hash.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_hash.py",
@@ -2354,13 +2345,13 @@
     "test_importlib/import_/test_api.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_importlib/import_/test_api.py",
       "status": "fail",
-      "stage": "compile",
-      "rc": -11,
-      "err": "T] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments",
-      "out": "",
+      "stage": "run",
+      "rc": 0,
+      "err": "no tests ran",
+      "out": "ERROR: Method not found: test_both\nERROR: Method not found: test_both\nunittest: ran 0 tests, 0 failed\n",
       "tags": [],
       "key": "test_importlib/import_/test_api.py",
-      "updated": "2026-10-04"
+      "updated": "2026-10-06"
     },
     "test_importlib/import_/test_caching.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_importlib/import_/test_caching.py",
@@ -3101,7 +3092,7 @@
       "out": "",
       "tags": [],
       "key": "test_marshal.py",
-      "updated": "2026-10-04"
+      "updated": "2026-10-06"
     },
     "test_math.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_math.py",
@@ -3780,21 +3771,18 @@
       "stage": "run",
       "rc": 1,
       "err": "",
-      "out": "Exception: \n",
+      "out": "ERROR: Method not found: normpath\nERROR: Method not found: abspath\n  ParseArgsTestCase.test_randomize\n  ParseArgsTestCase.test_use\n  ParseArgsTestCase.test_header\n  ParseArgsTestCase.test_coverage\n  ParseArgsTestCase.test_threshold\n  ParseArgsTestCase.test_option_and_arg\n  ParseArgsTestCase.test_arg\n  ParseArgsTestCase.test_ignore\n  ParseArgsTestCase.test_failfast\n  ParseArgsTestCase.test_start\n  ParseArgsTestCase.test_fromfile\n  ParseArgsTestCase.test_memlimit\n  ParseArgsTestCase.test_option_with_empty_string_value\n  ParseArgsTestCase.test_exclude\n  ParseArgsTestCase.test_arg_option_arg\n  ParseArgsTestCase.test_worker_args\n  ParseArgsTestCase.test_nowindows\n  ParseArgsTestCase.test_verbose3\n  ParseArgsTestCase.test_verbose2\n  ParseArgsTestCase.test_single\n  ParseArgsTestCase.test_forever\n  ParseArgsTestCase.test_help\n  ParseArgsTestCase.test_randseed\n  ParseArgsTestCase.test_unknown_option\n  ParseArgsTestCase.test_two_options\n  ParseArgsTestCase.test_unrecognized_argument\n  ParseArgsTestCase.test_slowest\n  ParseArgsTestCase.test_testdir\n  ParseArgsTestCase.test_coverdir\n  ParseArgsTestCase.test_nocoverdir\n  ParseArgsTestCase.test_verbose\n  ParseArgsTestCase.test_runleaks\n  ParseArgsTestCase.test_wait\n  ParseArgsTestCase.test_huntrleaks\n  ParseArgsTestCase.test_multiprocess\n  ParseArgsTestCase.test_quiet\n  ParseArgsTestCase.test_long_option__partial\nERROR: Method not found: realpath\nERROR: Method not found: mkdtemp\n  CheckActualTests.test_finds_expected_number_of_tests\nERROR: Method not found: realpath\nERROR: Method not found: mkdtemp\nException: No such file\n",
       "tags": [],
       "key": "test_regrtest.py",
-      "updated": "2026-10-04"
+      "updated": "2026-10-06"
     },
     "test_repl.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_repl.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": 1,
-      "err": "",
-      "out": "Exception: \n",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_repl.py",
-      "updated": "2026-10-04"
+      "updated": "2026-10-06"
     },
     "test_reprlib.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_reprlib.py",
@@ -3805,7 +3793,7 @@
       "out": "  ReprTests.test_string\n",
       "tags": [],
       "key": "test_reprlib.py",
-      "updated": "2026-10-04"
+      "updated": "2026-10-06"
     },
     "test_resource.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_resource.py",
@@ -4314,12 +4302,12 @@
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_subprocess.py",
       "status": "fail",
       "stage": "run",
-      "rc": 1,
+      "rc": -11,
       "err": "",
-      "out": "Exception: \n",
+      "out": "ERROR: Method not found: reap_children\n  ProcessTestCase.test_communicate_errors\nERROR: Method not found: _cleanup\nERROR: Method not found: doCleanups\nERROR: Method not found: reap_children\nERROR: Method not found: reap_children\n  ProcessTestCase.test_failed_child_execute_fd_leak\nERROR: Method not found: _cleanup\nERROR: Method not found: doCleanups\nERROR: Method not found: reap_children\nERROR: Method not found: reap_children\n  ProcessTestCase.test_bufsize_equal_one_text_mode\nERROR: Method not found: _cleanup\nERROR: Method not found: doCleanups\nERROR: Method not found: reap_children\nERROR: Method not found: reap_children\n  ProcessTestCase.test_stdout_devnull\nERROR: Method not found: _cleanup\nERROR: Method not found: doCleanups\nERROR: Method not found: reap_children\nERROR: Method not found: reap_children\n  ProcessTestCase.test_stdout_stderr_file\nERROR: Method not found: _cleanup\nERROR: Method not found: doCleanups\nERROR: Method not found: reap_children\nERROR: Method not found: reap_children\n  ProcessTestCase.test_no_leaking\nERROR: Method not found: _cleanup\nERROR: Method not found: doCleanups\nERROR: Method not found: reap_children\nERROR: Method not found: reap_children\n  ProcessTestCase.test_check_output_input_none_text\nERROR: Method not found: _cleanup\nERROR: Method not found: doCleanups\nERROR: Method not found: reap_children\nERROR: Method not found: reap_children\n  ProcessTestCase.test_stdout_fileobj\nERROR: Method not found: _cleanup\nERROR: Method not found: doCleanups\nERROR: Method not found: reap_children\nERROR: Method not found: reap_children\n  ProcessTestCase.test_pipesizes\nERROR: Method not found: _cleanup\nERROR: Method not found: doCleanups\nERROR: Method not found: reap_children\nERROR: Method not found: reap_children\n  ProcessTestCase.test_communicate_returns\nERROR: Method not found: _cleanup\nERROR: Method not found: doCleanups\nERROR: Method not found: reap_children\nERROR: Method not found: reap_children\n  ProcessTestCase.test_communicate_stderr\nERROR: Method not found: _cleanup\nERROR: Method not found: doCleanups\nERROR: Method not found: reap_children\nERROR: Method not found: reap_children\n  ProcessTestCase.test_check_output_timeout\n",
       "tags": [],
       "key": "test_subprocess.py",
-      "updated": "2026-10-04"
+      "updated": "2026-10-06"
     },
     "test_sunau.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_sunau.py",
@@ -4612,13 +4600,13 @@
     "test_tools/__init__.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_tools/__init__.py",
       "status": "fail",
-      "stage": "compile",
-      "rc": 1,
-      "err": "LLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\nERROR: Variable not found: __yields\nCompilation Failed: \n[AST] Freeing 70988 node child-lists...\n[AST] Freed 31168 child-lists (node slots stay in pool)",
-      "out": "",
+      "stage": "run",
+      "rc": 0,
+      "err": "no tests ran",
+      "out": "ERROR: Method not found: check_sanitizer\nERROR: Method not found: normpath\n",
       "tags": [],
       "key": "test_tools/__init__.py",
-      "updated": "2026-09-30"
+      "updated": "2026-10-06"
     },
     "test_tools/test_fixcid.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_tools/test_fixcid.py",

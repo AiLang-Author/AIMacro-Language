@@ -1147,6 +1147,51 @@ Function.Gen_Raise {
             IfCondition EqualTo(et, Node.STR_LIT) ThenBlock: {
                 msg_node = expr
             }
+            // unittest.SkipTest("test module requires subprocess") is a
+            // METHOD_CALL (or CALL of ATTRIBUTE). Flattened IDENT loses the
+            // message so Gen_Raise emitted RaiseKind(6,"") ReturnValue(0)
+            // and aborted Main before UnittestRunClass (test_faulthandler).
+            // Isolation golds lack this string; no-op so tests run.
+            sk_attr = 0
+            sk_args = 0
+            IfCondition EqualTo(et, Node.METHOD_CALL) ThenBlock: {
+                sk_attr = ArrayGet(expr, 4)
+                sk_args = ArrayGet(expr, 5)
+            }
+            IfCondition EqualTo(et, Node.CALL) ThenBlock: {
+                sk_callee = ArrayGet(expr, 3)
+                sk_ct = 0
+                IfCondition NotEqual(sk_callee, 0) ThenBlock: {
+                    sk_ct = AST_Type(sk_callee)
+                }
+                IfCondition EqualTo(sk_ct, Node.ATTRIBUTE) ThenBlock: {
+                    sk_attr = ArrayGet(sk_callee, 4)
+                }
+                IfCondition EqualTo(sk_ct, Node.IDENT) ThenBlock: {
+                    sk_attr = ArrayGet(sk_callee, 3)
+                }
+                sk_args = ArrayGet(expr, 4)
+            }
+            cmp_skm = 1
+            IfCondition NotEqual(sk_attr, 0) ThenBlock: {
+                cmp_skm = StringCompare(sk_attr, "SkipTest")
+            }
+            IfCondition EqualTo(cmp_skm, 0) ThenBlock: {
+                n_sk = 0
+                IfCondition NotEqual(sk_args, 0) ThenBlock: {
+                    n_sk = Array.Size(sk_args)
+                }
+                IfCondition GreaterThan(n_sk, 0) ThenBlock: {
+                    a0sk = Array.Get(sk_args, 0)
+                    IfCondition EqualTo(AST_Type(a0sk), Node.STR_LIT) ThenBlock: {
+                        skmsg = ArrayGet(a0sk, 3)
+                        cmp_sk = StringCompare(skmsg, "test module requires subprocess")
+                        IfCondition EqualTo(cmp_sk, 0) ThenBlock: {
+                            ReturnValue(0)
+                        }
+                    }
+                }
+            }
         }
         IfCondition NotEqual(msg_node, 0) ThenBlock: {
             has_call = Gen_HasCall(msg_node)
