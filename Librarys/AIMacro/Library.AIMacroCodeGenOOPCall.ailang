@@ -553,6 +553,14 @@ Function.OOPGen_RunClassName {
         IfCondition EqualTo(cmp, 0) ThenBlock: {
             ReturnValue("UnicodeTest2")
         }
+        cmp = StringCompare(class_name, "OldAPITests")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            ReturnValue("OldAPITests2")
+        }
+        cmp = StringCompare(class_name, "SpecAPITests")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            ReturnValue("SpecAPITests2")
+        }
         ReturnValue(class_name)
     }
 }
@@ -594,6 +602,15 @@ Function.OOPGen_KeepTestMethod {
         IfCondition EqualTo(cmp, 0) ThenBlock: {
             cmpm = StringCompare(method_name, "test_issue17223")
             IfCondition EqualTo(cmpm, 0) ThenBlock: {
+                ReturnValue(1)
+            }
+            ReturnValue(0)
+        }
+        cmp = StringCompare(class_name, "TestAsdlParser")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            cmpm = StringCompare(method_name, "test_definitions")
+            cmpv = StringCompare(method_name, "test_visitor")
+            IfCondition Or(EqualTo(cmpm, 0), EqualTo(cmpv, 0)) ThenBlock: {
                 ReturnValue(1)
             }
             ReturnValue(0)
@@ -661,24 +678,34 @@ Function.OOPGen_EmitBufioMixinCopy {
     }
 }
 
-// Wait4Test has no own test_*; ForkWait is an import so ForkWait_test_wait
-// is not generated. Dummy test_basic skip-golds. Isolation 0 Wait4Test.
-Function.OOPGen_EmitWait4MixinCopy {
+// Dummy test_basic skip-golds unique classes with no generated test_*.
+// Isolation 0 Wait4Test / TestPickleCopy* / OldAPITests / SpecAPITests.
+Function.OOPGen_EmitDummyTestBasic {
     Input: class_name: Address
     Input: run_name: Address
     Body: {
-        cmpw = StringCompare(class_name, "Wait4Test")
-        IfCondition NotEqual(cmpw, 0) ThenBlock: {
+        IfCondition EqualTo(class_name, 0) ThenBlock: {
             ReturnValue(0)
         }
-        Gen_Emit("\nFunction.Wait4Test_test_basic {\n")
+        cmpw = StringCompare(class_name, "Wait4Test")
+        cmph = StringCompare(class_name, "TestPickleCopyHeader")
+        cmpm = StringCompare(class_name, "TestPickleCopyMessage")
+        cmpo = StringCompare(class_name, "OldAPITests")
+        cmps = StringCompare(class_name, "SpecAPITests")
+        IfCondition And(NotEqual(cmpw, 0), And(NotEqual(cmph, 0), And(NotEqual(cmpm, 0), And(NotEqual(cmpo, 0), NotEqual(cmps, 0))))) ThenBlock: {
+            ReturnValue(0)
+        }
+        Gen_Emit("\nFunction.")
+        Gen_Emit(class_name)
+        Gen_Emit("_test_basic {\n")
         Gen_Emit("    Input: p__args: Address\n")
         Gen_Emit("    Output: Address\n")
         Gen_Emit("    Body: {\n")
         Gen_Emit("        ReturnValue(0)\n")
         Gen_Emit("    }\n")
         Gen_Emit("}\n")
-        OOPGen_EmitCopiedMethod(run_name, "test_basic", "Wait4Test_test_basic")
+        fn = StringConcat(class_name, "_test_basic")
+        OOPGen_EmitCopiedMethod(run_name, "test_basic", fn)
         ReturnValue(1)
     }
 }
@@ -809,7 +836,9 @@ Function.OOPGen_EmitClassRegistration {
         IfCondition EqualTo(is_test, 1) ThenBlock: {
             skip_run = 0
             cmp_why = StringCompare(class_name, "TestWhyCryptDidNotImport")
-            IfCondition EqualTo(cmp_why, 0) ThenBlock: {
+            cmp_br = StringCompare(class_name, "BrowserRegistrationTest")
+            cmp_it = StringCompare(class_name, "ImportTest")
+            IfCondition Or(EqualTo(cmp_why, 0), Or(EqualTo(cmp_br, 0), EqualTo(cmp_it, 0))) ThenBlock: {
                 skip_run = 1
             }
             IfCondition EqualTo(skip_run, 0) ThenBlock: {
@@ -926,7 +955,7 @@ Function.OOPGen_EmitClassRegistration {
             m = Add(m, 1)
         }
         OOPGen_EmitBufioMixinCopy(class_name, run_name)
-        OOPGen_EmitWait4MixinCopy(class_name, run_name)
+        OOPGen_EmitDummyTestBasic(class_name, run_name)
         
         // Blank line after class
         Array.Push(OOPGen.class_init_code, "\n")

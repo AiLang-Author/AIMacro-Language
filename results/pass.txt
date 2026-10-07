@@ -3,6 +3,7 @@ test__osx_support.py
 test_abstract_numbers.py
 test_aifc.py
 test_array.py
+test_asdl_parser.py
 test_asynchat.py
 test_asyncio/test_context.py
 test_asyncio/test_events.py
@@ -79,6 +80,7 @@ test_email/test_defect_handling.py
 test_email/test_generator.py
 test_email/test_headerregistry.py
 test_email/test_parser.py
+test_email/test_pickleable.py
 test_email/test_utils.py
 test_ensurepip.py
 test_enumerate.py
@@ -118,6 +120,7 @@ test_importlib/extension/test_case_sensitivity.py
 test_importlib/frozen/test_finder.py
 test_importlib/frozen/test_loader.py
 test_importlib/import_/test___package__.py
+test_importlib/import_/test_api.py
 test_importlib/import_/test_caching.py
 test_importlib/import_/test_path.py
 test_importlib/source/test_case_sensitivity.py
@@ -285,6 +288,7 @@ test_wait3.py
 test_wait4.py
 test_wave.py
 test_weakset.py
+test_webbrowser.py
 test_winsound.py
 test_xdrlib.py
 test_xml_dom_minicompat.py
