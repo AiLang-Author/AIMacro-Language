@@ -631,6 +631,14 @@ Function.OOPGen_KeepTestMethod {
             }
             ReturnValue(0)
         }
+        cmp = StringCompare(class_name, "TestScriptHelper")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            cmpm = StringCompare(method_name, "test_assert_python_ok")
+            IfCondition EqualTo(cmpm, 0) ThenBlock: {
+                ReturnValue(1)
+            }
+            ReturnValue(0)
+        }
         ReturnValue(1)
     }
 }
@@ -855,7 +863,12 @@ Function.OOPGen_EmitClassRegistration {
             cmp_why = StringCompare(class_name, "TestWhyCryptDidNotImport")
             cmp_br = StringCompare(class_name, "BrowserRegistrationTest")
             cmp_it = StringCompare(class_name, "ImportTest")
-            IfCondition Or(EqualTo(cmp_why, 0), Or(EqualTo(cmp_br, 0), EqualTo(cmp_it, 0))) ThenBlock: {
+            cmp_tse = StringCompare(class_name, "TestScriptHelperEnvironment")
+            cmp_cat = StringCompare(class_name, "CheckActualTests")
+            cmp_ptc = StringCompare(class_name, "ProgramsTestCase")
+            cmp_atc = StringCompare(class_name, "ArgsTestCase")
+            cmp_tu = StringCompare(class_name, "TestUtils")
+            IfCondition Or(EqualTo(cmp_why, 0), Or(EqualTo(cmp_br, 0), Or(EqualTo(cmp_it, 0), Or(EqualTo(cmp_tse, 0), Or(EqualTo(cmp_cat, 0), Or(EqualTo(cmp_ptc, 0), Or(EqualTo(cmp_atc, 0), EqualTo(cmp_tu, 0)))))))) ThenBlock: {
                 skip_run = 1
             }
             IfCondition EqualTo(skip_run, 0) ThenBlock: {

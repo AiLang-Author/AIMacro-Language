@@ -2165,10 +2165,10 @@
       "stage": "run",
       "rc": 1,
       "err": "",
-      "out": "reading_cleanup\nERROR: Method not found: threading_setup\nERROR: Method not found: Event\nERROR: Method not found: start\nERROR: Method not found: wait\nERROR: Method not found: getcwd\nERROR: Method not found: gettempdir\nERROR: Method not found: chdir\nERROR: Method not found: mkdtemp\nERROR: Method not found: flush\nERROR: Method not found: stat\nERROR: Method not found: fromtimestamp\nERROR: Method not found: replace\nERROR: Method not found: timestamp\nERROR: Method not found: formatdate\n  SimpleHTTPServerTestCase.test_browser_cache_with_If_None_Match_header\nERROR: Method not found: chdir\nERROR: Method not found: rmtree\nERROR: Method not found: stop\nERROR: Method not found: __exit__\nERROR: Method not found: threading_cleanup\nERROR: Method not found: threading_setup\nERROR: Method not found: Event\nERROR: Method not found: start\nERROR: Method not found: wait\nERROR: Method not found: getcwd\nERROR: Method not found: gettempdir\nERROR: Method not found: chdir\nERROR: Method not found: mkdtemp\nERROR: Method not found: flush\nERROR: Method not found: stat\nERROR: Method not found: fromtimestamp\nERROR: Method not found: replace\nERROR: Method not found: timestamp\nERROR: Method not found: formatdate\n  SimpleHTTPServerTestCase.test_invalid_requests\nERROR: Method not found: chdir\nERROR: Method not found: rmtree\nERROR: Method not found: stop\nERROR: Method not found: __exit__\nERROR: Method not found: threading_cleanup\nERROR: Method not found: threading_setup\nERROR: Method not found: Event\nERROR: Method not found: start\nERROR: Method not found: wait\nERROR: Method not found: getcwd\nERROR: Method not found: gettempdir\nERROR: Method not found: chdir\nERROR: Method not found: mkdtemp\nERROR: Method not found: flush\nERROR: Method not found: stat\nERROR: Method not found: fromtimestamp\nERROR: Method not found: replace\nERROR: Method not found: timestamp\nERROR: Method not found: formatdate\n  SimpleHTTPServerTestCase.test_last_modified\nERROR: Method not found: chdir\nERROR: Method not found: rmtree\nERROR: Method not found: stop\nERROR: Method not found: __exit__\nERROR: Method not found: threading_cleanup\nERROR: Method not found: threading_setup\nERROR: Method not found: Event\nERROR: Method not found: start\nERROR: Method not found: wait\nERROR: Method not found: getcwd\nERROR: Method not found: gettempdir\nERROR: Method not found: chdir\nERROR: Method not found: mkdtemp\nERROR: Method not found: flush\nERROR: Method not found: stat\nERROR: Method not found: fromtimestamp\nERROR: Method not found: replace\nERROR: Method not found: timestamp\nERROR: Method not found: formatdate\n  SimpleHTTPServerTestCase.test_path_without_leading_slash\nERROR: Method not found: chdir\nERROR: Method not found: rmtree\nERROR: Method not found: stop\nERROR: Method not found: __exit__\nERROR: Method not found: threading_cleanup\nERROR: Method not found: threading_setup\nERROR: Method not found: Event\nERROR: Method not found: start\nERROR: Method not found: wait\nERROR: Method not found: getcwd\nERROR: Method not found: gettempdir\nERROR: Method not found: chdir\nERROR: Method not found: mkdtemp\nERROR: Method not found: flush\nERROR: Method not found: stat\nERROR: Method not found: fromtimestamp\nERROR: Method not found: replace\nERROR: Method not found: timestamp\nERROR: Method not found: formatdate\n  SimpleHTTPServerTestCase.test_html_escape_filename\nERROR: Method not found: chdir\nERROR: Method not found: rmtree\nERROR: Method not found: stop\nERROR: Method not found: __exit__\nERROR: Method not found: threading_cleanup\nERROR: Method not found: setUp\nERROR: Method not found: getcwd\nERROR: Method not found: mkdtemp\nERROR: Method not found: can_symlink\nERROR: Method not found: chmod\nERROR: Method not found: chmod\nERROR: Method not found: chmod\nERROR: Method not found: chmod\nERROR: Method not found: chmod\nERROR: Method not found: chmod\nERROR: Method not found: chmod\nERROR: Method not found: chdir\n  CGIHTTPServerTestCase.test_url_collapse_path\nERROR: Method not found: chdir\nERROR: Method not found: tearDown\nException: rmdir\n",
+      "out": "ERROR: Method not found: encode\nERROR: Method not found: compile\nERROR: Method not found: requires_working_socket\nERROR: Method not found: encode\nERROR: Method not found: compile\n  MiscTestCase.test_all\nFAIL: assertEqual\nunittest: ran 1 tests, 1 failed\n",
       "tags": [],
       "key": "test_httpservers.py",
-      "updated": "2026-10-04"
+      "updated": "2026-10-07"
     },
     "test_idle.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_idle.py",
@@ -3740,14 +3740,11 @@
     },
     "test_regrtest.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_regrtest.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": 1,
-      "err": "",
-      "out": "ERROR: Method not found: normpath\nERROR: Method not found: abspath\n  ParseArgsTestCase.test_randomize\n  ParseArgsTestCase.test_use\n  ParseArgsTestCase.test_header\n  ParseArgsTestCase.test_coverage\n  ParseArgsTestCase.test_threshold\n  ParseArgsTestCase.test_option_and_arg\n  ParseArgsTestCase.test_arg\n  ParseArgsTestCase.test_ignore\n  ParseArgsTestCase.test_failfast\n  ParseArgsTestCase.test_start\n  ParseArgsTestCase.test_fromfile\n  ParseArgsTestCase.test_memlimit\n  ParseArgsTestCase.test_option_with_empty_string_value\n  ParseArgsTestCase.test_exclude\n  ParseArgsTestCase.test_arg_option_arg\n  ParseArgsTestCase.test_worker_args\n  ParseArgsTestCase.test_nowindows\n  ParseArgsTestCase.test_verbose3\n  ParseArgsTestCase.test_verbose2\n  ParseArgsTestCase.test_single\n  ParseArgsTestCase.test_forever\n  ParseArgsTestCase.test_help\n  ParseArgsTestCase.test_randseed\n  ParseArgsTestCase.test_unknown_option\n  ParseArgsTestCase.test_two_options\n  ParseArgsTestCase.test_unrecognized_argument\n  ParseArgsTestCase.test_slowest\n  ParseArgsTestCase.test_testdir\n  ParseArgsTestCase.test_coverdir\n  ParseArgsTestCase.test_nocoverdir\n  ParseArgsTestCase.test_verbose\n  ParseArgsTestCase.test_runleaks\n  ParseArgsTestCase.test_wait\n  ParseArgsTestCase.test_huntrleaks\n  ParseArgsTestCase.test_multiprocess\n  ParseArgsTestCase.test_quiet\n  ParseArgsTestCase.test_long_option__partial\nERROR: Method not found: realpath\nERROR: Method not found: mkdtemp\n  CheckActualTests.test_finds_expected_number_of_tests\nERROR: Method not found: realpath\nERROR: Method not found: mkdtemp\nException: No such file\n",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_regrtest.py",
-      "updated": "2026-10-06"
+      "updated": "2026-10-07"
     },
     "test_repl.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_repl.py",
@@ -3847,14 +3844,11 @@
     },
     "test_script_helper.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_script_helper.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": 1,
-      "err": "",
-      "out": "  TestScriptHelper.test_assert_python_ok\n  TestScriptHelper.test_assert_python_failure\n  TestScriptHelper.test_assert_python_ok_raises\nFAIL: assertIn\n  TestScriptHelper.test_assert_python_failure_raises\nFAIL: assertIn\n  TestScriptHelper.test_assert_python_isolated_when_env_not_required\n  TestScriptHelper.test_assert_python_not_isolated_when_env_is_required\nFAIL: assertTrue\nException: assertTrue\n",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_script_helper.py",
-      "updated": "2026-10-04"
+      "updated": "2026-10-07"
     },
     "test_secrets.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_secrets.py",

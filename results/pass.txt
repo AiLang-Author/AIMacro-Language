@@ -207,10 +207,12 @@ test_pyclbr.py
 test_quopri.py
 test_re.py
 test_readline.py
+test_regrtest.py
 test_repl.py
 test_resource.py
 test_rlcompleter.py
 test_sched.py
+test_script_helper.py
 test_secrets.py
 test_select.py
 test_selectors.py
