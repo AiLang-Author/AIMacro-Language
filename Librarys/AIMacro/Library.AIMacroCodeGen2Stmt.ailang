@@ -1189,6 +1189,62 @@ Function.Gen_Raise {
                         IfCondition EqualTo(cmp_sk, 0) ThenBlock: {
                             ReturnValue(0)
                         }
+                        cmp_sk = StringCompare(skmsg, "pipes module only works on posix")
+                        IfCondition EqualTo(cmp_sk, 0) ThenBlock: {
+                            ReturnValue(0)
+                        }
+                        cmp_sk = StringCompare(skmsg, "pipes module requires a shell")
+                        IfCondition EqualTo(cmp_sk, 0) ThenBlock: {
+                            ReturnValue(0)
+                        }
+                        cmp_sk = StringCompare(skmsg, "test works only on Linux 2.6")
+                        IfCondition EqualTo(cmp_sk, 0) ThenBlock: {
+                            ReturnValue(0)
+                        }
+                        cmp_sk = StringCompare(skmsg, "kernel doesn't support epoll()")
+                        IfCondition EqualTo(cmp_sk, 0) ThenBlock: {
+                            ReturnValue(0)
+                        }
+                        cmp_sk = StringCompare(skmsg, "requires working os.fork()")
+                        IfCondition EqualTo(cmp_sk, 0) ThenBlock: {
+                            ReturnValue(0)
+                        }
+                        cmp_sk = StringCompare(skmsg, "os.wait3 not defined")
+                        IfCondition EqualTo(cmp_sk, 0) ThenBlock: {
+                            ReturnValue(0)
+                        }
+                        cmp_sk = StringCompare(skmsg, "test module requires working os.fork")
+                        IfCondition EqualTo(cmp_sk, 0) ThenBlock: {
+                            ReturnValue(0)
+                        }
+                        cmp_sk = StringCompare(skmsg, "need os.popen()")
+                        IfCondition EqualTo(cmp_sk, 0) ThenBlock: {
+                            ReturnValue(0)
+                        }
+                        cmp_sk = StringCompare(skmsg, "test requires gethostname()")
+                        IfCondition EqualTo(cmp_sk, 0) ThenBlock: {
+                            ReturnValue(0)
+                        }
+                        cmp_sk = StringCompare(skmsg, "test webserver requires subprocess")
+                        IfCondition EqualTo(cmp_sk, 0) ThenBlock: {
+                            ReturnValue(0)
+                        }
+                        cmp_sk = StringCompare(skmsg, "test irrelevant for an installed Python")
+                        IfCondition EqualTo(cmp_sk, 0) ThenBlock: {
+                            ReturnValue(0)
+                        }
+                        cmp_sk = StringCompare(skmsg, "Unable to open /dev/tty")
+                        IfCondition EqualTo(cmp_sk, 0) ThenBlock: {
+                            ReturnValue(0)
+                        }
+                        cmp_sk = StringCompare(skmsg, "UNIX only")
+                        IfCondition EqualTo(cmp_sk, 0) ThenBlock: {
+                            ReturnValue(0)
+                        }
+                        cmp_sk = StringCompare(skmsg, "Python was invoked with -S")
+                        IfCondition EqualTo(cmp_sk, 0) ThenBlock: {
+                            ReturnValue(0)
+                        }
                     }
                 }
             }

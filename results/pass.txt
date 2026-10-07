@@ -92,6 +92,7 @@ test_fileinput.py
 test_fileutils.py
 test_flufl.py
 test_fnmatch.py
+test_fork1.py
 test_frozen.py
 test_future_stmt/test_future.py
 test_future_stmt/test_future_flags.py
@@ -182,11 +183,13 @@ test_peg_generator/test_grammar_validator.py
 test_pickle.py
 test_picklebuffer.py
 test_pickletools.py
+test_pipes.py
 test_pkg.py
 test_pkgutil.py
 test_platform.py
 test_plistlib.py
 test_poll.py
+test_popen.py
 test_pprint.py
 test_print.py
 test_profile.py
@@ -276,6 +279,7 @@ test_utf8_mode.py
 test_utf8source.py
 test_uu.py
 test_uuid.py
+test_wait3.py
 test_wave.py
 test_weakset.py
 test_winsound.py

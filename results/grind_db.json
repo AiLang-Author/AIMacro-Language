@@ -102,10 +102,10 @@
       "stage": "run",
       "rc": 1,
       "err": "",
-      "out": "ERROR: Method not found: is_python_build\nException: \n",
+      "out": "ERROR: Method not found: is_python_build\n  TestAsdlParser.test_constructor_fields\nFAIL: assertEqual\n  TestAsdlParser.test_product\nFAIL: assertEqual\n  TestAsdlParser.test_attributes\nFAIL: assertEqual\n  TestAsdlParser.test_definitions\n  TestAsdlParser.test_visitor\nunittest: ran 5 tests, 3 failed\n",
       "tags": [],
       "key": "test_asdl_parser.py",
-      "updated": "2026-10-04"
+      "updated": "2026-10-06"
     },
     "test_ast.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_ast.py",
@@ -384,7 +384,7 @@
       "out": "",
       "tags": [],
       "key": "test_asyncio/test_unix_events.py",
-      "updated": "2026-10-03"
+      "updated": "2026-10-06"
     },
     "test_asyncio/test_waitfor.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_asyncio/test_waitfor.py",
@@ -1585,12 +1585,12 @@
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_epoll.py",
       "status": "fail",
       "stage": "run",
-      "rc": 1,
+      "rc": -11,
       "err": "",
-      "out": "Exception: \n",
+      "out": "ERROR: Method not found: epoll\nERROR: Method not found: create_server\n  TestEPoll.test_control_and_wait\nERROR: Method not found: create_server\n  TestEPoll.test_badcreate\nERROR: Method not found: create_server\n  TestEPoll.test_fromfd\nERROR: Method not found: create_server\n  TestEPoll.test_add\nERROR: Method not found: create_server\n  TestEPoll.test_unregister_closed\n",
       "tags": [],
       "key": "test_epoll.py",
-      "updated": "2026-10-04"
+      "updated": "2026-10-06"
     },
     "test_errno.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_errno.py",
@@ -1772,14 +1772,11 @@
     },
     "test_fork1.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_fork1.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": 1,
-      "err": "",
-      "out": "Exception: \n",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_fork1.py",
-      "updated": "2026-10-04"
+      "updated": "2026-10-06"
     },
     "test_format.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_format.py",
@@ -2707,13 +2704,13 @@
     "test_ioctl.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_ioctl.py",
       "status": "fail",
-      "stage": "compile",
-      "rc": -11,
-      "err": "T] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments",
-      "out": "",
+      "stage": "run",
+      "rc": 1,
+      "err": "",
+      "out": "Exception: No such file\n",
       "tags": [],
       "key": "test_ioctl.py",
-      "updated": "2026-10-04"
+      "updated": "2026-10-06"
     },
     "test_ipaddress.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_ipaddress.py",
@@ -3068,12 +3065,12 @@
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_mailbox.py",
       "status": "fail",
       "stage": "run",
-      "rc": 1,
+      "rc": -11,
       "err": "",
-      "out": "ERROR: Method not found: encode\nException: \n",
+      "out": "ERROR: Method not found: encode\nERROR: Method not found: encode\n  TestMailboxSuperclass.test_notimplemented\nERROR: Method not found: setUp\n  TestMaildir.test_create_tmp\nERROR: Method not found: isdir\nERROR: Method not found: setUp\n  TestMaildir.test_get_file\nERROR: Method not found: isdir\nERROR: Method not found: setUp\n  TestMaildir.test_add_that_raises_leaves_mailbox_empty\nERROR: Method not found: isdir\nERROR: Method not found: setUp\n  TestMaildir.test_iteritems\nERROR: Method not found: isdir\nERROR: Method not found: setUp\n  TestMaildir.test_items\nERROR: Method not found: isdir\nERROR: Method not found: setUp\n  TestMaildir.test_get_string\nERROR: Method not found: isdir\nERROR: Method not found: setUp\n  TestMaildir.test_lock_unlock\nERROR: Method not found: isdir\nERROR: Method not found: setUp\n  TestMaildir.test_file_permissions\nERROR: Method not found: isdir\nERROR: Method not found: setUp\n  TestMaildir.test_keys\nERROR: Method not found: isdir\nERROR: Method not found: setUp\n  TestMaildir.test_popitem\nERROR: Method not found: isdir\nERROR: Method not found: setUp\n  TestMaildir.test_add_nonascii_StringIO_raises\nERROR: Method not found: isdir\nERROR: Method not found: setUp\n  TestMaildir.test_consistent_factory\nERROR: Method not found: isdir\nERROR: Method not found: setUp\n  TestMaildir.test_add_and_remove_folders\nERROR: Method not found: isdir\nERROR: Method not found: setUp\n  TestMaildir.test_folder_file_perms\nERROR: Method not found: isdir\nERROR: Method not found: setUp\n  TestMaildir.test_get_bytes\nERROR: Method not found: isdir\nERROR: Method not found: setUp\n  TestMaildir.test_add\nFAIL: assertEqual\nERROR: Method not found: isdir\nERROR: Method not found: setUp\n  TestMaildir.test_get\nERROR: Method not found: isdir\nERROR: Method not found: setUp\n  TestMaildir.test_list_folders\nERROR: Method not found: isdir\nERROR: Method not found: setUp\n  TestMaildir.test_delitem\nFAIL: assertEqual\nERROR: Method not found: isdir\nERROR: Method not found: setUp\n  TestMaildir.test_add_binary_file\nERROR: Method not found: isdir\nERROR: Method not found: setUp\n  TestMaildir.test_values\nERROR: Method not found: isdir\nERROR: Method not found: setUp\n  TestMaildir.test_clear\nERROR: Method not found: isdir\nERROR: Method not found: setUp\n  TestMaildir.test_set_MM\nERROR: Method not found: isdir\nERROR: Method not found: setUp\n  TestMaildir.test_get_message\nERROR: Method not found: isdir\nERROR: Method not found: setUp\n  TestMaildir.test_add_StringIO_warns\nERROR: Method not found: isdir\nERROR: Method not found: setUp\n  TestMaildir.test_discard\nFAIL: assertEqual\nERROR: Method not found: isdir\nERROR: Method not found: setUp\n  TestMaildir.test_get_folder\nERROR: Method not found: isdir\nERROR: Method not found: setUp\n  TestMaildir.test_iterkeys\nERROR: Method not found: isdir\nERROR: Method not found: setUp\n  TestMaildir.test_popitem_and_flush_twice\nERROR: Method not found: isdir\nERROR: Method not found: setUp\n  TestMaildir.test_iter\nERROR: Method not found: isdir\nERROR: Method not found: setUp\n  TestMaildir.test_len\nFAIL: assertEqual\nERROR: Method not found: isdir\nERROR: Method not found: setUp\n  TestMaildir.test_initialize_existing\nERROR: Method not found: isdir\nERROR: Method not found: setUp\n  TestMaildir.test_add_invalid_8bit_bytes_header\nERROR: Method not found: isdir\nERROR: Method not found: setUp\n  TestMaildir.test_clean\n",
       "tags": [],
       "key": "test_mailbox.py",
-      "updated": "2026-10-04"
+      "updated": "2026-10-06"
     },
     "test_mailcap.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_mailcap.py",
@@ -3475,14 +3472,11 @@
     },
     "test_pipes.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_pipes.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": 1,
-      "err": "",
-      "out": "Exception: \n",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_pipes.py",
-      "updated": "2026-10-04"
+      "updated": "2026-10-06"
     },
     "test_pkg.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_pkg.py",
@@ -3526,14 +3520,11 @@
     },
     "test_popen.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_popen.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": 1,
-      "err": "",
-      "out": "Exception: \n",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_popen.py",
-      "updated": "2026-10-04"
+      "updated": "2026-10-06"
     },
     "test_poplib.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_poplib.py",
@@ -3967,13 +3958,13 @@
     "test_site.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_site.py",
       "status": "fail",
-      "stage": "compile",
-      "rc": 1,
-      "err": "ALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\nERROR: Variable not found: license\nCompilation Failed: \n[AST] Freeing 90971 node child-lists...\n[AST] Freed 38968 child-lists (node slots stay in pool)",
-      "out": "",
+      "stage": "run",
+      "rc": -11,
+      "err": "",
+      "out": "  HelperFunctionsTests.test_addpackage_import_bad_pth_file\n  HelperFunctionsTests.test_getsitepackages\n",
       "tags": [],
       "key": "test_site.py",
-      "updated": "2026-10-03"
+      "updated": "2026-10-06"
     },
     "test_slice.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_slice.py",
@@ -3987,12 +3978,12 @@
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_smtpd.py",
       "status": "fail",
       "stage": "run",
-      "rc": 1,
+      "rc": -11,
       "err": "",
-      "out": "Exception: \n",
+      "out": "  SMTPDServerTest.test_process_message_unimplemented\nERROR: Method not found: close_all\n  SMTPDServerTest.test_decode_data_and_enable_SMTPUTF8_raises\nERROR: Method not found: close_all\n  DebuggingServerTest.test_process_SMTPUTF8_message_with_enable_SMTPUTF8_true\nERROR: Method not found: close_all\n  DebuggingServerTest.test_process_message_with_decode_data_false\nERROR: Method not found: close_all\n  DebuggingServerTest.test_process_message_with_decode_data_true\nERROR: Method not found: close_all\n  DebuggingServerTest.test_process_message_with_enable_SMTPUTF8_true\nERROR: Method not found: close_all\n  TestFamilyDetection.test_socket_uses_IPv4\nERROR: Method not found: close_all\n  TestFamilyDetection.test_socket_uses_IPv6\nERROR: Method not found: close_all\nERROR: Method not found: StringIO\n  TestRcptOptionParsing.test_nothing_accepted\nERROR: Method not found: close_all\nERROR: Method not found: StringIO\n  TestRcptOptionParsing.test_params_rejected\nERROR: Method not found: close_all\nERROR: Method not found: StringIO\n  TestMailOptionParsing.test_with_decode_data_false\nERROR: Method not found: close_all\nERROR: Method not found: StringIO\n  TestMailOptionParsing.test_with_enable_smtputf8_true\nERROR: Method not found: close_all\nERROR: Method not found: StringIO\n  TestMailOptionParsing.test_with_decode_data_true\nERROR: Method not found: close_all\nERROR: Method not found: StringIO\nERROR: Method not found: accept\nERROR: Method not found: SMTPChannel\n  SMTPDChannelTest.test_MAIL_quoted_localpart\nERROR: Method not found: close_all\nERROR: Method not found: StringIO\nERROR: Method not found: accept\nERROR: Method not found: SMTPChannel\n  SMTPDChannelTest.test_MAIL_command_limit_extended_with_SIZE\nERROR: Method not found: close_all\nERROR: Method not found: StringIO\nERROR: Method not found: accept\nERROR: Method not found: SMTPChannel\n  SMTPDChannelTest.test_RCPT_lowercase_to_OK\nERROR: Method not found: close_all\nERROR: Method not found: StringIO\nERROR: Method not found: accept\nERROR: Method not found: SMTPChannel\n  SMTPDChannelTest.test_MAIL_RCPT_unknown_parameters\nERROR: Method not found: close_all\nERROR: Method not found: StringIO\nERROR: Method not found: accept\nERROR: Method not found: SMTPChannel\n  SMTPDChannelTest.test_MAIL_chevrons\nERROR: Method not found: close_all\nERROR: Method not found: StringIO\nERROR: Method not found: accept\nERROR: Method not found: SMTPChannel\n  SMTPDChannelTest.test_NOOP_bad_syntax\nERROR: Method not found: close_all\nERROR: Method not found: StringIO\nERROR: Method not found: accept\nERROR: Method not found: SMTPChannel\n  SMTPDChannelTest.test_nested_MAIL\nERROR: Method not found: close_all\nERROR: Method not found: StringIO\nERROR: Method not found: accept\nERROR: Method not found: SMTPChannel\n  SMTPDChannelTest.test_HELP_command\nERROR: Method not found: close_all\nERROR: Method not found: StringIO\nERROR: Method not found: accept\nERROR: Method not found: SMTPChannel\n  SMTPDChannelTest.test_data_longer_than_default_data_size_limit\n",
       "tags": [],
       "key": "test_smtpd.py",
-      "updated": "2026-10-04"
+      "updated": "2026-10-06"
     },
     "test_smtplib.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_smtplib.py",
@@ -5073,14 +5064,11 @@
     },
     "test_wait3.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_wait3.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": 1,
-      "err": "",
-      "out": "Exception: \n",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_wait3.py",
-      "updated": "2026-10-04"
+      "updated": "2026-10-06"
     },
     "test_wait4.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_wait4.py",
@@ -5088,10 +5076,10 @@
       "stage": "run",
       "rc": 1,
       "err": "",
-      "out": "Exception: \n",
+      "out": "ERROR: Method not found: get_attribute\nunittest: ran 0 tests, 0 failed\nunittest: TestCase scheduled but 0 tests ran\n",
       "tags": [],
       "key": "test_wait4.py",
-      "updated": "2026-10-04"
+      "updated": "2026-10-06"
     },
     "test_warnings/__init__.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_warnings/__init__.py",
@@ -5137,10 +5125,10 @@
       "stage": "run",
       "rc": 1,
       "err": "",
-      "out": "Exception: \n",
+      "out": "  GenericBrowserCommandTest.test_open\n  BackgroundBrowserCommandTest.test_open\n  ChromeCommandTest.test_open_new_tab\n  ChromeCommandTest.test_open\n  ChromeCommandTest.test_open_with_autoraise_false\n  ChromeCommandTest.test_open_new\n  MozillaCommandTest.test_open_new_tab\n  MozillaCommandTest.test_open\n  MozillaCommandTest.test_open_with_autoraise_false\n  MozillaCommandTest.test_open_new\n  NetscapeCommandTest.test_open_new_tab\n  NetscapeCommandTest.test_open\n  NetscapeCommandTest.test_open_with_autoraise_false\n  NetscapeCommandTest.test_open_new\n  GaleonCommandTest.test_open_new_tab\n  GaleonCommandTest.test_open\n  GaleonCommandTest.test_open_with_autoraise_false\n  GaleonCommandTest.test_open_new\n  OperaCommandTest.test_open_new_tab\n  OperaCommandTest.test_open\n  OperaCommandTest.test_open_with_autoraise_false\n  OperaCommandTest.test_open_new\n  ELinksCommandTest.test_open_new_tab\n  ELinksCommandTest.test_open\n  ELinksCommandTest.test_open_with_autoraise_false\n  ELinksCommandTest.test_open_new\n  BrowserRegistrationTest.test_register_preferred\nFAIL: assertEqual\n  BrowserRegistrationTest.test_register_default\nFAIL: assertEqual\n  ImportTest.test_get\nFAIL: assertIsNone\n  ImportTest.test_environment\n  ImportTest.test_environment_preferred\n  ImportTest.test_synthesize\nunittest: ran 32 tests, 3 failed\n",
       "tags": [],
       "key": "test_webbrowser.py",
-      "updated": "2026-10-04"
+      "updated": "2026-10-06"
     },
     "test_winconsoleio.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_winconsoleio.py",
