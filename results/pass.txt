@@ -153,6 +153,7 @@ test_importlib/test_windows.py
 test_importlib/test_zip.py
 test_index.py
 test_int.py
+test_interpreters.py
 test_iterlen.py
 test_json/__init__.py
 test_json/test_decode.py

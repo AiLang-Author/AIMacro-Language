@@ -42,24 +42,24 @@
     "test__xxsubinterpreters.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test__xxsubinterpreters.py",
       "status": "fail",
-      "stage": "transpile",
-      "rc": 1,
-      "err": "transpile: \nParse Error: Unexpected token in expression\n token=23\nParse Error: expected token 85 got 3\nerror: compilation failed",
-      "out": "",
+      "stage": "run",
+      "rc": -11,
+      "err": "",
+      "out": "  IsShareableTests.test_default_shareables\n  IsShareableTests.test_not_shareable\nERROR: Method not found: channel_create\n  ShareableTypeTests.test_non_shareable_int\nERROR: Method not found: channel_destroy\nERROR: Method not found: channel_create\n  ShareableTypeTests.test_strs\nERROR: Method not found: channel_destroy\nERROR: Method not found: channel_create\n  ShareableTypeTests.test_singletons\nERROR: Method not found: channel_destroy\nERROR: Method not found: channel_create\n  ShareableTypeTests.test_int\nERROR: Method not found: channel_destroy\nERROR: Method not found: channel_create\n  ShareableTypeTests.test_types\nERROR: Method not found: channel_destroy\n  GetCurrentTests.test_main\nERROR: Method not found: channel_list_all\n  GetMainTests.test_from_subinterpreter\nERROR: Method not found: channel_list_all\n  GetMainTests.test_from_main\nERROR: Method not found: channel_list_all\n  IsRunningTests.test_from_subinterpreter\nERROR: Method not found: channel_list_all\n  IsRunningTests.test_already_destroyed\nERROR: Method not found: channel_list_all\n  IsRunningTests.test_bad_id\nERROR: Method not found: channel_list_all\n  IsRunningTests.test_does_not_exist\n",
       "tags": [],
       "key": "test__xxsubinterpreters.py",
-      "updated": "2026-10-03"
+      "updated": "2026-10-08"
     },
     "test_abc.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_abc.py",
       "status": "fail",
-      "stage": "transpile",
+      "stage": "run",
       "rc": -11,
-      "err": "transpile:",
-      "out": "",
+      "err": "",
+      "out": "  __nest_0_TestLegacyAPI.test_abstractproperty_basics\nFAIL: assertTrue\n  __nest_0_TestLegacyAPI.test_abstractstaticmethod_basics\nFAIL: assertTrue\n  __nest_0_TestLegacyAPI.test_abstractclassmethod_basics\nFAIL: assertTrue\n  __nest_1_TestABC.test_abstractproperty_basics\nFAIL: assertTrue\n  __nest_1_TestABC.test_registration_transitiveness\nFAIL: assertTrue\n  __nest_1_TestABC.test_update_new_abstractmethods\n  __nest_1_TestABC.test_registration_edge_cases\n  __nest_1_TestABC.test_update_multi_inheritance\nFAIL: assertEqual\n  __nest_1_TestABC.test_metaclass_abc\nFAIL: assertEqual\n  __nest_1_TestABC.test_abstractstaticmethod_basics\nFAIL: assertTrue\n  __nest_1_TestABC.test_register_non_class\n  __nest_1_TestABC.test_isinstance_invalidation\n  __nest_1_TestABC.test_abstractmethod_basics\nFAIL: assertTrue\n  __nest_1_TestABC.test_all_new_methods_are_called\nFAIL: assertEqual\n  __nest_1_TestABC.test_customdescriptors_with_abstractmethod\n  __nest_1_TestABC.test_update_as_decorator\nFAIL: assertEqual\n  __nest_1_TestABC.test_update_implementation\nFAIL: assertEqual\n  __nest_1_TestABC.test_ABC_helper\nFAIL: assertEqual\n  __nest_1_TestABC.test_registration_basics\nFAIL: assertIs\n  __nest_1_TestABC.test_issubclass_bad_arguments\n  __nest_1_TestABC.test_subclasshook\nFAIL: assertFalse\n  __nest_1_TestABC.test_update_del_implementation\n  __nest_1_TestABC.test_descriptors_with_abstractmethod\nFAIL: assertEqual\n  __nest_1_TestABC.test_abstractmethod_integration\nFAIL: assertEqual\n  __nest_1_TestABC.test_object_new_with_many_abstractmethods\n  __nest_1_TestABC.test_update_del\nFAIL: assertEqual\n  __nest_1_TestABC.test_abstractclassmethod_basics\nFAIL: assertTrue\n  __nest_1_TestABC.test_register_as_class_deco\nFAIL: assertTrue\n  __nest_1_TestABC.test_tricky_new_works\n  __nest_1_TestABC.test_ABC_has___slots__\nFAIL: assertTrue\n  __nest_1_TestABC.test_registration_builtins\n",
       "tags": [],
       "key": "test_abc.py",
-      "updated": "2026-10-03"
+      "updated": "2026-10-08"
     },
     "test_abstract_numbers.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_abstract_numbers.py",
@@ -80,13 +80,13 @@
     "test_argparse.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_argparse.py",
       "status": "fail",
-      "stage": "transpile",
+      "stage": "run",
       "rc": -11,
-      "err": "transpile:",
-      "out": "",
+      "err": "",
+      "out": "ERROR: Method not found: FileType\nERROR: Method not found: FileType\nERROR: Method not found: FileType\nERROR: Method not found: FileType\nERROR: Method not found: FileType\nERROR: Method not found: FileType\nERROR: Method not found: FileType\nERROR: Method not found: FileType\nERROR: Method not found: FileType\nERROR: Method not found: FileType\nERROR: Method not found: FileType\nERROR: Method not found: FileType\nERROR: Method not found: FileType\nERROR: Method not found: FileType\nERROR: Method not found: FileType\nERROR: Method not found: FileType\nERROR: Method not found: FileType\nERROR: Method not found: FileType\nERROR: Method not found: FileType\nERROR: Method not found: FileType\nERROR: Method not found: FileType\nERROR: Method not found: FileType\nERROR: Method not found: FileType\nERROR: Method not found: FileType\nERROR: Method not found: FileType\nERROR: Method not found: FileType\n  StdStreamTest.test_skip_invalid_stderr\n  StdStreamTest.test_skip_invalid_stdout\n  TestBooleanOptionalAction.test_const\n  TestFileTypeRepr.test_r_latin\n  TestFileTypeRepr.test_wb_1\n  TestFileTypeRepr.test_r_1_replace\n  TestFileTypeRepr.test_w_big5_ignore\n  TestFileTypeRepr.test_r\n  TestFileTypeOpenArgs.test_open_args\n  TestFileTypeMissingInitialization.test\nFAIL: assertEqual\n  TestTypeRegistration.test\n  TestActionRegistration.test\nERROR: Method not found: add_argument\nERROR: Method not found: add_argument\nERROR: Method not found: add_subparsers\n",
       "tags": [],
       "key": "test_argparse.py",
-      "updated": "2026-10-03"
+      "updated": "2026-10-08"
     },
     "test_array.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_array.py",
@@ -118,13 +118,13 @@
     "test_asyncgen.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_asyncgen.py",
       "status": "fail",
-      "stage": "transpile",
+      "stage": "run",
       "rc": 1,
-      "err": "transpile: \nParse Error: expected token 83 got 3\nParse Error: expected token 85 got 3\nParse Error: expected token 85 got 3\nParse Error: Expected '}' after class body\nerror: compilation failed",
-      "out": "",
+      "err": "",
+      "out": "  AsyncGenSyntaxTest.test_async_gen_syntax_02\n  AsyncGenSyntaxTest.test_async_gen_syntax_03\n  AsyncGenSyntaxTest.test_async_gen_syntax_01\n  AsyncGenSyntaxTest.test_async_gen_syntax_04\n  AsyncGenSyntaxTest.test_async_gen_syntax_05\n  AsyncGenTest.test_async_gen_iteration_02\n  AsyncGenTest.test_async_gen_api_01\nFAIL: assertEqual\n  AsyncGenTest.test_async_gen_exception_09\n[ARENA] FATAL: mmap failed!\n",
       "tags": [],
       "key": "test_asyncgen.py",
-      "updated": "2026-10-03"
+      "updated": "2026-10-08"
     },
     "test_asynchat.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_asynchat.py",
@@ -173,7 +173,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_asyncio/test_context.py",
-      "updated": "2026-10-07"
+      "updated": "2026-10-08"
     },
     "test_asyncio/test_events.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_asyncio/test_events.py",
@@ -221,7 +221,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_asyncio/test_proactor_events.py",
-      "updated": "2026-10-07"
+      "updated": "2026-10-08"
     },
     "test_asyncio/test_protocols.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_asyncio/test_protocols.py",
@@ -329,13 +329,13 @@
     "test_asyncio/test_taskgroups.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_asyncio/test_taskgroups.py",
       "status": "fail",
-      "stage": "transpile",
-      "rc": 1,
-      "err": "transpile: \nParse Error: expected token 84 got 52\nParse Error: Expected '{' to start block\nParse Error: expected token 85 got 52\nParse Error: expected token 85 got 52\nParse Error: Expected '}' after class body\nerror: compilation failed",
-      "out": "",
+      "stage": "run",
+      "rc": -11,
+      "err": "",
+      "out": "  TestTaskGroup.test_taskgroup_01\n  TestTaskGroup.test_taskgroup_12\n",
       "tags": [],
       "key": "test_asyncio/test_taskgroups.py",
-      "updated": "2026-10-03"
+      "updated": "2026-10-08"
     },
     "test_asyncio/test_tasks.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_asyncio/test_tasks.py",
@@ -375,13 +375,13 @@
     "test_asyncio/test_unix_events.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_asyncio/test_unix_events.py",
       "status": "fail",
-      "stage": "transpile",
+      "stage": "run",
       "rc": 1,
-      "err": "transpile: \nParse Error: expected token 84 got 89\nParse Error: Expected '{' to start block\nParse Error: expected token 85 got 89\nParse Error: Expected '}' after class body\nerror: compilation failed",
-      "out": "",
+      "err": "",
+      "out": "_sigchld_replace_handler\nERROR: Method not found: new_test_loop\nERROR: Method not found: SafeChildWatcher\nERROR: Method not found: attach_loop\n  SafeChildWatcherTests.test_sigchld_child_reaped_elsewhere\nERROR: Method not found: new_test_loop\nERROR: Method not found: SafeChildWatcher\nERROR: Method not found: attach_loop\n  SafeChildWatcherTests.test_sigchld_two_children\nERROR: Method not found: new_test_loop\nERROR: Method not found: SafeChildWatcher\nERROR: Method not found: attach_loop\n  SafeChildWatcherTests.test_sigchld\nERROR: Method not found: new_test_loop\nERROR: Method not found: SafeChildWatcher\nERROR: Method not found: attach_loop\n  SafeChildWatcherTests.test_remove_child_handler\nERROR: Method not found: new_test_loop\nERROR: Method not found: SafeChildWatcher\nERROR: Method not found: attach_loop\n  SafeChildWatcherTests.test_set_loop_race_condition\nERROR: Method not found: new_test_loop\nERROR: Method not found: SafeChildWatcher\nERROR: Method not found: attach_loop\n  SafeChildWatcherTests.test_sigchld_race_condition\nERROR: Method not found: new_test_loop\nERROR: Method not found: FastChildWatcher\nERROR: Method not found: attach_loop\n  FastChildWatcherTests.test_sigchld_unknown_status\nERROR: Method not found: new_test_loop\nERROR: Method not found: FastChildWatcher\nERROR: Method not found: attach_loop\n  FastChildWatcherTests.test_create_watcher\nERROR: Method not found: new_test_loop\nERROR: Method not found: FastChildWatcher\nERROR: Method not found: attach_loop\n  FastChildWatcherTests.test_sigchld_unknown_pid_during_registration\nERROR: Method not found: new_test_loop\nERROR: Method not found: FastChildWatcher\nERROR: Method not found: attach_loop\n  FastChildWatcherTests.test_sigchld_unhandled_exception\nERROR: Method not found: new_test_loop\nERROR: Method not found: FastChildWatcher\nERROR: Method not found: attach_loop\n  FastChildWatcherTests.test_sigchld_two_children_terminating_together\nERROR: Method not found: new_test_loop\nERROR: Method not found: FastChildWatcher\nERROR: Method not found: attach_loop\n  FastChildWatcherTests.test_sigchld_remove_handler\nERROR: Method not found: new_test_loop\nERROR: Method not found: FastChildWatcher\nERROR: Method not found: attach_loop\n  FastChildWatcherTests.test_set_loop\nERROR: Method not found: new_test_loop\nERROR: Method not found: FastChildWatcher\nERROR: Method not found: attach_loop\n  FastChildWatcherTests.test_sigchld_replace_handler\nERROR: Method not found: new_test_loop\nERROR: Method not found: FastChildWatcher\nERROR: Method not found: attach_loop\n  FastChildWatcherTests.test_sigchld_child_reaped_elsewhere\nERROR: Method not found: new_test_loop\nERROR: Method not found: FastChildWatcher\nERROR: Method not found: attach_loop\n  FastChildWatcherTests.test_sigchld_two_children\nERROR: Method not found: new_test_loop\nERROR: Method not found: FastChildWatcher\nERROR: Method not found: attach_loop\n  FastChildWatcherTests.test_sigchld\nERROR: Method not found: new_test_loop\nERROR: Method not found: FastChildWatcher\nERROR: Method not found: attach_loop\n  FastChildWatcherTests.test_remove_child_handler\nERROR: Method not found: new_test_loop\nERROR: Method not found: FastChildWatcher\nERROR: Method not found: attach_loop\n  FastChildWatcherTests.test_set_loop_race_condition\nERROR: Method not found: new_test_loop\nERROR: Method not found: FastChildWatcher\nERROR: Method not found: attach_loop\n  FastChildWatcherTests.test_sigchld_race_condition\n  PolicyTests.test_get_default_child_watcher\n  PolicyTests.test_get_child_watcher_after_set\n  PolicyTests.test_child_watcher_replace_mainloop_existing\n  PolicyTests.test_get_child_watcher_thread\nERROR: Method not found: new_event_loop\nERROR: Method not found: set_event_loop\n  TestFunctional.test_add_reader_invalid_argument\nERROR: Method not found: set_event_loop\nERROR: Method not found: new_event_loop\nERROR: Method not found: set_event_loop\n  TestFunctional.test_add_reader_or_writer_transport_fd\nERROR: Method not found: set_event_loop\nunittest: ran 115 tests, 4 failed\n",
       "tags": [],
       "key": "test_asyncio/test_unix_events.py",
-      "updated": "2026-10-06"
+      "updated": "2026-10-08"
     },
     "test_asyncio/test_waitfor.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_asyncio/test_waitfor.py",
@@ -533,7 +533,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_bisect.py",
-      "updated": "2026-10-07"
+      "updated": "2026-10-08"
     },
     "test_bool.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_bool.py",
@@ -541,18 +541,18 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_bool.py",
-      "updated": "2026-10-07"
+      "updated": "2026-10-08"
     },
     "test_buffer.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_buffer.py",
       "status": "fail",
-      "stage": "transpile",
+      "stage": "run",
       "rc": 1,
-      "err": "transpile: \nParse Error: expected token 84 got 89\nParse Error: Expected '{' to start block\nParse Error: expected token 85 got 89\nerror: compilation failed",
-      "out": "",
+      "err": "",
+      "out": "Exception: argument is not iterable\n",
       "tags": [],
       "key": "test_buffer.py",
-      "updated": "2026-10-03"
+      "updated": "2026-10-08"
     },
     "test_bufio.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_bufio.py",
@@ -565,13 +565,13 @@
     "test_builtin.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_builtin.py",
       "status": "fail",
-      "stage": "transpile",
+      "stage": "compile",
       "rc": 1,
-      "err": "transpile: \nParse Error: expected token 3 got 52\nParse Error: expected token 17 got 52\nParse Error: Unexpected token in expression\n token=52\nParse Error: expected token 84 got 3\nParse Error: Expected '{' to start block\nParse Error: expected token 85 got 3\nParse Error: Expected '}' after class body\nerror: compilation failed",
+      "err": "\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\nERROR: Variable not found: map\nCompilation Failed: \n[AST] Freeing 149754 node child-lists...\n[AST] Freed 61186 child-lists (node slots stay in pool)",
       "out": "",
       "tags": [],
       "key": "test_builtin.py",
-      "updated": "2026-10-03"
+      "updated": "2026-10-08"
     },
     "test_bytes.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_bytes.py",
@@ -590,7 +590,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_bz2.py",
-      "updated": "2026-10-07"
+      "updated": "2026-10-08"
     },
     "test_c_locale_coercion.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_c_locale_coercion.py",
@@ -671,7 +671,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_capi/test_structmembers.py",
-      "updated": "2026-10-07"
+      "updated": "2026-10-08"
     },
     "test_capi/test_unicode.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_capi/test_unicode.py",
@@ -690,7 +690,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_cgi.py",
-      "updated": "2026-10-07"
+      "updated": "2026-10-08"
     },
     "test_cgitb.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_cgitb.py",
@@ -719,13 +719,13 @@
     "test_class.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_class.py",
       "status": "fail",
-      "stage": "transpile",
-      "rc": 1,
-      "err": "transpile: \nParse Error: expected token 83 got 86\nParse Error: Unexpected token in expression\n token=87\nParse Error: expected token 60 got 1\nParse Error: expected token 85 got 83\nParse Error: Expected '}' after class body\nerror: compilation failed",
-      "out": "",
+      "stage": "run",
+      "rc": -11,
+      "err": "",
+      "out": "  ClassTests.testMisc\n",
       "tags": [],
       "key": "test_class.py",
-      "updated": "2026-10-03"
+      "updated": "2026-10-08"
     },
     "test_clinic.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_clinic.py",
@@ -778,13 +778,13 @@
     "test_code.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_code.py",
       "status": "fail",
-      "stage": "transpile",
+      "stage": "run",
       "rc": -11,
-      "err": "transpile:",
-      "out": "",
+      "err": "",
+      "out": "  CodeTest.test_endline_and_columntable_none_when_no_debug_ranges_env\n  CodeTest.test_qualname\n  CodeTest.test_newempty\n  CodeTest.test_nlocals_mismatch\n",
       "tags": [],
       "key": "test_code.py",
-      "updated": "2026-10-03"
+      "updated": "2026-10-08"
     },
     "test_code_module.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_code_module.py",
@@ -969,13 +969,13 @@
     "test_compile.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_compile.py",
       "status": "fail",
-      "stage": "transpile",
+      "stage": "compile",
       "rc": 1,
-      "err": "transpile: \nParse Error: expected token 83 got 86\nParse Error: expected token 60 got 87\nParse Error: Unexpected token in expression\n token=87\nParse Error: expected token 85 got 1\nParse Error: Expected '}' after class body\nerror: compilation failed",
+      "err": "ts\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\nERROR: Variable not found: y\nCompilation Failed: \n[AST] Freeing 130675 node child-lists...\n[AST] Freed 55721 child-lists (node slots stay in pool)",
       "out": "",
       "tags": [],
       "key": "test_compile.py",
-      "updated": "2026-10-03"
+      "updated": "2026-10-08"
     },
     "test_compileall.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_compileall.py",
@@ -994,7 +994,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_complex.py",
-      "updated": "2026-10-07"
+      "updated": "2026-10-08"
     },
     "test_configparser.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_configparser.py",
@@ -1021,29 +1021,29 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_context.py",
-      "updated": "2026-10-07"
+      "updated": "2026-10-08"
     },
     "test_contextlib.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_contextlib.py",
       "status": "fail",
-      "stage": "transpile",
+      "stage": "run",
       "rc": 1,
-      "err": "transpile: \nParse Error: Unexpected token in expression\n token=62\nParse Error: expected token 85 got 1\nParse Error: expected token 85 got 1\nParse Error: Expected '}' after class body\nerror: compilation failed",
-      "out": "",
+      "err": "",
+      "out": "tractContextManager.test_structural_subclassing\nFAIL: assertTrue\n  ContextManagerTestCase.test_contextmanager_do_not_unchain_non_stopiteration_exceptions\n  ContextManagerTestCase.test_contextmanager_doc_attrib\nFAIL: assertEqual\n  ContextManagerTestCase.test_contextmanager_except_stopiter\n  ContextManagerTestCase.test_param_errors\n  ContextManagerTestCase.test_contextmanager_except\nFAIL: assertEqual\n  ContextManagerTestCase.test_keywords\nFAIL: assertEqual\n  ContextManagerTestCase.test_contextmanager_traceback\nFAIL: assertEqual\nFAIL: assertEqual\n  ContextManagerTestCase.test_instance_docstring_given_cm_docstring\nFAIL: assertEqual\n  ContextManagerTestCase.test_contextmanager_trap_yield_after_throw\n  ContextManagerTestCase.test_contextmanager_plain\nFAIL: assertEqual\n  ContextManagerTestCase.test_contextmanager_finally\nFAIL: assertEqual\nFAIL: assertEqual\n  ContextManagerTestCase.test_contextmanager_attribs\nFAIL: assertEqual\n  ContextManagerTestCase.test_nokeepref\n  ContextManagerTestCase.test_contextmanager_except_pep479\n  ContextManagerTestCase.test_contextmanager_no_reraise\n  ClosingTestCase.test_closing\n  ClosingTestCase.test_instance_docs\n  ClosingTestCase.test_closing_error\nFAIL: assertEqual\n  NullcontextTestCase.test_nullcontext\n  FileContextTestCase.testWithOpen\n  LockContextTestCase.testWithLock\n  LockContextTestCase.testWithCondition\n  LockContextTestCase.testWithSemaphore\n  LockContextTestCase.testWithBoundedSemaphore\n  LockContextTestCase.testWithRLock\n  TestContextDecorator.test_decorating_method\n  TestContextDecorator.test_contextmanager_as_decorator\nFAIL: assertEqual\n  TestContextDecorator.test_contextdecorator_as_mixin\nFAIL: assertTrue\n  TestContextDecorator.test_typo_enter\n  TestContextDecorator.test_decorator_with_exception\nFAIL: assertTrue\nFAIL: assertIsNotNone\n  TestContextDecorator.test_decorator\nFAIL: assertTrue\n  TestContextDecorator.test_instance_docs\n  TestContextDecorator.test_contextdecorator_with_exception\nFAIL: assertIsNotNone\n  TestContextDecorator.test_typo_exit\n  TestContextDecorator.test_contextdecorator\nFAIL: assertIs\n  TestExitStack.test_exit_exception_traceback\n  TestExitStack.test_exit_exception_non_suppressing\n  TestExitStack.test_callback\n  TestExitStack.test_body_exception_suppress\n  TestExitStack.test_excessive_nesting\n  TestExitStack.test_exit_exception_chaining\n  TestExitStack.test_exit_exception_explicit_none_context\n  TestExitStack.test_instance_docs\n  TestExitStack.test_instance_bypass\n  TestExitStack.test_enter_context\n  TestExitStack.test_exit_exception_with_correct_context\n  TestExitStack.test_dont_reraise_RuntimeError\n  TestExitStack.test_exit_suppress\n  TestExitStack.test_enter_context_errors\n  TestExitStack.test_push\n  TestExitStack.test_exit_exception_with_existing_context\n  TestExitStack.test_pop_all\n  TestExitStack.test_exit_exception_chaining_reference\nFAIL: Expected IndexError, but no exception was raised\n  TestExitStack.test_exit_raise\n  TestExitStack.test_exit_exception_chaining_suppress\n  TestExitStack.test_no_resources\n  TestRedirectStdout.test_redirect_to_string_io\n  TestRedirectStdout.test_enter_result_is_target\n  TestRedirectStdout.test_cm_is_reentrant\n  TestRedirectStdout.test_instance_docs\n  TestRedirectStdout.test_no_redirect_in_init\n  TestRedirectStdout.test_cm_is_reusable\n  TestRedirectStderr.test_redirect_to_string_io\n  TestRedirectStderr.test_enter_result_is_target\n  TestRedirectStderr.test_cm_is_reentrant\n  TestRedirectStderr.test_instance_docs\n  TestRedirectStderr.test_no_redirect_in_init\n  TestRedirectStderr.test_cm_is_reusable\n  TestSuppress.test_no_result_from_enter\n  TestSuppress.test_no_args\n  TestSuppress.test_cm_is_reentrant\n  TestSuppress.test_exact_exception\n  TestSuppress.test_exception_hierarchy\n  TestSuppress.test_instance_docs\n  TestSuppress.test_no_exception\n  TestSuppress.test_multiple_exception_args\n  TestSuppress.test_other_exception\n  TestChdir.test_simple\n  TestChdir.test_reentrant\n  TestChdir.test_exception\nunittest: ran 82 tests, 20 failed\n",
       "tags": [],
       "key": "test_contextlib.py",
-      "updated": "2026-10-03"
+      "updated": "2026-10-08"
     },
     "test_contextlib_async.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_contextlib_async.py",
       "status": "fail",
-      "stage": "transpile",
+      "stage": "run",
       "rc": 1,
-      "err": "transpile: \nParse Error: Unexpected token in expression\n token=62\nParse Error: expected token 85 got 1\nParse Error: expected token 85 got 1\nParse Error: Expected '}' after class body\nerror: compilation failed",
-      "out": "",
+      "err": "",
+      "out": "ERROR: Method not found: requires_working_socket\n  TestAbstractAsyncContextManager.test_exit_is_abstract\n  TestAbstractAsyncContextManager.test_async_gen_propagates_generator_exit\nFAIL: assertEqual\n  TestAbstractAsyncContextManager.test_structural_subclassing\nFAIL: assertFalse\n  AsyncContextManagerTestCase.test_contextmanager_trap_second_yield\n  AsyncContextManagerTestCase.test_contextmanager_doc_attrib\nFAIL: assertEqual\n  AsyncContextManagerTestCase.test_contextmanager_except_stopiter\n  AsyncContextManagerTestCase.test_contextmanager_except\nFAIL: assertEqual\n  AsyncContextManagerTestCase.test_contextmanager_non_normalised\n  AsyncContextManagerTestCase.test_decorator_with_exception\nFAIL: assertTrue\n  AsyncContextManagerTestCase.test_contextmanager_trap_yield_after_throw\n  AsyncContextManagerTestCase.test_contextmanager_plain\nFAIL: assertEqual\n  AsyncContextManagerTestCase.test_contextmanager_finally\nFAIL: assertEqual\nFAIL: assertEqual\n  AsyncContextManagerTestCase.test_contextmanager_attribs\nFAIL: assertEqual\n  AsyncContextManagerTestCase.test_decorator\nFAIL: assertTrue\n  AsyncContextManagerTestCase.test_contextmanager_no_reraise\n  AsyncContextManagerTestCase.test_decorating_method\n  AsyncContextManagerTestCase.test_keywords\nFAIL: assertEqual\n  AsyncContextManagerTestCase.test_contextmanager_traceback\nFAIL: assertEqual\nFAIL: assertEqual\n  AsyncContextManagerTestCase.test_instance_docstring_given_cm_docstring\nFAIL: assertEqual\n  AsyncContextManagerTestCase.test_contextmanager_trap_no_yield\n  AsyncContextManagerTestCase.test_contextmanager_wrap_runtimeerror\n  AclosingTestCase.test_aclosing_bpo41229\nFAIL: assertEqual\n  AclosingTestCase.test_aclosing_error\nFAIL: assertEqual\n  AclosingTestCase.test_instance_docs\n  AclosingTestCase.test_aclosing\nERROR: Method not found: new_event_loop\nERROR: Method not found: set_event_loop\n  TestAsyncExitStack.test_async_push\nERROR: Method not found: new_event_loop\nERROR: Method not found: set_event_loop\n  TestAsyncExitStack.test_enter_async_context_errors\nERROR: Method not found: new_event_loop\nERROR: Method not found: set_event_loop\n  TestAsyncExitStack.test_async_exit_exception_explicit_none_context\nERROR: Method not found: new_event_loop\nERROR: Method not found: set_event_loop\n  TestAsyncExitStack.test_async_callback\nERROR: Method not found: new_event_loop\nERROR: Method not found: set_event_loop\n  TestAsyncExitStack.test_enter_async_context\nERROR: Method not found: new_event_loop\nERROR: Method not found: set_event_loop\n  TestAsyncExitStack.test_async_exit_exception_chaining\nERROR: Method not found: new_event_loop\nERROR: Method not found: set_event_loop\n  TestAsyncExitStack.test_instance_bypass_async\n  TestAsyncNullcontext.test_async_nullcontext\nunittest: ran 33 tests, 16 failed\n",
       "tags": [],
       "key": "test_contextlib_async.py",
-      "updated": "2026-10-03"
+      "updated": "2026-10-08"
     },
     "test_copy.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_copy.py",
@@ -1064,13 +1064,13 @@
     "test_coroutines.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_coroutines.py",
       "status": "fail",
-      "stage": "transpile",
-      "rc": 1,
-      "err": "transpile: \nParse Error: Unexpected token in expression\n token=27\nParse Error: expected token 85 got 84\nParse Error: expected token 85 got 84\nParse Error: Expected '}' after class body\nerror: compilation failed",
-      "out": "",
+      "stage": "run",
+      "rc": 124,
+      "err": "timeout",
+      "out": "  AsyncBadSyntaxTest.test_badsyntax_4\n  AsyncBadSyntaxTest.test_badsyntax_1\n  AsyncBadSyntaxTest.test_badsyntax_2\n  AsyncBadSyntaxTest.test_badsyntax_3\n  TokenizerRegrTest.test_oneline_defs\n  CoroutineTest.test_comp_4\n",
       "tags": [],
       "key": "test_coroutines.py",
-      "updated": "2026-10-03"
+      "updated": "2026-10-08"
     },
     "test_cppext/__init__.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_cppext/__init__.py",
@@ -1108,7 +1108,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_csv.py",
-      "updated": "2026-10-07"
+      "updated": "2026-10-08"
     },
     "test_ctypes.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_ctypes.py",
@@ -1179,7 +1179,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_dbm_gnu.py",
-      "updated": "2026-10-07"
+      "updated": "2026-10-08"
     },
     "test_dbm_ndbm.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_dbm_ndbm.py",
@@ -1195,13 +1195,13 @@
     "test_decimal.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_decimal.py",
       "status": "fail",
-      "stage": "transpile",
-      "rc": 1,
-      "err": "transpile: \nParse Error: expected token 84 got 82\nParse Error: Expected '{' to start block\nParse Error: expected token 85 got 82\nParse Error: expected token 85 got 82\nParse Error: expected token 85 got 82\nParse Error: expected token 85 got 82\nParse Error: expected token 85 got 82\nParse Error: Expected '}' after class body\nerror: compilation failed",
-      "out": "",
+      "stage": "run",
+      "rc": -11,
+      "err": "",
+      "out": "ERROR: Method not found: skipUnless\nERROR: Method not found: getcontext\nERROR: Method not found: keys\nERROR: Method not found: getcontext\nERROR: Method not found: isdir\nERROR: Method not found: skipUnless\nERROR: Method not found: skipIf\n  CExplicitConstructionTest.test_explicit_from_float\n  CExplicitConstructionTest.test_explicit_from_bool\n  CExplicitConstructionTest.test_explicit_from_tuples\n  CExplicitConstructionTest.test_explicit_from_list\n  CExplicitConstructionTest.test_explicit_context_create_decimal\n  CExplicitConstructionTest.test_explicit_from_int\n  CExplicitConstructionTest.test_explicit_context_create_from_float\n  CExplicitConstructionTest.test_explicit_from_None\n  CExplicitConstructionTest.test_from_legacy_strings\n  CExplicitConstructionTest.test_unicode_digits\n  CExplicitConstructionTest.test_explicit_empty\n  CExplicitConstructionTest.test_explicit_from_Decimal\n  CExplicitConstructionTest.test_explicit_from_string\n  PyExplicitConstructionTest.test_explicit_from_float\n  PyExplicitConstructionTest.test_explicit_from_bool\n  PyExplicitConstructionTest.test_explicit_from_tuples\n  PyExplicitConstructionTest.test_explicit_from_list\n  PyExplicitConstructionTest.test_explicit_context_create_decimal\n  PyExplicitConstructionTest.test_explicit_from_int\n  PyExplicitConstructionTest.test_explicit_context_create_from_float\n  PyExplicitConstructionTest.test_explicit_from_None\n  PyExplicitConstructionTest.test_from_legacy_strings\n  PyExplicitConstructionTest.test_unicode_digits\n  PyExplicitConstructionTest.test_explicit_empty\n  PyExplicitConstructionTest.test_explicit_from_Decimal\n  PyExplicitConstructionTest.test_explicit_from_string\n  CImplicitConstructionTest.test_implicit_from_float\n  CImplicitConstructionTest.test_implicit_from_None\n  CImplicitConstructionTest.test_implicit_from_Decimal\n  CImplicitConstructionTest.test_implicit_from_string\n  CImplicitConstructionTest.test_implicit_from_int\n",
       "tags": [],
       "key": "test_decimal.py",
-      "updated": "2026-10-03"
+      "updated": "2026-10-08"
     },
     "test_decorators.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_decorators.py",
@@ -1233,13 +1233,13 @@
     "test_descr.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_descr.py",
       "status": "fail",
-      "stage": "transpile",
+      "stage": "compile",
       "rc": 1,
-      "err": "transpile: \nParse Error: Expected base class name\nParse Error: Expected ')' after base class list\nParse Error: expected token 85 got 81\nParse Error: expected token 85 got 81\nParse Error: Expected '}' after class body\nerror: compilation failed",
+      "err": ": duplicate definition of '__nest_246_E_foo_set' first seen at main:19343 \u2014 aborting, same-file copies are unpredictable\nSEMANTIC ERROR at line 47922, col 0: duplicate function\nSEMANTIC ERROR main:19367: duplicate definition of '__nest_246_E_foo_set' first seen at main:19343 \u2014 aborting, same-file copies are unpredictable\nSEMANTIC ERROR at line 47934, col 0: duplicate function\nSemantic Analysis Failed\n[AST] Freeing 176867 node child-lists...\n[AST] Freed 65982 child-lists (node slots stay in pool)",
       "out": "",
       "tags": [],
       "key": "test_descr.py",
-      "updated": "2026-10-03"
+      "updated": "2026-10-08"
     },
     "test_descrtut.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_descrtut.py",
@@ -1280,7 +1280,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_dict_version.py",
-      "updated": "2026-10-07"
+      "updated": "2026-10-08"
     },
     "test_dictcomps.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_dictcomps.py",
@@ -1307,7 +1307,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_difflib.py",
-      "updated": "2026-10-07"
+      "updated": "2026-10-08"
     },
     "test_dis.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_dis.py",
@@ -1402,7 +1402,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_email/test__encoded_words.py",
-      "updated": "2026-10-07"
+      "updated": "2026-10-08"
     },
     "test_email/test__header_value_parser.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_email/test__header_value_parser.py",
@@ -1410,7 +1410,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_email/test__header_value_parser.py",
-      "updated": "2026-10-07"
+      "updated": "2026-10-08"
     },
     "test_email/test_asian_codecs.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_email/test_asian_codecs.py",
@@ -1418,7 +1418,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_email/test_asian_codecs.py",
-      "updated": "2026-10-07"
+      "updated": "2026-10-08"
     },
     "test_email/test_contentmanager.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_email/test_contentmanager.py",
@@ -1426,7 +1426,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_email/test_contentmanager.py",
-      "updated": "2026-10-07"
+      "updated": "2026-10-08"
     },
     "test_email/test_defect_handling.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_email/test_defect_handling.py",
@@ -1434,7 +1434,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_email/test_defect_handling.py",
-      "updated": "2026-10-07"
+      "updated": "2026-10-08"
     },
     "test_email/test_email.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_email/test_email.py",
@@ -1453,7 +1453,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_email/test_generator.py",
-      "updated": "2026-10-07"
+      "updated": "2026-10-08"
     },
     "test_email/test_headerregistry.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_email/test_headerregistry.py",
@@ -1491,7 +1491,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_email/test_parser.py",
-      "updated": "2026-10-07"
+      "updated": "2026-10-08"
     },
     "test_email/test_pickleable.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_email/test_pickleable.py",
@@ -1556,7 +1556,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_enumerate.py",
-      "updated": "2026-10-07"
+      "updated": "2026-10-08"
     },
     "test_eof.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_eof.py",
@@ -1588,13 +1588,13 @@
     "test_except_star.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_except_star.py",
       "status": "fail",
-      "stage": "transpile",
-      "rc": 1,
-      "err": "transpile: \nParse Error: expected token 84 got 52\nParse Error: Expected '{' to start block\nParse Error: expected token 85 got 52\nParse Error: expected token 85 got 52\nParse Error: Expected '}' after class body\nerror: compilation failed",
-      "out": "",
+      "stage": "run",
+      "rc": -11,
+      "err": "",
+      "out": "ected exception: skip\nFAIL: unexpected exception: unexpected exception: unexpected exception: skip\nFAIL: unexpected exception: unexpected exception: unexpected exception: unexpected exception: skip\nFAIL: unexpected exception: skip\nFAIL: unexpected exception: unexpected exception: skip\n  TestExceptStarSplitSemantics.test_naked_exception_matched_wrapped2\nFAIL: unexpected exception: skip\nFAIL: unexpected exception: unexpected exception: skip\nFAIL: unexpected exception: unexpected exception: unexpected exception: skip\nFAIL: unexpected exception: unexpected exception: unexpected exception: unexpected exception: skip\nFAIL: unexpected exception: skip\nFAIL: unexpected exception: unexpected exception: skip\n  TestExceptStarSplitSemantics.test_nested_except_stars\nERROR: n\n  TestExceptStarSplitSemantics.test_no_match_single_type\nFAIL: unexpected exception: skip\nFAIL: unexpected exception: unexpected exception: skip\nFAIL: unexpected exception: unexpected exception: unexpected exception: skip\nFAIL: unexpected exception: unexpected exception: unexpected exception: unexpected exception: skip\nFAIL: unexpected exception: skip\nFAIL: unexpected exception: unexpected exception: skip\n  TestExceptStarSplitSemantics.test_singleton_groups_are_kept\nFAIL: unexpected exception: skip\nFAIL: unexpected exception: unexpected exception: skip\nFAIL: unexpected exception: unexpected exception: unexpected exception: skip\nFAIL: unexpected exception: unexpected exception: unexpected exception: unexpected exception: skip\nFAIL: unexpected exception: skip\nFAIL: unexpected exception: unexpected exception: skip\n  TestExceptStarSplitSemantics.test_match_single_type_nested\nFAIL: unexpected exception: skip\nFAIL: unexpected exception: unexpected exception: skip\nFAIL: unexpected exception: unexpected exception: unexpected exception: skip\nFAIL: unexpected exception: unexpected exception: unexpected exception: unexpected exception: skip\nFAIL: unexpected exception: skip\nFAIL: unexpected exception: unexpected exception: skip\n  TestExceptStarSplitSemantics.test_empty_groups_removed\nFAIL: unexpected exception: skip\nFAIL: unexpected exception: unexpected exception: skip\nFAIL: unexpected exception: unexpected exception: unexpected exception: skip\nFAIL: unexpected exception: unexpected exception: unexpected exception: unexpected exception: skip\nFAIL: unexpected exception: skip\nFAIL: unexpected exception: unexpected exception: skip\n  TestExceptStarSplitSemantics.test_first_match_wins_named\nERROR: fst\n  TestExceptStarSplitSemantics.test_nested_in_loop\nERROR: nl\n  TestExceptStarSplitSemantics.test_multiple_matches_unnamed\nERROR: mmu\n  TestExceptStarSplitSemantics.test_naked_exception_matched_wrapped1\nFAIL: unexpected exception: skip\nFAIL: unexpected exception: unexpected exception: skip\nFAIL: unexpected exception: unexpected exception: unexpected exception: skip\nFAIL: unexpected exception: unexpected exception: unexpected exception: unexpected exception: skip\nFAIL: unexpected exception: skip\nFAIL: unexpected exception: unexpected exception: skip\n  TestExceptStarSplitSemantics.test_match_single_type\nFAIL: unexpected exception: skip\nFAIL: unexpected exception: unexpected exception: skip\nFAIL: unexpected exception: unexpected exception: unexpected exception: skip\nFAIL: unexpected exception: unexpected exception: unexpected exception: unexpected exception: skip\nFAIL: unexpected exception: skip\nFAIL: unexpected exception: unexpected exception: skip\n  TestExceptStarSplitSemantics.test_match_single_type_partial_match\nFAIL: unexpected exception: skip\nFAIL: unexpected exception: unexpected exception: skip\nFAIL: unexpected exception: unexpected exception: unexpected exception: skip\nFAIL: unexpected exception: unexpected exception: unexpected exception: unexpected exception: skip\nFAIL: unexpected exception: skip\nFAIL: unexpected exception: unexpected exception: skip\n  TestExceptStarSplitSemantics.test_multiple_matches_named\nERROR: mmn\n  TestExceptStarReraise.test_reraise_partial_handle_some_named\n",
       "tags": [],
       "key": "test_except_star.py",
-      "updated": "2026-10-03"
+      "updated": "2026-10-08"
     },
     "test_exception_group.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_exception_group.py",
@@ -1602,7 +1602,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_exception_group.py",
-      "updated": "2026-10-07"
+      "updated": "2026-10-08"
     },
     "test_exception_hierarchy.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_exception_hierarchy.py",
@@ -1615,24 +1615,24 @@
     "test_exception_variations.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_exception_variations.py",
       "status": "fail",
-      "stage": "transpile",
+      "stage": "run",
       "rc": 1,
-      "err": "transpile: \nParse Error: expected token 84 got 52\nParse Error: Expected '{' to start block\nParse Error: expected token 85 got 52\nParse Error: Expected '}' after class body\nerror: compilation failed",
-      "out": "",
+      "err": "",
+      "out": "  ExceptTestCases.test_nested_exception_in_else\n  ExceptTestCases.test_try_except_else\n  ExceptTestCases.test_try_finally_no_exception\n  ExceptTestCases.test_nested_exception_in_except\nFAIL: assertTrue\n  ExceptTestCases.test_try_except_finally\n  ExceptTestCases.test_try_except_else_finally_no_exception\n  ExceptTestCases.test_try_except_else_finally\n  ExceptTestCases.test_try_except_finally_no_exception\n  ExceptTestCases.test_try_except_else_no_exception\n  ExceptTestCases.test_try_except\n  ExceptTestCases.test_nested_else\n  ExceptTestCases.test_try_except_no_exception\n  ExceptTestCases.test_nested_exception_in_finally_no_exception\n  ExceptTestCases.test_nested_exception_in_finally_with_exception\nFAIL: assertTrue\n  ExceptStarTestCases.test_try_except_else\n  ExceptStarTestCases.test_try_finally_no_exception\n  ExceptStarTestCases.test_try_except_finally\n  ExceptStarTestCases.test_nested_else_mixed1\n  ExceptStarTestCases.test_try_except_else_finally_no_exception\n  ExceptStarTestCases.test_try_except_else_finally\n  ExceptStarTestCases.test_nested_mixed1\nFAIL: assertTrue\n  ExceptStarTestCases.test_try_except_finally_no_exception\n  ExceptStarTestCases.test_nested_mixed2\nFAIL: assertTrue\n  ExceptStarTestCases.test_try_except_else_no_exception\n  ExceptStarTestCases.test_try_except\n  ExceptStarTestCases.test_nested_else_mixed2\n  ExceptStarTestCases.test_nested_else\n  ExceptStarTestCases.test_try_except_no_exception\nunittest: ran 28 tests, 4 failed\n",
       "tags": [],
       "key": "test_exception_variations.py",
-      "updated": "2026-10-03"
+      "updated": "2026-10-08"
     },
     "test_exceptions.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_exceptions.py",
       "status": "fail",
-      "stage": "transpile",
-      "rc": 1,
-      "err": "transpile: \nParse Error: expected token 84 got 1\nParse Error: Expected '{' to start block\nParse Error: expected token 85 got 1\nParse Error: expected token 85 got 1\nParse Error: Expected '}' after class body\nerror: compilation failed",
+      "stage": "compile",
+      "rc": -11,
+      "err": "Stdlib\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT] Loaded: AIMacro.AIMacroSeq\n[IMPORT] Loaded: AIMacro.AIMacroNum\n[IMPORT ERROR] Cannot read: weakref\n[IMPORT ERROR] Cannot read: errno\n[IMPORT ERROR] Cannot read: textwrap\n[IMPORT] Extracting symbols from 24 modules\n[IMPORT] Checking 1119 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 29378, col 11: Unexpected token in statement\n  In:",
       "out": "",
       "tags": [],
       "key": "test_exceptions.py",
-      "updated": "2026-10-03"
+      "updated": "2026-10-08"
     },
     "test_extcall.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_extcall.py",
@@ -1667,7 +1667,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_file.py",
-      "updated": "2026-10-07"
+      "updated": "2026-10-08"
     },
     "test_file_eintr.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_file_eintr.py",
@@ -1720,13 +1720,13 @@
     "test_finalization.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_finalization.py",
       "status": "fail",
-      "stage": "transpile",
+      "stage": "run",
       "rc": 1,
-      "err": "transpile: \nParse Error: Unexpected token in expression\n token=12\nParse Error: expected token 85 got 3\nParse Error: expected token 85 got 3\nParse Error: expected token 85 got 3\nParse Error: Expected '}' after class body\nerror: compilation failed",
-      "out": "",
+      "err": "",
+      "out": "  SimpleFinalizationTest.test_simple\nFAIL: assertEqual\nException: assertEqual\n",
       "tags": [],
       "key": "test_finalization.py",
-      "updated": "2026-10-06"
+      "updated": "2026-10-08"
     },
     "test_float.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_float.py",
@@ -1818,13 +1818,13 @@
     "test_ftplib.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_ftplib.py",
       "status": "fail",
-      "stage": "transpile",
+      "stage": "run",
       "rc": 1,
-      "err": "transpile: \nParse Error: expected token 84 got 89\nParse Error: Expected '{' to start block\nParse Error: expected token 85 got 89\nParse Error: Expected '}' after class body\nerror: compilation failed",
-      "out": "",
+      "err": "",
+      "out": "ERROR: Method not found: requires_working_socket\nERROR: Method not found: create_socket\nERROR: Method not found: bind\nERROR: Method not found: listen\nERROR: Method not found: Lock\nERROR: Method not found: getsockname\nException: index out of range\n",
       "tags": [],
       "key": "test_ftplib.py",
-      "updated": "2026-10-03"
+      "updated": "2026-10-08"
     },
     "test_funcattrs.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_funcattrs.py",
@@ -1865,7 +1865,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_future_stmt/test_future.py",
-      "updated": "2026-10-07"
+      "updated": "2026-10-08"
     },
     "test_future_stmt/test_future_flags.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_future_stmt/test_future_flags.py",
@@ -1929,24 +1929,24 @@
     "test_generators.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_generators.py",
       "status": "fail",
-      "stage": "transpile",
+      "stage": "compile",
       "rc": 1,
-      "err": "transpile: \nParse Error: Unexpected token in expression\n token=28\nParse Error: expected token 85 got 3\nParse Error: Expected '}' after class body\nerror: compilation failed",
+      "err": "LINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\nERROR: Variable not found: __yields\nCompilation Failed: \n[AST] Freeing 105560 node child-lists...\n[AST] Freed 45550 child-lists (node slots stay in pool)",
       "out": "",
       "tags": [],
       "key": "test_generators.py",
-      "updated": "2026-10-03"
+      "updated": "2026-10-08"
     },
     "test_genericalias.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_genericalias.py",
       "status": "fail",
-      "stage": "transpile",
+      "stage": "run",
       "rc": 1,
-      "err": "transpile: \nParse Error: Unexpected token in expression\n token=52\nParse Error: expected token 83 got 3\nParse Error: expected token 83 got 3\nerror: compilation failed",
-      "out": "",
+      "err": "",
+      "out": "Exception: index out of range\n",
       "tags": [],
       "key": "test_genericalias.py",
-      "updated": "2026-10-03"
+      "updated": "2026-10-08"
     },
     "test_genericclass.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_genericclass.py",
@@ -2000,7 +2000,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_getpath.py",
-      "updated": "2026-10-07"
+      "updated": "2026-10-08"
     },
     "test_gettext.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_gettext.py",
@@ -2034,13 +2034,13 @@
     "test_grammar.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_grammar.py",
       "status": "fail",
-      "stage": "transpile",
-      "rc": 1,
-      "err": "transpile: \nParse Error: Unexpected token in expression\n token=60\nParse Error: expected token 85 got 3\nParse Error: Expected '}' after class body\nerror: compilation failed",
-      "out": "",
+      "stage": "run",
+      "rc": -11,
+      "err": "",
+      "out": "  TokenTests.test_eof_error\n",
       "tags": [],
       "key": "test_grammar.py",
-      "updated": "2026-10-03"
+      "updated": "2026-10-08"
     },
     "test_graphlib.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_graphlib.py",
@@ -2097,7 +2097,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_heapq.py",
-      "updated": "2026-10-07"
+      "updated": "2026-10-08"
     },
     "test_hmac.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_hmac.py",
@@ -2116,7 +2116,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_html.py",
-      "updated": "2026-10-07"
+      "updated": "2026-10-08"
     },
     "test_htmlparser.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_htmlparser.py",
@@ -2388,7 +2388,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_importlib/source/test_file_loader.py",
-      "updated": "2026-10-07"
+      "updated": "2026-10-08"
     },
     "test_importlib/source/test_finder.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_importlib/source/test_finder.py",
@@ -2415,18 +2415,18 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_importlib/source/test_source_encoding.py",
-      "updated": "2026-10-07"
+      "updated": "2026-10-08"
     },
     "test_importlib/test_abc.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_importlib/test_abc.py",
       "status": "fail",
-      "stage": "compile",
+      "stage": "run",
       "rc": 1,
-      "err": "T] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\n[PARSER] Parsed 1022 declarations, 96297 total nodes\n[PARSER] SUCCESS\n[SEMANTIC] contract check\nSEMANTIC ERROR main:2358: duplicate definition of 'SourceLoader___classattrs' first seen at main:340 \u2014 aborting, same-file copies are unpredictable\nSEMANTIC ERROR at line 30884, col 0: duplicate function\nSemantic Analysis Failed\n[AST] Freeing 96297 node child-lists...\n[AST] Freed 40640 child-lists (node slots stay in pool)",
-      "out": "",
+      "err": "",
+      "out": "ERROR: Method not found: split_frozen\nERROR: Method not found: split_frozen\nERROR: Method not found: split_frozen\nERROR: Method not found: split_frozen\nERROR: Method not found: split_frozen\nERROR: Method not found: import_importlib\nERROR: Method not found: import_importlib\nERROR: Method not found: import_importlib\nERROR: Method not found: import_importlib\nERROR: Method not found: test_both\nERROR: Method not found: test_both\nERROR: Method not found: test_both\nERROR: Method not found: test_both\nERROR: Method not found: test_both\nERROR: Method not found: test_both\nERROR: Method not found: test_both\nERROR: Method not found: test_both\nERROR: Method not found: test_both\nERROR: Method not found: test_both\nERROR: Method not found: test_both\nERROR: Method not found: split_frozen\nERROR: Method not found: test_both\nERROR: Method not found: split_frozen\nERROR: Method not found: test_both\nERROR: Method not found: test_both\nERROR: Method not found: test_both\nERROR: Method not found: test_both\nERROR: Method not found: test_both\nERROR: Method not found: test_both\nERROR: Method not found: test_both\nERROR: Method not found: test_both\nERROR: Method not found: test_both\nERROR: Method not found: split_frozen\nERROR: Method not found: split_frozen\nERROR: Method not found: test_both\nERROR: Method not found: test_both\nERROR: Method not found: test_both\nERROR: Method not found: split_frozen\nERROR: Method not found: split_frozen\nERROR: Method not found: split_frozen\nERROR: Method not found: split_frozen\nERROR: Method not found: split_frozen\nException: \n",
       "tags": [],
       "key": "test_importlib/test_abc.py",
-      "updated": "2026-10-03"
+      "updated": "2026-10-08"
     },
     "test_importlib/test_api.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_importlib/test_api.py",
@@ -2434,7 +2434,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_importlib/test_api.py",
-      "updated": "2026-10-07"
+      "updated": "2026-10-08"
     },
     "test_importlib/test_compatibilty_files.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_importlib/test_compatibilty_files.py",
@@ -2465,7 +2465,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_importlib/test_lazy.py",
-      "updated": "2026-10-07"
+      "updated": "2026-10-08"
     },
     "test_importlib/test_locks.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_importlib/test_locks.py",
@@ -2557,7 +2557,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_importlib/test_resource.py",
-      "updated": "2026-10-07"
+      "updated": "2026-10-08"
     },
     "test_importlib/test_spec.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_importlib/test_spec.py",
@@ -2605,18 +2605,18 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_index.py",
-      "updated": "2026-10-07"
+      "updated": "2026-10-08"
     },
     "test_inspect.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_inspect.py",
       "status": "fail",
-      "stage": "transpile",
-      "rc": 1,
-      "err": "transpile: \nParse Error: Unexpected token in expression\n token=18\nParse Error: expected token 85 got 2\nerror: compilation failed",
-      "out": "",
+      "stage": "run",
+      "rc": -11,
+      "err": "",
+      "out": "ERROR: Method not found: partialmethod\nERROR: Method not found: partialmethod\nERROR: Method not found: partialmethod\nERROR: Method not found: partialmethod\nERROR: Method not found: StupidGit\n",
       "tags": [],
       "key": "test_inspect.py",
-      "updated": "2026-10-03"
+      "updated": "2026-10-08"
     },
     "test_int.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_int.py",
@@ -2624,7 +2624,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_int.py",
-      "updated": "2026-10-07"
+      "updated": "2026-10-08"
     },
     "test_int_literal.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_int_literal.py",
@@ -2639,25 +2639,22 @@
     },
     "test_interpreters.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_interpreters.py",
-      "status": "fail",
-      "stage": "transpile",
-      "rc": 1,
-      "err": "transpile: \nParse Error: Unexpected token in expression\n token=23\nParse Error: expected token 85 got 3\nerror: compilation failed",
-      "out": "",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_interpreters.py",
-      "updated": "2026-10-03"
+      "updated": "2026-10-08"
     },
     "test_io.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_io.py",
       "status": "fail",
-      "stage": "transpile",
-      "rc": -11,
-      "err": "transpile:",
-      "out": "",
+      "stage": "run",
+      "rc": 1,
+      "err": "",
+      "out": "ERROR: Method not found: skipUnless\nException: No such file\n",
       "tags": [],
       "key": "test_io.py",
-      "updated": "2026-10-03"
+      "updated": "2026-10-08"
     },
     "test_ioctl.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_ioctl.py",
@@ -2827,7 +2824,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_json/test_recursion.py",
-      "updated": "2026-10-07"
+      "updated": "2026-10-08"
     },
     "test_json/test_scanstring.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_json/test_scanstring.py",
@@ -2851,7 +2848,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_json/test_speedups.py",
-      "updated": "2026-10-07"
+      "updated": "2026-10-08"
     },
     "test_json/test_tool.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_json/test_tool.py",
@@ -2946,7 +2943,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_list.py",
-      "updated": "2026-10-07"
+      "updated": "2026-10-08"
     },
     "test_listcomps.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_listcomps.py",
@@ -3107,7 +3104,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_minidom.py",
-      "updated": "2026-10-07"
+      "updated": "2026-10-08"
     },
     "test_mmap.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_mmap.py",
@@ -3133,7 +3130,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_modulefinder.py",
-      "updated": "2026-10-07"
+      "updated": "2026-10-08"
     },
     "test_msilib.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_msilib.py",
@@ -3141,7 +3138,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_msilib.py",
-      "updated": "2026-10-07"
+      "updated": "2026-10-08"
     },
     "test_multibytecodec.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_multibytecodec.py",
@@ -3228,7 +3225,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_opcache.py",
-      "updated": "2026-10-07"
+      "updated": "2026-10-08"
     },
     "test_opcodes.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_opcodes.py",
@@ -3252,7 +3249,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_operator.py",
-      "updated": "2026-10-07"
+      "updated": "2026-10-08"
     },
     "test_optparse.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_optparse.py",
@@ -3276,13 +3273,13 @@
     "test_os.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_os.py",
       "status": "fail",
-      "stage": "transpile",
+      "stage": "compile",
       "rc": 1,
-      "err": "transpile: \nParse Error: expected token 83 got 3\nParse Error: expected token 81 got 3\nParse Error: expected token 85 got 3\nParse Error: Expected '}' after class body\nerror: compilation failed",
+      "err": "INDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\nERROR: Variable not found: func_args\nCompilation Failed: \n[AST] Freeing 214946 node child-lists...\n[AST] Freed 88198 child-lists (node slots stay in pool)",
       "out": "",
       "tags": [],
       "key": "test_os.py",
-      "updated": "2026-10-03"
+      "updated": "2026-10-08"
     },
     "test_ossaudiodev.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_ossaudiodev.py",
@@ -3314,13 +3311,13 @@
     "test_patma.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_patma.py",
       "status": "fail",
-      "stage": "transpile",
+      "stage": "compile",
       "rc": 1,
-      "err": "transpile: \nParse Error: expected token 81 got 24\nParse Error: expected token 84 got 24\nParse Error: Expected '{' to start block\nParse Error: expected token 85 got 24\nParse Error: Expected '}' after class body\nerror: compilation failed",
+      "err": "INDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\nERROR: Variable not found: frozenset\nCompilation Failed: \n[AST] Freeing 161036 node child-lists...\n[AST] Freed 65569 child-lists (node slots stay in pool)",
       "out": "",
       "tags": [],
       "key": "test_patma.py",
-      "updated": "2026-10-03"
+      "updated": "2026-10-08"
     },
     "test_pdb.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_pdb.py",
@@ -3336,13 +3333,13 @@
     "test_peepholer.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_peepholer.py",
       "status": "fail",
-      "stage": "transpile",
-      "rc": 1,
-      "err": "transpile: \nParse Error: expected token 84 got 41\nParse Error: Expected '{' to start block\nParse Error: expected token 85 got 41\nParse Error: expected token 85 got 41\nParse Error: Expected '}' after class body\nerror: compilation failed",
-      "out": "",
+      "stage": "run",
+      "rc": -11,
+      "err": "",
+      "out": "  TestTranforms.test_elim_inversion_of_is_or_in\n  TestTranforms.test_static_swaps_match_sequence\n  TestTranforms.test_format_combinations\n  TestTranforms.test_format_misc\n",
       "tags": [],
       "key": "test_peepholer.py",
-      "updated": "2026-10-03"
+      "updated": "2026-10-08"
     },
     "test_peg_generator/__init__.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_peg_generator/__init__.py",
@@ -3458,7 +3455,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_platform.py",
-      "updated": "2026-10-07"
+      "updated": "2026-10-08"
     },
     "test_plistlib.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_plistlib.py",
@@ -3466,7 +3463,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_plistlib.py",
-      "updated": "2026-10-07"
+      "updated": "2026-10-08"
     },
     "test_poll.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_poll.py",
@@ -3498,13 +3495,13 @@
     "test_positional_only_arg.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_positional_only_arg.py",
       "status": "fail",
-      "stage": "transpile",
-      "rc": 1,
-      "err": "transpile: \nParse Error: Expected lambda parameter\nParse Error: expected token 87 got 53\nParse Error: Unexpected token in expression\n token=53\nParse Error: expected token 85 got 87\nParse Error: Expected '}' after class body\nerror: compilation failed",
-      "out": "",
+      "stage": "run",
+      "rc": -11,
+      "err": "",
+      "out": "  PositionalOnlyTestCase.test_pos_only_definition\nFAIL: assertEqual\n  PositionalOnlyTestCase.test_positional_only_invalid_calls\n  PositionalOnlyTestCase.test_positional_only_and_kwonlyargs_invalid_calls\n  PositionalOnlyTestCase.test_invalid_syntax_lambda\n  PositionalOnlyTestCase.test_closures\n  PositionalOnlyTestCase.test_invalid_syntax_errors_async\n  PositionalOnlyTestCase.test_generator\nFAIL: assertEqual\n  PositionalOnlyTestCase.test_positional_only_with_optional_invalid_calls\n  PositionalOnlyTestCase.test_serialization\n  PositionalOnlyTestCase.test_posonly_methods\n  PositionalOnlyTestCase.test_lambdas\nFAIL: assertEqual\n  PositionalOnlyTestCase.test_invalid_syntax_errors\n  PositionalOnlyTestCase.test_change_default_pos_only\nFAIL: assertEqual\n  PositionalOnlyTestCase.test_mangling\n  PositionalOnlyTestCase.test_syntax_for_many_positional_only\n  PositionalOnlyTestCase.test_no_standard_args_usage\n  PositionalOnlyTestCase.test_too_many_arguments\n  PositionalOnlyTestCase.test_same_keyword_as_positional_with_kwargs\n  PositionalOnlyTestCase.test_optional_positional_only_args\n",
       "tags": [],
       "key": "test_positional_only_arg.py",
-      "updated": "2026-10-03"
+      "updated": "2026-10-08"
     },
     "test_posix.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_posix.py",
@@ -3545,7 +3542,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_pprint.py",
-      "updated": "2026-10-07"
+      "updated": "2026-10-08"
     },
     "test_print.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_print.py",
@@ -3553,7 +3550,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_print.py",
-      "updated": "2026-10-07"
+      "updated": "2026-10-08"
     },
     "test_profile.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_profile.py",
@@ -3848,7 +3845,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_selectors.py",
-      "updated": "2026-10-07"
+      "updated": "2026-10-08"
     },
     "test_set.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_set.py",
@@ -3856,7 +3853,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_set.py",
-      "updated": "2026-10-07"
+      "updated": "2026-10-08"
     },
     "test_setcomps.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_setcomps.py",
@@ -3875,18 +3872,18 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_shelve.py",
-      "updated": "2026-10-07"
+      "updated": "2026-10-08"
     },
     "test_shlex.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_shlex.py",
       "status": "fail",
-      "stage": "transpile",
-      "rc": 1,
-      "err": "transpile: \nParse Error: expected token 3 got 52\nParse Error: expected token 17 got 52\nParse Error: Unexpected token in expression\n token=52\nParse Error: expected token 84 got 3\nParse Error: Expected '{' to start block\nParse Error: expected token 85 got 3\nParse Error: Expected '}' after class body\nerror: compilation failed",
-      "out": "",
+      "stage": "run",
+      "rc": 124,
+      "err": "timeout",
+      "out": "ERROR: Method not found: splitlines\nERROR: Method not found: splitlines\n  ShlexTest.testJoinRoundtrip\nERROR: Method not found: splitlines\nERROR: Method not found: splitlines\n  ShlexTest.testTokenTypes\n",
       "tags": [],
       "key": "test_shlex.py",
-      "updated": "2026-10-03"
+      "updated": "2026-10-08"
     },
     "test_shutil.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_shutil.py",
@@ -3966,13 +3963,13 @@
     "test_socket.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_socket.py",
       "status": "fail",
-      "stage": "transpile",
+      "stage": "run",
       "rc": -11,
-      "err": "transpile:",
-      "out": "",
+      "err": "",
+      "out": "ERROR: Method not found: calcsize\nERROR: Method not found: cpython_only\nERROR: Method not found: cpython_only\nERROR: Method not found: decode\nERROR: Method not found: decode\nERROR: Method not found: decode\nERROR: Method not found: decode\nERROR: Method not found: requires_working_socket\nERROR: Method not found: socket\nERROR: Method not found: socket\nERROR: Method not found: socket\nERROR: Method not found: socket\nERROR: Method not found: socket\nERROR: Method not found: socket\nERROR: Method not found: socket\nERROR: Method not found: array\nERROR: Method not found: calcsize\nERROR: Method not found: cpython_only\nERROR: Method not found: cpython_only\nERROR: Method not found: decode\nERROR: Method not found: decode\nERROR: Method not found: decode\nERROR: Method not found: decode\nERROR: Method not found: socket\nERROR: Method not found: bind\nERROR: Method not found: listen\nERROR: Method not found: set\nERROR: Method not found: accept\n  ThreadedVSOCKSocketStreamTest.testStream\n  GeneralModuleTests.test_sock_ioctl\nFAIL: assertTrue\n  GeneralModuleTests.test_msgflag_enum\n  GeneralModuleTests.testNtoH\n  GeneralModuleTests.testRefCountGetNameInfo\n",
       "tags": [],
       "key": "test_socket.py",
-      "updated": "2026-10-03"
+      "updated": "2026-10-08"
     },
     "test_socketserver.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_socketserver.py",
@@ -4001,7 +3998,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_source_encoding.py",
-      "updated": "2026-10-07"
+      "updated": "2026-10-08"
     },
     "test_spwd.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_spwd.py",
@@ -4089,13 +4086,13 @@
     "test_sqlite3/test_types.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_sqlite3/test_types.py",
       "status": "fail",
-      "stage": "compile",
+      "stage": "run",
       "rc": -11,
-      "err": "T] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments",
-      "out": "",
+      "err": "",
+      "out": "ERROR: Method not found: connect\nERROR: Method not found: cursor\nERROR: Method not found: execute\n  SqliteTypeTests.test_float\nERROR: Method not found: connect\nERROR: Method not found: cursor\nERROR: Method not found: execute\n  SqliteTypeTests.test_small_int\nERROR: Method not found: connect\nERROR: Method not found: cursor\nERROR: Method not found: execute\n  SqliteTypeTests.test_blob\nERROR: Method not found: connect\nERROR: Method not found: cursor\nERROR: Method not found: execute\n  SqliteTypeTests.test_too_large_string\n",
       "tags": [],
       "key": "test_sqlite3/test_types.py",
-      "updated": "2026-10-03"
+      "updated": "2026-10-08"
     },
     "test_sqlite3/test_userfunctions.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_sqlite3/test_userfunctions.py",
@@ -4320,13 +4317,13 @@
     "test_sys_settrace.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_sys_settrace.py",
       "status": "fail",
-      "stage": "transpile",
-      "rc": 1,
-      "err": "transpile: \nParse Error: expected token 84 got 52\nParse Error: Expected '{' to start block\nParse Error: expected token 85 got 52\nParse Error: expected token 85 got 52\nParse Error: Expected '}' after class body\nerror: compilation failed",
-      "out": "",
+      "stage": "run",
+      "rc": -11,
+      "err": "",
+      "out": "ERROR: Method not found: requires_working_socket\nERROR: Method not found: isenabled\nERROR: Method not found: disable\n  TraceTestCase.test_try_except_star_no_exception\n",
       "tags": [],
       "key": "test_sys_settrace.py",
-      "updated": "2026-10-03"
+      "updated": "2026-10-08"
     },
     "test_sysconfig.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_sysconfig.py",
@@ -4334,7 +4331,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_sysconfig.py",
-      "updated": "2026-10-07"
+      "updated": "2026-10-08"
     },
     "test_syslog.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_syslog.py",
@@ -4415,7 +4412,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_threadedtempfile.py",
-      "updated": "2026-10-07"
+      "updated": "2026-10-08"
     },
     "test_threading.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_threading.py",
@@ -4471,7 +4468,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_timeout.py",
-      "updated": "2026-10-07"
+      "updated": "2026-10-08"
     },
     "test_tix.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_tix.py",
@@ -4494,13 +4491,13 @@
     "test_tokenize.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_tokenize.py",
       "status": "fail",
-      "stage": "transpile",
-      "rc": 1,
-      "err": "transpile: \nParse Error: expected token 3 got 52\nParse Error: expected token 17 got 52\nParse Error: Unexpected token in expression\n token=52\nParse Error: expected token 83 got 3\nParse Error: expected token 85 got 3\nParse Error: expected token 85 got 3\nParse Error: Expected '}' after class body\nerror: compilation failed",
-      "out": "",
+      "stage": "run",
+      "rc": -11,
+      "err": "",
+      "out": "  TokenizeTest.test_tabs\n  TokenizeTest.test_long\n  TokenizeTest.test_underscore_literals\n  TokenizeTest.test_method\n  TokenizeTest.test_int\n  TokenizeTest.test_shift\n  TokenizeTest.test_implicit_newline\n  TokenizeTest.test_basic\n  TokenizeTest.test_float\n  TokenizeTest.test_comparison\n  TokenizeTest.test_additive\n  TokenizeTest.test_function\n  TokenizeTest.test_async\n  TokenizeTest.test_multiplicative\n  TokenizeTest.test_non_ascii_identifiers\n  TokenizeTest.test_string\n  TokenizeTest.test_unary\n  GenerateTokensTest.test_tabs\n  GenerateTokensTest.test_long\n  GenerateTokensTest.test_underscore_literals\n  GenerateTokensTest.test_method\n  GenerateTokensTest.test_int\n  GenerateTokensTest.test_shift\n  GenerateTokensTest.test_implicit_newline\n  GenerateTokensTest.test_basic\n  GenerateTokensTest.test_float\n  GenerateTokensTest.test_comparison\n  GenerateTokensTest.test_additive\n  GenerateTokensTest.test_function\n  GenerateTokensTest.test_async\n  GenerateTokensTest.test_multiplicative\n  GenerateTokensTest.test_non_ascii_identifiers\n  GenerateTokensTest.test_string\n  GenerateTokensTest.test_unary\n  TestMisc.test_decistmt\n  TestTokenizerAdheresToPep0263.test_bad_coding_cookie\n  TestTokenizerAdheresToPep0263.test_utf8_coding_cookie_and_utf8_bom\n  TestTokenizerAdheresToPep0263.test_utf8_coding_cookie_and_no_utf8_bom\n  TestTokenizerAdheresToPep0263.test_no_coding_cookie_and_utf8_bom\n  TestTokenizerAdheresToPep0263.test_latin1_coding_cookie_and_utf8_bom\n  Test_Tokenize.test__tokenize_decodes_with_specified_encoding\n  Test_Tokenize.test__tokenize_does_not_decode_with_encoding_none\n  TestDetectEncoding.test_no_bom_no_encoding_cookie\n  TestDetectEncoding.test_cookie_second_line_noncommented_first_line\n  TestDetectEncoding.test_filename_in_exception\n  TestDetectEncoding.test_cookie_second_line_empty_first_line\n  TestDetectEncoding.test_bom_no_cookie\n  TestDetectEncoding.test_latin1_normalization\n  TestDetectEncoding.test_utf8_normalization\n  TestDetectEncoding.test_false_encoding\n  TestDetectEncoding.test_cookie_second_line_commented_first_line\n  TestDetectEncoding.test_short_files\n  TestDetectEncoding.test_matched_bom_and_cookie_first_line\n  TestDetectEncoding.test_cookie_second_line_no_bom\n  TestDetectEncoding.test_open_error\n  TestDetectEncoding.test_syntaxerror_latin1\n  TestDetectEncoding.test_mismatched_bom_and_cookie_second_line_raises_syntaxerror\n  TestDetectEncoding.test_mismatched_bom_and_cookie_first_line_raises_syntaxerror\n  TestDetectEncoding.test_open\n# coding: %s\nprint('euro:\u20ac')\n  TestDetectEncoding.test_cookie_first_line_no_bom\n  TestDetectEncoding.test_matched_bom_and_cookie_second_line\n  TestTokenize.test_tokenize\n  TestTokenize.test_pathological_trailing_whitespace\n  TestTokenize.test_exact_type\n  TestTokenize.test_oneline_defs\n  TestTokenize.test_comment_at_the_end_of_the_source_without_newline\n  UntokenizeTest.test_bad_input_order\nFAIL: assertEqual\n  UntokenizeTest.test_iter_compat\n  UntokenizeTest.test_backslash_continuation\n  TestRoundtrip.test_random_files\n  TestRoundtrip.test_continuation\n  TestRoundtrip.test_roundtrip\n  TestRoundtrip.test_string_concatenation\n  TestRoundtrip.test_indentation_semantics_retained\n  TestRoundtrip.test_backslash_continuation\n  CTokenizeTest.test_tabs\n  CTokenizeTest.test_float\n  CTokenizeTest.test_comparison\n  CTokenizeTest.test_continuation_lines_indentation\n  CTokenizeTest.test_additive\n  CTokenizeTest.test_max_indent\n",
       "tags": [],
       "key": "test_tokenize.py",
-      "updated": "2026-10-03"
+      "updated": "2026-10-08"
     },
     "test_tomllib/__init__.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_tomllib/__init__.py",
@@ -4620,7 +4617,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_tools/test_pindent.py",
-      "updated": "2026-10-07"
+      "updated": "2026-10-08"
     },
     "test_tools/test_reindent.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_tools/test_reindent.py",
@@ -4701,7 +4698,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_turtle.py",
-      "updated": "2026-10-07"
+      "updated": "2026-10-08"
     },
     "test_type_annotations.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_type_annotations.py",
@@ -4741,24 +4738,24 @@
     "test_types.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_types.py",
       "status": "fail",
-      "stage": "transpile",
+      "stage": "run",
       "rc": -11,
-      "err": "transpile:",
-      "out": "",
+      "err": "",
+      "out": "ERROR: Method not found: TypeVar\n  TypesTests.test_comparisons\nFAIL: int comparisons failed\n  TypesTests.test_slot_wrapper_types\n  TypesTests.test_int__format__\n",
       "tags": [],
       "key": "test_types.py",
-      "updated": "2026-10-03"
+      "updated": "2026-10-08"
     },
     "test_typing.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_typing.py",
       "status": "fail",
-      "stage": "transpile",
-      "rc": 1,
-      "err": "transpile: \nParse Error: Unexpected token in expression\n token=52\nParse Error: expected token 83 got 3\nParse Error: expected token 81 got 3\nParse Error: expected token 85 got 3\nParse Error: Expected '}' after class body\nerror: compilation failed",
-      "out": "",
+      "stage": "run",
+      "rc": -11,
+      "err": "",
+      "out": "ERROR: Method not found: NewType\nERROR: Method not found: send\nERROR: Method not found: ParamSpec\nERROR: Method not found: TypeVar\nERROR: Method not found: NewType\n  AnyTests.test_repr\nFAIL: assertEqual\n  AnyTests.test_can_subclass\nFAIL: assertFalse\n  AnyTests.test_cannot_instantiate\n",
       "tags": [],
       "key": "test_typing.py",
-      "updated": "2026-10-03"
+      "updated": "2026-10-08"
     },
     "test_ucn.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_ucn.py",
@@ -4766,7 +4763,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_ucn.py",
-      "updated": "2026-10-07"
+      "updated": "2026-10-08"
     },
     "test_unary.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_unary.py",
@@ -4792,7 +4789,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_unicode_file.py",
-      "updated": "2026-10-07"
+      "updated": "2026-10-08"
     },
     "test_unicode_file_functions.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_unicode_file_functions.py",
@@ -4868,7 +4865,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_unparse.py",
-      "updated": "2026-10-07"
+      "updated": "2026-10-08"
     },
     "test_urllib.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_urllib.py",
@@ -4933,13 +4930,13 @@
     "test_urlparse.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_urlparse.py",
       "status": "fail",
-      "stage": "transpile",
-      "rc": 1,
-      "err": "transpile: \nParse Error: Unexpected token in expression\n token=60\nParse Error: expected token 85 got 82\nParse Error: Expected '}' after class body\nerror: compilation failed",
-      "out": "",
+      "stage": "run",
+      "rc": -11,
+      "err": "",
+      "out": "  UrlParseTestCase.test_urlsplit_attributes\n",
       "tags": [],
       "key": "test_urlparse.py",
-      "updated": "2026-10-03"
+      "updated": "2026-10-08"
     },
     "test_userdict.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_userdict.py",
@@ -4963,7 +4960,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_userstring.py",
-      "updated": "2026-10-07"
+      "updated": "2026-10-08"
     },
     "test_utf8_mode.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_utf8_mode.py",
@@ -5102,13 +5099,13 @@
     "test_with.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_with.py",
       "status": "fail",
-      "stage": "transpile",
+      "stage": "run",
       "rc": 1,
-      "err": "transpile: \nParse Error: expected token 84 got 89\nParse Error: Expected '{' to start block\nParse Error: expected token 85 got 89\nParse Error: expected token 85 got 89\nParse Error: Expected '}' after class body\nerror: compilation failed",
-      "out": "",
+      "err": "",
+      "out": "  FailureTestCase.testExitThrows\n  FailureTestCase.testExitAttributeError\n  FailureTestCase.testAssignmentToTupleContainingNoneError\n  FailureTestCase.testEnterAttributeError1\n  FailureTestCase.testAssignmentToNoneError\n  FailureTestCase.testAssignmentToTupleOnlyContainingNoneError\n  FailureTestCase.testEnterAttributeError2\n  FailureTestCase.testEnterThrows\nFAIL: assertEqual\n  FailureTestCase.testNameError\n  NonexceptionalTestCase.testUnboundGenerator\nFAIL: assertTrue\n  NonexceptionalTestCase.testInlineGeneratorSyntax\n  NonexceptionalTestCase.testBoundGenerator\nFAIL: assertTrue\n  NonexceptionalTestCase.testInlineGeneratorBoundToExistingVariable\nFAIL: assertTrue\n  NonexceptionalTestCase.testInlineGeneratorBoundSyntax\nFAIL: assertTrue\n  NonexceptionalTestCase.testInlineGeneratorBoundToDottedVariable\nFAIL: assertTrue\n  NonexceptionalTestCase.testNestedSingleStatements\nFAIL: assertTrue\n  NestedNonexceptionalTestCase.testSingleArgBoundToMultipleElementTupleError\n  NestedNonexceptionalTestCase.testSingleArgBoundToSingleElementParenthesizedList\nFAIL: assertTrue\n  NestedNonexceptionalTestCase.testSingleArgBoundToNonTuple\nFAIL: assertTrue\n  NestedNonexceptionalTestCase.testSingleArgInlineGeneratorSyntax\n  NestedNonexceptionalTestCase.testMultipleArgBound\nFAIL: assertTrue\n  NestedNonexceptionalTestCase.testSingleArgUnbound\nFAIL: assertTrue\n  NestedNonexceptionalTestCase.testMultipleArgUnbound\nFAIL: assertTrue\n  ExceptionalTestCase.testErrorsInBool\nFAIL: Should NOT see this\n  ExceptionalTestCase.testNestedExceptionBeforeInnerStatement\nFAIL: assertTrue\n  ExceptionalTestCase.testRaisedGeneratorExit1\n  ExceptionalTestCase.testRaisedStopIteration2\n  ExceptionalTestCase.testRaisedStopIteration3\n  ExceptionalTestCase.testNestedExceptionAfterInnerStatement\nFAIL: assertTrue\n  ExceptionalTestCase.testSingleResource\nFAIL: assertTrue\n  ExceptionalTestCase.testRaisedStopIteration1\n  ExceptionalTestCase.testRaisedGeneratorExit2\n  ExceptionalTestCase.testMultipleResourcesInSingleStatement\nFAIL: assertTrue\n  ExceptionalTestCase.testExceptionNormalized\nFAIL: assertTrue\n  ExceptionalTestCase.testNestedSingleStatements\nFAIL: assertTrue\n  NonLocalFlowControlTestCase.testWithYield\n  NonLocalFlowControlTestCase.testWithContinue\n  NonLocalFlowControlTestCase.testWithReturn\n  NonLocalFlowControlTestCase.testWithBreak\n  NonLocalFlowControlTestCase.testWithRaise\n  AssignmentTargetTestCase.testSingleComplexTarget\nFAIL: assertEqual\n  AssignmentTargetTestCase.testMultipleComplexTargets\nFAIL: assertEqual\n  AssignmentTargetTestCase.testWithExtendedTargets\n  ExitSwallowsExceptionTestCase.testExitFalseDoesntSwallowException\nFAIL: ZeroDivisionError should have been raised\n  ExitSwallowsExceptionTestCase.testExitTrueSwallowsException\n  NestedWith.testExceptionInExprList\nFAIL: assertTrue\n  NestedWith.testNoExceptions\nFAIL: assertTrue\n  NestedWith.testEnterReturnsTuple\nFAIL: assertEqual\n  NestedWith.testExceptionInExit\nFAIL: assertTrue\n  NestedWith.testExceptionInEnter\nFAIL: body of bad with executed\nunittest: ran 50 tests, 27 failed\n",
       "tags": [],
       "key": "test_with.py",
-      "updated": "2026-10-03"
+      "updated": "2026-10-08"
     },
     "test_wsgiref.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_wsgiref.py",
