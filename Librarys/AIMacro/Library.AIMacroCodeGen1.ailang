@@ -2527,6 +2527,11 @@ Function.Gen_NodeHasYield {
             IfCondition EqualTo(Gen_StmtsHaveYield(ArrayGet(node, 5)), 1) ThenBlock: {
                 ReturnValue(1)
             }
+            // slot 6 is else_body (finally is slot 5). Nested yield in
+            // try/else (generators flat_conjoin) must init __yields.
+            IfCondition EqualTo(Gen_StmtsHaveYield(ArrayGet(node, 6)), 1) ThenBlock: {
+                ReturnValue(1)
+            }
             excepts = ArrayGet(node, 4)
             IfCondition NotEqual(excepts, 0) ThenBlock: {
                 IfCondition EqualTo(Array.IsArray(excepts), 1) ThenBlock: {
@@ -4155,6 +4160,8 @@ Function.Gen_UnboundSkip {
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
         cmp = StringCompare(name, "map")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+        cmp = StringCompare(name, "breakpoint")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
         cmp = StringCompare(name, "min")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
         cmp = StringCompare(name, "max")
@@ -4311,6 +4318,12 @@ Function.Gen_WalkUnbound {
             ReturnValue(0)
         }
         IfCondition EqualTo(t, Node.LIST_COMP) ThenBlock: {
+            // Walk expr / iterable / cond. Skip target var and var2 so
+            // listcomp `_` is not GetNone (that unpack is a leftover).
+            // Iterable freevar `y` in `(1 for x in y)` must be declared.
+            Gen_WalkUnbound(ArrayGet(node, 3), assigned, unbound, extra_skip)
+            Gen_WalkUnbound(ArrayGet(node, 5), assigned, unbound, extra_skip)
+            Gen_WalkUnbound(ArrayGet(node, 6), assigned, unbound, extra_skip)
             ReturnValue(0)
         }
         IfCondition EqualTo(t, Node.IDENT) ThenBlock: {

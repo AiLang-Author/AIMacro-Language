@@ -565,10 +565,10 @@
     "test_builtin.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_builtin.py",
       "status": "fail",
-      "stage": "compile",
-      "rc": 1,
-      "err": "\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\nERROR: Variable not found: map\nCompilation Failed: \n[AST] Freeing 149754 node child-lists...\n[AST] Freed 61186 child-lists (node slots stay in pool)",
-      "out": "",
+      "stage": "run",
+      "rc": -11,
+      "err": "",
+      "out": "ERROR: Method not found: startswith\n",
       "tags": [],
       "key": "test_builtin.py",
       "updated": "2026-10-08"
@@ -969,10 +969,10 @@
     "test_compile.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_compile.py",
       "status": "fail",
-      "stage": "compile",
-      "rc": 1,
-      "err": "ts\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\nERROR: Variable not found: y\nCompilation Failed: \n[AST] Freeing 130675 node child-lists...\n[AST] Freed 55721 child-lists (node slots stay in pool)",
-      "out": "",
+      "stage": "run",
+      "rc": -11,
+      "err": "",
+      "out": "  TestSpecifics.test_bad_single_statement\n  TestSpecifics.test_merge_code_attrs\n  TestSpecifics.test_compile_invalid_namedexpr\n  TestSpecifics.test_lineno_procedure_call\n  TestSpecifics.test_literals_with_leading_zeroes\nFAIL: assertEqual\n  TestSpecifics.test_apply_static_swaps_2\n  TestSpecifics.test_apply_static_swaps_3\n  TestSpecifics.test_line_number_implicit_return_after_async_for\n  TestSpecifics.test_compiler_recursion_limit\n  TestSpecifics.test_path_like_objects\n  TestSpecifics.test_yet_more_evil_still_undecodable\n  TestSpecifics.test_big_dict_literal\n  TestSpecifics.test_float_literals\n  TestSpecifics.test_stack_overflow\n  TestSpecifics.test_subscripts\nFAIL: assertEqual\n  TestSpecifics.test_lineno_after_implicit_return\n  TestSpecifics.test_peephole_opt_unreachable_code_array_access_in_bounds\n  TestSpecifics.test_compare_positions\n  TestSpecifics.test_extended_arg\n",
       "tags": [],
       "key": "test_compile.py",
       "updated": "2026-10-08"
@@ -1233,10 +1233,10 @@
     "test_descr.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_descr.py",
       "status": "fail",
-      "stage": "compile",
-      "rc": 1,
-      "err": ": duplicate definition of '__nest_246_E_foo_set' first seen at main:19343 \u2014 aborting, same-file copies are unpredictable\nSEMANTIC ERROR at line 47922, col 0: duplicate function\nSEMANTIC ERROR main:19367: duplicate definition of '__nest_246_E_foo_set' first seen at main:19343 \u2014 aborting, same-file copies are unpredictable\nSEMANTIC ERROR at line 47934, col 0: duplicate function\nSemantic Analysis Failed\n[AST] Freeing 176867 node child-lists...\n[AST] Freed 65982 child-lists (node slots stay in pool)",
-      "out": "",
+      "stage": "run",
+      "rc": -9,
+      "err": "",
+      "out": "  OperatorsTest.test_dicts\n",
       "tags": [],
       "key": "test_descr.py",
       "updated": "2026-10-08"
@@ -1626,10 +1626,10 @@
     "test_exceptions.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_exceptions.py",
       "status": "fail",
-      "stage": "compile",
+      "stage": "run",
       "rc": -11,
-      "err": "Stdlib\n[IMPORT] Loaded: FixedPointTrig\n[IMPORT] Loaded: AIMacro.AIMacroSeq\n[IMPORT] Loaded: AIMacro.AIMacroNum\n[IMPORT ERROR] Cannot read: weakref\n[IMPORT ERROR] Cannot read: errno\n[IMPORT ERROR] Cannot read: textwrap\n[IMPORT] Extracting symbols from 24 modules\n[IMPORT] Checking 1119 symbols for conflicts\n[IMPORT] Found 0 conflicting symbols\n[IMPORT] Done.\n[AST] Initialized, pool-backed node storage\n[PARSER] Starting parse...\nPARSE ERROR at line 29378, col 11: Unexpected token in statement\n  In:",
-      "out": "",
+      "err": "",
+      "out": "  ExceptionTests.test_unhandled\n",
       "tags": [],
       "key": "test_exceptions.py",
       "updated": "2026-10-08"
@@ -1929,10 +1929,10 @@
     "test_generators.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_generators.py",
       "status": "fail",
-      "stage": "compile",
-      "rc": 1,
-      "err": "LINDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\nERROR: Variable not found: __yields\nCompilation Failed: \n[AST] Freeing 105560 node child-lists...\n[AST] Freed 45550 child-lists (node slots stay in pool)",
-      "out": "",
+      "stage": "run",
+      "rc": -11,
+      "err": "",
+      "out": "  SignalAndYieldFromTest.test_raise_and_yield_from\nFAIL: assertIs\n",
       "tags": [],
       "key": "test_generators.py",
       "updated": "2026-10-08"
@@ -3273,10 +3273,10 @@
     "test_os.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_os.py",
       "status": "fail",
-      "stage": "compile",
-      "rc": 1,
-      "err": "INDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\nERROR: Variable not found: func_args\nCompilation Failed: \n[AST] Freeing 214946 node child-lists...\n[AST] Freed 88198 child-lists (node slots stay in pool)",
-      "out": "",
+      "stage": "run",
+      "rc": -11,
+      "err": "",
+      "out": "ERROR: Method not found: abspath\nERROR: Method not found: fsencode\nERROR: Method not found: fsencode\nERROR: Method not found: abspath\nERROR: Method not found: abspath\nERROR: Method not found: startswith\nERROR: Method not found: startswith\nERROR: Method not found: startswith\nERROR: Method not found: skipUnless\nERROR: Method not found: skipUnless\nERROR: Method not found: getpwall\nERROR: Method not found: startswith\nERROR: Method not found: startswith\nERROR: Method not found: skipIf\nERROR: Method not found: get_config_var\nERROR: Method not found: get_config_var\nERROR: Method not found: get_config_var\nERROR: Method not found: abspath\nERROR: Method not found: fsencode\nERROR: Method not found: fsencode\nERROR: Method not found: abspath\nERROR: Method not found: abspath\nERROR: Method not found: startswith\nERROR: Method not found: startswith\nERROR: Method not found: startswith\nERROR: Method not found: skipUnless\nERROR: Method not found: skipUnless\nERROR: Method not found: lexists\n  FileTests.test_splice\nERROR: Method not found: lexists\nERROR: Method not found: lexists\n  FileTests.test_splice_invalid_values\nERROR: Method not found: lexists\nERROR: Method not found: lexists\n  FileTests.test_rename\n",
       "tags": [],
       "key": "test_os.py",
       "updated": "2026-10-08"
@@ -3311,10 +3311,10 @@
     "test_patma.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_patma.py",
       "status": "fail",
-      "stage": "compile",
-      "rc": 1,
-      "err": "INDIRECT] 3 arguments\n[CALLINDIRECT] 4 arguments\n[CALLINDIRECT] 5 arguments\n[CALLINDIRECT] 6 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 2 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\nERROR: Variable not found: frozenset\nCompilation Failed: \n[AST] Freeing 161036 node child-lists...\n[AST] Freed 65569 child-lists (node slots stay in pool)",
-      "out": "",
+      "stage": "run",
+      "rc": -11,
+      "err": "",
+      "out": "rtEqual\n  TestPatma.test_patma_131\nERROR: object is not iterable\n  TestPatma.test_patma_206\nFAIL: assertEqual\n  TestPatma.test_patma_067\n  TestPatma.test_patma_185\nFAIL: assertEqual\n  TestPatma.test_patma_040\nFAIL: assertEqual\n  TestPatma.test_patma_177\nFAIL: assertEqual\n  TestPatma.test_patma_240\n  TestPatma.test_patma_095\n  TestPatma.test_patma_150\nFAIL: assertIs\n  TestPatma.test_patma_155\n  TestPatma.test_patma_009\nFAIL: assertEqual\n  TestPatma.test_patma_172\n  TestPatma.test_patma_245\nFAIL: assertEqual\n  TestPatma.test_patma_090\nFAIL: assertIs\n  TestPatma.test_patma_045\n  TestPatma.test_patma_209\n  TestPatma.test_patma_119\n  TestPatma.test_patma_062\n  TestPatma.test_patma_180\nFAIL: assertIs\n  TestSyntaxErrors.test_mapping_pattern_keys_may_only_match_literals_and_attribute_lookups\n  TestSyntaxErrors.test_name_capture_makes_remaining_patterns_unreachable_4\n  TestSyntaxErrors.test_name_capture_makes_remaining_patterns_unreachable_1\n  TestSyntaxErrors.test_name_capture_makes_remaining_patterns_unreachable_0\n  TestSyntaxErrors.test_wildcard_makes_remaining_patterns_unreachable_2\n  TestSyntaxErrors.test_wildcard_makes_remaining_patterns_unreachable_3\n  TestSyntaxErrors.test_invalid_syntax_3\n  TestSyntaxErrors.test_multiple_assignments_to_name_in_pattern_4\n  TestSyntaxErrors.test_invalid_syntax_2\n  TestSyntaxErrors.test_multiple_assignments_to_name_in_pattern_5\n  TestSyntaxErrors.test_patterns_may_only_match_literals_and_attribute_lookups_0\n  TestSyntaxErrors.test_patterns_may_only_match_literals_and_attribute_lookups_1\n  TestSyntaxErrors.test_multiple_starred_names_in_sequence_pattern_1\n  TestSyntaxErrors.test_real_number_required_in_complex_literal_2\n  TestSyntaxErrors.test_multiple_starred_names_in_sequence_pattern_0\n  TestSyntaxErrors.test_real_number_required_in_complex_literal_3\n  TestSyntaxErrors.test_mapping_pattern_duplicate_key_edge_case3\n  TestSyntaxErrors.test_mapping_pattern_duplicate_key_edge_case2\n  TestSyntaxErrors.test_multiple_assignments_to_name_in_pattern_0\n  TestSyntaxErrors.test_imaginary_number_required_in_complex_literal_0\n  TestSyntaxErrors.test_multiple_assignments_to_name_in_pattern_1\n  TestSyntaxErrors.test_imaginary_number_required_in_complex_literal_1\n  TestSyntaxErrors.test_attribute_name_repeated_in_class_pattern\n  TestSyntaxErrors.test_mapping_pattern_duplicate_key_edge_case0\n  TestSyntaxErrors.test_multiple_assignments_to_name_in_pattern_3\n  TestSyntaxErrors.test_mapping_pattern_duplicate_key_edge_case1\n  TestSyntaxErrors.test_multiple_assignments_to_name_in_pattern_2\n  TestSyntaxErrors.test_alternative_patterns_bind_different_names_1\n  TestSyntaxErrors.test_alternative_patterns_bind_different_names_0\n  TestSyntaxErrors.test_invalid_syntax_0\n  TestSyntaxErrors.test_invalid_syntax_1\n  TestSyntaxErrors.test_real_number_required_in_complex_literal_1\n  TestSyntaxErrors.test_real_number_required_in_complex_literal_0\n  TestSyntaxErrors.test_name_capture_makes_remaining_patterns_unreachable_2\n  TestSyntaxErrors.test_name_capture_makes_remaining_patterns_unreachable_3\n  TestSyntaxErrors.test_wildcard_makes_remaining_patterns_unreachable_1\n  TestSyntaxErrors.test_wildcard_makes_remaining_patterns_unreachable_0\n  TestSyntaxErrors.test_mapping_pattern_duplicate_key\n  TestSyntaxErrors.test_wildcard_makes_remaining_patterns_unreachable_4\n  TestSyntaxErrors.test_wildcard_makes_remaining_patterns_unreachable_5\n  TestTypeErrors.test_got_multiple_subpatterns_for_attribute_0\n  TestTypeErrors.test_got_multiple_subpatterns_for_attribute_1\n  TestTypeErrors.test_match_args_must_be_a_tuple_2\n  TestTypeErrors.test_match_args_elements_must_be_strings\n  TestTypeErrors.test_match_args_must_be_a_tuple_0\n  TestTypeErrors.test_match_args_must_be_a_tuple_1\n  TestTypeErrors.test_accepts_positional_subpatterns_1\nFAIL: assertEqual\n  TestTypeErrors.test_accepts_positional_subpatterns_0\n  TestValueErrors.test_mapping_pattern_checks_duplicate_key_1\n  TestTracing.test_parser_deeply_nested_patterns\n  TestTracing.test_unreachable_code\n",
       "tags": [],
       "key": "test_patma.py",
       "updated": "2026-10-08"

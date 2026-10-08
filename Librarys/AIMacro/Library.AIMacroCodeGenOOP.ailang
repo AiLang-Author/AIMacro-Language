@@ -1024,6 +1024,15 @@ Function.OOPGen_MethodImpl {
                     func_name = StringConcat(func_name, "_dup")
                 }
             }
+            // Third+ property setter still matches Class_method; keep
+            // suffixing until unique (descr nested E.foo fset copies).
+            WhileLoop EqualTo(Gen_NameInArray(func_name, OOPGen.emitted_methods), 1) {
+                IfCondition GreaterThan(num_params, 1) ThenBlock: {
+                    func_name = StringConcat(func_name, "_set")
+                } ElseBlock: {
+                    func_name = StringConcat(func_name, "_dup")
+                }
+            }
             Array.Push(OOPGen.emitted_methods, func_name)
         }
 
@@ -1534,6 +1543,14 @@ Function.OOPGen_Assign {
             use_bare = 1
         }
         IfCondition EqualTo(is_cls, 1) ThenBlock: {
+            use_bare = 1
+        }
+        // EmitIdent maps WindowsError/OSError/AssertionError to ExcKind
+        // ints; `3 = None` / `8 = 5` is not an lvalue.
+        IfCondition EqualTo(Gen_NameEndsWith(tname, "Error"), 1) ThenBlock: {
+            use_bare = 1
+        }
+        IfCondition EqualTo(Gen_NameEndsWith(tname, "Warning"), 1) ThenBlock: {
             use_bare = 1
         }
         Gen_EmitIndent()

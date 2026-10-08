@@ -252,7 +252,17 @@ Function.Gen_EmitPackedSmartCall {
         IfCondition EqualTo(name, 0) ThenBlock: {
             Gen_Emit("0")
         } ElseBlock: {
-            Gen_EmitIdent(name)
+            // Statement n>3 (breakpoint(1,2,3,four=4,five=5)) skips
+            // Gen_CallExpr; EmitIdent of a mapped builtin VNFs.
+            mapped_ps = Gen_MapBuiltin(name)
+            mcmp_ps = StringCompare(mapped_ps, name)
+            IfCondition EqualTo(mcmp_ps, 0) ThenBlock: {
+                Gen_EmitIdent(name)
+            } ElseBlock: {
+                Gen_Emit("AddressOf(")
+                Gen_Emit(mapped_ps)
+                Gen_Emit(")")
+            }
         }
         Gen_Emit(", ")
         Gen_Emit(pack)
@@ -1607,6 +1617,9 @@ Function.Gen_MapBuiltin {
         cmp = StringCompare(name, "map")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.Map") }
 
+        cmp = StringCompare(name, "breakpoint")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.SmartCall") }
+
         cmp = StringCompare(name, "iter")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.Iter") }
 
@@ -1879,6 +1892,12 @@ Function.Gen_MapTypeConstant {
 
         cmp = StringCompare(name, "slice")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("TypeID.UNKNOWN") }
+
+        cmp = StringCompare(name, "frozenset")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AddressOf(AIMacro.FrozenSet)") }
+
+        cmp = StringCompare(name, "set")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AddressOf(AIMacro.MakeSet)") }
 
         // Exception types as isinstance args — ExcKind ints (see Gen_MapExcKind)
         cmp = StringCompare(name, "ValueError")

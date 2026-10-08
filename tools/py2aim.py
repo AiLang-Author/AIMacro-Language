@@ -293,7 +293,27 @@ def _for_unpack_assigns(tmp: str, target: ast.expr, counter_box: list[int]) -> l
         stmts: list[ast.stmt] = []
         for idx, elt in enumerate(target.elts):
             if isinstance(elt, ast.Starred):
-                return []  # unsupported
+                # for a, b, *rest in xs — star-last rest slice.
+                if idx != len(target.elts) - 1:
+                    return []
+                inner = elt.value
+                if not isinstance(inner, ast.Name):
+                    return []
+                stmts.append(
+                    ast.Assign(
+                        targets=[ast.Name(id=inner.id, ctx=ast.Store())],
+                        value=ast.Subscript(
+                            value=ast.Name(id=tmp, ctx=ast.Load()),
+                            slice=ast.Slice(
+                                lower=ast.Constant(value=idx),
+                                upper=None,
+                                step=None,
+                            ),
+                            ctx=ast.Load(),
+                        ),
+                    )
+                )
+                continue
             if isinstance(elt, ast.Name):
                 stmts.append(
                     ast.Assign(
@@ -596,6 +616,18 @@ def desugar_nameerror_probe(src: str) -> str:
     """
     def repl(m: re.Match) -> str:
         indent, name = m.group("indent"), m.group("name")
+        # Exception type names are EmitIdent ints; `WindowsError = None`
+        # became `3 = Types.GetNone()` (test_exceptions PARSE).
+        if name.endswith(("Error", "Warning")) or name in {
+            "Exception",
+            "BaseException",
+            "StopIteration",
+            "KeyboardInterrupt",
+            "SystemExit",
+            "StopAsyncIteration",
+            "GeneratorExit",
+        }:
+            return m.group(0)
         return f"{indent}{name} = None\n{m.group(0)}"
     return _NAMEERROR_PROBE_RE.sub(repl, src)
 

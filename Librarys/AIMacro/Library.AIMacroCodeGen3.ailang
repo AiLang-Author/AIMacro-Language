@@ -1145,11 +1145,15 @@ Function.Gen_FlattenExpr {
 
             // Leftover / callable CALL with n>3: pack + SmartCallN (CallIndirect
             // is illegal for leftover-0 and exceeds the SysV input cap).
+            // Mapped builtins (map/zip/...) must not SmartCallN the Python
+            // ident — that VNFs `map` (test_builtin 3-iterable map).
             n_sc = 0
             IfCondition NotEqual(args, 0) ThenBlock: {
                 n_sc = Array.Size(args)
             }
-            IfCondition GreaterThan(n_sc, 3) ThenBlock: {
+            mapped_sc = Gen_MapBuiltin(call_name)
+            mcmp_sc = StringCompare(mapped_sc, call_name)
+            IfCondition And(GreaterThan(n_sc, 3), EqualTo(mcmp_sc, 0)) ThenBlock: {
                 pack = Gen_TempName()
                 Gen_EmitIndent()
                 Gen_Emit(pack)
