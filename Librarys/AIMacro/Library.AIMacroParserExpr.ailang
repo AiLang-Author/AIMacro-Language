@@ -1028,6 +1028,57 @@ Function.Parse_FString {
     }
 }
 
+Function.Parse_DottedName {
+    Output: Address
+    Body: {
+        IfCondition NotEqual(Parse_Type(), Token.IDENTIFIER) ThenBlock: {
+            ReturnValue(0)
+        }
+        name = Parse_CopyStr(Parse_Val())
+        Parse_Advance()
+        WhileLoop EqualTo(Parse_Match(Token.DOT), 1) {
+            Parse_Advance()
+            Parse_SkipNoise()
+            IfCondition EqualTo(Parse_Match(Token.IDENTIFIER), 1) ThenBlock: {
+                name = StringConcat(name, ".")
+                name = StringConcat(name, Parse_CopyStr(Parse_Val()))
+                Parse_Advance()
+            } ElseBlock: {
+                BreakLoop
+            }
+        }
+        ReturnValue(name)
+    }
+}
+
+Function.Parse_ParenHasAs {
+    Output: Integer
+    Body: {
+        depth = 0
+        i = Parse.pos
+        WhileLoop EqualTo(1, 1) {
+            t = Lex_GetType(i)
+            IfCondition EqualTo(t, Token.EOF) ThenBlock: {
+                ReturnValue(0)
+            }
+            IfCondition EqualTo(t, Token.LPAREN) ThenBlock: {
+                depth = Add(depth, 1)
+            }
+            IfCondition EqualTo(t, Token.RPAREN) ThenBlock: {
+                depth = Subtract(depth, 1)
+                IfCondition EqualTo(depth, 0) ThenBlock: {
+                    ReturnValue(0)
+                }
+            }
+            IfCondition And(EqualTo(t, Token.AS), EqualTo(depth, 1)) ThenBlock: {
+                ReturnValue(1)
+            }
+            i = Add(i, 1)
+        }
+        ReturnValue(0)
+    }
+}
+
 Function.Parse_With {
     Output: Address
     Body: {
@@ -1036,11 +1087,25 @@ Function.Parse_With {
         Parse_Consume(Token.WITH)
 
         // Multi-with: with A as a, B as b { body }
+        // Parenthesized: with (A as a, B as b) { body }
         // Desugar to nested WITH_STMT (rightmost innermost) so exit order matches Python.
         exprs = Array.Create(4)
         as_names = Array.Create(4)
+        wrapped = 0
+        Parse_SkipNoise()
+        IfCondition EqualTo(Parse_Match(Token.LPAREN), 1) ThenBlock: {
+            IfCondition EqualTo(Parse_ParenHasAs(), 1) ThenBlock: {
+                wrapped = 1
+                Parse_Advance()
+            }
+        }
         WhileLoop EqualTo(1, 1) {
             Parse_SkipNoise()
+            IfCondition EqualTo(wrapped, 1) ThenBlock: {
+                IfCondition EqualTo(Parse_Match(Token.RPAREN), 1) ThenBlock: {
+                    BreakLoop
+                }
+            }
             expr = Parse_Expr()
             as_name = 0
             is_as = Parse_Match(Token.AS)
@@ -1048,7 +1113,7 @@ Function.Parse_With {
                 Parse_Advance()
                 Parse_SkipNoise()
                 names = Array.Create(4)
-                // with expr as (a, b) — unpack names from __enter__ result
+                // with expr as (a, b) / as (self.a, self.b)
                 IfCondition EqualTo(Parse_Match(Token.LPAREN), 1) ThenBlock: {
                     Parse_Advance()
                     WhileLoop EqualTo(1, 1) {
@@ -1065,20 +1130,25 @@ Function.Parse_With {
                             Parse_SkipParens()
                             ContinueLoop
                         }
-                        IfCondition EqualTo(Parse_Match(Token.IDENTIFIER), 1) ThenBlock: {
-                            np = Parse_Val()
-                            nm = Parse_CopyStr(np)
-                            Parse_Advance()
-                            Array.Push(names, nm)
+                        dotted = Parse_DottedName()
+                        IfCondition NotEqual(dotted, 0) ThenBlock: {
+                            Array.Push(names, dotted)
                         } ElseBlock: {
                             Parse_Advance()
                         }
                     }
                 } ElseBlock: {
-                    name_ptr = Parse_Val()
-                    nm = Parse_CopyStr(name_ptr)
-                    Parse_Consume(Token.IDENTIFIER)
-                    Array.Push(names, nm)
+                    dotted = Parse_DottedName()
+                    IfCondition NotEqual(dotted, 0) ThenBlock: {
+                        Array.Push(names, dotted)
+                    }
+                    // with expr as list(x)[0][1] / as targets[1][0]
+                    IfCondition EqualTo(Parse_Match(Token.LPAREN), 1) ThenBlock: {
+                        Parse_SkipParens()
+                    }
+                    WhileLoop EqualTo(Parse_Match(Token.LBRACKET), 1) {
+                        Parse_SkipBrackets()
+                    }
                 }
                 as_name = names
             }
@@ -1091,6 +1161,12 @@ Function.Parse_With {
                 ContinueLoop
             }
             BreakLoop
+        }
+        IfCondition EqualTo(wrapped, 1) ThenBlock: {
+            Parse_SkipNoise()
+            IfCondition EqualTo(Parse_Match(Token.RPAREN), 1) ThenBlock: {
+                Parse_Advance()
+            }
         }
 
         body = Parse_EnterBlock()

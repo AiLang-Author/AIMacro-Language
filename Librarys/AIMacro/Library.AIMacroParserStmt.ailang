@@ -180,6 +180,11 @@ Function.Parse_Try {
             
             Parse_Advance()  // Skip 'except'
             Parse_SkipNoise()
+            // except* ExceptionGroup { }  (PEP 654)
+            IfCondition EqualTo(Parse_Match(Token.STAR), 1) ThenBlock: {
+                Parse_Advance()
+                Parse_SkipNoise()
+            }
             
             // except { } | except Type { } | except pkg.Type { }
             // | except (A, B) { } | except Type as name { } | except (A, B) as e { }
@@ -224,7 +229,11 @@ Function.Parse_Try {
                                 }
                             }
                         } ElseBlock: {
-                            BreakLoop
+                            // except (ValueError, 42) / except (E, f())
+                            IfCondition EqualTo(Parse_Match(Token.RPAREN), 0) ThenBlock: {
+                                Parse_Expr()
+                                Parse_SkipNoise()
+                            }
                         }
                     }
                 }
@@ -250,6 +259,47 @@ Function.Parse_Try {
                     // except Type() as e  (call, not a type tuple)
                     IfCondition EqualTo(Parse_Match(Token.LPAREN), 1) ThenBlock: {
                         Parse_SkipParens()
+                    }
+                    // except Signals[self.decimal]
+                    IfCondition EqualTo(Parse_Match(Token.LBRACKET), 1) ThenBlock: {
+                        Parse_SkipBrackets()
+                    }
+                    // except A | B  (PEP 604) / except Exception or Exception
+                    WhileLoop Or(EqualTo(Parse_Match(Token.BIT_OR), 1), EqualTo(Parse_Match(Token.OR), 1)) {
+                        Parse_Advance()
+                        Parse_SkipNoise()
+                        IfCondition EqualTo(Parse_Match(Token.IDENTIFIER), 1) ThenBlock: {
+                            WhileLoop EqualTo(1, 1) {
+                                Parse_Advance()
+                                Parse_SkipNoise()
+                                IfCondition EqualTo(Parse_Match(Token.DOT), 1) ThenBlock: {
+                                    Parse_Advance()
+                                    Parse_SkipNoise()
+                                } ElseBlock: {
+                                    BreakLoop
+                                }
+                            }
+                        } ElseBlock: {
+                            IfCondition EqualTo(Parse_Match(Token.NUMBER), 1) ThenBlock: {
+                                Parse_Advance()
+                            }
+                        }
+                    }
+                } ElseBlock: {
+                    // except 42 / except other expr type
+                    IfCondition EqualTo(Parse_Match(Token.NUMBER), 1) ThenBlock: {
+                        Parse_Advance()
+                        Parse_SkipNoise()
+                    } ElseBlock: {
+                        t = Parse_Type()
+                        IfCondition NotEqual(t, Token.LBRACE) ThenBlock: {
+                            IfCondition NotEqual(t, Token.COLON) ThenBlock: {
+                                IfCondition NotEqual(t, Token.AS) ThenBlock: {
+                                    Parse_Expr()
+                                    Parse_SkipNoise()
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -658,6 +708,11 @@ Function.Parse_ConsumeForTarget {
         name = Parse_CopyStr(p)
         Parse_Consume(Token.IDENTIFIER)
         Parse_SkipNoise()
+        // for tgt[0] in ... / for values[i] in ...
+        WhileLoop EqualTo(Parse_Match(Token.LBRACKET), 1) {
+            Parse_SkipBrackets()
+            Parse_SkipNoise()
+        }
         ReturnValue(name)
     }
 }
@@ -708,11 +763,17 @@ Function.Parse_For {
                 is_tuple = 1
                 Parse_Advance()
                 Parse_SkipNoise()
-                var2 = Parse_ConsumeForTarget()
-                WhileLoop EqualTo(Parse_Match(Token.COMMA), 1) {
-                    Parse_Advance()
-                    Parse_SkipNoise()
-                    discard = Parse_ConsumeForTarget()
+                // for x, in seq — trailing comma, single target
+                IfCondition EqualTo(Parse_Match(Token.IN), 0) ThenBlock: {
+                    var2 = Parse_ConsumeForTarget()
+                    WhileLoop EqualTo(Parse_Match(Token.COMMA), 1) {
+                        Parse_Advance()
+                        Parse_SkipNoise()
+                        IfCondition EqualTo(Parse_Match(Token.IN), 1) ThenBlock: {
+                            BreakLoop
+                        }
+                        discard = Parse_ConsumeForTarget()
+                    }
                 }
             }
         }
@@ -771,6 +832,26 @@ Function.Parse_Yield {
         col = Parse_Col()
 
         Parse_Consume(Token.YIELD)
+        // Keep NEWLINE: `yield` then a following stmt must not eat that stmt
+        // as the yield value. Comments on the same line still skip.
+        WhileLoop EqualTo(Parse_Type(), Token.COMMENT) {
+            Parse_Advance()
+        }
+        IfCondition EqualTo(as_stmt, 1) ThenBlock: {
+            next = Parse_Type()
+            IfCondition EqualTo(next, Token.NEWLINE) ThenBlock: {
+                node = AST_Create(Node.PASS_STMT, 0)
+                ReturnValue(node)
+            }
+            IfCondition EqualTo(next, Token.SEMICOLON) ThenBlock: {
+                node = AST_Create(Node.PASS_STMT, 0)
+                ReturnValue(node)
+            }
+            IfCondition EqualTo(next, Token.RBRACE) ThenBlock: {
+                node = AST_Create(Node.PASS_STMT, 0)
+                ReturnValue(node)
+            }
+        }
         Parse_SkipNoise()
 
         // yield from <expr>
@@ -922,6 +1003,25 @@ Function.Parse_IsAnnotStop {
 
 Function.Parse_SkipParamAnnotation {
     Body: {
+        // def f() -> {42: 'ham'}  /  c: {1: 2}  — dict annotation, not the body
+        IfCondition EqualTo(Parse_Match(Token.LBRACE), 1) ThenBlock: {
+            Parse_Advance()
+            d = 1
+            WhileLoop GreaterThan(d, 0) {
+                t = Parse_Type()
+                IfCondition EqualTo(t, Token.EOF) ThenBlock: {
+                    BreakLoop
+                }
+                IfCondition EqualTo(t, Token.LBRACE) ThenBlock: {
+                    d = Add(d, 1)
+                }
+                IfCondition EqualTo(t, Token.RBRACE) ThenBlock: {
+                    d = Subtract(d, 1)
+                }
+                Parse_Advance()
+            }
+            ReturnValue(0)
+        }
         dp = 0
         db = 0
         WhileLoop EqualTo(1, 1) {
@@ -1068,6 +1168,8 @@ Function.Parse_AssignRhs {
     Output: Address
     Body: {
         first = Parse_Expr()
+        // a, b, c = x, y, z = rhs  — tuple tail before the next '='
+        first = Parse_BareTupleTail(first)
         is_assign = Parse_Match(Token.ASSIGN)
         IfCondition EqualTo(is_assign, 1) ThenBlock: {
             line = Parse_Line()
@@ -1108,7 +1210,7 @@ Function.Parse_AssignRhs {
             // Unknown middle target shape — keep prior skip behavior
             ReturnValue(deeper)
         }
-        ReturnValue(Parse_BareTupleTail(first))
+        ReturnValue(first)
     }
 }
 

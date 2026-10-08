@@ -108,6 +108,8 @@ Function.Parse_Consume {
             PrintNumber(tok_type)
             PrintMessage(" got ")
             PrintNumber(cur)
+            PrintMessage(" at line ")
+            PrintNumber(Parse_Line())
             PrintMessage("\n")
             ReturnValue(0)
         }
@@ -1372,6 +1374,11 @@ Function.Parse_FuncDef {
                     kw_ptr = Parse_Val()
                     kw_name = Parse_CopyStr(kw_ptr)
                     Parse_Advance()
+                    // **kwargs: annotation  (def f(**k: 11))
+                    IfCondition EqualTo(Parse_Match(Token.COLON), 1) ThenBlock: {
+                        Parse_Advance()
+                        Parse_SkipParamAnnotation()
+                    }
                     Array.Push(params, kw_name)
                     Array.Push(defaults, 0)
                 }
@@ -1469,6 +1476,10 @@ Function.Parse_Lambda {
                 Parse_Advance()
                 ContinueLoop
             }
+            IfCondition EqualTo(Parse_Match(Token.SLASH), 1) ThenBlock: {
+                Parse_Advance()
+                ContinueLoop
+            }
             IfCondition EqualTo(Parse_Match(Token.POWER), 1) ThenBlock: {
                 Parse_Advance()
                 Parse_SkipNoise()
@@ -1537,19 +1548,33 @@ Function.Parse_EnterBlock {
     Output: Address
     Body: {
         Parse_SkipNoise()
-        ok = Parse_Consume(Token.LBRACE)
-        IfCondition EqualTo(ok, 0) ThenBlock: {
-            // Python leftover ':' after multiline def/class signatures
-            IfCondition EqualTo(Parse_Match(Token.COLON), 1) ThenBlock: {
-                Parse_Advance()
-            } ElseBlock: {
-                Parse_Error("Expected '{' to start block")
-                ReturnValue(Array.Create(1))
-            }
+        // Do not Parse_Consume('{') first: a miss sets Parse.err and aborts
+        // leftover-colon recovery (except* / unbraced one-liners).
+        IfCondition EqualTo(Parse_Match(Token.LBRACE), 1) ThenBlock: {
+            Parse_Advance()
+            Parse_SkipNoise()
+            body = Parse_Block()
+            ReturnValue(body)
         }
-        Parse_SkipNoise()
-        body = Parse_Block()
-        ReturnValue(body)
+        IfCondition EqualTo(Parse_Match(Token.COLON), 1) ThenBlock: {
+            Parse_Advance()
+            Parse_SkipNoise()
+            IfCondition EqualTo(Parse_Match(Token.LBRACE), 1) ThenBlock: {
+                Parse_Advance()
+                Parse_SkipNoise()
+                body = Parse_Block()
+                ReturnValue(body)
+            }
+            // Unbraced one-stmt suite: except* Type as e: pass
+            stmts = Array.Create(1)
+            stmt = Parse_Stmt()
+            IfCondition NotEqual(stmt, 0) ThenBlock: {
+                Array.Push(stmts, stmt)
+            }
+            ReturnValue(stmts)
+        }
+        Parse_Error("Expected '{' to start block")
+        ReturnValue(Array.Create(1))
     }
 }
 

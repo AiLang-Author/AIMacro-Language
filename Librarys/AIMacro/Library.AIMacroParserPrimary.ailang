@@ -116,7 +116,8 @@ Function.Parse_Primary {
                 next_t = Lex_GetType(Add(Parse.pos, 1))
                 IfCondition EqualTo(next_t, Token.LPAREN) ThenBlock: {
                     node = Parse_SuperCall()
-                    ReturnValue(node)
+                    result = Parse_Postfix(node)
+                    ReturnValue(result)
                 }
             }
             // Merge prefix + adjacent STRING/FSTRING; keep concat through further prefixed pieces.
@@ -198,8 +199,9 @@ Function.Parse_Primary {
             first = Parse_ListElem()
             Parse_SkipNoise()
             is_starred = EqualTo(AST_Type(first), Node.STARRED)
-            // Generator expression: (x for x in y) — not (*a for ...)
+            // Generator expression: (x for x in y) / (x async for x in y)
             IfCondition EqualTo(is_starred, 0) ThenBlock: {
+                Parse_SkipCompAsync()
                 IfCondition EqualTo(Parse_Match(Token.FOR), 1) ThenBlock: {
                     node = Parse_CompAfter(first, Token.RPAREN, line, col)
                     result = Parse_Postfix(node)
@@ -267,6 +269,56 @@ Function.Parse_Primary {
     }
 }
 
+// One subscript dim: expr / *expr / start:end:step (empty ends allowed).
+// Slice dims are SLICE_ACCESS with object slot 0; caller fills it for 1-dim.
+Function.Parse_IndexDim {
+    Output: Address
+    Body: {
+        line = Parse_Line()
+        col = Parse_Col()
+        Parse_SkipNoise()
+        start_expr = 0
+        is_colon = Parse_Match(Token.COLON)
+        IfCondition EqualTo(is_colon, 0) ThenBlock: {
+            start_expr = Parse_StarOrExpr()
+            Parse_SkipNoise()
+            is_colon = Parse_Match(Token.COLON)
+        }
+        IfCondition EqualTo(is_colon, 1) ThenBlock: {
+            Parse_Advance()
+            Parse_SkipNoise()
+            end_expr = 0
+            IfCondition EqualTo(Parse_Match(Token.RBRACKET), 0) ThenBlock: {
+                IfCondition EqualTo(Parse_Match(Token.COLON), 0) ThenBlock: {
+                    IfCondition EqualTo(Parse_Match(Token.COMMA), 0) ThenBlock: {
+                        end_expr = Parse_Expr()
+                        Parse_SkipNoise()
+                    }
+                }
+            }
+            step_expr = 0
+            IfCondition EqualTo(Parse_Match(Token.COLON), 1) ThenBlock: {
+                Parse_Advance()
+                Parse_SkipNoise()
+                IfCondition EqualTo(Parse_Match(Token.RBRACKET), 0) ThenBlock: {
+                    IfCondition EqualTo(Parse_Match(Token.COMMA), 0) ThenBlock: {
+                        step_expr = Parse_Expr()
+                    }
+                }
+            }
+            slice_node = AST_Create(Node.SLICE_ACCESS, 4)
+            ArraySet(slice_node, 1, line)
+            ArraySet(slice_node, 2, col)
+            ArraySet(slice_node, 3, 0)
+            ArraySet(slice_node, 4, start_expr)
+            ArraySet(slice_node, 5, end_expr)
+            ArraySet(slice_node, 6, step_expr)
+            ReturnValue(slice_node)
+        }
+        ReturnValue(start_expr)
+    }
+}
+
 // =============================================================================
 // POSTFIX PARSING (calls, indexing, method calls)
 // =============================================================================
@@ -315,68 +367,20 @@ Function.Parse_Postfix {
                 ContinueLoop
             }
             
-            // Index access OR slice
+            // Index access OR slice OR multi-dim (x[1:2, 2:2] / x[:42, ..., 24])
             IfCondition EqualTo(t, Token.LBRACKET) ThenBlock: {
                 line = Parse_Line()
                 col = Parse_Col()
                 
                 Parse_Advance()  // Skip [
+                Parse_SkipNoise()
                 
-                // Check for slice syntax: [start:end] or [:end] or [start:] or [:]
-                // First, try to parse start expression (might be empty)
-                start_expr = 0
-                is_colon = Parse_Match(Token.COLON)
-                
-                IfCondition EqualTo(is_colon, 0) ThenBlock: {
-                    // There's a start expression
-                    start_expr = Parse_Expr()
-                    is_colon = Parse_Match(Token.COLON)
-                }
-                
-                IfCondition EqualTo(is_colon, 1) ThenBlock: {
-                    // This is a SLICE!  [start:end] / [start:end:step] / [::step] etc.
-                    Parse_Advance()  // Skip first :
-                    
-                    // End expression (may be empty before ] or second :)
-                    end_expr = 0
-                    is_rbracket = Parse_Match(Token.RBRACKET)
-                    is_colon2 = Parse_Match(Token.COLON)
-                    IfCondition And(EqualTo(is_rbracket, 0), EqualTo(is_colon2, 0)) ThenBlock: {
-                        end_expr = Parse_Expr()
-                    }
-                    
-                    // Optional step: second colon
-                    step_expr = 0
-                    is_colon2 = Parse_Match(Token.COLON)
-                    IfCondition EqualTo(is_colon2, 1) ThenBlock: {
-                        Parse_Advance()  // Skip second :
-                        is_rbracket = Parse_Match(Token.RBRACKET)
-                        IfCondition EqualTo(is_rbracket, 0) ThenBlock: {
-                            step_expr = Parse_Expr()
-                        }
-                    }
-                    
-                    Parse_Consume(Token.RBRACKET)
-                    
-                    // Create SLICE node: [SLICE_ACCESS, line, col, expr, start, end, step]
-                    slice_node = AST_Create(Node.SLICE_ACCESS, 4)
-                    ArraySet(slice_node, 1, line)
-                    ArraySet(slice_node, 2, col)
-                    ArraySet(slice_node, 3, result)
-                    ArraySet(slice_node, 4, start_expr)
-                    ArraySet(slice_node, 5, end_expr)
-                    ArraySet(slice_node, 6, step_expr)
-                    
-                    result = slice_node
-                    ContinueLoop
-                }
-                
-                // Index tuple: X[A,B,...]  (Python: comma makes a tuple key)
-                // Same shape as parenthesized (A,B) -> LIST_LIT
+                first_dim = Parse_IndexDim()
+                Parse_SkipNoise()
                 is_comma = Parse_Match(Token.COMMA)
                 IfCondition EqualTo(is_comma, 1) ThenBlock: {
                     elems = Array.Create(8)
-                    Array.Push(elems, start_expr)
+                    Array.Push(elems, first_dim)
                     WhileLoop EqualTo(1, 1) {
                         Parse_SkipNoise()
                         is_comma = Parse_Match(Token.COMMA)
@@ -387,7 +391,7 @@ Function.Parse_Postfix {
                             IfCondition EqualTo(is_rb, 1) ThenBlock: {
                                 BreakLoop
                             }
-                            Array.Push(elems, Parse_Expr())
+                            Array.Push(elems, Parse_IndexDim())
                         } ElseBlock: {
                             BreakLoop
                         }
@@ -406,16 +410,22 @@ Function.Parse_Postfix {
                     result = idx_node
                     ContinueLoop
                 }
-
-                // Regular single-index access
-                Parse_Consume(Token.RBRACKET)
                 
+                IfCondition EqualTo(AST_Type(first_dim), Node.SLICE_ACCESS) ThenBlock: {
+                    ArraySet(first_dim, 1, line)
+                    ArraySet(first_dim, 2, col)
+                    ArraySet(first_dim, 3, result)
+                    Parse_Consume(Token.RBRACKET)
+                    result = first_dim
+                    ContinueLoop
+                }
+                
+                Parse_Consume(Token.RBRACKET)
                 idx_node = AST_Create(Node.INDEX_ACCESS, 2)
                 ArraySet(idx_node, 1, line)
                 ArraySet(idx_node, 2, col)
                 ArraySet(idx_node, 3, result)
-                ArraySet(idx_node, 4, start_expr)  // start_expr is the index
-                
+                ArraySet(idx_node, 4, first_dim)
                 result = idx_node
                 ContinueLoop
             }
@@ -546,8 +556,9 @@ Function.Parse_ArgList {
                 }
                 first_arg = Parse_Expr()
                 Parse_SkipNoise()
-                // Genexp arg without extra parens: f(x for x in y)
+                // Genexp arg without extra parens: f(x for x in y) / f(x async for x in y)
                 // Leave ')' for the caller's Parse_Consume(RPAREN).
+                Parse_SkipCompAsync()
                 IfCondition EqualTo(Parse_Match(Token.FOR), 1) ThenBlock: {
                     line = Parse_Line()
                     col = Parse_Col()
@@ -626,6 +637,10 @@ Function.Parse_CompForBody {
                 IfCondition EqualTo(is_rp, 1) ThenBlock: {
                     BreakLoop
                 }
+                // trailing comma: (x for x, in seq)
+                IfCondition EqualTo(Parse_Match(Token.IN), 1) ThenBlock: {
+                    BreakLoop
+                }
                 name = Parse_ConsumeForTarget()
                 IfCondition EqualTo(var2, 0) ThenBlock: {
                     var2 = name
@@ -641,6 +656,10 @@ Function.Parse_CompForBody {
             WhileLoop EqualTo(Parse_Match(Token.COMMA), 1) {
                 Parse_Advance()
                 Parse_SkipNoise()
+                // trailing comma: [x for x, in seq]
+                IfCondition EqualTo(Parse_Match(Token.IN), 1) ThenBlock: {
+                    BreakLoop
+                }
                 name = Parse_ConsumeForTarget()
                 IfCondition EqualTo(var2, 0) ThenBlock: {
                     var2 = name
@@ -687,6 +706,7 @@ Function.Parse_CompIterExtra {
         line = ArrayGet(node, 1)
         col = ArrayGet(node, 2)
         Parse_SkipNoise()
+        Parse_SkipCompAsync()
         WhileLoop Or(EqualTo(Parse_Match(Token.FOR), 1), EqualTo(Parse_Match(Token.IF), 1)) {
             IfCondition EqualTo(Parse_Match(Token.FOR), 1) ThenBlock: {
                 Parse_Advance()
@@ -706,8 +726,22 @@ Function.Parse_CompIterExtra {
                 discard_cond = Parse_Or()
             }
             Parse_SkipNoise()
+            Parse_SkipCompAsync()
         }
         ReturnValue(0)
+    }
+}
+
+Function.Parse_SkipCompAsync {
+    Body: {
+        IfCondition EqualTo(Parse_Type(), Token.IDENTIFIER) ThenBlock: {
+            IfCondition EqualTo(StringCompare(Parse_Val(), "async"), 0) ThenBlock: {
+                nxt = Lex_GetType(Add(Parse.pos, 1))
+                IfCondition EqualTo(nxt, Token.FOR) ThenBlock: {
+                    Parse_Advance()
+                }
+            }
+        }
     }
 }
 
@@ -772,6 +806,8 @@ Function.Parse_List {
         // Comprehension only when first elt is a plain expr (not *star)
         is_starred = EqualTo(AST_Type(first), Node.STARRED)
         IfCondition EqualTo(is_starred, 0) ThenBlock: {
+            Parse_SkipNoise()
+            Parse_SkipCompAsync()
             is_for = Parse_Match(Token.FOR)
             IfCondition EqualTo(is_for, 1) ThenBlock: {
                 node = Parse_CompAfter(first, Token.RBRACKET, line, col)
@@ -901,7 +937,8 @@ Function.Parse_Dict {
             } ElseBlock: {
                 first = Parse_StarOrExpr()
                 Parse_SkipNoise()
-                // Set comprehension: {x for x in y}
+                // Set comprehension: {x for x in y} / {x async for x in y}
+                Parse_SkipCompAsync()
                 IfCondition EqualTo(Parse_Match(Token.FOR), 1) ThenBlock: {
                     node = Parse_CompAfter(first, Token.RBRACE, line, col)
                     ReturnValue(node)
@@ -939,7 +976,8 @@ Function.Parse_Dict {
                 Parse_SkipNoise()
                 val = Parse_Expr()
                 Parse_SkipNoise()
-                // Dict comprehension: {k: v for x in y}
+                // Dict comprehension: {k: v for x in y} / {k: v async for x in y}
+                Parse_SkipCompAsync()
                 IfCondition EqualTo(Parse_Match(Token.FOR), 1) ThenBlock: {
                     node = Parse_CompAfter(first, Token.RBRACE, line, col)
                     ReturnValue(node)

@@ -141,6 +141,8 @@ Function.Parse_Error {
         Parse.err_msg = msg
         PrintMessage("Parse Error: ")
         PrintMessage(msg)
+        PrintMessage(" at line ")
+        PrintNumber(Parse_Line())
         PrintMessage("\n")
     }
 }
@@ -227,8 +229,30 @@ Function.Parse_SkipParens {
 Function.Parse_ClassBase {
     Input: bases: Address
     Body: {
+        // *bases / **kw / class A(0, *range(1, 8), **d)
+        IfCondition Or(EqualTo(Parse_Check(Token.STAR), 1), EqualTo(Parse_Check(Token.POWER), 1)) ThenBlock: {
+            Parse_Advance()
+            Parse_SkipNoise()
+            IfCondition EqualTo(Parse_Check(Token.IDENTIFIER), 1) ThenBlock: {
+                Parse_Expr()
+            } ElseBlock: {
+                IfCondition EqualTo(Parse_Check(Token.LPAREN), 1) ThenBlock: {
+                    Parse_SkipParens()
+                } ElseBlock: {
+                    IfCondition NotEqual(Parse_Type(), Token.RPAREN) ThenBlock: {
+                        IfCondition NotEqual(Parse_Type(), Token.COMMA) ThenBlock: {
+                            Parse_Expr()
+                        }
+                    }
+                }
+            }
+            ReturnValue(0)
+        }
         IfCondition EqualTo(Parse_Check(Token.IDENTIFIER), 0) ThenBlock: {
-            Parse_Error("Expected base class name")
+            // numeric / call / other expr bases: skip, do not register a name
+            IfCondition And(NotEqual(Parse_Type(), Token.RPAREN), NotEqual(Parse_Type(), Token.COMMA)) ThenBlock: {
+                Parse_Expr()
+            }
             ReturnValue(0)
         }
         base = Parse_ExpectIdent()
@@ -239,7 +263,7 @@ Function.Parse_ClassBase {
                 base = nxt
             }
         }
-        IfCondition EqualTo(Parse_Check(Token.LBRACKET), 1) ThenBlock: {
+        WhileLoop EqualTo(Parse_Check(Token.LBRACKET), 1) {
             Parse_SkipBrackets()
         }
         // Call base: namedtuple("Point", "x y") / f("x") — skip args, keep callee name
@@ -777,26 +801,29 @@ Function.Parse_SuperCall {
         method_name = 0
         args = Array.Create(1)
         
+        // super().method(args) only when '(' follows the name.
+        // super(D, D).goo.__self__ leaves ".goo" for Parse_Postfix.
         is_dot = Parse_Check(Token.DOT)
         IfCondition EqualTo(is_dot, 1) ThenBlock: {
-            Parse_Advance()
-            method_name = Parse_ExpectIdent()
-            Parse_SkipNoise()
-            is_lparen = Parse_Check(Token.LPAREN)
-            IfCondition EqualTo(is_lparen, 1) ThenBlock: {
+            t1 = Lex_GetType(Add(Parse.pos, 1))
+            t2 = Lex_GetType(Add(Parse.pos, 2))
+            IfCondition And(EqualTo(t1, Token.IDENTIFIER), EqualTo(t2, Token.LPAREN)) ThenBlock: {
                 Parse_Advance()
-                args = Parse_ArgList()
+                method_name = Parse_ExpectIdent()
                 Parse_SkipNoise()
-                is_rparen = Parse_Check(Token.RPAREN)
-                IfCondition EqualTo(is_rparen, 1) ThenBlock: {
+                is_lparen = Parse_Check(Token.LPAREN)
+                IfCondition EqualTo(is_lparen, 1) ThenBlock: {
                     Parse_Advance()
+                    args = Parse_ArgList()
+                    Parse_SkipNoise()
+                    is_rparen = Parse_Check(Token.RPAREN)
+                    IfCondition EqualTo(is_rparen, 1) ThenBlock: {
+                        Parse_Advance()
+                    }
+                    ElseBlock: {
+                        Parse_SkipSuperArgs()
+                    }
                 }
-                ElseBlock: {
-                    Parse_SkipSuperArgs()
-                }
-            }
-            ElseBlock: {
-                method_name = 0
             }
         }
         

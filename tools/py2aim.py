@@ -28,7 +28,37 @@ CONTINUE_SUITE = ("else", "elif", "except", "finally")
 import re
 
 _CASE_RE = re.compile(r"^(\s*)case\s+(.+?)\s*:\s*(.*)$")
-_MATCH_RE = re.compile(r"^(\s*)match\s+(.+?)\s*:\s*$")
+_MATCH_RE = re.compile(r"^(\s*)match\s+(.+?)\s*:\s*(#.*)?$")
+
+
+def _take_as_binds(pat: str, indent: str, tmp: str):
+    """Pull nested `as name` out of a match pattern (or-patterns, mappings)."""
+    binds: list[str] = []
+
+    def repl(m):
+        binds.append(f"{indent}    {m.group(1)} = {tmp}\n")
+        return ""
+
+    pat2 = re.sub(r"\s+as\s+([A-Za-z_][A-Za-z0-9_]*)", repl, pat)
+    return pat2.strip(), binds
+
+
+def _split_case_line(raw: str):
+    """Split `case <pattern>: [trailing]` at the suite colon (depth 0).
+
+    `{0: 0}:` must not use the dict colon. `_CASE_RE` is non-greedy and did.
+    """
+    m = re.match(r"^(\s*)case\s+", raw)
+    if not m:
+        return None
+    indent = m.group(1)
+    rest = raw[m.end() :]
+    idx = _suite_colon_index(rest)
+    if idx == -1:
+        return None
+    pattern = rest[:idx].strip()
+    trailing = rest[idx + 1 :].strip()
+    return indent, pattern, trailing
 
 
 def desugar_match(src: str) -> str:
@@ -65,15 +95,15 @@ def desugar_match(src: str) -> str:
                 out.append(raw)
                 i += 1
                 continue
-            cm = _CASE_RE.match(raw.rstrip("\n"))
-            if not cm:
+            parsed_case = _split_case_line(raw.rstrip("\n"))
+            if not parsed_case:
                 ws = raw[: len(raw) - len(raw.lstrip())]
                 if len(ws.expandtabs(4)) <= ind_w:
                     break
                 out.append(raw)
                 i += 1
                 continue
-            c_indent, pattern, trailing = cm.group(1), cm.group(2).strip(), cm.group(3)
+            c_indent, pattern, trailing = parsed_case
             c_w = len(c_indent.expandtabs(4))
             if c_w <= ind_w:
                 break
@@ -119,7 +149,21 @@ def desugar_match(src: str) -> str:
                     capture = pat
                     binds.append(f"{indent}    {pat} = {tmp}\n")
                 else:
-                    cond = f"({tmp}) == ({pat})"
+                    am = re.match(
+                        r"^(.+?)\s+as\s+([A-Za-z_][A-Za-z0-9_]*)$",
+                        pat,
+                    )
+                    if am:
+                        inner, name = am.group(1).strip(), am.group(2)
+                        inner, extra = _take_as_binds(inner, indent, tmp)
+                        binds.extend(extra)
+                        cond = f"({tmp}) == ({inner})"
+                        capture = name
+                        binds.append(f"{indent}    {name} = {tmp}\n")
+                    else:
+                        pat2, extra = _take_as_binds(pat, indent, tmp)
+                        binds.extend(extra)
+                        cond = f"({tmp}) == ({pat2})"
             if guard:
                 g = guard
                 if capture:
@@ -338,6 +382,15 @@ SUITE_START = (
     "with",
     "async",
 )
+
+
+def _stmt_first(code: str) -> str:
+    """First keyword of a logical line. `except*` is still except (PEP 654)."""
+    first = code.split(None, 1)[0] if code else ""
+    first = first.rstrip(":")
+    if first.startswith("except"):
+        return "except"
+    return first
 
 
 def _leading_ws(line: str) -> str:
@@ -713,19 +766,10 @@ _STARARGS_ANN_RE = re.compile(
 
 
 def desugar_starargs_annotations(src: str) -> str:
-    """Strip type annotations on *args / **kwargs in def signatures only."""
-    lines = src.splitlines(keepends=True)
-    out: list[str] = []
-    for line in lines:
-        raw = line.rstrip("\n")
-        stripped = raw.lstrip()
-        if stripped.startswith("def ") and "*" in raw:
-            raw2 = _STARARGS_ANN_RE.sub(r"\1\2", raw)
-            nl = "\n" if line.endswith("\n") else ""
-            out.append(raw2 + nl)
-        else:
-            out.append(line)
-    return "".join(out)
+    """No-op: the parser now skips *args/**kwargs annotations, including
+    bracketed forms like *args: Unpack[tuple[int, str]]. The old regex
+    stopped at the first comma and left `*args, str]:`."""
+    return src
 
 
 def desugar_nested_class_cells(src: str) -> str:
@@ -915,7 +959,7 @@ def convert(src: str) -> str:
         return "pass\n"
     # match/case already desugared if called via main;
     # accept raw match too when convert() used alone
-    if re.search(r"(?m)^\s*match\s+.+:\s*$", src):
+    if re.search(r"(?m)^\s*match\s+.+:\s*(#.*)?$", src):
         src = desugar_match(src)
     src = desugar_pep695_type_params(src)
     src = desugar_starargs_annotations(src)
@@ -969,8 +1013,7 @@ def convert(src: str) -> str:
         ws = _leading_ws(line)
         width = _indent_width(ws)
         code, comment = _code_part(line[len(ws) :])
-        first = code.split(None, 1)[0] if code else ""
-        first = first.rstrip(":")
+        first = _stmt_first(code)
         line_q = _advance_quote_state(line, None)
 
         # Dedent: close braces. else/elif/except/finally share the brace.
