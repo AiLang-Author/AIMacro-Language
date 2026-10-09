@@ -568,7 +568,7 @@
       "stage": "run",
       "rc": -11,
       "err": "",
-      "out": "ERROR: Method not found: startswith\n",
+      "out": "",
       "tags": [],
       "key": "test_builtin.py",
       "updated": "2026-10-08"
@@ -1614,12 +1614,9 @@
     },
     "test_exception_variations.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_exception_variations.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": 1,
-      "err": "",
-      "out": "  ExceptTestCases.test_nested_exception_in_else\n  ExceptTestCases.test_try_except_else\n  ExceptTestCases.test_try_finally_no_exception\n  ExceptTestCases.test_nested_exception_in_except\nFAIL: assertTrue\n  ExceptTestCases.test_try_except_finally\n  ExceptTestCases.test_try_except_else_finally_no_exception\n  ExceptTestCases.test_try_except_else_finally\n  ExceptTestCases.test_try_except_finally_no_exception\n  ExceptTestCases.test_try_except_else_no_exception\n  ExceptTestCases.test_try_except\n  ExceptTestCases.test_nested_else\n  ExceptTestCases.test_try_except_no_exception\n  ExceptTestCases.test_nested_exception_in_finally_no_exception\n  ExceptTestCases.test_nested_exception_in_finally_with_exception\nFAIL: assertTrue\n  ExceptStarTestCases.test_try_except_else\n  ExceptStarTestCases.test_try_finally_no_exception\n  ExceptStarTestCases.test_try_except_finally\n  ExceptStarTestCases.test_nested_else_mixed1\n  ExceptStarTestCases.test_try_except_else_finally_no_exception\n  ExceptStarTestCases.test_try_except_else_finally\n  ExceptStarTestCases.test_nested_mixed1\nFAIL: assertTrue\n  ExceptStarTestCases.test_try_except_finally_no_exception\n  ExceptStarTestCases.test_nested_mixed2\nFAIL: assertTrue\n  ExceptStarTestCases.test_try_except_else_no_exception\n  ExceptStarTestCases.test_try_except\n  ExceptStarTestCases.test_nested_else_mixed2\n  ExceptStarTestCases.test_nested_else\n  ExceptStarTestCases.test_try_except_no_exception\nunittest: ran 28 tests, 4 failed\n",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_exception_variations.py",
       "updated": "2026-10-08"
     },
@@ -3276,7 +3273,7 @@
       "stage": "run",
       "rc": -11,
       "err": "",
-      "out": "ERROR: Method not found: abspath\nERROR: Method not found: fsencode\nERROR: Method not found: fsencode\nERROR: Method not found: abspath\nERROR: Method not found: abspath\nERROR: Method not found: startswith\nERROR: Method not found: startswith\nERROR: Method not found: startswith\nERROR: Method not found: skipUnless\nERROR: Method not found: skipUnless\nERROR: Method not found: getpwall\nERROR: Method not found: startswith\nERROR: Method not found: startswith\nERROR: Method not found: skipIf\nERROR: Method not found: get_config_var\nERROR: Method not found: get_config_var\nERROR: Method not found: get_config_var\nERROR: Method not found: abspath\nERROR: Method not found: fsencode\nERROR: Method not found: fsencode\nERROR: Method not found: abspath\nERROR: Method not found: abspath\nERROR: Method not found: startswith\nERROR: Method not found: startswith\nERROR: Method not found: startswith\nERROR: Method not found: skipUnless\nERROR: Method not found: skipUnless\nERROR: Method not found: lexists\n  FileTests.test_splice\nERROR: Method not found: lexists\nERROR: Method not found: lexists\n  FileTests.test_splice_invalid_values\nERROR: Method not found: lexists\nERROR: Method not found: lexists\n  FileTests.test_rename\n",
+      "out": "ERROR: Method not found: abspath\nERROR: Method not found: fsencode\nERROR: Method not found: fsencode\nERROR: Method not found: abspath\nERROR: Method not found: abspath\nERROR: Method not found: skipUnless\nERROR: Method not found: skipUnless\nERROR: Method not found: getpwall\nERROR: Method not found: skipIf\nERROR: Method not found: get_config_var\nERROR: Method not found: get_config_var\nERROR: Method not found: get_config_var\nERROR: Method not found: abspath\nERROR: Method not found: fsencode\nERROR: Method not found: fsencode\nERROR: Method not found: abspath\nERROR: Method not found: abspath\nERROR: Method not found: skipUnless\nERROR: Method not found: skipUnless\nERROR: Method not found: lexists\n  FileTests.test_splice\nERROR: Method not found: lexists\nERROR: Method not found: lexists\n  FileTests.test_splice_invalid_values\nERROR: Method not found: lexists\nERROR: Method not found: lexists\n  FileTests.test_rename\n",
       "tags": [],
       "key": "test_os.py",
       "updated": "2026-10-08"

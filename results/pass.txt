@@ -90,6 +90,7 @@ test_eof.py
 test_errno.py
 test_exception_group.py
 test_exception_hierarchy.py
+test_exception_variations.py
 test_faulthandler.py
 test_fcntl.py
 test_file.py

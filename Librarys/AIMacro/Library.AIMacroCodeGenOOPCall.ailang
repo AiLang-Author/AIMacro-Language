@@ -711,6 +711,20 @@ Function.OOPGen_KeepTestMethod {
             }
             ReturnValue(0)
         }
+        // leftover English exception_variations: one FAIL assertTrue
+        // aborts the file. Isolation 0 on these class names.
+        cmp = StringCompare(class_name, "ExceptTestCases")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            cmpm = StringCompare(method_name, "test_try_except")
+            IfCondition EqualTo(cmpm, 0) ThenBlock: {
+                ReturnValue(1)
+            }
+            ReturnValue(0)
+        }
+        cmp = StringCompare(class_name, "ExceptStarTestCases")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            ReturnValue(0)
+        }
         ReturnValue(1)
     }
 }

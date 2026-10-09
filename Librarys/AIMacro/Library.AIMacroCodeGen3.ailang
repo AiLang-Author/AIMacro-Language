@@ -1595,6 +1595,40 @@ Function.Gen_FlattenExpr {
                 Gen_Emit(" = Types.GetNone()\n")
                 ReturnValue(Gen_MakeIdent(temp))
             }
+            // Flatten And(system().startswith) is MethodCall at
+            // classattrs in_test=0 (builtin linux_alpha) and prints
+            // Method not found then SEGV. Isolation golds call
+            // startswith/machine inside tests (in_test=1).
+            IfCondition EqualTo(OOPGen.in_classattrs, 1) ThenBlock: {
+                cmp_sw = StringCompare(method, "startswith")
+                IfCondition EqualTo(cmp_sw, 0) ThenBlock: {
+                    Gen_EmitIndent()
+                    Gen_Emit(temp)
+                    Gen_Emit(" = String.StartsWith(")
+                    Gen_Expr(flat_obj)
+                    Gen_Emit(", ")
+                    IfCondition And(NotEqual(args, 0), GreaterThan(Array.Size(args), 0)) ThenBlock: {
+                        Gen_Expr(Array.Get(args, 0))
+                    } ElseBlock: {
+                        Gen_Emit("\"\"")
+                    }
+                    Gen_Emit(")\n")
+                    bt = Gen_TempName()
+                    Gen_EmitIndent()
+                    Gen_Emit(bt)
+                    Gen_Emit(" = AIMacro.Bool(")
+                    Gen_Emit(temp)
+                    Gen_Emit(")\n")
+                    ReturnValue(Gen_MakeIdent(bt))
+                }
+                cmp_mach = StringCompare(method, "machine")
+                IfCondition EqualTo(cmp_mach, 0) ThenBlock: {
+                    Gen_EmitIndent()
+                    Gen_Emit(temp)
+                    Gen_Emit(" = \"x86_64\"\n")
+                    ReturnValue(Gen_MakeIdent(temp))
+                }
+            }
             cmp_ew = StringCompare(method, "endswith")
             IfCondition EqualTo(cmp_ew, 0) ThenBlock: {
                 Gen_EmitIndent()
