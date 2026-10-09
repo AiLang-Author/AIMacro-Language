@@ -1016,6 +1016,102 @@ def _clos_freevars(inner: ast.AST, enclosing: set[str]) -> list[str]:
     return seen
 
 
+def _lambda_needs_hoist(lam: ast.AST, enclosing: set[str]) -> bool:
+    """True if this lambda closes over enclosing names or a nested
+    lambda/def loads this lambda's params (the f1 / extra-nesting case)."""
+    if not isinstance(lam, ast.Lambda):
+        return bool(_clos_freevars(lam, enclosing))
+    if _clos_freevars(lam, enclosing):
+        return True
+    owned = _clos_params(lam)
+    inner_env = enclosing | owned
+    for n in ast.walk(lam):
+        if n is lam:
+            continue
+        if isinstance(n, ast.Lambda):
+            if _clos_freevars(n, owned) or _lambda_needs_hoist(n, inner_env):
+                return True
+        elif isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            if _clos_freevars(n, owned):
+                return True
+    return False
+
+
+def _hoist_in_stmts(
+    body: list[ast.stmt],
+    enclosing: set[str],
+    counter: list[int],
+    changed: list[bool],
+) -> list[ast.stmt]:
+    """Lift closure lambdas in *body* to nested FunctionDefs.
+
+    Nested lambdas are lifted into the new FunctionDef so extra-nesting
+    can pass the per-call cell through. Lambdas with no freevars stay
+    as Lambda (isolation golds with `lambda: None` stay byte-identical).
+    """
+    hoisted: list[ast.stmt] = []
+
+    class _R(ast.NodeTransformer):
+        def visit_FunctionDef(self, n: ast.FunctionDef):
+            return n
+
+        def visit_AsyncFunctionDef(self, n: ast.AsyncFunctionDef):
+            return n
+
+        def visit_ClassDef(self, n: ast.ClassDef):
+            return n
+
+        def visit_Lambda(self, n: ast.Lambda):
+            if not _lambda_needs_hoist(n, enclosing):
+                return n
+            changed[0] = True
+            counter[0] += 1
+            name = f"_aim_lam_{counter[0]}"
+            fn = ast.FunctionDef(
+                name=name,
+                args=n.args,
+                body=[ast.Return(value=n.body)],
+                decorator_list=[],
+            )
+            owned = _clos_direct_assigned(fn)
+            fn.body = _hoist_in_stmts(
+                fn.body, enclosing | owned, counter, changed
+            )
+            hoisted.append(fn)
+            return ast.Name(id=name, ctx=ast.Load())
+
+    new_body = [_R().visit(s) for s in body]
+    return hoisted + new_body
+
+
+def _hoist_lambdas_tree(
+    tree: ast.AST, counter: list[int], changed: list[bool]
+) -> ast.AST:
+    """Pre-pass: lambda with freevars → nested def, then existing cell desugar."""
+
+    class _H(ast.NodeTransformer):
+        def visit_FunctionDef(self, node: ast.FunctionDef):
+            node = self.generic_visit(node)
+            enclosing = _clos_direct_assigned(node)
+            node.body = _hoist_in_stmts(
+                list(node.body), enclosing, counter, changed
+            )
+            return node
+
+        visit_AsyncFunctionDef = visit_FunctionDef
+
+        def visit_Module(self, node: ast.Module):
+            node = self.generic_visit(node)
+            # Module names are globals, not cells. Only hoist nested-lambda
+            # owners (lambda x: lambda y: x + y) at module level.
+            node.body = _hoist_in_stmts(
+                list(node.body), set(), counter, changed
+            )
+            return node
+
+    return _H().visit(tree)
+
+
 class _ClosRewrite(ast.NodeTransformer):
     def __init__(self, mapping: dict[str, str], cell: str, via_self: bool):
         self.mapping = mapping
@@ -1044,13 +1140,63 @@ class _ClosRewrite(ast.NodeTransformer):
         return node
 
     def visit_FunctionDef(self, node: ast.FunctionDef):
+        # Already-converted __aim_clos_ methods: rewrite freevar Names
+        # (f8 middle scope). Other nested defs stay intact for convert.
+        if node.name in ("__init__", "__call__"):
+            return self.generic_visit(node)
         return node
 
     def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef):
         return node
 
     def visit_ClassDef(self, node: ast.ClassDef):
+        if str(node.name).startswith("__aim_clos_"):
+            return self.generic_visit(node)
         return node
+
+    def visit_Lambda(self, node: ast.Lambda):
+        return node
+
+
+def _clos_copy_parent_into_cell(
+    body: list[ast.stmt], mapping: dict[str, str]
+) -> list[ast.stmt]:
+    """After a child `_aim_c = {}`, copy parent cell keys into it.
+
+    f8 / mixed freevars: middle def already built a cell for its own
+    locals (b); parent freevars (z, y) must be copied so the inner
+    class, whose self._c is that dict, can load them.
+    """
+    if not mapping:
+        return body
+    out: list[ast.stmt] = []
+    for stmt in body:
+        out.append(stmt)
+        if (
+            isinstance(stmt, ast.Assign)
+            and len(stmt.targets) == 1
+            and isinstance(stmt.targets[0], ast.Name)
+            and stmt.targets[0].id == "_aim_c"
+            and isinstance(stmt.value, ast.Dict)
+        ):
+            for key in mapping.values():
+                out.append(
+                    ast.Assign(
+                        targets=[
+                            ast.Subscript(
+                                value=ast.Name(id="_aim_c", ctx=ast.Load()),
+                                slice=ast.Constant(value=key),
+                                ctx=ast.Store(),
+                            )
+                        ],
+                        value=ast.Subscript(
+                            value=_clos_self_c(),
+                            slice=ast.Constant(value=key),
+                            ctx=ast.Load(),
+                        ),
+                    )
+                )
+    return out
 
 
 def _clos_self_c() -> ast.expr:
@@ -1130,6 +1276,7 @@ def _clos_class(
         defaults=list(inner.args.defaults),
     )
     call_body = [_ClosRewrite(mapping, "_c", True).visit(s) for s in inner.body]
+    call_body = _clos_copy_parent_into_cell(call_body, mapping)
     call_body, _frees = _clos_replace_nested(
         call_body, enclosing, _clos_self_c(), counter, changed
     )
@@ -1208,11 +1355,12 @@ def _clos_replace_nested(
 
 
 def desugar_nested_func_closures(src: str) -> str:
-    """Nested def with freevars → per-call cell dict + callable class.
+    """Nested def/lambda with freevars → per-call cell dict + callable class.
 
     Codegen flattens nested Functions and stores freevars in one PyMod.x,
     so make_adder(1) then make_adder(10) share the cell. Isolation golds
-    that only close over self/cls are left byte-identical.
+    that only close over self/cls are left byte-identical. Lambdas are
+    lifted to nested defs first so the same cell path applies.
     """
     try:
         tree = ast.parse(src)
@@ -1220,6 +1368,7 @@ def desugar_nested_func_closures(src: str) -> str:
         return src
     counter = [0]
     changed = [False]
+    tree = _hoist_lambdas_tree(tree, counter, changed)
 
     class _X(ast.NodeTransformer):
         def visit_FunctionDef(self, node: ast.FunctionDef):
