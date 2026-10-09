@@ -804,6 +804,801 @@ def desugar_starargs_annotations(src: str) -> str:
     return src
 
 
+def _fn_own_yields(fn: ast.AST) -> bool:
+    class _V(ast.NodeVisitor):
+        def __init__(self):
+            self.found = False
+
+        def visit_FunctionDef(self, n: ast.FunctionDef):
+            return
+
+        def visit_AsyncFunctionDef(self, n: ast.AsyncFunctionDef):
+            return
+
+        def visit_ClassDef(self, n: ast.ClassDef):
+            return
+
+        def visit_Lambda(self, n: ast.Lambda):
+            return
+
+        def visit_Yield(self, n: ast.Yield):
+            self.found = True
+
+        def visit_YieldFrom(self, n: ast.YieldFrom):
+            self.found = True
+
+    v = _V()
+    for s in getattr(fn, "body", []) or []:
+        v.visit(s)
+        if v.found:
+            return True
+    return False
+
+
+def _tree_has_yield(node: ast.AST) -> bool:
+    if isinstance(node, (ast.Yield, ast.YieldFrom)):
+        return True
+    if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef, ast.Lambda)):
+        return False
+    for c in ast.iter_child_nodes(node):
+        if _tree_has_yield(c):
+            return True
+    return False
+
+
+def _gen_self_attr(name: str, ctx) -> ast.Attribute:
+    return ast.Attribute(
+        value=ast.Name(id="self", ctx=ast.Load()),
+        attr=name,
+        ctx=ctx,
+    )
+
+
+class _GenNameRew(ast.NodeTransformer):
+    def __init__(self, mapping: dict[str, str]):
+        self.mapping = mapping
+
+    def visit_Name(self, n: ast.Name):
+        if n.id in self.mapping:
+            return _gen_self_attr(self.mapping[n.id], n.ctx)
+        return n
+
+    def visit_FunctionDef(self, n: ast.FunctionDef):
+        return n
+
+    def visit_AsyncFunctionDef(self, n: ast.AsyncFunctionDef):
+        return n
+
+    def visit_ClassDef(self, n: ast.ClassDef):
+        return n
+
+    def visit_Lambda(self, n: ast.Lambda):
+        return n
+
+
+class _GenSM:
+    def __init__(self, mapping: dict[str, str]):
+        self.rew = _GenNameRew(mapping)
+        self.states: list[list[ast.stmt]] = [[]]
+        self.cur = 0
+        self.it_n = 0
+        self.loops: list[tuple[int, int]] = []
+
+    def news(self) -> int:
+        sid = len(self.states)
+        self.states.append([])
+        return sid
+
+    def add(self, stmt: ast.stmt):
+        self.states[self.cur].append(stmt)
+
+    def rw(self, node):
+        return self.rew.visit(node)
+
+    def set_s(self, sid: int) -> ast.Assign:
+        return ast.Assign(
+            targets=[_gen_self_attr("_s", ast.Store())],
+            value=ast.Constant(value=sid),
+        )
+
+    def goto(self, sid: int):
+        self.add(self.set_s(sid))
+        self.add(ast.Continue())
+
+    def yield_to(self, expr: ast.expr | None, nxt: int):
+        self.add(self.set_s(nxt))
+        self.add(ast.Return(value=expr if expr is not None else ast.Constant(value=None)))
+
+    def stop(self):
+        self.add(self.set_s(-1))
+        self.add(
+            ast.Raise(
+                exc=ast.Call(
+                    func=ast.Name(id="StopIteration", ctx=ast.Load()),
+                    args=[],
+                    keywords=[],
+                ),
+                cause=None,
+            )
+        )
+
+    def build(self, stmts: list[ast.stmt], after: int | None):
+        i = 0
+        while i < len(stmts):
+            s = stmts[i]
+            rest = stmts[i + 1 :]
+            if isinstance(s, ast.For) and _tree_has_yield(s):
+                self._for(s, rest, after)
+                return
+            if isinstance(s, ast.While) and _tree_has_yield(s):
+                self._while(s, rest, after)
+                return
+            if isinstance(s, ast.If) and _tree_has_yield(s):
+                self._if(s, rest, after)
+                return
+            if isinstance(s, ast.Try) and _tree_has_yield(s):
+                self._try(s, rest, after)
+                return
+            if isinstance(s, ast.Expr) and isinstance(s.value, ast.Yield):
+                self._yield_stmt(s.value.value, None, rest, after)
+                return
+            if isinstance(s, ast.Expr) and isinstance(s.value, ast.YieldFrom):
+                self._yield_from(s.value.value, None, rest, after)
+                return
+            if isinstance(s, ast.Assign) and len(s.targets) == 1 and isinstance(s.value, ast.Yield):
+                self._yield_stmt(s.value.value, s.targets[0], rest, after)
+                return
+            if isinstance(s, ast.Assign) and len(s.targets) == 1 and isinstance(s.value, ast.YieldFrom):
+                self._yield_from(s.value.value, s.targets[0], rest, after)
+                return
+            if isinstance(s, ast.Return):
+                self.stop()
+                return
+            if isinstance(s, ast.Break) and self.loops:
+                self.goto(self.loops[-1][1])
+                return
+            if isinstance(s, ast.Continue) and self.loops:
+                self.goto(self.loops[-1][0])
+                return
+            self.add(self.rw(s))
+            i += 1
+        if after is None:
+            self.stop()
+        else:
+            self.goto(after)
+
+    def _yield_stmt(self, expr, target, rest, after):
+        nxt = self.news()
+        e = self.rw(expr) if expr is not None else ast.Constant(value=None)
+        self.yield_to(e, nxt)
+        old = self.cur
+        self.cur = nxt
+        if target is not None:
+            self.add(
+                ast.Assign(
+                    targets=[self.rw(target)],
+                    value=_gen_self_attr("_sent", ast.Load()),
+                )
+            )
+        self.build(rest, after)
+        self.cur = old
+
+    def _next_or_stop(self, it_attr: str, dest, after_sid: int):
+        """next(self.it) into dest; on StopIteration goto after.
+
+        Continue stays outside the Try: AILANG ContinueLoop inside
+        Fork (except) does not resume the outer WhileLoop.
+        """
+        flag = f"_k{self.it_n}"
+        self.it_n += 1
+        self.add(
+            ast.Assign(
+                targets=[_gen_self_attr(flag, ast.Store())],
+                value=ast.Constant(value=0),
+            )
+        )
+        self.add(
+            ast.Try(
+                body=[
+                    ast.Assign(
+                        targets=[dest],
+                        value=ast.Call(
+                            func=ast.Name(id="next", ctx=ast.Load()),
+                            args=[_gen_self_attr(it_attr, ast.Load())],
+                            keywords=[],
+                        ),
+                    )
+                ],
+                handlers=[
+                    ast.ExceptHandler(
+                        type=ast.Name(id="StopIteration", ctx=ast.Load()),
+                        name=None,
+                        body=[
+                            ast.Assign(
+                                targets=[_gen_self_attr(flag, ast.Store())],
+                                value=ast.Constant(value=1),
+                            )
+                        ],
+                    )
+                ],
+                orelse=[],
+                finalbody=[],
+            )
+        )
+        self.add(
+            ast.If(
+                test=_gen_self_attr(flag, ast.Load()),
+                body=[self.set_s(after_sid), ast.Continue()],
+                orelse=[],
+            )
+        )
+
+    def _yield_from(self, expr, target, rest, after):
+        # for _v in expr: yield _v  then assign last sent
+        it = f"_i{self.it_n}"
+        self.it_n += 1
+        self.add(
+            ast.Assign(
+                targets=[_gen_self_attr(it, ast.Store())],
+                value=ast.Call(
+                    func=ast.Name(id="iter", ctx=ast.Load()),
+                    args=[self.rw(expr)],
+                    keywords=[],
+                ),
+            )
+        )
+        head = self.news()
+        after_yf = self.news()
+        self.goto(head)
+        old = self.cur
+        self.cur = head
+        tmp = f"_v{self.it_n}"
+        self._next_or_stop(it, _gen_self_attr(tmp, ast.Store()), after_yf)
+        self.yield_to(_gen_self_attr(tmp, ast.Load()), head)
+        self.cur = after_yf
+        if target is not None:
+            self.add(
+                ast.Assign(
+                    targets=[self.rw(target)],
+                    value=_gen_self_attr("_sent", ast.Load()),
+                )
+            )
+        self.build(rest, after)
+        self.cur = old
+
+    def _for(self, s: ast.For, rest, after):
+        it = f"_i{self.it_n}"
+        self.it_n += 1
+        self.add(
+            ast.Assign(
+                targets=[_gen_self_attr(it, ast.Store())],
+                value=ast.Call(
+                    func=ast.Name(id="iter", ctx=ast.Load()),
+                    args=[self.rw(s.iter)],
+                    keywords=[],
+                ),
+            )
+        )
+        head = self.news()
+        body_s = self.news()
+        after_for = self.news() if (rest or after is not None or s.orelse) else None
+        if after_for is None:
+            after_for = self.news()
+        self.goto(head)
+        old = self.cur
+        self.cur = head
+        self._next_or_stop(it, self.rw(s.target), after_for)
+        self.goto(body_s)
+        self.cur = body_s
+        self.loops.append((head, after_for))
+        self.build(list(s.body), head)
+        self.loops.pop()
+        self.cur = after_for
+        if s.orelse:
+            self.build(list(s.orelse) + rest, after)
+        else:
+            self.build(rest, after)
+        self.cur = old
+
+    def _while(self, s: ast.While, rest, after):
+        head = self.news()
+        body_s = self.news()
+        after_w = self.news() if (rest or after is not None or s.orelse) else self.news()
+        self.goto(head)
+        old = self.cur
+        self.cur = head
+        self.add(
+            ast.If(
+                test=self.rw(s.test),
+                body=[self.set_s(body_s), ast.Continue()],
+                orelse=[self.set_s(after_w), ast.Continue()],
+            )
+        )
+        self.cur = body_s
+        self.loops.append((head, after_w))
+        self.build(list(s.body), head)
+        self.loops.pop()
+        self.cur = after_w
+        if s.orelse:
+            self.build(list(s.orelse) + rest, after)
+        else:
+            self.build(rest, after)
+        self.cur = old
+
+    def _if(self, s: ast.If, rest, after):
+        then_s = self.news()
+        else_s = self.news() if s.orelse else None
+        join = self.news() if (rest or after is not None) else None
+        then_after = join if join is not None else after
+        else_after = join if join is not None else after
+        if else_s is None:
+            els = [self.set_s(join if join is not None else (after if after is not None else -1)), ast.Continue()]
+        else:
+            els = [self.set_s(else_s), ast.Continue()]
+        self.add(
+            ast.If(
+                test=self.rw(s.test),
+                body=[self.set_s(then_s), ast.Continue()],
+                orelse=els,
+            )
+        )
+        old = self.cur
+        self.cur = then_s
+        self.build(list(s.body), then_after if then_after is not None else -1)
+        if else_s is not None:
+            self.cur = else_s
+            self.build(list(s.orelse), else_after if else_after is not None else -1)
+        if join is not None:
+            self.cur = join
+            self.build(rest, after)
+        self.cur = old
+
+    def _try(self, s: ast.Try, rest, after):
+        # Body / handlers / finally as separate states. Yield is never
+        # inside a Python try (that would run finally on suspend).
+        join = self.news() if (rest or after is not None) else None
+        fin = self.news() if s.finalbody else join
+        if fin is None:
+            fin = after if after is not None else -1
+        body_s = self.news()
+        handler_sids: list[int] = []
+        for _h in s.handlers:
+            handler_sids.append(self.news())
+        self.goto(body_s)
+        old = self.cur
+        self.cur = body_s
+        start_body = self.cur
+        self.build(list(s.body), fin if isinstance(fin, int) else join)
+        # wrap states created for body in Try that jumps to handlers
+        # Only wrap the body start state's remaining... too late if build
+        # already emitted yields as Return. Wrap every state from
+        # start_body through newly created ones that belong to the body.
+        # Simpler: wrap start_body statements in Try.
+        hs = []
+        for h, hsid in zip(s.handlers, handler_sids):
+            hs.append(
+                ast.ExceptHandler(
+                    type=self.rw(h.type) if h.type is not None else None,
+                    name=h.name,
+                    body=[self.set_s(hsid), ast.Continue()],
+                )
+            )
+        if hs and self.states[body_s]:
+            self.states[body_s] = [
+                ast.Try(
+                    body=list(self.states[body_s]),
+                    handlers=hs,
+                    orelse=[],
+                    finalbody=[],
+                )
+            ]
+        for h, hsid in zip(s.handlers, handler_sids):
+            self.cur = hsid
+            self.build(list(h.body), fin if isinstance(fin, int) else join)
+        if s.finalbody:
+            self.cur = fin
+            self.build(list(s.finalbody), join if join is not None else after)
+        if join is not None:
+            self.cur = join
+            self.build(rest, after)
+        self.cur = old
+
+
+def _gen_convert(
+    fn: ast.FunctionDef, enclosing: set[str], counter: list[int]
+) -> tuple[ast.ClassDef, ast.FunctionDef]:
+    counter[0] += 1
+    cname = f"__aim_gen_{counter[0]}"
+    params = [a.arg for a in fn.args.args]
+    frees = _clos_freevars(fn, enclosing)
+    locs = _clos_direct_assigned(fn)
+    mapping: dict[str, str] = {}
+    for n in params + list(locs) + frees:
+        if n not in mapping and n not in ("_s", "_sent"):
+            mapping[n] = f"_g_{n}"
+    sm = _GenSM(mapping)
+    sm.build(list(fn.body), None)
+    init_args = [ast.arg(arg="self")]
+    init_body: list[ast.stmt] = [
+        ast.Assign(
+            targets=[_gen_self_attr("_s", ast.Store())],
+            value=ast.Constant(value=0),
+        ),
+        ast.Assign(
+            targets=[_gen_self_attr("_sent", ast.Store())],
+            value=ast.Constant(value=None),
+        ),
+    ]
+    factory_args: list[ast.expr] = []
+    seen_init: set[str] = set()
+    param_attrs: set[str] = set()
+    for n in params + frees:
+        if n in seen_init or n not in mapping:
+            continue
+        seen_init.add(n)
+        pname = mapping[n]
+        init_args.append(ast.arg(arg=pname))
+        init_body.append(
+            ast.Assign(
+                targets=[_gen_self_attr(pname, ast.Store())],
+                value=ast.Name(id=pname, ctx=ast.Load()),
+            )
+        )
+        factory_args.append(ast.Name(id=n, ctx=ast.Load()))
+        param_attrs.add(pname)
+    fields: set[str] = set(mapping.values()) | {"_s", "_sent"}
+    for body in sm.states:
+        for stmt in body:
+            for n in ast.walk(stmt):
+                if (
+                    isinstance(n, ast.Attribute)
+                    and isinstance(n.value, ast.Name)
+                    and n.value.id == "self"
+                ):
+                    fields.add(n.attr)
+    for attr in sorted(fields):
+        if attr in ("_s", "_sent") or attr in param_attrs:
+            continue
+        init_body.append(
+            ast.Assign(
+                targets=[_gen_self_attr(attr, ast.Store())],
+                value=ast.Constant(value=None),
+            )
+        )
+    init = ast.FunctionDef(
+        name="__init__",
+        args=ast.arguments(
+            posonlyargs=[],
+            args=init_args,
+            kwonlyargs=[],
+            kw_defaults=[],
+            defaults=[],
+        ),
+        body=init_body,
+        decorator_list=[],
+    )
+    send_ifs: list[ast.stmt] = [
+        ast.If(
+            test=ast.Compare(
+                left=_gen_self_attr("_s", ast.Load()),
+                ops=[ast.Eq()],
+                comparators=[ast.Constant(value=-1)],
+            ),
+            body=[
+                ast.Raise(
+                    exc=ast.Call(
+                        func=ast.Name(id="StopIteration", ctx=ast.Load()),
+                        args=[],
+                        keywords=[],
+                    ),
+                    cause=None,
+                )
+            ],
+            orelse=[],
+        )
+    ]
+    for sid, body in enumerate(sm.states):
+        if not body:
+            body = [ast.Pass()]
+        send_ifs.append(
+            ast.If(
+                test=ast.Compare(
+                    left=_gen_self_attr("_s", ast.Load()),
+                    ops=[ast.Eq()],
+                    comparators=[ast.Constant(value=sid)],
+                ),
+                body=body,
+                orelse=[],
+            )
+        )
+    send_ifs.append(
+        ast.Raise(
+            exc=ast.Call(
+                func=ast.Name(id="StopIteration", ctx=ast.Load()),
+                args=[],
+                keywords=[],
+            ),
+            cause=None,
+        )
+    )
+    send = ast.FunctionDef(
+        name="send",
+        args=ast.arguments(
+            posonlyargs=[],
+            args=[ast.arg(arg="self"), ast.arg(arg="_aim_v")],
+            kwonlyargs=[],
+            kw_defaults=[],
+            defaults=[],
+        ),
+        body=[
+            ast.Assign(
+                targets=[_gen_self_attr("_sent", ast.Store())],
+                value=ast.Name(id="_aim_v", ctx=ast.Load()),
+            ),
+            ast.Assign(
+                targets=[ast.Name(id="_aim_run", ctx=ast.Store())],
+                value=ast.Constant(value=True),
+            ),
+            ast.While(
+                test=ast.Name(id="_aim_run", ctx=ast.Load()),
+                body=send_ifs,
+                orelse=[],
+            ),
+        ],
+        decorator_list=[],
+    )
+    dunder_next = ast.FunctionDef(
+        name="__next__",
+        args=ast.arguments(
+            posonlyargs=[],
+            args=[ast.arg(arg="self")],
+            kwonlyargs=[],
+            kw_defaults=[],
+            defaults=[],
+        ),
+        body=[
+            ast.Return(
+                value=ast.Call(
+                    func=ast.Attribute(
+                        value=ast.Name(id="self", ctx=ast.Load()),
+                        attr="send",
+                        ctx=ast.Load(),
+                    ),
+                    args=[ast.Constant(value=None)],
+                    keywords=[],
+                )
+            )
+        ],
+        decorator_list=[],
+    )
+    dunder_iter = ast.FunctionDef(
+        name="__iter__",
+        args=ast.arguments(
+            posonlyargs=[],
+            args=[ast.arg(arg="self")],
+            kwonlyargs=[],
+            kw_defaults=[],
+            defaults=[],
+        ),
+        body=[ast.Return(value=ast.Name(id="self", ctx=ast.Load()))],
+        decorator_list=[],
+    )
+    cls = ast.ClassDef(
+        name=cname,
+        bases=[],
+        keywords=[],
+        body=[init, send, dunder_next, dunder_iter],
+        decorator_list=[],
+    )
+    new_fn = ast.FunctionDef(
+        name=fn.name,
+        args=fn.args,
+        body=[
+            ast.Return(
+                value=ast.Call(
+                    func=ast.Name(id=cname, ctx=ast.Load()),
+                    args=factory_args,
+                    keywords=[],
+                )
+            )
+        ],
+        decorator_list=list(fn.decorator_list),
+        returns=fn.returns,
+    )
+    return cls, new_fn
+
+
+def _for_to_while(node: ast.For, counter: list[int]) -> list[ast.stmt]:
+    """for x in e → iter/next loop. Gen_For uses IterLen/IterGet, which
+    treats an OOP generator as a dict (Hash.Keys). Files with generator
+    functions rewrite remaining for-loops so `for x in gen()` works.
+    `_aim_gr` is a dedicated while flag: codegen `while True` reuses
+    `_aim_t0`, and ContinueLoop then sees a falsy last temp.
+    """
+    counter[0] += 1
+    n = counter[0]
+    it = f"_aim_gi{n}"
+    st = f"_aim_gs{n}"
+    run = f"_aim_gr{n}"
+    nxt = ast.Assign(
+        targets=[node.target],
+        value=ast.Call(
+            func=ast.Name(id="next", ctx=ast.Load()),
+            args=[ast.Name(id=it, ctx=ast.Load())],
+            keywords=[],
+        ),
+    )
+    orelse = list(node.orelse) if node.orelse else []
+    return [
+        ast.Assign(
+            targets=[ast.Name(id=it, ctx=ast.Store())],
+            value=ast.Call(
+                func=ast.Name(id="iter", ctx=ast.Load()),
+                args=[node.iter],
+                keywords=[],
+            ),
+        ),
+        ast.Assign(
+            targets=[ast.Name(id=run, ctx=ast.Store())],
+            value=ast.Constant(value=True),
+        ),
+        ast.While(
+            test=ast.Name(id=run, ctx=ast.Load()),
+            body=[
+                ast.Assign(
+                    targets=[ast.Name(id=st, ctx=ast.Store())],
+                    value=ast.Constant(value=0),
+                ),
+                ast.Try(
+                    body=[nxt],
+                    handlers=[
+                        ast.ExceptHandler(
+                            type=ast.Name(id="StopIteration", ctx=ast.Load()),
+                            name=None,
+                            body=[
+                                ast.Assign(
+                                    targets=[ast.Name(id=st, ctx=ast.Store())],
+                                    value=ast.Constant(value=1),
+                                )
+                            ],
+                        )
+                    ],
+                    orelse=[],
+                    finalbody=[],
+                ),
+                ast.If(
+                    test=ast.Name(id=st, ctx=ast.Load()),
+                    body=orelse + [ast.Break()],
+                    orelse=[],
+                ),
+            ]
+            + list(node.body),
+            orelse=[],
+        ),
+    ]
+
+
+def _rewrite_for_over_gens(tree: ast.AST, gen_names: set[str]) -> ast.AST:
+    """Rewrite `for x in genfunc(...)` only. Rewriting every for-loop
+    in a file that contains a generator turns `for k in d.keys()` into
+    iter(keys-view), which AIMacro rejects as not iterable (shelve).
+    """
+    if not gen_names:
+        return tree
+    counter = [0]
+
+    class _F(ast.NodeTransformer):
+        def visit_For(self, node: ast.For):
+            node = self.generic_visit(node)
+            it = node.iter
+            if (
+                isinstance(it, ast.Call)
+                and isinstance(it.func, ast.Name)
+                and it.func.id in gen_names
+            ):
+                return _for_to_while(node, counter)
+            return node
+
+        def visit_ListComp(self, node):
+            return node
+
+        def visit_SetComp(self, node):
+            return node
+
+        def visit_DictComp(self, node):
+            return node
+
+        def visit_GeneratorExp(self, node):
+            return node
+
+    return _F().visit(tree)
+
+
+def desugar_generators(src: str) -> str:
+    """Generator functions → class with __next__/send (pause at yield).
+
+    Codegen currently collects yields into a list and runs the body at
+    call time, so `g = f()` already prints side effects. Isolation files
+    without generator functions stay byte-identical.
+    """
+    try:
+        tree = ast.parse(src)
+    except SyntaxError:
+        return src
+    counter = [0]
+    changed = [False]
+    gen_names: set[str] = set()
+
+    class _G(ast.NodeTransformer):
+        def __init__(self):
+            self.stack: list[set[str]] = []
+
+        def _visit_fn(self, node: ast.FunctionDef, hoisted: list[ast.stmt]):
+            assigned = _clos_direct_assigned(node)
+            self.stack.append(assigned | {node.name})
+            inner_h: list[ast.stmt] = []
+            new_body: list[ast.stmt] = []
+            for stmt in node.body:
+                if isinstance(stmt, ast.FunctionDef):
+                    new_body.append(self._visit_fn(stmt, inner_h))
+                elif isinstance(stmt, ast.AsyncFunctionDef):
+                    new_body.append(stmt)
+                elif isinstance(stmt, ast.ClassDef):
+                    new_body.append(self.visit(stmt))
+                else:
+                    new_body.append(stmt)
+            self.stack.pop()
+            node.body = inner_h + new_body
+            if _fn_own_yields(node) and not node.decorator_list:
+                enclosing: set[str] = set()
+                for e in self.stack:
+                    enclosing |= e
+                cls, fn = _gen_convert(node, enclosing, counter)
+                hoisted.append(cls)
+                changed[0] = True
+                gen_names.add(node.name)
+                return fn
+            return node
+
+        def visit_Module(self, node: ast.Module):
+            self.stack.append(set())
+            hoisted: list[ast.stmt] = []
+            new_body: list[ast.stmt] = []
+            for stmt in node.body:
+                if isinstance(stmt, ast.FunctionDef):
+                    new_body.append(self._visit_fn(stmt, hoisted))
+                elif isinstance(stmt, ast.ClassDef):
+                    new_body.append(self.visit(stmt))
+                else:
+                    new_body.append(stmt)
+            self.stack.pop()
+            node.body = hoisted + new_body
+            return node
+
+        def visit_ClassDef(self, node: ast.ClassDef):
+            hoisted: list[ast.stmt] = []
+            new_body: list[ast.stmt] = []
+            for stmt in node.body:
+                if isinstance(stmt, ast.FunctionDef):
+                    new_body.append(self._visit_fn(stmt, hoisted))
+                elif isinstance(stmt, ast.ClassDef):
+                    new_body.append(self.visit(stmt))
+                else:
+                    new_body.append(stmt)
+            node.body = hoisted + new_body
+            return node
+
+    new_tree = _G().visit(tree)
+    if not changed[0]:
+        return src
+    new_tree = _rewrite_for_over_gens(new_tree, gen_names)
+    ast.fix_missing_locations(new_tree)
+    try:
+        return ast.unparse(new_tree) + "\n"
+    except Exception:
+        return src
+
+
 def desugar_nested_class_cells(src: str) -> str:
     """Capture enclosing locals used by nested class methods into a module dict.
 
@@ -1662,6 +2457,7 @@ def convert(src: str) -> str:
     src = desugar_from_import_as(src)
     src = desugar_tuple_unpack(src)
     src = desugar_for_unpack(src)
+    src = desugar_generators(src)
     src = desugar_nested_class_cells(src)
     src = desugar_nested_func_closures(src)
     src = desugar_dict_call(src)
