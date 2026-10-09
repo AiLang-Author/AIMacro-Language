@@ -27,177 +27,656 @@ import sys
 CONTINUE_SUITE = ("else", "elif", "except", "finally")
 import re
 
-_CASE_RE = re.compile(r"^(\s*)case\s+(.+?)\s*:\s*(.*)$")
-_MATCH_RE = re.compile(r"^(\s*)match\s+(.+?)\s*:\s*(#.*)?$")
+def _m_name(name: str, ctx=None) -> ast.Name:
+    return ast.Name(id=name, ctx=ctx or ast.Load())
 
 
-def _take_as_binds(pat: str, indent: str, tmp: str):
-    """Pull nested `as name` out of a match pattern (or-patterns, mappings)."""
-    binds: list[str] = []
-
-    def repl(m):
-        binds.append(f"{indent}    {m.group(1)} = {tmp}\n")
-        return ""
-
-    pat2 = re.sub(r"\s+as\s+([A-Za-z_][A-Za-z0-9_]*)", repl, pat)
-    return pat2.strip(), binds
+def _m_assign(name: str, value: ast.expr) -> ast.Assign:
+    return ast.Assign(targets=[_m_name(name, ast.Store())], value=value)
 
 
-def _split_case_line(raw: str):
-    """Split `case <pattern>: [trailing]` at the suite colon (depth 0).
+def _m_const(v) -> ast.Constant:
+    return ast.Constant(value=v)
 
-    `{0: 0}:` must not use the dict colon. `_CASE_RE` is non-greedy and did.
+
+def _m_call(name: str, args: list) -> ast.Call:
+    return ast.Call(func=_m_name(name), args=args, keywords=[])
+
+
+def _m_iff(test: ast.expr, body: list, orelse: list | None = None) -> ast.If:
+    if not body:
+        body = [ast.Pass()]
+    return ast.If(test=test, body=body, orelse=orelse or [])
+
+
+def _m_not(e: ast.expr) -> ast.UnaryOp:
+    return ast.UnaryOp(op=ast.Not(), operand=e)
+
+
+def _m_eq(a: ast.expr, b: ast.expr) -> ast.Compare:
+    return ast.Compare(left=a, ops=[ast.Eq()], comparators=[b])
+
+
+def _m_is(a: ast.expr, b: ast.expr) -> ast.Compare:
+    return ast.Compare(left=a, ops=[ast.Is()], comparators=[b])
+
+
+def _m_lt(a: ast.expr, b: ast.expr) -> ast.Compare:
+    return ast.Compare(left=a, ops=[ast.Lt()], comparators=[b])
+
+
+def _m_in(a: ast.expr, b: ast.expr) -> ast.Compare:
+    return ast.Compare(left=a, ops=[ast.In()], comparators=[b])
+
+
+def _m_sub(obj: ast.expr, idx: ast.expr, ctx=None) -> ast.Subscript:
+    return ast.Subscript(value=obj, slice=idx, ctx=ctx or ast.Load())
+
+
+def _m_attr(obj: ast.expr, attr: str, ctx=None) -> ast.Attribute:
+    return ast.Attribute(value=obj, attr=attr, ctx=ctx or ast.Load())
+
+
+def _m_fresh(counter: list, prefix: str) -> str:
+    counter[0] += 1
+    return f"_aim_{prefix}_{counter[0]}"
+
+
+def _m_ensure(expr: ast.expr, counter: list, stmts: list) -> str:
+    if isinstance(expr, ast.Name):
+        return expr.id
+    nm = _m_fresh(counter, "v")
+    stmts.append(_m_assign(nm, expr))
+    return nm
+
+
+def _m_isinstance(obj: str, typ: str) -> ast.Call:
+    return _m_call("isinstance", [_m_name(obj), _m_name(typ)])
+
+
+def _collect_match_args(tree: ast.AST) -> dict:
+    """Map class name → positional __match_args__ names.
+
+    Explicit `__match_args__ = ('x', 'y')` wins. Dataclass field
+    annotations are the fallback so `case Point(0, y)` can use Attribute
+    loads without runtime getattr (GetAttr is a stub).
     """
-    m = re.match(r"^(\s*)case\s+", raw)
-    if not m:
-        return None
-    indent = m.group(1)
-    rest = raw[m.end() :]
-    idx = _suite_colon_index(rest)
-    if idx == -1:
-        return None
-    pattern = rest[:idx].strip()
-    trailing = rest[idx + 1 :].strip()
-    return indent, pattern, trailing
+    out: dict = {}
+    for n in ast.walk(tree):
+        if not isinstance(n, ast.ClassDef):
+            continue
+        ma = None
+        fields: list[str] = []
+        is_dc = False
+        for d in n.decorator_list:
+            if isinstance(d, ast.Name) and d.id == "dataclass":
+                is_dc = True
+            elif isinstance(d, ast.Attribute) and d.attr == "dataclass":
+                is_dc = True
+            elif isinstance(d, ast.Call):
+                f = d.func
+                if isinstance(f, ast.Name) and f.id == "dataclass":
+                    is_dc = True
+                elif isinstance(f, ast.Attribute) and f.attr == "dataclass":
+                    is_dc = True
+        for s in n.body:
+            if isinstance(s, ast.Assign):
+                for t in s.targets:
+                    if isinstance(t, ast.Name) and t.id == "__match_args__":
+                        if isinstance(s.value, (ast.Tuple, ast.List)):
+                            ma = [
+                                e.value
+                                for e in s.value.elts
+                                if isinstance(e, ast.Constant)
+                                and isinstance(e.value, str)
+                            ]
+            elif isinstance(s, ast.AnnAssign) and isinstance(s.target, ast.Name):
+                if not s.target.id.startswith("_"):
+                    fields.append(s.target.id)
+        names = ma if ma is not None else (fields if is_dc and fields else None)
+        if names is None:
+            continue
+        if n.name in out:
+            out[n.name] = None
+        else:
+            out[n.name] = names
+    return out
+
+
+_BUILTIN_MATCH_CLS = {
+    "bool",
+    "bytearray",
+    "bytes",
+    "dict",
+    "float",
+    "frozenset",
+    "int",
+    "list",
+    "set",
+    "str",
+    "tuple",
+}
+
+
+def _match_on_attr(
+    subj_e: ast.expr,
+    attr: str,
+    p: ast.pattern,
+    ok: str,
+    counter: list,
+    match_args: dict,
+    binds: dict,
+    dest: list,
+) -> None:
+    val = _m_fresh(counter, "av")
+    vs, vok, vb = _emit_pattern(_m_name(val), p, counter, match_args)
+    step = [_m_assign(val, _m_attr(subj_e, attr))]
+    step.extend(vs)
+    step.append(_m_iff(_m_not(_m_name(vok)), [_m_assign(ok, _m_const(False))]))
+    dest.append(_m_iff(_m_name(ok), step))
+    binds.update(vb)
+
+
+def _match_bind_names(pat: ast.pattern) -> list:
+    names: list[str] = []
+
+    def add(n):
+        if n and n not in names:
+            names.append(n)
+
+    def walk(p):
+        if p is None:
+            return
+        if isinstance(p, ast.MatchAs):
+            walk(p.pattern)
+            add(p.name)
+        elif isinstance(p, ast.MatchOr):
+            for q in p.patterns:
+                walk(q)
+        elif isinstance(p, ast.MatchSequence):
+            for q in p.patterns:
+                walk(q)
+        elif isinstance(p, ast.MatchStar):
+            add(p.name)
+        elif isinstance(p, ast.MatchMapping):
+            for q in p.patterns:
+                walk(q)
+            add(p.rest)
+        elif isinstance(p, ast.MatchClass):
+            for q in p.patterns:
+                walk(q)
+            for q in p.kwd_patterns:
+                walk(q)
+
+    walk(pat)
+    return names
+
+
+def _emit_pattern(
+    subj: ast.expr,
+    pat: ast.pattern,
+    counter: list,
+    match_args: dict,
+) -> tuple:
+    """Return (stmts, ok_name, bind_map name→expr). No user binds assigned."""
+    stmts: list = []
+    subj_n = _m_ensure(subj, counter, stmts)
+    subj_e = _m_name(subj_n)
+    ok = _m_fresh(counter, "ok")
+    binds: dict = {}
+
+    def fail_ok():
+        return _m_assign(ok, _m_const(False))
+
+    def ok_true():
+        return _m_assign(ok, _m_const(True))
+
+    if isinstance(pat, ast.MatchAs):
+        if pat.pattern is None:
+            stmts.append(ok_true())
+            if pat.name:
+                binds[pat.name] = subj_e
+            return stmts, ok, binds
+        inner_s, inner_ok, inner_b = _emit_pattern(
+            subj_e, pat.pattern, counter, match_args
+        )
+        stmts.extend(inner_s)
+        stmts.append(_m_assign(ok, _m_name(inner_ok)))
+        binds.update(inner_b)
+        if pat.name:
+            binds[pat.name] = subj_e
+        return stmts, ok, binds
+
+    if isinstance(pat, ast.MatchValue):
+        stmts.append(_m_assign(ok, _m_eq(subj_e, pat.value)))
+        return stmts, ok, binds
+
+    if isinstance(pat, ast.MatchSingleton):
+        stmts.append(_m_assign(ok, _m_is(subj_e, _m_const(pat.value))))
+        return stmts, ok, binds
+
+    if isinstance(pat, ast.MatchOr):
+        stmts.append(fail_ok())
+        names = _match_bind_names(pat)
+        tmps = {nm: _m_fresh(counter, "b") for nm in names}
+        for nm in names:
+            stmts.append(_m_assign(tmps[nm], _m_const(None)))
+        for alt in pat.patterns:
+            a_s, a_ok, a_b = _emit_pattern(subj_e, alt, counter, match_args)
+            body = list(a_s)
+            on = [_m_assign(ok, _m_const(True))]
+            for nm, expr in a_b.items():
+                if nm in tmps:
+                    on.append(_m_assign(tmps[nm], expr))
+            body.append(_m_iff(_m_name(a_ok), on))
+            stmts.append(_m_iff(_m_not(_m_name(ok)), body))
+        binds = {nm: _m_name(tmps[nm]) for nm in names}
+        return stmts, ok, binds
+
+    if isinstance(pat, ast.MatchSequence):
+        isseq = _m_fresh(counter, "seq")
+        stmts.append(_m_assign(isseq, _m_const(False)))
+        stmts.append(
+            ast.Try(
+                body=[
+                    ast.Expr(value=_m_call("len", [subj_e])),
+                    _m_assign(isseq, _m_const(True)),
+                ],
+                handlers=[
+                    ast.ExceptHandler(
+                        type=_m_name("Exception"),
+                        name=None,
+                        body=[ast.Pass()],
+                    )
+                ],
+                orelse=[],
+                finalbody=[],
+            )
+        )
+        for typ in ("list", "tuple", "range"):
+            stmts.append(
+                _m_iff(_m_isinstance(subj_n, typ), [_m_assign(isseq, _m_const(True))])
+            )
+        for typ in ("str", "bytes", "bytearray", "dict", "set"):
+            stmts.append(
+                _m_iff(_m_isinstance(subj_n, typ), [_m_assign(isseq, _m_const(False))])
+            )
+        stmts.append(fail_ok())
+        pats = list(pat.patterns)
+        star_i = None
+        for i, p in enumerate(pats):
+            if isinstance(p, ast.MatchStar):
+                star_i = i
+                break
+        seq_body: list = [ok_true()]
+        n_name = _m_fresh(counter, "n")
+        seq_body.append(_m_assign(n_name, _m_call("len", [subj_e])))
+        n_e = _m_name(n_name)
+        if star_i is None:
+            seq_body.append(
+                _m_iff(
+                    ast.Compare(
+                        left=n_e,
+                        ops=[ast.NotEq()],
+                        comparators=[_m_const(len(pats))],
+                    ),
+                    [fail_ok()],
+                )
+            )
+        else:
+            nfixed = len(pats) - 1
+            seq_body.append(
+                _m_iff(_m_lt(n_e, _m_const(nfixed)), [fail_ok()])
+            )
+        for i, p in enumerate(pats):
+            if isinstance(p, ast.MatchStar):
+                continue
+            if star_i is None or i < star_i:
+                idx_e: ast.expr = _m_const(i)
+            else:
+                back = len(pats) - i
+                idx_n = _m_fresh(counter, "i")
+                seq_body.append(
+                    _m_assign(
+                        idx_n,
+                        ast.BinOp(
+                            left=n_e, op=ast.Sub(), right=_m_const(back)
+                        ),
+                    )
+                )
+                idx_e = _m_name(idx_n)
+            elt = _m_sub(subj_e, idx_e)
+            e_s, e_ok, e_b = _emit_pattern(elt, p, counter, match_args)
+            elt_body = list(e_s)
+            elt_body.append(_m_iff(_m_not(_m_name(e_ok)), [fail_ok()]))
+            seq_body.append(_m_iff(_m_name(ok), elt_body))
+            binds.update(e_b)
+        if star_i is not None and pats[star_i].name:
+            nfixed = len(pats) - 1
+            st_n = _m_fresh(counter, "st")
+            sl_n = _m_fresh(counter, "sl")
+            en_n = _m_fresh(counter, "en")
+            i_n = _m_fresh(counter, "si")
+            sn = _m_fresh(counter, "star")
+            elt_n = _m_fresh(counter, "se")
+            star_body = [
+                _m_assign(st_n, _m_const(star_i)),
+                _m_assign(
+                    sl_n,
+                    ast.BinOp(left=n_e, op=ast.Sub(), right=_m_const(nfixed)),
+                ),
+                _m_assign(
+                    en_n,
+                    ast.BinOp(
+                        left=_m_name(st_n), op=ast.Add(), right=_m_name(sl_n)
+                    ),
+                ),
+                _m_assign(sn, ast.List(elts=[], ctx=ast.Load())),
+                _m_assign(i_n, _m_name(st_n)),
+                ast.While(
+                    test=_m_lt(_m_name(i_n), _m_name(en_n)),
+                    body=[
+                        _m_assign(elt_n, _m_sub(subj_e, _m_name(i_n))),
+                        ast.Expr(
+                            value=ast.Call(
+                                func=_m_attr(_m_name(sn), "append"),
+                                args=[_m_name(elt_n)],
+                                keywords=[],
+                            )
+                        ),
+                        _m_assign(
+                            i_n,
+                            ast.BinOp(
+                                left=_m_name(i_n),
+                                op=ast.Add(),
+                                right=_m_const(1),
+                            ),
+                        ),
+                    ],
+                    orelse=[],
+                ),
+            ]
+            binds[pats[star_i].name] = _m_name(sn)
+            seq_body.append(_m_iff(_m_name(ok), star_body))
+        stmts.append(_m_iff(_m_name(isseq), seq_body))
+        return stmts, ok, binds
+
+    if isinstance(pat, ast.MatchMapping):
+        ismap = _m_fresh(counter, "map")
+        stmts.append(_m_assign(ismap, _m_const(False)))
+        stmts.append(
+            ast.Try(
+                body=[
+                    ast.Expr(
+                        value=ast.Call(
+                            func=_m_attr(subj_e, "keys"),
+                            args=[],
+                            keywords=[],
+                        )
+                    ),
+                    _m_assign(ismap, _m_const(True)),
+                ],
+                handlers=[
+                    ast.ExceptHandler(
+                        type=_m_name("Exception"),
+                        name=None,
+                        body=[ast.Pass()],
+                    )
+                ],
+                orelse=[],
+                finalbody=[],
+            )
+        )
+        stmts.append(
+            _m_iff(_m_isinstance(subj_n, "dict"), [_m_assign(ismap, _m_const(True))])
+        )
+        stmts.append(fail_ok())
+        used_n = _m_fresh(counter, "used")
+        map_body: list = [
+            ok_true(),
+            _m_assign(used_n, ast.Dict(keys=[], values=[])),
+        ]
+        for key_e, vp in zip(pat.keys, pat.patterns):
+            kn = _m_ensure(key_e, counter, map_body)
+            has = _m_in(_m_name(kn), subj_e)
+            vs, vok, vb = _emit_pattern(
+                _m_sub(subj_e, _m_name(kn)), vp, counter, match_args
+            )
+            then = list(vs)
+            then.append(_m_iff(_m_not(_m_name(vok)), [fail_ok()]))
+            then.append(
+                ast.Assign(
+                    targets=[_m_sub(_m_name(used_n), _m_name(kn), ast.Store())],
+                    value=_m_const(1),
+                )
+            )
+            binds.update(vb)
+            map_body.append(
+                _m_iff(
+                    _m_name(ok),
+                    [_m_iff(has, then, [fail_ok()])],
+                )
+            )
+        if pat.rest:
+            rest_n = _m_fresh(counter, "rest")
+            k_n = _m_fresh(counter, "k")
+            rest_body = [
+                _m_assign(rest_n, ast.Dict(keys=[], values=[])),
+                ast.For(
+                    target=_m_name(k_n, ast.Store()),
+                    iter=subj_e,
+                    body=[
+                        _m_iff(
+                            _m_not(_m_in(_m_name(k_n), _m_name(used_n))),
+                            [
+                                ast.Assign(
+                                    targets=[
+                                        _m_sub(
+                                            _m_name(rest_n),
+                                            _m_name(k_n),
+                                            ast.Store(),
+                                        )
+                                    ],
+                                    value=_m_sub(subj_e, _m_name(k_n)),
+                                )
+                            ],
+                        )
+                    ],
+                    orelse=[],
+                ),
+            ]
+            map_body.append(_m_iff(_m_name(ok), rest_body))
+            binds[pat.rest] = _m_name(rest_n)
+        stmts.append(_m_iff(_m_name(ismap), map_body))
+        return stmts, ok, binds
+
+    if isinstance(pat, ast.MatchClass):
+        stmts.append(fail_ok())
+        inst = _m_call("isinstance", [subj_e, pat.cls])
+        cls_body: list = [ok_true()]
+        static = None
+        builtin = False
+        if isinstance(pat.cls, ast.Name):
+            static = match_args.get(pat.cls.id)
+            builtin = pat.cls.id in _BUILTIN_MATCH_CLS
+        npos = len(pat.patterns)
+        if builtin:
+            if npos == 1:
+                vs, vok, vb = _emit_pattern(
+                    subj_e, pat.patterns[0], counter, match_args
+                )
+                step = list(vs)
+                step.append(_m_iff(_m_not(_m_name(vok)), [fail_ok()]))
+                cls_body.append(_m_iff(_m_name(ok), step))
+                binds.update(vb)
+            elif npos > 1:
+                cls_body.append(fail_ok())
+        elif npos:
+            if static is not None:
+                if npos > len(static):
+                    cls_body.append(fail_ok())
+                else:
+                    for i, p in enumerate(pat.patterns):
+                        _match_on_attr(
+                            subj_e,
+                            static[i],
+                            p,
+                            ok,
+                            counter,
+                            match_args,
+                            binds,
+                            cls_body,
+                        )
+            else:
+                ma_n = _m_fresh(counter, "ma")
+                cls_body.append(
+                    _m_assign(ma_n, _m_attr(pat.cls, "__match_args__"))
+                )
+                cls_body.append(
+                    _m_iff(
+                        _m_lt(
+                            _m_call("len", [_m_name(ma_n)]),
+                            _m_const(npos),
+                        ),
+                        [fail_ok()],
+                    )
+                )
+                for i, p in enumerate(pat.patterns):
+                    nm_n = _m_fresh(counter, "nm")
+                    val_n = _m_fresh(counter, "cv")
+                    got2 = _m_fresh(counter, "got")
+                    step = [
+                        _m_assign(nm_n, _m_sub(_m_name(ma_n), _m_const(i))),
+                        _m_assign(got2, _m_const(True)),
+                        ast.Try(
+                            body=[
+                                _m_assign(
+                                    val_n,
+                                    _m_call(
+                                        "getattr",
+                                        [subj_e, _m_name(nm_n)],
+                                    ),
+                                )
+                            ],
+                            handlers=[
+                                ast.ExceptHandler(
+                                    type=_m_name("AttributeError"),
+                                    name=None,
+                                    body=[
+                                        _m_assign(got2, _m_const(False)),
+                                        _m_assign(val_n, _m_const(None)),
+                                    ],
+                                )
+                            ],
+                            orelse=[],
+                            finalbody=[],
+                        ),
+                    ]
+                    vs, vok, vb = _emit_pattern(
+                        _m_name(val_n), p, counter, match_args
+                    )
+                    inner = vs + [
+                        _m_iff(_m_not(_m_name(vok)), [fail_ok()])
+                    ]
+                    step.append(
+                        _m_iff(
+                            _m_not(_m_name(got2)),
+                            [fail_ok()],
+                            inner,
+                        )
+                    )
+                    cls_body.append(_m_iff(_m_name(ok), step))
+                    binds.update(vb)
+        for attr, p in zip(pat.kwd_attrs, pat.kwd_patterns):
+            _match_on_attr(
+                subj_e, attr, p, ok, counter, match_args, binds, cls_body
+            )
+        stmts.append(_m_iff(inst, cls_body))
+        return stmts, ok, binds
+
+    if isinstance(pat, ast.MatchStar):
+        stmts.append(ok_true())
+        if pat.name:
+            binds[pat.name] = _m_call("list", [subj_e])
+        return stmts, ok, binds
+
+    stmts.append(fail_ok())
+    return stmts, ok, binds
+
+
+def _desugar_one_match(
+    node: ast.Match, counter: list, match_args: dict
+) -> list:
+    m_n = _m_fresh(counter, "m")
+    hit = _m_fresh(counter, "hit")
+    stmts = [
+        _m_assign(m_n, node.subject),
+        _m_assign(hit, _m_const(False)),
+    ]
+    for case in node.cases:
+        ps, pok, pb = _emit_pattern(
+            _m_name(m_n), case.pattern, counter, match_args
+        )
+        taken: list = []
+        for nm, expr in pb.items():
+            taken.append(_m_assign(nm, expr))
+        body = [ast.copy_location(s, case.pattern) for s in case.body]
+        if case.guard is None:
+            taken.append(_m_assign(hit, _m_const(True)))
+            taken.extend(body)
+        else:
+            taken.append(
+                _m_iff(
+                    case.guard,
+                    [_m_assign(hit, _m_const(True))] + body,
+                )
+            )
+        case_body = list(ps)
+        case_body.append(_m_iff(_m_name(pok), taken))
+        stmts.append(_m_iff(_m_not(_m_name(hit)), case_body))
+    return stmts
 
 
 def desugar_match(src: str) -> str:
-    lines = src.splitlines(keepends=True)
-    out: list[str] = []
-    i = 0
-    n = len(lines)
-    match_counter = 0
-    while i < n:
-        line = lines[i]
-        m = _MATCH_RE.match(line.rstrip("\n"))
-        if not m:
-            out.append(line)
-            i += 1
-            continue
-        indent, subject = m.group(1), m.group(2).strip()
-        ind_w = len(indent.expandtabs(4))
-        match_counter += 1
-        tmp = f"_aim_match_{match_counter}"
-        out.append(f"{indent}{tmp} = {subject}\n")
-        i += 1
-        first_case = True
-        while i < n:
-            raw = lines[i]
-            stripped = raw.strip()
-            if stripped == "":
-                out.append(raw)
-                i += 1
-                continue
-            if stripped.startswith("#"):
-                ws = raw[: len(raw) - len(raw.lstrip())]
-                if len(ws.expandtabs(4)) <= ind_w:
-                    break
-                out.append(raw)
-                i += 1
-                continue
-            parsed_case = _split_case_line(raw.rstrip("\n"))
-            if not parsed_case:
-                ws = raw[: len(raw) - len(raw.lstrip())]
-                if len(ws.expandtabs(4)) <= ind_w:
-                    break
-                out.append(raw)
-                i += 1
-                continue
-            c_indent, pattern, trailing = parsed_case
-            c_w = len(c_indent.expandtabs(4))
-            if c_w <= ind_w:
-                break
-            body_lines: list[str] = []
-            if trailing:
-                body_lines.append(f"{c_indent}    {trailing}\n")
-            i += 1
-            while i < n:
-                b = lines[i]
-                if b.strip() == "":
-                    body_lines.append(b)
-                    i += 1
-                    continue
-                b_ws = b[: len(b) - len(b.lstrip())]
-                if len(b_ws.expandtabs(4)) <= c_w:
-                    break
-                body_lines.append(b)
-                i += 1
-            guard = None
-            pat = pattern
-            if " if " in pattern:
-                left, _, right = pattern.rpartition(" if ")
-                pat, guard = left.strip(), right.strip()
-            binds: list[str] = []
-            cond: str
-            capture = None
-            if pat == "_":
-                cond = "True"
-            elif pat == "None":
-                cond = f"{tmp} is None"
-            else:
-                tm = re.match(
-                    r"^([\w.]+)\(([A-Za-z_][A-Za-z0-9_]*)\)$",
-                    pat,
-                )
-                if tm:
-                    typ, name = tm.group(1), tm.group(2)
-                    cond = f"isinstance({tmp}, {typ})"
-                    capture = name
-                    binds.append(f"{indent}    {name} = {tmp}\n")
-                elif re.match(r"^[A-Za-z_][A-Za-z0-9_]*$", pat):
-                    cond = "True"
-                    capture = pat
-                    binds.append(f"{indent}    {pat} = {tmp}\n")
-                else:
-                    am = re.match(
-                        r"^(.+?)\s+as\s+([A-Za-z_][A-Za-z0-9_]*)$",
-                        pat,
+    """Replace match/case with ifs. Isolation files without ast.Match stay intact."""
+    try:
+        tree = ast.parse(src)
+    except SyntaxError:
+        return src
+    if not any(isinstance(n, ast.Match) for n in ast.walk(tree)):
+        return src
+    counter = [0]
+    match_args = _collect_match_args(tree)
+
+    class _M(ast.NodeTransformer):
+        def visit_Match(self, node: ast.Match):
+            node.subject = self.visit(node.subject)
+            new_cases = []
+            for c in node.cases:
+                body = []
+                for s in c.body:
+                    r = self.visit(s)
+                    if isinstance(r, list):
+                        body.extend(r)
+                    elif r is not None:
+                        body.append(r)
+                new_cases.append(
+                    ast.match_case(
+                        pattern=c.pattern, guard=c.guard, body=body
                     )
-                    if am:
-                        inner, name = am.group(1).strip(), am.group(2)
-                        inner, extra = _take_as_binds(inner, indent, tmp)
-                        binds.extend(extra)
-                        cond = f"({tmp}) == ({inner})"
-                        capture = name
-                        binds.append(f"{indent}    {name} = {tmp}\n")
-                    else:
-                        pat2, extra = _take_as_binds(pat, indent, tmp)
-                        binds.extend(extra)
-                        cond = f"({tmp}) == ({pat2})"
-            if guard:
-                g = guard
-                if capture:
-                    # rewrite capture name → tmp so guard can run before bind
-                    g = re.sub(rf"\b{re.escape(capture)}\b", tmp, g)
-                if cond == "True":
-                    cond = f"({g})"
-                else:
-                    cond = f"({cond}) and ({g})"
-            if pat == "_" and guard is None and not first_case:
-                out.append(f"{indent}else:\n")
-            else:
-                kw = "if" if first_case else "elif"
-                out.append(f"{indent}{kw} {cond}:\n")
-            first_case = False
-            out.extend(binds)
-            # reindent body from case-indent to match-indent+4
-            # body currently at case_indent+4; we want match_indent+4 (+ binds already)
-            # Keep body as-is (it was under case) — case indent is match+4, body is match+8.
-            # After `if` at match indent, body should be match+4. So shift left by (c_w - ind_w).
-            shift = c_w - ind_w
-            for bl in body_lines:
-                if bl.strip() == "":
-                    out.append(bl)
-                    continue
-                # remove `shift` spaces from the start (approx)
-                # body uses spaces; expand tabs
-                expanded = bl.expandtabs(4)
-                if expanded.startswith(" " * shift):
-                    out.append(expanded[shift:])
-                else:
-                    out.append(bl)
-        # end match cases
-    return "".join(out)
+                )
+            return _desugar_one_match(
+                ast.Match(subject=node.subject, cases=new_cases),
+                counter,
+                match_args,
+            )
+
+    new_tree = _M().visit(tree)
+    ast.fix_missing_locations(new_tree)
+    try:
+        return ast.unparse(new_tree) + "\n"
+    except Exception:
+        return src
 
 
 def desugar_tuple_unpack(src: str) -> str:
@@ -3096,10 +3575,7 @@ def convert(src: str) -> str:
     # rejects zero-byte input. Emit a bare `pass` so transpile succeeds.
     if not src or not src.strip():
         return "pass\n"
-    # match/case already desugared if called via main;
-    # accept raw match too when convert() used alone
-    if re.search(r"(?m)^\s*match\s+.+:\s*(#.*)?$", src):
-        src = desugar_match(src)
+    src = desugar_match(src)
     src = desugar_pep695_type_params(src)
     src = desugar_starargs_annotations(src)
     src = desugar_nameerror_probe(src)
