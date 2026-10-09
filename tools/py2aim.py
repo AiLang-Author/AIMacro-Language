@@ -954,6 +954,289 @@ def desugar_nested_class_cells(src: str) -> str:
         return src
 
 
+_CLOS_SKIP = {
+    "self",
+    "cls",
+    "True",
+    "False",
+    "None",
+    "_aim_c",
+    "_aim_ncells",
+}
+
+
+def _clos_params(node: ast.AST) -> set[str]:
+    if not hasattr(node, "args"):
+        return set()
+    names = {a.arg for a in node.args.args + node.args.kwonlyargs}
+    if node.args.vararg:
+        names.add(node.args.vararg.arg)
+    if node.args.kwarg:
+        names.add(node.args.kwarg.arg)
+    return names
+
+
+def _clos_direct_assigned(node: ast.AST) -> set[str]:
+    """Params plus stores in this function, not in nested def/class bodies."""
+    assigned = _clos_params(node)
+    body = getattr(node, "body", None) or []
+    for stmt in body:
+        if isinstance(stmt, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+            continue
+        for n in ast.walk(stmt):
+            if isinstance(n, ast.Name) and isinstance(n.ctx, ast.Store):
+                assigned.add(n.id)
+    return assigned
+
+
+def _clos_inner_locals(node: ast.AST) -> set[str]:
+    locs = _clos_params(node)
+    for n in ast.walk(node):
+        if isinstance(n, ast.Name) and isinstance(n.ctx, ast.Store):
+            locs.add(n.id)
+    return locs
+
+
+def _clos_freevars(inner: ast.AST, enclosing: set[str]) -> list[str]:
+    iloc = _clos_inner_locals(inner)
+    for n in ast.walk(inner):
+        if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            iloc.add(n.name)
+    seen: list[str] = []
+    for n in ast.walk(inner):
+        if (
+            isinstance(n, ast.Name)
+            and isinstance(n.ctx, ast.Load)
+            and n.id in enclosing
+            and n.id not in iloc
+            and n.id not in _CLOS_SKIP
+            and n.id not in seen
+        ):
+            seen.append(n.id)
+    return seen
+
+
+def _clos_is_leaf(node: ast.FunctionDef) -> bool:
+    for stmt in node.body:
+        if isinstance(stmt, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            return False
+        for n in ast.walk(stmt):
+            if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                return False
+    return True
+
+
+class _ClosRewrite(ast.NodeTransformer):
+    def __init__(self, mapping: dict[str, str], cell: str, via_self: bool):
+        self.mapping = mapping
+        self.cell = cell
+        self.via_self = via_self
+
+    def _cell(self) -> ast.expr:
+        if self.via_self:
+            return ast.Attribute(
+                value=ast.Name(id="self", ctx=ast.Load()),
+                attr="_c",
+                ctx=ast.Load(),
+            )
+        return ast.Name(id=self.cell, ctx=ast.Load())
+
+    def _sub(self, name: str, ctx):
+        return ast.Subscript(
+            value=self._cell(),
+            slice=ast.Constant(value=self.mapping[name]),
+            ctx=ctx,
+        )
+
+    def visit_Name(self, node: ast.Name):
+        if node.id in self.mapping:
+            return self._sub(node.id, node.ctx)
+        return node
+
+
+def _clos_class(cname: str, inner: ast.FunctionDef, mapping: dict[str, str]) -> ast.ClassDef:
+    """class C: def __init__(self, _c): self._c = _c
+    def __call__(self, ...inner args...): rewritten body"""
+    init = ast.FunctionDef(
+        name="__init__",
+        args=ast.arguments(
+            posonlyargs=[],
+            args=[
+                ast.arg(arg="self"),
+                ast.arg(arg="_c"),
+            ],
+            kwonlyargs=[],
+            kw_defaults=[],
+            defaults=[],
+        ),
+        body=[
+            ast.Assign(
+                targets=[
+                    ast.Attribute(
+                        value=ast.Name(id="self", ctx=ast.Load()),
+                        attr="_c",
+                        ctx=ast.Store(),
+                    )
+                ],
+                value=ast.Name(id="_c", ctx=ast.Load()),
+            )
+        ],
+        decorator_list=[],
+    )
+    call_args = ast.arguments(
+        posonlyargs=[],
+        args=[ast.arg(arg="self")] + list(inner.args.args),
+        vararg=inner.args.vararg,
+        kwonlyargs=list(inner.args.kwonlyargs),
+        kw_defaults=list(inner.args.kw_defaults),
+        kwarg=inner.args.kwarg,
+        defaults=list(inner.args.defaults),
+    )
+    call_body = [_ClosRewrite(mapping, "_c", True).visit(s) for s in inner.body]
+    if not call_body:
+        call_body = [ast.Pass()]
+    call = ast.FunctionDef(
+        name="__call__",
+        args=call_args,
+        body=call_body,
+        decorator_list=[],
+        returns=inner.returns,
+    )
+    return ast.ClassDef(
+        name=cname,
+        bases=[],
+        keywords=[],
+        body=[init, call],
+        decorator_list=[],
+    )
+
+
+def desugar_nested_func_closures(src: str) -> str:
+    """Nested def with freevars → per-call cell dict + callable class.
+
+    Codegen flattens nested Functions and stores freevars in one PyMod.x,
+    so make_adder(1) then make_adder(10) share the cell. Isolation golds
+    that only close over self/cls are left byte-identical.
+    """
+    try:
+        tree = ast.parse(src)
+    except SyntaxError:
+        return src
+    counter = [0]
+    changed = [False]
+
+    class _X(ast.NodeTransformer):
+        def visit_FunctionDef(self, node: ast.FunctionDef):
+            node = self.generic_visit(node)
+            enclosing = _clos_direct_assigned(node)
+            new_body: list[ast.stmt] = []
+            cell_maps: list[tuple[str, str]] = []
+            cell_name = "_aim_c"
+            renames: dict[str, str] = {}
+            for stmt in node.body:
+                if isinstance(stmt, ast.FunctionDef) and _clos_is_leaf(stmt):
+                    frees = _clos_freevars(stmt, enclosing)
+                    if frees:
+                        changed[0] = True
+                        counter[0] += 1
+                        cid = counter[0]
+                        cname = f"__aim_clos_{cid}"
+                        fn_name = f"_aim_fn_{cid}"
+                        mapping = {v: v for v in frees}
+                        for v in frees:
+                            if (v, v) not in cell_maps:
+                                cell_maps.append((v, v))
+                        new_body.append(_clos_class(cname, stmt, mapping))
+                        # Unique _aim_fn_* so EmitIdent does not GetNone a
+                        # file-global nested name like adder. SmartCallN
+                        # already dispatches Hash __bound__ via MethodCall.
+                        inst = ast.Call(
+                            func=ast.Name(id=cname, ctx=ast.Load()),
+                            args=[ast.Name(id=cell_name, ctx=ast.Load())],
+                            keywords=[],
+                        )
+                        new_body.append(
+                            ast.Assign(
+                                targets=[ast.Name(id=fn_name, ctx=ast.Store())],
+                                value=ast.Dict(
+                                    keys=[
+                                        ast.Constant(value="__bound__"),
+                                        ast.Constant(value="obj"),
+                                        ast.Constant(value="name"),
+                                    ],
+                                    values=[
+                                        ast.Constant(value=1),
+                                        inst,
+                                        ast.Constant(value="__call__"),
+                                    ],
+                                ),
+                            )
+                        )
+                        renames[stmt.name] = fn_name
+                        continue
+                new_body.append(stmt)
+            if renames:
+
+                class _Ren(ast.NodeTransformer):
+                    def visit_Name(self, n: ast.Name):
+                        if n.id in renames:
+                            return ast.Name(id=renames[n.id], ctx=n.ctx)
+                        return n
+
+                new_body = [
+                    s
+                    if isinstance(s, ast.ClassDef)
+                    and str(s.name).startswith("__aim_clos_")
+                    else _Ren().visit(s)
+                    for s in new_body
+                ]
+            if cell_maps:
+                inits: list[ast.stmt] = [
+                    ast.Assign(
+                        targets=[ast.Name(id=cell_name, ctx=ast.Store())],
+                        value=ast.Dict(keys=[], values=[]),
+                    )
+                ]
+                for v, key in cell_maps:
+                    inits.append(
+                        ast.Assign(
+                            targets=[
+                                ast.Subscript(
+                                    value=ast.Name(id=cell_name, ctx=ast.Load()),
+                                    slice=ast.Constant(value=key),
+                                    ctx=ast.Store(),
+                                )
+                            ],
+                            value=ast.Name(id=v, ctx=ast.Load()),
+                        )
+                    )
+                mapping = {v: k for v, k in cell_maps}
+                rewritten = []
+                for stmt in new_body:
+                    if isinstance(stmt, ast.ClassDef) and stmt.name.startswith(
+                        "__aim_clos_"
+                    ):
+                        rewritten.append(stmt)
+                    else:
+                        rewritten.append(
+                            _ClosRewrite(mapping, cell_name, False).visit(stmt)
+                        )
+                node.body = inits + rewritten
+            else:
+                node.body = new_body
+            return node
+
+        visit_AsyncFunctionDef = visit_FunctionDef
+
+    new_tree = _X().visit(tree)
+    if not changed[0]:
+        return src
+    ast.fix_missing_locations(new_tree)
+    try:
+        return ast.unparse(new_tree) + "\n"
+    except Exception:
+        return src
+
 
 def desugar_dict_call(src: str) -> str:
     """dict(a=1, b=2) → {'a': 1, 'b': 2} so keyword args survive AIMacro CALL."""
@@ -1001,6 +1284,7 @@ def convert(src: str) -> str:
     src = desugar_tuple_unpack(src)
     src = desugar_for_unpack(src)
     src = desugar_nested_class_cells(src)
+    src = desugar_nested_func_closures(src)
     src = desugar_dict_call(src)
     """Insert `{` / `}` from indentation. Preserve comments."""
     raw_lines = src.splitlines()

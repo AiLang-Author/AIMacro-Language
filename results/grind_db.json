@@ -173,7 +173,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_asyncio/test_context.py",
-      "updated": "2026-10-08"
+      "updated": "2026-10-09"
     },
     "test_asyncio/test_events.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_asyncio/test_events.py",
@@ -221,7 +221,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_asyncio/test_proactor_events.py",
-      "updated": "2026-10-08"
+      "updated": "2026-10-09"
     },
     "test_asyncio/test_protocols.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_asyncio/test_protocols.py",
@@ -533,7 +533,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_bisect.py",
-      "updated": "2026-10-08"
+      "updated": "2026-10-09"
     },
     "test_bool.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_bool.py",
@@ -541,7 +541,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_bool.py",
-      "updated": "2026-10-08"
+      "updated": "2026-10-09"
     },
     "test_buffer.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_buffer.py",
@@ -590,7 +590,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_bz2.py",
-      "updated": "2026-10-08"
+      "updated": "2026-10-09"
     },
     "test_c_locale_coercion.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_c_locale_coercion.py",
@@ -671,7 +671,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_capi/test_structmembers.py",
-      "updated": "2026-10-08"
+      "updated": "2026-10-09"
     },
     "test_capi/test_unicode.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_capi/test_unicode.py",
@@ -690,7 +690,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_cgi.py",
-      "updated": "2026-10-08"
+      "updated": "2026-10-09"
     },
     "test_cgitb.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_cgitb.py",
@@ -994,7 +994,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_complex.py",
-      "updated": "2026-10-08"
+      "updated": "2026-10-09"
     },
     "test_configparser.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_configparser.py",
@@ -1021,7 +1021,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_context.py",
-      "updated": "2026-10-08"
+      "updated": "2026-10-09"
     },
     "test_contextlib.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_contextlib.py",
@@ -1105,7 +1105,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_csv.py",
-      "updated": "2026-10-08"
+      "updated": "2026-10-09"
     },
     "test_ctypes.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_ctypes.py",
@@ -1176,7 +1176,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_dbm_gnu.py",
-      "updated": "2026-10-08"
+      "updated": "2026-10-09"
     },
     "test_dbm_ndbm.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_dbm_ndbm.py",
@@ -1277,7 +1277,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_dict_version.py",
-      "updated": "2026-10-08"
+      "updated": "2026-10-09"
     },
     "test_dictcomps.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_dictcomps.py",
@@ -1304,7 +1304,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_difflib.py",
-      "updated": "2026-10-08"
+      "updated": "2026-10-09"
     },
     "test_dis.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_dis.py",
@@ -1399,7 +1399,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_email/test__encoded_words.py",
-      "updated": "2026-10-08"
+      "updated": "2026-10-09"
     },
     "test_email/test__header_value_parser.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_email/test__header_value_parser.py",
@@ -1407,7 +1407,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_email/test__header_value_parser.py",
-      "updated": "2026-10-08"
+      "updated": "2026-10-09"
     },
     "test_email/test_asian_codecs.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_email/test_asian_codecs.py",
@@ -1415,7 +1415,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_email/test_asian_codecs.py",
-      "updated": "2026-10-08"
+      "updated": "2026-10-09"
     },
     "test_email/test_contentmanager.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_email/test_contentmanager.py",
@@ -1423,7 +1423,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_email/test_contentmanager.py",
-      "updated": "2026-10-08"
+      "updated": "2026-10-09"
     },
     "test_email/test_defect_handling.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_email/test_defect_handling.py",
@@ -1431,7 +1431,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_email/test_defect_handling.py",
-      "updated": "2026-10-08"
+      "updated": "2026-10-09"
     },
     "test_email/test_email.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_email/test_email.py",
@@ -1450,7 +1450,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_email/test_generator.py",
-      "updated": "2026-10-08"
+      "updated": "2026-10-09"
     },
     "test_email/test_headerregistry.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_email/test_headerregistry.py",
@@ -1488,7 +1488,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_email/test_parser.py",
-      "updated": "2026-10-08"
+      "updated": "2026-10-09"
     },
     "test_email/test_pickleable.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_email/test_pickleable.py",
@@ -1553,7 +1553,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_enumerate.py",
-      "updated": "2026-10-08"
+      "updated": "2026-10-09"
     },
     "test_eof.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_eof.py",
@@ -1599,7 +1599,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_exception_group.py",
-      "updated": "2026-10-08"
+      "updated": "2026-10-09"
     },
     "test_exception_hierarchy.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_exception_hierarchy.py",
@@ -1661,7 +1661,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_file.py",
-      "updated": "2026-10-08"
+      "updated": "2026-10-09"
     },
     "test_file_eintr.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_file_eintr.py",
@@ -1859,7 +1859,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_future_stmt/test_future.py",
-      "updated": "2026-10-08"
+      "updated": "2026-10-09"
     },
     "test_future_stmt/test_future_flags.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_future_stmt/test_future_flags.py",
@@ -1994,7 +1994,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_getpath.py",
-      "updated": "2026-10-08"
+      "updated": "2026-10-09"
     },
     "test_gettext.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_gettext.py",
@@ -2091,7 +2091,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_heapq.py",
-      "updated": "2026-10-08"
+      "updated": "2026-10-09"
     },
     "test_hmac.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_hmac.py",
@@ -2110,7 +2110,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_html.py",
-      "updated": "2026-10-08"
+      "updated": "2026-10-09"
     },
     "test_htmlparser.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_htmlparser.py",
@@ -2382,7 +2382,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_importlib/source/test_file_loader.py",
-      "updated": "2026-10-08"
+      "updated": "2026-10-09"
     },
     "test_importlib/source/test_finder.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_importlib/source/test_finder.py",
@@ -2409,7 +2409,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_importlib/source/test_source_encoding.py",
-      "updated": "2026-10-08"
+      "updated": "2026-10-09"
     },
     "test_importlib/test_abc.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_importlib/test_abc.py",
@@ -2428,7 +2428,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_importlib/test_api.py",
-      "updated": "2026-10-08"
+      "updated": "2026-10-09"
     },
     "test_importlib/test_compatibilty_files.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_importlib/test_compatibilty_files.py",
@@ -2459,7 +2459,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_importlib/test_lazy.py",
-      "updated": "2026-10-08"
+      "updated": "2026-10-09"
     },
     "test_importlib/test_locks.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_importlib/test_locks.py",
@@ -2551,7 +2551,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_importlib/test_resource.py",
-      "updated": "2026-10-08"
+      "updated": "2026-10-09"
     },
     "test_importlib/test_spec.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_importlib/test_spec.py",
@@ -2599,7 +2599,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_index.py",
-      "updated": "2026-10-08"
+      "updated": "2026-10-09"
     },
     "test_inspect.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_inspect.py",
@@ -2618,7 +2618,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_int.py",
-      "updated": "2026-10-08"
+      "updated": "2026-10-09"
     },
     "test_int_literal.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_int_literal.py",
@@ -2818,7 +2818,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_json/test_recursion.py",
-      "updated": "2026-10-08"
+      "updated": "2026-10-09"
     },
     "test_json/test_scanstring.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_json/test_scanstring.py",
@@ -2842,7 +2842,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_json/test_speedups.py",
-      "updated": "2026-10-08"
+      "updated": "2026-10-09"
     },
     "test_json/test_tool.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_json/test_tool.py",
@@ -2937,7 +2937,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_list.py",
-      "updated": "2026-10-08"
+      "updated": "2026-10-09"
     },
     "test_listcomps.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_listcomps.py",
@@ -3098,7 +3098,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_minidom.py",
-      "updated": "2026-10-08"
+      "updated": "2026-10-09"
     },
     "test_mmap.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_mmap.py",
@@ -3124,7 +3124,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_modulefinder.py",
-      "updated": "2026-10-08"
+      "updated": "2026-10-09"
     },
     "test_msilib.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_msilib.py",
@@ -3132,7 +3132,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_msilib.py",
-      "updated": "2026-10-08"
+      "updated": "2026-10-09"
     },
     "test_multibytecodec.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_multibytecodec.py",
@@ -3219,7 +3219,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_opcache.py",
-      "updated": "2026-10-08"
+      "updated": "2026-10-09"
     },
     "test_opcodes.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_opcodes.py",
@@ -3243,7 +3243,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_operator.py",
-      "updated": "2026-10-08"
+      "updated": "2026-10-09"
     },
     "test_optparse.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_optparse.py",
@@ -3449,7 +3449,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_platform.py",
-      "updated": "2026-10-08"
+      "updated": "2026-10-09"
     },
     "test_plistlib.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_plistlib.py",
@@ -3457,7 +3457,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_plistlib.py",
-      "updated": "2026-10-08"
+      "updated": "2026-10-09"
     },
     "test_poll.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_poll.py",
@@ -3536,7 +3536,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_pprint.py",
-      "updated": "2026-10-08"
+      "updated": "2026-10-09"
     },
     "test_print.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_print.py",
@@ -3544,7 +3544,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_print.py",
-      "updated": "2026-10-08"
+      "updated": "2026-10-09"
     },
     "test_profile.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_profile.py",
@@ -3802,12 +3802,13 @@
     "test_scope.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_scope.py",
       "status": "fail",
-      "stage": "compile",
-      "rc": 1,
-      "err": "s\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 1 arguments\n[CALLINDIRECT] 0 arguments\n[CALLINDIRECT] 3 arguments\n[CALLINDIRECT] 1 arguments\nERROR: Variable not found: bad\nCompilation Failed: \n[AST] Freeing 43189 node child-lists...\n[AST] Freed 18245 child-lists (node slots stay in pool)",
-      "out": "",
+      "stage": "run",
+      "rc": -11,
+      "err": "",
+      "out": "  ScopeTests.testCellIsArgAndEscapes\nFAIL: assertIsNot\n  ScopeTests.testNearestEnclosingScope\n  ScopeTests.testEvalFreeVars\n  ScopeTests.testComplexDefinitions\nFAIL: assertEqual\n  ScopeTests.testNonLocalFunction\n  ScopeTests.testLambdas\nFAIL: assertEqual\n  ScopeTests.testSimpleAndRebinding\n  ScopeTests.testInteractionWithTraceFunc\n  ScopeTests.testUnoptimizedNamespaces\n  ScopeTests.testClassAndGlobal\n  ScopeTests.testScopeOfGlobalStmt\n  ScopeTests.testSimpleNesting\n  ScopeTests.testExtraNesting\nFAIL: assertEqual\n  ScopeTests.testEvalExecFreeVars\nFAIL: exec should have failed, because code contained free vars\n  ScopeTests.testUnboundLocal_AfterDel\n0\n  ScopeTests.testNestingPlusFreeRefToGlobal\nFAIL: assertEqual\n  ScopeTests.testUnboundLocal\n-2\n  ScopeTests.testNestedNonLocal\n  ScopeTests.testTopIsNotSignificant\n  ScopeTests.testNonLocalClass\n  ScopeTests.testListCompLocalVars\nNone\nbad should not be defined\nNone\n  ScopeTests.testNestingThroughClass\n",
       "tags": [],
-      "key": "test_scope.py"
+      "key": "test_scope.py",
+      "updated": "2026-10-09"
     },
     "test_script_helper.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_script_helper.py",
@@ -3839,7 +3840,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_selectors.py",
-      "updated": "2026-10-08"
+      "updated": "2026-10-09"
     },
     "test_set.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_set.py",
@@ -3847,7 +3848,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_set.py",
-      "updated": "2026-10-08"
+      "updated": "2026-10-09"
     },
     "test_setcomps.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_setcomps.py",
@@ -3866,7 +3867,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_shelve.py",
-      "updated": "2026-10-08"
+      "updated": "2026-10-09"
     },
     "test_shlex.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_shlex.py",
@@ -3992,7 +3993,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_source_encoding.py",
-      "updated": "2026-10-08"
+      "updated": "2026-10-09"
     },
     "test_spwd.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_spwd.py",
@@ -4325,7 +4326,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_sysconfig.py",
-      "updated": "2026-10-08"
+      "updated": "2026-10-09"
     },
     "test_syslog.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_syslog.py",
@@ -4406,7 +4407,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_threadedtempfile.py",
-      "updated": "2026-10-08"
+      "updated": "2026-10-09"
     },
     "test_threading.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_threading.py",
@@ -4462,7 +4463,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_timeout.py",
-      "updated": "2026-10-08"
+      "updated": "2026-10-09"
     },
     "test_tix.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_tix.py",
@@ -4611,7 +4612,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_tools/test_pindent.py",
-      "updated": "2026-10-08"
+      "updated": "2026-10-09"
     },
     "test_tools/test_reindent.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_tools/test_reindent.py",
@@ -4692,7 +4693,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_turtle.py",
-      "updated": "2026-10-08"
+      "updated": "2026-10-09"
     },
     "test_type_annotations.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_type_annotations.py",
@@ -4757,7 +4758,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_ucn.py",
-      "updated": "2026-10-08"
+      "updated": "2026-10-09"
     },
     "test_unary.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_unary.py",
@@ -4783,7 +4784,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_unicode_file.py",
-      "updated": "2026-10-08"
+      "updated": "2026-10-09"
     },
     "test_unicode_file_functions.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_unicode_file_functions.py",
@@ -4859,7 +4860,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_unparse.py",
-      "updated": "2026-10-08"
+      "updated": "2026-10-09"
     },
     "test_urllib.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_urllib.py",
@@ -4954,7 +4955,7 @@
       "tags": [],
       "stage_ok": "run",
       "key": "test_userstring.py",
-      "updated": "2026-10-08"
+      "updated": "2026-10-09"
     },
     "test_utf8_mode.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_utf8_mode.py",
