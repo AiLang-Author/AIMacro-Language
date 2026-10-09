@@ -857,6 +857,17 @@ def desugar_nested_class_cells(src: str) -> str:
                                 ):
                                     used.add(n.id)
                     if used:
+                        has_call = any(
+                            isinstance(item, (ast.FunctionDef, ast.AsyncFunctionDef))
+                            and item.name == "__call__"
+                            for item in stmt.body
+                        )
+                        # __call__ + enclosing freevars: per-call cell in
+                        # desugar_nested_func_closures (SmartCall1 on the
+                        # instance SEGVs; bound hash + self._c is the fix).
+                        if has_call:
+                            new_body.append(stmt)
+                            continue
                         cell_counter[0] += 1
                         cid = cell_counter[0]
                         need_dict[0] = True
@@ -1298,6 +1309,167 @@ def _clos_class(
     )
 
 
+def _class_has_call(cls: ast.ClassDef) -> bool:
+    return any(
+        isinstance(item, (ast.FunctionDef, ast.AsyncFunctionDef))
+        and item.name == "__call__"
+        for item in cls.body
+    )
+
+
+def _clos_class_method_freevars(
+    cls: ast.ClassDef, enclosing: set[str]
+) -> list[str]:
+    seen: list[str] = []
+    for item in cls.body:
+        if not isinstance(item, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            continue
+        ml = _clos_inner_locals(item)
+        ml.add(item.name)
+        for n in ast.walk(item):
+            if (
+                isinstance(n, ast.Name)
+                and isinstance(n.ctx, ast.Load)
+                and n.id in enclosing
+                and n.id not in ml
+                and n.id not in _CLOS_SKIP
+                and n.id != cls.name
+                and n.id not in seen
+            ):
+                seen.append(n.id)
+    return seen
+
+
+def _clos_init_c_assign() -> ast.Assign:
+    return ast.Assign(
+        targets=[
+            ast.Attribute(
+                value=ast.Name(id="self", ctx=ast.Load()),
+                attr="_c",
+                ctx=ast.Store(),
+            )
+        ],
+        value=ast.Name(id="_c", ctx=ast.Load()),
+    )
+
+
+def _rewrite_method_freevars(
+    fn: ast.FunctionDef, mapping: dict[str, str]
+) -> ast.FunctionDef:
+    class _M(ast.NodeTransformer):
+        def visit_Name(self, n: ast.Name):
+            if n.id in mapping:
+                return ast.Subscript(
+                    value=_clos_self_c(),
+                    slice=ast.Constant(value=mapping[n.id]),
+                    ctx=n.ctx,
+                )
+            return n
+
+        def visit_FunctionDef(self, n: ast.FunctionDef):
+            return n
+
+        def visit_AsyncFunctionDef(self, n: ast.AsyncFunctionDef):
+            return n
+
+        def visit_ClassDef(self, n: ast.ClassDef):
+            return n
+
+        def visit_Lambda(self, n: ast.Lambda):
+            return n
+
+    fn.body = [_M().visit(s) for s in fn.body]
+    return fn
+
+
+def _clos_patch_nested_class(
+    cls: ast.ClassDef, mapping: dict[str, str]
+) -> ast.ClassDef:
+    """Inject __init__(self, _c) and rewrite method freevars to self._c."""
+    new_body: list[ast.stmt] = []
+    has_init = False
+    for item in cls.body:
+        if isinstance(item, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            if item.name == "__init__":
+                has_init = True
+                args = item.args
+                rest = list(args.args)
+                if rest and rest[0].arg in ("self", "cls"):
+                    new_args = [rest[0], ast.arg(arg="_c")] + rest[1:]
+                else:
+                    new_args = [ast.arg(arg="self"), ast.arg(arg="_c")] + rest
+                item.args = ast.arguments(
+                    posonlyargs=list(args.posonlyargs),
+                    args=new_args,
+                    vararg=args.vararg,
+                    kwonlyargs=list(args.kwonlyargs),
+                    kw_defaults=list(args.kw_defaults),
+                    kwarg=args.kwarg,
+                    defaults=list(args.defaults),
+                )
+                item.body = [_clos_init_c_assign()] + list(item.body)
+            item = _rewrite_method_freevars(item, mapping)
+            new_body.append(item)
+        else:
+            new_body.append(item)
+    if not has_init:
+        init = ast.FunctionDef(
+            name="__init__",
+            args=ast.arguments(
+                posonlyargs=[],
+                args=[ast.arg(arg="self"), ast.arg(arg="_c")],
+                kwonlyargs=[],
+                kw_defaults=[],
+                defaults=[],
+            ),
+            body=[_clos_init_c_assign()],
+            decorator_list=[],
+        )
+        new_body.insert(0, init)
+    return ast.ClassDef(
+        name=cls.name,
+        bases=list(cls.bases),
+        keywords=list(cls.keywords),
+        body=new_body,
+        decorator_list=list(cls.decorator_list),
+    )
+
+
+def _clos_rewrite_ctors(
+    body: list[ast.stmt],
+    ctor_kind: dict[str, str],
+    cell_expr: ast.expr,
+) -> list[ast.stmt]:
+    """Adder() → bound hash / Adder(_aim_c) so SmartCall1 does not SEGV."""
+
+    class _C(ast.NodeTransformer):
+        def visit_ClassDef(self, n: ast.ClassDef):
+            return n
+
+        def visit_Call(self, n: ast.Call):
+            n = self.generic_visit(n)
+            if isinstance(n.func, ast.Name) and n.func.id in ctor_kind:
+                n.args = [cell_expr] + list(n.args)
+                if ctor_kind[n.func.id] == "bound":
+                    return ast.Dict(
+                        keys=[
+                            ast.Constant(value="__bound__"),
+                            ast.Constant(value="obj"),
+                            ast.Constant(value="name"),
+                        ],
+                        values=[
+                            ast.Constant(value=1),
+                            n,
+                            ast.Constant(value="__call__"),
+                        ],
+                    )
+            return n
+
+    return [
+        s if isinstance(s, ast.ClassDef) else _C().visit(s) for s in body
+    ]
+
+
 def _clos_replace_nested(
     body: list[ast.stmt],
     enclosing: set[str],
@@ -1309,6 +1481,7 @@ def _clos_replace_nested(
     new_body: list[ast.stmt] = []
     cell_maps: list[tuple[str, str]] = []
     renames: dict[str, str] = {}
+    ctor_kind: dict[str, str] = {}
     for stmt in body:
         if isinstance(stmt, ast.FunctionDef):
             frees = _clos_freevars(stmt, enclosing)
@@ -1333,7 +1506,20 @@ def _clos_replace_nested(
                 )
                 renames[stmt.name] = fn_name
                 continue
+        if isinstance(stmt, ast.ClassDef):
+            frees = _clos_class_method_freevars(stmt, enclosing)
+            if frees and _class_has_call(stmt):
+                changed[0] = True
+                mapping = {v: v for v in frees}
+                for v in frees:
+                    if (v, v) not in cell_maps:
+                        cell_maps.append((v, v))
+                new_body.append(_clos_patch_nested_class(stmt, mapping))
+                ctor_kind[stmt.name] = "bound"
+                continue
         new_body.append(stmt)
+    if ctor_kind:
+        new_body = _clos_rewrite_ctors(new_body, ctor_kind, cell_expr)
     if renames:
 
         class _Ren(ast.NodeTransformer):
@@ -1355,12 +1541,13 @@ def _clos_replace_nested(
 
 
 def desugar_nested_func_closures(src: str) -> str:
-    """Nested def/lambda with freevars → per-call cell dict + callable class.
+    """Nested def/lambda/class with freevars → per-call cell dict + callable class.
 
     Codegen flattens nested Functions and stores freevars in one PyMod.x,
     so make_adder(1) then make_adder(10) share the cell. Isolation golds
     that only close over self/cls are left byte-identical. Lambdas are
-    lifted to nested defs first so the same cell path applies.
+    lifted to nested defs first so the same cell path applies. Nested
+    class with __call__ gets __init__(self, _c) and a bound-hash ctor.
     """
     try:
         tree = ast.parse(src)
