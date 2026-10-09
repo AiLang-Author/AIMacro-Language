@@ -1396,7 +1396,8 @@ Function.Gen_PackedCall {
             arg = Array.Get(args, idx)
             IfCondition NotEqual(arg, 0) ThenBlock: {
                 hc = Gen_HasCall(arg)
-                IfCondition EqualTo(hc, 1) ThenBlock: {
+                atp = AST_Type(arg)
+                IfCondition Or(EqualTo(hc, 1), EqualTo(atp, Node.ATTRIBUTE)) ThenBlock: {
                     arg = Gen_FlattenExpr(arg)
                 }
             }
@@ -1440,14 +1441,21 @@ Function.Gen_EmitPrintChunk {
         }
         IfCondition EqualTo(arg_type, Node.NUM_LIT) ThenBlock: {
             val = ArrayGet(arg, 3)
-            Gen_Emit("PrintNumber(")
+            tnum = Gen_TempName()
+            Gen_Emit(tnum)
+            Gen_Emit(" = ")
             Gen_EmitNumber(val)
+            Gen_Emit("\n")
+            Gen_EmitIndent()
+            Gen_Emit("PrintNumber(")
+            Gen_Emit(tnum)
             Gen_Emit(")")
             ReturnValue(0)
         }
         has_call = Gen_HasCall(arg)
         is_string = Gen_InvolvesString(arg)
-        needs_flatten = Or(EqualTo(has_call, 1), EqualTo(is_string, 1))
+        is_attr = EqualTo(arg_type, Node.ATTRIBUTE)
+        needs_flatten = Or(Or(EqualTo(has_call, 1), EqualTo(is_string, 1)), EqualTo(is_attr, 1))
         IfCondition EqualTo(needs_flatten, 1) ThenBlock: {
             arg = Gen_FlattenExpr(arg)
         }

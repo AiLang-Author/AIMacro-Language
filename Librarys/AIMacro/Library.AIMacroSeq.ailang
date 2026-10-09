@@ -1764,14 +1764,21 @@ Function.AIMacro.FileWrite {
 Function.AIMacro.FileClose {
     Input: handle: Address
     Body: {
-        IfCondition EqualTo(AIMacro.IsFile(handle), 0) ThenBlock: {
+        isf = AIMacro.IsFile(handle)
+        IfCondition EqualTo(isf, 1) ThenBlock: {
+            fd = Dereference(Add(handle, 8))
+            IfCondition And(GreaterEqual(fd, 3), GreaterEqual(fd, 0)) ThenBlock: {
+                SystemCall(3, fd)
+                StoreValue(Add(handle, 8), Subtract(0, 1))
+            }
             ReturnValue(0)
         }
-        fd = Dereference(Add(handle, 8))
-        IfCondition And(GreaterEqual(fd, 3), GreaterEqual(fd, 0)) ThenBlock: {
-            SystemCall(3, fd)
-            StoreValue(Add(handle, 8), Subtract(0, 1))
+        mx = OOP.MethodExists(handle, "close")
+        IfCondition EqualTo(mx, 1) ThenBlock: {
+            cargs = Array.Create(1)
+            OOP.MethodCall(handle, "close", cargs)
         }
+        ReturnValue(0)
     }
 }
 

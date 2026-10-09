@@ -854,14 +854,246 @@ def _gen_self_attr(name: str, ctx) -> ast.Attribute:
     )
 
 
+# ExcKind ints from Gen_MapExcKind / exception-name-as-value.
+_GEN_EXC_KINDS = (
+    (1, "Exception"),
+    (2, "ValueError"),
+    (3, "OSError"),
+    (4, "FileNotFoundError"),
+    (5, "TypeError"),
+    (6, "RuntimeError"),
+    (7, "ZeroDivisionError"),
+    (8, "AssertionError"),
+    (9, "StopIteration"),
+    (14, "AttributeError"),
+    (15, "KeyError"),
+    (16, "NameError"),
+    (17, "IndexError"),
+    (27, "GeneratorExit"),
+)
+
+
+def _tkind_raise_stmts() -> list[ast.stmt]:
+    """Raise the stored ExcKind. `raise self._tkind` is an IDENT named
+    `_tkind` and maps to RuntimeError; dispatch by integer instead.
+    """
+    stmts: list[ast.stmt] = [
+        ast.Assign(
+            targets=[_gen_self_attr("_tkind_save", ast.Store())],
+            value=_gen_self_attr("_tkind", ast.Load()),
+        ),
+        ast.Assign(
+            targets=[_gen_self_attr("_tkind", ast.Store())],
+            value=ast.Constant(value=0),
+        ),
+    ]
+    for kind, name in _GEN_EXC_KINDS:
+        stmts.append(
+            ast.If(
+                test=ast.Compare(
+                    left=_gen_self_attr("_tkind_save", ast.Load()),
+                    ops=[ast.Eq()],
+                    comparators=[ast.Constant(value=kind)],
+                ),
+                body=[
+                    ast.Raise(
+                        exc=ast.Call(
+                            func=ast.Name(id=name, ctx=ast.Load()),
+                            args=[],
+                            keywords=[],
+                        ),
+                        cause=None,
+                    )
+                ],
+                orelse=[],
+            )
+        )
+    stmts.append(
+        ast.Raise(
+            exc=ast.Call(
+                func=ast.Name(id="RuntimeError", ctx=ast.Load()),
+                args=[],
+                keywords=[],
+            ),
+            cause=None,
+        )
+    )
+    return stmts
+
+
+def _throw_if_stmt() -> ast.stmt:
+    """Call __aim_raise so the kind table lives once per class.
+
+    AIMacro exceptions are a process-wide pending kind, so a raise
+    inside __aim_raise is still seen by send()'s Try wrap. Do not
+    Return from send here: a Return inside a wrapped try body skips
+    the except Fork that runs `except GeneratorExit`.
+    """
+    return ast.If(
+        test=_gen_self_attr("_tkind", ast.Load()),
+        body=[
+            ast.Expr(
+                value=ast.Call(
+                    func=ast.Attribute(
+                        value=ast.Name(id="self", ctx=ast.Load()),
+                        attr="__aim_raise",
+                        ctx=ast.Load(),
+                    ),
+                    args=[],
+                    keywords=[],
+                )
+            )
+        ],
+        orelse=[],
+    )
+
+
+def _frame_dummy() -> ast.expr:
+    """Live gi_frame. `gi_frame = self` is a cyclic OOP instance and
+    SmartPrint SEGVs; a tiny hash with f_back=None is printable.
+    """
+    return ast.Dict(
+        keys=[ast.Constant(value="f_back")],
+        values=[ast.Constant(value=None)],
+    )
+
+
+_GEN_SKIP_FIELDS = {
+    "send",
+    "throw",
+    "close",
+    "__aim_raise",
+    "__next__",
+    "__iter__",
+    "__init__",
+    "__class__",
+    "__data__",
+}
+
+
+def _genexp_to_fn(node: ast.GeneratorExp, name: str) -> ast.FunctionDef:
+    body: list[ast.stmt] = [ast.Expr(value=ast.Yield(value=node.elt))]
+    for gen in reversed(node.generators):
+        for iff in reversed(gen.ifs):
+            body = [ast.If(test=iff, body=body, orelse=[])]
+        body = [
+            ast.For(target=gen.target, iter=gen.iter, body=body, orelse=[])
+        ]
+    return ast.FunctionDef(
+        name=name,
+        args=ast.arguments(
+            posonlyargs=[],
+            args=[],
+            kwonlyargs=[],
+            kw_defaults=[],
+            defaults=[],
+        ),
+        body=body,
+        decorator_list=[],
+    )
+
+
+def _hoist_genexps(tree: ast.AST, counter: list[int], changed: list[bool]) -> ast.AST:
+    """(x for x in it) → nested def that yields, then the existing
+    generator-function conversion. Isolation golds currently compile
+    genexp as LIST_COMP; converting makes next()/send work.
+    """
+
+    class _Skip(ast.NodeTransformer):
+        def visit_FunctionDef(self, n: ast.FunctionDef):
+            return n
+
+        def visit_AsyncFunctionDef(self, n: ast.AsyncFunctionDef):
+            return n
+
+        def visit_ClassDef(self, n: ast.ClassDef):
+            return n
+
+        def visit_Lambda(self, n: ast.Lambda):
+            return n
+
+        def visit_ListComp(self, n: ast.ListComp):
+            return n
+
+        def visit_SetComp(self, n: ast.SetComp):
+            return n
+
+        def visit_DictComp(self, n: ast.DictComp):
+            return n
+
+        def visit_GeneratorExp(self, n: ast.GeneratorExp):
+            if any(g.is_async for g in n.generators):
+                return n
+            n = self.generic_visit(n)
+            counter[0] += 1
+            name = f"_aim_gx_{counter[0]}"
+            self.pending.append(_genexp_to_fn(n, name))
+            changed[0] = True
+            return ast.Call(
+                func=ast.Name(id=name, ctx=ast.Load()),
+                args=[],
+                keywords=[],
+            )
+
+    def hoist_body(body: list[ast.stmt]) -> list[ast.stmt]:
+        out: list[ast.stmt] = []
+        for stmt in body:
+            r = _Skip()
+            r.pending = []
+            stmt2 = r.visit(stmt)
+            out.extend(r.pending)
+            if isinstance(stmt2, ast.FunctionDef):
+                stmt2.body = hoist_body(stmt2.body)
+            elif isinstance(stmt2, ast.AsyncFunctionDef):
+                stmt2.body = hoist_body(stmt2.body)
+            elif isinstance(stmt2, ast.ClassDef):
+                stmt2.body = hoist_body(stmt2.body)
+            out.append(stmt2)
+        return out
+
+    class _M(ast.NodeTransformer):
+        def visit_Module(self, node: ast.Module):
+            node.body = hoist_body(node.body)
+            return node
+
+    return _M().visit(tree)
+
+
 class _GenNameRew(ast.NodeTransformer):
     def __init__(self, mapping: dict[str, str]):
         self.mapping = mapping
+        self._skip: set[str] = set()
 
     def visit_Name(self, n: ast.Name):
+        if n.id in self._skip:
+            return n
         if n.id in self.mapping:
             return _gen_self_attr(self.mapping[n.id], n.ctx)
         return n
+
+    def _visit_comp(self, n):
+        bound: set[str] = set()
+        for g in n.generators:
+            for x in ast.walk(g.target):
+                if isinstance(x, ast.Name):
+                    bound.add(x.id)
+        old = self._skip
+        self._skip = old | bound
+        n = self.generic_visit(n)
+        self._skip = old
+        return n
+
+    def visit_ListComp(self, n: ast.ListComp):
+        return self._visit_comp(n)
+
+    def visit_SetComp(self, n: ast.SetComp):
+        return self._visit_comp(n)
+
+    def visit_DictComp(self, n: ast.DictComp):
+        return self._visit_comp(n)
+
+    def visit_GeneratorExp(self, n: ast.GeneratorExp):
+        return self._visit_comp(n)
 
     def visit_FunctionDef(self, n: ast.FunctionDef):
         return n
@@ -879,14 +1111,15 @@ class _GenNameRew(ast.NodeTransformer):
 class _GenSM:
     def __init__(self, mapping: dict[str, str]):
         self.rew = _GenNameRew(mapping)
-        self.states: list[list[ast.stmt]] = [[]]
+        self.states: list[list[ast.stmt]] = [[_throw_if_stmt()]]
         self.cur = 0
         self.it_n = 0
         self.loops: list[tuple[int, int]] = []
+        self.wrapped: set[int] = set()
 
     def news(self) -> int:
         sid = len(self.states)
-        self.states.append([])
+        self.states.append([_throw_if_stmt()])
         return sid
 
     def add(self, stmt: ast.stmt):
@@ -912,13 +1145,25 @@ class _GenSM:
     def stop(self):
         self.add(self.set_s(-1))
         self.add(
-            ast.Raise(
-                exc=ast.Call(
-                    func=ast.Name(id="StopIteration", ctx=ast.Load()),
-                    args=[],
-                    keywords=[],
-                ),
-                cause=None,
+            ast.Assign(
+                targets=[_gen_self_attr("gi_frame", ast.Store())],
+                value=ast.Constant(value=None),
+            )
+        )
+        self.add(
+            ast.If(
+                test=_gen_self_attr("_closing", ast.Load()),
+                body=[ast.Return(value=ast.Constant(value=None))],
+                orelse=[
+                    ast.Raise(
+                        exc=ast.Call(
+                            func=ast.Name(id="StopIteration", ctx=ast.Load()),
+                            args=[],
+                            keywords=[],
+                        ),
+                        cause=None,
+                    )
+                ],
             )
         )
 
@@ -1154,44 +1399,72 @@ class _GenSM:
         self.cur = old
 
     def _try(self, s: ast.Try, rest, after):
-        # Body / handlers / finally as separate states. Yield is never
-        # inside a Python try (that would run finally on suspend).
         join = self.news() if (rest or after is not None) else None
         fin = self.news() if s.finalbody else join
         if fin is None:
-            fin = after if after is not None else -1
+            fin = after
         body_s = self.news()
         handler_sids: list[int] = []
         for _h in s.handlers:
             handler_sids.append(self.news())
         self.goto(body_s)
         old = self.cur
+        n_before = len(self.states)
         self.cur = body_s
-        start_body = self.cur
         self.build(list(s.body), fin if isinstance(fin, int) else join)
-        # wrap states created for body in Try that jumps to handlers
-        # Only wrap the body start state's remaining... too late if build
-        # already emitted yields as Return. Wrap every state from
-        # start_body through newly created ones that belong to the body.
-        # Simpler: wrap start_body statements in Try.
-        hs = []
-        for h, hsid in zip(s.handlers, handler_sids):
-            hs.append(
-                ast.ExceptHandler(
-                    type=self.rw(h.type) if h.type is not None else None,
-                    name=h.name,
-                    body=[self.set_s(hsid), ast.Continue()],
-                )
-            )
-        if hs and self.states[body_s]:
-            self.states[body_s] = [
-                ast.Try(
-                    body=list(self.states[body_s]),
-                    handlers=hs,
-                    orelse=[],
-                    finalbody=[],
-                )
-            ]
+        wrap_ids = [body_s] + list(range(n_before, len(self.states)))
+        flag = f"_kt{self.it_n}"
+        self.it_n += 1
+        if s.handlers:
+            for sid in wrap_ids:
+                orig = list(self.states[sid])
+                hs = []
+                for i, h in enumerate(s.handlers):
+                    hs.append(
+                        ast.ExceptHandler(
+                            type=self.rw(h.type) if h.type is not None else None,
+                            name=h.name,
+                            body=[
+                                ast.Assign(
+                                    targets=[_gen_self_attr(flag, ast.Store())],
+                                    value=ast.Constant(value=i + 1),
+                                )
+                            ],
+                        )
+                    )
+                head, tail = orig, []
+                if orig and isinstance(orig[-1], (ast.Return, ast.Continue)):
+                    if len(orig) >= 2 and isinstance(orig[-2], ast.Assign):
+                        head, tail = orig[:-2], orig[-2:]
+                    else:
+                        head, tail = orig[:-1], orig[-1:]
+                wrapped: list[ast.stmt] = [
+                    ast.Assign(
+                        targets=[_gen_self_attr(flag, ast.Store())],
+                        value=ast.Constant(value=0),
+                    ),
+                    ast.Try(
+                        body=head if head else [ast.Pass()],
+                        handlers=hs,
+                        orelse=[],
+                        finalbody=[],
+                    ),
+                ]
+                for i, hsid in enumerate(handler_sids):
+                    wrapped.append(
+                        ast.If(
+                            test=ast.Compare(
+                                left=_gen_self_attr(flag, ast.Load()),
+                                ops=[ast.Eq()],
+                                comparators=[ast.Constant(value=i + 1)],
+                            ),
+                            body=[self.set_s(hsid), ast.Continue()],
+                            orelse=[],
+                        )
+                    )
+                wrapped.extend(tail)
+                self.states[sid] = wrapped
+                self.wrapped.update(wrap_ids)
         for h, hsid in zip(s.handlers, handler_sids):
             self.cur = hsid
             self.build(list(h.body), fin if isinstance(fin, int) else join)
@@ -1202,6 +1475,171 @@ class _GenSM:
             self.cur = join
             self.build(rest, after)
         self.cur = old
+
+
+def _gen_wrap_unwrapped_close(sm: _GenSM) -> None:
+    """Swallow GeneratorExit on close in states with no user try.
+
+    Wrap only throw_if. Wrapping the yield Return leaks ExcEnter
+    (Return/Continue skip ExcLeave) and SEGVs later next() calls.
+    """
+    for sid, body in enumerate(sm.states):
+        if sid in sm.wrapped:
+            continue
+        orig = list(body) if body else [_throw_if_stmt()]
+        throw_if = orig[0] if orig else _throw_if_stmt()
+        rest = orig[1:] if orig else []
+        flag = f"_kc{sid}"
+        head: list[ast.stmt] = [
+            ast.Assign(
+                targets=[_gen_self_attr(flag, ast.Store())],
+                value=ast.Constant(value=0),
+            ),
+            ast.Try(
+                body=[throw_if],
+                handlers=[
+                    ast.ExceptHandler(
+                        type=ast.Name(id="GeneratorExit", ctx=ast.Load()),
+                        name=None,
+                        body=[
+                            ast.Assign(
+                                targets=[_gen_self_attr(flag, ast.Store())],
+                                value=ast.Constant(value=1),
+                            )
+                        ],
+                    ),
+                    ast.ExceptHandler(
+                        type=ast.Name(id="StopIteration", ctx=ast.Load()),
+                        name=None,
+                        body=[
+                            ast.Assign(
+                                targets=[_gen_self_attr(flag, ast.Store())],
+                                value=ast.Constant(value=2),
+                            )
+                        ],
+                    ),
+                    ast.ExceptHandler(
+                        type=ast.Name(id="Exception", ctx=ast.Load()),
+                        name=None,
+                        body=[
+                            ast.Assign(
+                                targets=[_gen_self_attr(flag, ast.Store())],
+                                value=ast.Constant(value=3),
+                            )
+                        ],
+                    ),
+                ],
+                orelse=[],
+                finalbody=[],
+            ),
+            ast.If(
+                test=ast.Compare(
+                    left=_gen_self_attr(flag, ast.Load()),
+                    ops=[ast.Eq()],
+                    comparators=[ast.Constant(value=1)],
+                ),
+                body=[
+                    ast.If(
+                        test=_gen_self_attr("_closing", ast.Load()),
+                        body=[
+                            ast.Assign(
+                                targets=[_gen_self_attr("_s", ast.Store())],
+                                value=ast.Constant(value=-1),
+                            ),
+                            ast.Assign(
+                                targets=[_gen_self_attr("gi_frame", ast.Store())],
+                                value=ast.Constant(value=None),
+                            ),
+                            ast.Return(value=ast.Constant(value=None)),
+                        ],
+                        orelse=[
+                            ast.Raise(
+                                exc=ast.Call(
+                                    func=ast.Name(
+                                        id="GeneratorExit", ctx=ast.Load()
+                                    ),
+                                    args=[],
+                                    keywords=[],
+                                ),
+                                cause=None,
+                            )
+                        ],
+                    )
+                ],
+                orelse=[],
+            ),
+            ast.If(
+                test=ast.Compare(
+                    left=_gen_self_attr(flag, ast.Load()),
+                    ops=[ast.Eq()],
+                    comparators=[ast.Constant(value=2)],
+                ),
+                body=[
+                    ast.If(
+                        test=_gen_self_attr("_closing", ast.Load()),
+                        body=[
+                            ast.Assign(
+                                targets=[_gen_self_attr("_s", ast.Store())],
+                                value=ast.Constant(value=-1),
+                            ),
+                            ast.Assign(
+                                targets=[_gen_self_attr("gi_frame", ast.Store())],
+                                value=ast.Constant(value=None),
+                            ),
+                            ast.Return(value=ast.Constant(value=None)),
+                        ],
+                        orelse=[
+                            ast.Raise(
+                                exc=ast.Call(
+                                    func=ast.Name(
+                                        id="StopIteration", ctx=ast.Load()
+                                    ),
+                                    args=[],
+                                    keywords=[],
+                                ),
+                                cause=None,
+                            )
+                        ],
+                    )
+                ],
+                orelse=[],
+            ),
+            ast.If(
+                test=ast.Compare(
+                    left=_gen_self_attr(flag, ast.Load()),
+                    ops=[ast.Eq()],
+                    comparators=[ast.Constant(value=3)],
+                ),
+                body=[
+                    ast.Assign(
+                        targets=[_gen_self_attr("_s", ast.Store())],
+                        value=ast.Constant(value=-1),
+                    ),
+                    ast.Assign(
+                        targets=[_gen_self_attr("gi_frame", ast.Store())],
+                        value=ast.Constant(value=None),
+                    ),
+                    ast.Assign(
+                        targets=[_gen_self_attr("_tkind", ast.Store())],
+                        value=_gen_self_attr("_tkind_save", ast.Load()),
+                    ),
+                    ast.Expr(
+                        value=ast.Call(
+                            func=ast.Attribute(
+                                value=ast.Name(id="self", ctx=ast.Load()),
+                                attr="__aim_raise",
+                                ctx=ast.Load(),
+                            ),
+                            args=[],
+                            keywords=[],
+                        )
+                    ),
+                    ast.Return(value=ast.Constant(value=None)),
+                ],
+                orelse=[],
+            ),
+        ]
+        sm.states[sid] = head + rest
 
 
 def _gen_convert(
@@ -1218,6 +1656,7 @@ def _gen_convert(
             mapping[n] = f"_g_{n}"
     sm = _GenSM(mapping)
     sm.build(list(fn.body), None)
+    _gen_wrap_unwrapped_close(sm)
     init_args = [ast.arg(arg="self")]
     init_body: list[ast.stmt] = [
         ast.Assign(
@@ -1227,6 +1666,26 @@ def _gen_convert(
         ast.Assign(
             targets=[_gen_self_attr("_sent", ast.Store())],
             value=ast.Constant(value=None),
+        ),
+        ast.Assign(
+            targets=[_gen_self_attr("_tkind", ast.Store())],
+            value=ast.Constant(value=0),
+        ),
+        ast.Assign(
+            targets=[_gen_self_attr("_tkind_save", ast.Store())],
+            value=ast.Constant(value=0),
+        ),
+        ast.Assign(
+            targets=[_gen_self_attr("gi_running", ast.Store())],
+            value=ast.Constant(value=0),
+        ),
+        ast.Assign(
+            targets=[_gen_self_attr("_closing", ast.Store())],
+            value=ast.Constant(value=0),
+        ),
+        ast.Assign(
+            targets=[_gen_self_attr("gi_frame", ast.Store())],
+            value=_frame_dummy(),
         ),
     ]
     factory_args: list[ast.expr] = []
@@ -1254,10 +1713,24 @@ def _gen_convert(
                     isinstance(n, ast.Attribute)
                     and isinstance(n.value, ast.Name)
                     and n.value.id == "self"
+                    and isinstance(n.ctx, ast.Store)
                 ):
                     fields.add(n.attr)
     for attr in sorted(fields):
-        if attr in ("_s", "_sent") or attr in param_attrs:
+        if (
+            attr
+            in (
+                "_s",
+                "_sent",
+                "_tkind",
+                "_tkind_save",
+                "gi_running",
+                "_closing",
+                "gi_frame",
+            )
+            or attr in param_attrs
+            or attr in _GEN_SKIP_FIELDS
+        ):
             continue
         init_body.append(
             ast.Assign(
@@ -1285,21 +1758,31 @@ def _gen_convert(
                 comparators=[ast.Constant(value=-1)],
             ),
             body=[
-                ast.Raise(
-                    exc=ast.Call(
-                        func=ast.Name(id="StopIteration", ctx=ast.Load()),
-                        args=[],
-                        keywords=[],
-                    ),
-                    cause=None,
-                )
+                ast.Assign(
+                    targets=[_gen_self_attr("gi_frame", ast.Store())],
+                    value=ast.Constant(value=None),
+                ),
+                ast.If(
+                    test=_gen_self_attr("_closing", ast.Load()),
+                    body=[ast.Return(value=ast.Constant(value=None))],
+                    orelse=[
+                        ast.Raise(
+                            exc=ast.Call(
+                                func=ast.Name(id="StopIteration", ctx=ast.Load()),
+                                args=[],
+                                keywords=[],
+                            ),
+                            cause=None,
+                        )
+                    ],
+                ),
             ],
             orelse=[],
         )
     ]
     for sid, body in enumerate(sm.states):
         if not body:
-            body = [ast.Pass()]
+            body = [_throw_if_stmt()]
         send_ifs.append(
             ast.If(
                 test=ast.Compare(
@@ -1383,11 +1866,177 @@ def _gen_convert(
         body=[ast.Return(value=ast.Name(id="self", ctx=ast.Load()))],
         decorator_list=[],
     )
+    aim_raise = ast.FunctionDef(
+        name="__aim_raise",
+        args=ast.arguments(
+            posonlyargs=[],
+            args=[ast.arg(arg="self")],
+            kwonlyargs=[],
+            kw_defaults=[],
+            defaults=[],
+        ),
+        body=_tkind_raise_stmts(),
+        decorator_list=[],
+    )
+    throw_closed: list[ast.stmt] = [
+        ast.If(
+            test=ast.Compare(
+                left=_gen_self_attr("_s", ast.Load()),
+                ops=[ast.Eq()],
+                comparators=[ast.Constant(value=-1)],
+            ),
+            body=[
+                ast.Expr(
+                    value=ast.Call(
+                        func=ast.Attribute(
+                            value=ast.Name(id="self", ctx=ast.Load()),
+                            attr="__aim_raise",
+                            ctx=ast.Load(),
+                        ),
+                        args=[],
+                        keywords=[],
+                    )
+                ),
+                ast.Return(value=ast.Constant(value=None)),
+            ],
+            orelse=[],
+        )
+    ]
+    throw = ast.FunctionDef(
+        name="throw",
+        args=ast.arguments(
+            posonlyargs=[],
+            args=[
+                ast.arg(arg="self"),
+                ast.arg(arg="typ"),
+                ast.arg(arg="val"),
+                ast.arg(arg="tb"),
+            ],
+            kwonlyargs=[],
+            kw_defaults=[],
+            defaults=[ast.Constant(value=None), ast.Constant(value=None)],
+        ),
+        body=[
+            ast.Assign(
+                targets=[_gen_self_attr("_tkind", ast.Store())],
+                value=ast.Name(id="typ", ctx=ast.Load()),
+            )
+        ]
+        + throw_closed
+        + [
+            ast.Return(
+                value=ast.Call(
+                    func=ast.Attribute(
+                        value=ast.Name(id="self", ctx=ast.Load()),
+                        attr="send",
+                        ctx=ast.Load(),
+                    ),
+                    args=[ast.Constant(value=None)],
+                    keywords=[],
+                )
+            )
+        ],
+        decorator_list=[],
+    )
+    close = ast.FunctionDef(
+        name="close",
+        args=ast.arguments(
+            posonlyargs=[],
+            args=[ast.arg(arg="self")],
+            kwonlyargs=[],
+            kw_defaults=[],
+            defaults=[],
+        ),
+        body=[
+            ast.If(
+                test=ast.Compare(
+                    left=_gen_self_attr("_s", ast.Load()),
+                    ops=[ast.Eq()],
+                    comparators=[ast.Constant(value=-1)],
+                ),
+                body=[ast.Return(value=ast.Constant(value=None))],
+                orelse=[],
+            ),
+            ast.If(
+                test=ast.Compare(
+                    left=_gen_self_attr("_s", ast.Load()),
+                    ops=[ast.Eq()],
+                    comparators=[ast.Constant(value=0)],
+                ),
+                body=[
+                    ast.Assign(
+                        targets=[_gen_self_attr("_s", ast.Store())],
+                        value=ast.Constant(value=-1),
+                    ),
+                    ast.Assign(
+                        targets=[_gen_self_attr("gi_frame", ast.Store())],
+                        value=ast.Constant(value=None),
+                    ),
+                    ast.Return(value=ast.Constant(value=None)),
+                ],
+                orelse=[],
+            ),
+            ast.Assign(
+                targets=[_gen_self_attr("_closing", ast.Store())],
+                value=ast.Constant(value=1),
+            ),
+            ast.Assign(
+                targets=[_gen_self_attr("_tkind", ast.Store())],
+                value=ast.Constant(value=27),
+            ),
+            ast.Expr(
+                value=ast.Call(
+                    func=ast.Attribute(
+                        value=ast.Name(id="self", ctx=ast.Load()),
+                        attr="send",
+                        ctx=ast.Load(),
+                    ),
+                    args=[ast.Constant(value=None)],
+                    keywords=[],
+                )
+            ),
+            ast.Assign(
+                targets=[_gen_self_attr("_closing", ast.Store())],
+                value=ast.Constant(value=0),
+            ),
+            ast.If(
+                test=ast.Compare(
+                    left=_gen_self_attr("_s", ast.Load()),
+                    ops=[ast.NotEq()],
+                    comparators=[ast.Constant(value=-1)],
+                ),
+                body=[
+                    ast.Raise(
+                        exc=ast.Call(
+                            func=ast.Name(id="RuntimeError", ctx=ast.Load()),
+                            args=[
+                                ast.Constant(
+                                    value="generator ignored GeneratorExit"
+                                )
+                            ],
+                            keywords=[],
+                        ),
+                        cause=None,
+                    )
+                ],
+                orelse=[],
+            ),
+            ast.Assign(
+                targets=[_gen_self_attr("_s", ast.Store())],
+                value=ast.Constant(value=-1),
+            ),
+            ast.Assign(
+                targets=[_gen_self_attr("gi_frame", ast.Store())],
+                value=ast.Constant(value=None),
+            ),
+        ],
+        decorator_list=[],
+    )
     cls = ast.ClassDef(
         name=cname,
         bases=[],
         keywords=[],
-        body=[init, send, dunder_next, dunder_iter],
+        body=[init, aim_raise, send, dunder_next, dunder_iter, throw, close],
         decorator_list=[],
     )
     new_fn = ast.FunctionDef(
@@ -1528,6 +2177,7 @@ def desugar_generators(src: str) -> str:
     counter = [0]
     changed = [False]
     gen_names: set[str] = set()
+    tree = _hoist_genexps(tree, counter, changed)
 
     class _G(ast.NodeTransformer):
         def __init__(self):
