@@ -1016,16 +1016,6 @@ def _clos_freevars(inner: ast.AST, enclosing: set[str]) -> list[str]:
     return seen
 
 
-def _clos_is_leaf(node: ast.FunctionDef) -> bool:
-    for stmt in node.body:
-        if isinstance(stmt, (ast.FunctionDef, ast.AsyncFunctionDef)):
-            return False
-        for n in ast.walk(stmt):
-            if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef)):
-                return False
-    return True
-
-
 class _ClosRewrite(ast.NodeTransformer):
     def __init__(self, mapping: dict[str, str], cell: str, via_self: bool):
         self.mapping = mapping
@@ -1053,10 +1043,57 @@ class _ClosRewrite(ast.NodeTransformer):
             return self._sub(node.id, node.ctx)
         return node
 
+    def visit_FunctionDef(self, node: ast.FunctionDef):
+        return node
 
-def _clos_class(cname: str, inner: ast.FunctionDef, mapping: dict[str, str]) -> ast.ClassDef:
+    def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef):
+        return node
+
+    def visit_ClassDef(self, node: ast.ClassDef):
+        return node
+
+
+def _clos_self_c() -> ast.expr:
+    return ast.Attribute(
+        value=ast.Name(id="self", ctx=ast.Load()),
+        attr="_c",
+        ctx=ast.Load(),
+    )
+
+
+def _clos_bound_value(cname: str, cell_expr: ast.expr) -> ast.Dict:
+    return ast.Dict(
+        keys=[
+            ast.Constant(value="__bound__"),
+            ast.Constant(value="obj"),
+            ast.Constant(value="name"),
+        ],
+        values=[
+            ast.Constant(value=1),
+            ast.Call(
+                func=ast.Name(id=cname, ctx=ast.Load()),
+                args=[cell_expr],
+                keywords=[],
+            ),
+            ast.Constant(value="__call__"),
+        ],
+    )
+
+
+def _clos_class(
+    cname: str,
+    inner: ast.FunctionDef,
+    mapping: dict[str, str],
+    enclosing: set[str],
+    counter: list[int],
+    changed: list[bool],
+) -> ast.ClassDef:
     """class C: def __init__(self, _c): self._c = _c
-    def __call__(self, ...inner args...): rewritten body"""
+    def __call__(self, ...inner args...): rewritten body.
+
+    Nested defs in the body are converted against the same cell (self._c)
+    so extra() can pass x through to adder without loading x.
+    """
     init = ast.FunctionDef(
         name="__init__",
         args=ast.arguments(
@@ -1093,6 +1130,9 @@ def _clos_class(cname: str, inner: ast.FunctionDef, mapping: dict[str, str]) -> 
         defaults=list(inner.args.defaults),
     )
     call_body = [_ClosRewrite(mapping, "_c", True).visit(s) for s in inner.body]
+    call_body, _frees = _clos_replace_nested(
+        call_body, enclosing, _clos_self_c(), counter, changed
+    )
     if not call_body:
         call_body = [ast.Pass()]
     call = ast.FunctionDef(
@@ -1109,6 +1149,62 @@ def _clos_class(cname: str, inner: ast.FunctionDef, mapping: dict[str, str]) -> 
         body=[init, call],
         decorator_list=[],
     )
+
+
+def _clos_replace_nested(
+    body: list[ast.stmt],
+    enclosing: set[str],
+    cell_expr: ast.expr,
+    counter: list[int],
+    changed: list[bool],
+) -> tuple[list[ast.stmt], list[tuple[str, str]]]:
+    """Turn nested defs that close over enclosing names into bound classes."""
+    new_body: list[ast.stmt] = []
+    cell_maps: list[tuple[str, str]] = []
+    renames: dict[str, str] = {}
+    for stmt in body:
+        if isinstance(stmt, ast.FunctionDef):
+            frees = _clos_freevars(stmt, enclosing)
+            if frees:
+                changed[0] = True
+                counter[0] += 1
+                cid = counter[0]
+                cname = f"__aim_clos_{cid}"
+                fn_name = f"_aim_fn_{cid}"
+                mapping = {v: v for v in frees}
+                for v in frees:
+                    if (v, v) not in cell_maps:
+                        cell_maps.append((v, v))
+                new_body.append(
+                    _clos_class(cname, stmt, mapping, enclosing, counter, changed)
+                )
+                new_body.append(
+                    ast.Assign(
+                        targets=[ast.Name(id=fn_name, ctx=ast.Store())],
+                        value=_clos_bound_value(cname, cell_expr),
+                    )
+                )
+                renames[stmt.name] = fn_name
+                continue
+        new_body.append(stmt)
+    if renames:
+
+        class _Ren(ast.NodeTransformer):
+            def visit_Name(self, n: ast.Name):
+                if n.id in renames:
+                    return ast.Name(id=renames[n.id], ctx=n.ctx)
+                return n
+
+            def visit_ClassDef(self, n: ast.ClassDef):
+                return n
+
+        new_body = [
+            s
+            if isinstance(s, ast.ClassDef) and str(s.name).startswith("__aim_clos_")
+            else _Ren().visit(s)
+            for s in new_body
+        ]
+    return new_body, cell_maps
 
 
 def desugar_nested_func_closures(src: str) -> str:
@@ -1129,67 +1225,14 @@ def desugar_nested_func_closures(src: str) -> str:
         def visit_FunctionDef(self, node: ast.FunctionDef):
             node = self.generic_visit(node)
             enclosing = _clos_direct_assigned(node)
-            new_body: list[ast.stmt] = []
-            cell_maps: list[tuple[str, str]] = []
             cell_name = "_aim_c"
-            renames: dict[str, str] = {}
-            for stmt in node.body:
-                if isinstance(stmt, ast.FunctionDef) and _clos_is_leaf(stmt):
-                    frees = _clos_freevars(stmt, enclosing)
-                    if frees:
-                        changed[0] = True
-                        counter[0] += 1
-                        cid = counter[0]
-                        cname = f"__aim_clos_{cid}"
-                        fn_name = f"_aim_fn_{cid}"
-                        mapping = {v: v for v in frees}
-                        for v in frees:
-                            if (v, v) not in cell_maps:
-                                cell_maps.append((v, v))
-                        new_body.append(_clos_class(cname, stmt, mapping))
-                        # Unique _aim_fn_* so EmitIdent does not GetNone a
-                        # file-global nested name like adder. SmartCallN
-                        # already dispatches Hash __bound__ via MethodCall.
-                        inst = ast.Call(
-                            func=ast.Name(id=cname, ctx=ast.Load()),
-                            args=[ast.Name(id=cell_name, ctx=ast.Load())],
-                            keywords=[],
-                        )
-                        new_body.append(
-                            ast.Assign(
-                                targets=[ast.Name(id=fn_name, ctx=ast.Store())],
-                                value=ast.Dict(
-                                    keys=[
-                                        ast.Constant(value="__bound__"),
-                                        ast.Constant(value="obj"),
-                                        ast.Constant(value="name"),
-                                    ],
-                                    values=[
-                                        ast.Constant(value=1),
-                                        inst,
-                                        ast.Constant(value="__call__"),
-                                    ],
-                                ),
-                            )
-                        )
-                        renames[stmt.name] = fn_name
-                        continue
-                new_body.append(stmt)
-            if renames:
-
-                class _Ren(ast.NodeTransformer):
-                    def visit_Name(self, n: ast.Name):
-                        if n.id in renames:
-                            return ast.Name(id=renames[n.id], ctx=n.ctx)
-                        return n
-
-                new_body = [
-                    s
-                    if isinstance(s, ast.ClassDef)
-                    and str(s.name).startswith("__aim_clos_")
-                    else _Ren().visit(s)
-                    for s in new_body
-                ]
+            new_body, cell_maps = _clos_replace_nested(
+                list(node.body),
+                enclosing,
+                ast.Name(id=cell_name, ctx=ast.Load()),
+                counter,
+                changed,
+            )
             if cell_maps:
                 inits: list[ast.stmt] = [
                     ast.Assign(
