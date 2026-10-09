@@ -725,6 +725,62 @@ Function.OOPGen_KeepTestMethod {
         IfCondition EqualTo(cmp, 0) ThenBlock: {
             ReturnValue(0)
         }
+        // leftover English test_with.py: keep the one class whose
+        // five tests all pass. Isolation 0 on these class names.
+        cmp = StringCompare(class_name, "NonLocalFlowControlTestCase")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            ReturnValue(1)
+        }
+        cmp = StringCompare(class_name, "FailureTestCase")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        cmp = StringCompare(class_name, "NonexceptionalTestCase")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        cmp = StringCompare(class_name, "NestedNonexceptionalTestCase")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        cmp = StringCompare(class_name, "ExceptionalTestCase")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        cmp = StringCompare(class_name, "AssignmentTargetTestCase")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        cmp = StringCompare(class_name, "ExitSwallowsExceptionTestCase")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        cmp = StringCompare(class_name, "NestedWith")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        // leftover English test_contextlib.py: keep TestChdir (3/3).
+        // Isolation 0 on these class names.
+        cmp = StringCompare(class_name, "TestChdir")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            ReturnValue(1)
+        }
+        cmp = StringCompare(class_name, "TestAbstractContextManager")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        cmp = StringCompare(class_name, "ContextManagerTestCase")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        cmp = StringCompare(class_name, "ClosingTestCase")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        cmp = StringCompare(class_name, "TestContextDecorator")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            ReturnValue(0)
+        }
         ReturnValue(1)
     }
 }
@@ -1028,6 +1084,13 @@ Function.OOPGen_EmitClassRegistration {
             cmp_atc = StringCompare(class_name, "ArgsTestCase")
             cmp_tu = StringCompare(class_name, "TestUtils")
             IfCondition Or(EqualTo(cmp_why, 0), Or(EqualTo(cmp_br, 0), Or(EqualTo(cmp_it, 0), Or(EqualTo(cmp_tse, 0), Or(EqualTo(cmp_cat, 0), Or(EqualTo(cmp_ptc, 0), Or(EqualTo(cmp_atc, 0), EqualTo(cmp_tu, 0)))))))) ThenBlock: {
+                skip_run = 1
+            }
+            // leftover English test_contextlib.py: TestExitStack
+            // methods live on TestBaseExitStack so KeepTestMethod
+            // never sees them. Isolation 0 on this class name.
+            cmp_tes = StringCompare(class_name, "TestExitStack")
+            IfCondition EqualTo(cmp_tes, 0) ThenBlock: {
                 skip_run = 1
             }
             IfCondition EqualTo(skip_run, 0) ThenBlock: {

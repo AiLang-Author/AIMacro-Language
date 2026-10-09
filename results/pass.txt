@@ -53,6 +53,7 @@ test_compare.py
 test_complex.py
 test_contains.py
 test_context.py
+test_contextlib.py
 test_copy.py
 test_copyreg.py
 test_cppext/__init__.py
@@ -305,6 +306,7 @@ test_wave.py
 test_weakset.py
 test_webbrowser.py
 test_winsound.py
+test_with.py
 test_xdrlib.py
 test_xml_dom_minicompat.py
 test_xml_etree_c.py
