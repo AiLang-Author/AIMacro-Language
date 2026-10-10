@@ -1315,7 +1315,7 @@ def _fn_own_yields(fn: ast.AST) -> bool:
 
 
 def _tree_has_yield(node: ast.AST) -> bool:
-    if isinstance(node, (ast.Yield, ast.YieldFrom)):
+    if isinstance(node, (ast.Yield, ast.YieldFrom, ast.Await)):
         return True
     if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef, ast.Lambda)):
         return False
@@ -1323,6 +1323,390 @@ def _tree_has_yield(node: ast.AST) -> bool:
         if _tree_has_yield(c):
             return True
     return False
+
+
+def _expr_has_await(node: ast.AST) -> bool:
+    if isinstance(node, ast.Await):
+        return True
+    if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef, ast.Lambda)):
+        return False
+    for c in ast.iter_child_nodes(node):
+        if _expr_has_await(c):
+            return True
+    return False
+
+
+class _LiftAwait(ast.NodeTransformer):
+    """Replace Await in expressions with a temp; collect assigns in .pre."""
+
+    def __init__(self, counter: list[int]):
+        self.counter = counter
+        self.pre: list[ast.stmt] = []
+
+    def visit_FunctionDef(self, n: ast.FunctionDef):
+        return n
+
+    def visit_AsyncFunctionDef(self, n: ast.AsyncFunctionDef):
+        return n
+
+    def visit_ClassDef(self, n: ast.ClassDef):
+        return n
+
+    def visit_Lambda(self, n: ast.Lambda):
+        return n
+
+    def visit_Await(self, n: ast.Await):
+        n = self.generic_visit(n)
+        self.counter[0] += 1
+        t = f"_aim_aw{self.counter[0]}"
+        self.pre.append(
+            ast.Assign(
+                targets=[ast.Name(id=t, ctx=ast.Store())],
+                value=ast.Await(value=n.value),
+            )
+        )
+        return ast.Name(id=t, ctx=ast.Load())
+
+
+def _lift_expr(expr: ast.expr, counter: list[int]) -> tuple[list[ast.stmt], ast.expr]:
+    lifter = _LiftAwait(counter)
+    new = lifter.visit(expr)
+    return lifter.pre, new
+
+
+def _rewrite_async_loops(body: list[ast.stmt], counter: list[int]) -> list[ast.stmt]:
+    out: list[ast.stmt] = []
+    for s in body:
+        if isinstance(s, ast.AsyncFor):
+            out.extend(_async_for_to_while(s, counter))
+        elif isinstance(s, ast.AsyncWith):
+            out.extend(_async_with_to_try(s, counter))
+        elif isinstance(s, ast.If):
+            s = ast.If(
+                test=s.test,
+                body=_rewrite_async_loops(list(s.body), counter),
+                orelse=_rewrite_async_loops(list(s.orelse), counter),
+            )
+            out.append(s)
+        elif isinstance(s, ast.While):
+            s = ast.While(
+                test=s.test,
+                body=_rewrite_async_loops(list(s.body), counter),
+                orelse=_rewrite_async_loops(list(s.orelse), counter),
+            )
+            out.append(s)
+        elif isinstance(s, ast.For):
+            s = ast.For(
+                target=s.target,
+                iter=s.iter,
+                body=_rewrite_async_loops(list(s.body), counter),
+                orelse=_rewrite_async_loops(list(s.orelse), counter),
+            )
+            out.append(s)
+        elif isinstance(s, ast.Try):
+            s = ast.Try(
+                body=_rewrite_async_loops(list(s.body), counter),
+                handlers=[
+                    ast.ExceptHandler(
+                        type=h.type,
+                        name=h.name,
+                        body=_rewrite_async_loops(list(h.body), counter),
+                    )
+                    for h in s.handlers
+                ],
+                orelse=_rewrite_async_loops(list(s.orelse), counter),
+                finalbody=_rewrite_async_loops(list(s.finalbody), counter),
+            )
+            out.append(s)
+        elif isinstance(s, ast.With):
+            s = ast.With(
+                items=s.items,
+                body=_rewrite_async_loops(list(s.body), counter),
+            )
+            out.append(s)
+        else:
+            out.append(s)
+    return out
+
+
+def _async_for_to_while(node: ast.AsyncFor, counter: list[int]) -> list[ast.stmt]:
+    """async for x in e → e.__aiter__() + await __anext__ until StopAsyncIteration."""
+    counter[0] += 1
+    n = counter[0]
+    it = f"_aim_ai{n}"
+    st = f"_aim_as{n}"
+    run = f"_aim_ar{n}"
+    body = _rewrite_async_loops(list(node.body), counter)
+    orelse = _rewrite_async_loops(list(node.orelse), counter) if node.orelse else []
+    anext = ast.Await(
+        value=ast.Call(
+            func=ast.Attribute(
+                value=ast.Name(id=it, ctx=ast.Load()),
+                attr="__anext__",
+                ctx=ast.Load(),
+            ),
+            args=[],
+            keywords=[],
+        )
+    )
+    return [
+        ast.Assign(
+            targets=[ast.Name(id=it, ctx=ast.Store())],
+            value=ast.Call(
+                func=ast.Attribute(value=node.iter, attr="__aiter__", ctx=ast.Load()),
+                args=[],
+                keywords=[],
+            ),
+        ),
+        ast.Assign(
+            targets=[ast.Name(id=run, ctx=ast.Store())],
+            value=ast.Constant(value=True),
+        ),
+        ast.While(
+            test=ast.Name(id=run, ctx=ast.Load()),
+            body=[
+                ast.Assign(
+                    targets=[ast.Name(id=st, ctx=ast.Store())],
+                    value=ast.Constant(value=0),
+                ),
+                ast.Try(
+                    body=[ast.Assign(targets=[node.target], value=anext)],
+                    handlers=[
+                        ast.ExceptHandler(
+                            type=ast.Name(id="StopAsyncIteration", ctx=ast.Load()),
+                            name=None,
+                            body=[
+                                ast.Assign(
+                                    targets=[ast.Name(id=st, ctx=ast.Store())],
+                                    value=ast.Constant(value=1),
+                                )
+                            ],
+                        )
+                    ],
+                    orelse=[],
+                    finalbody=[],
+                ),
+                ast.If(
+                    test=ast.Name(id=st, ctx=ast.Load()),
+                    body=orelse + [ast.Break()],
+                    orelse=[],
+                ),
+            ]
+            + body,
+            orelse=[],
+        ),
+    ]
+
+
+def _async_with_to_try(node: ast.AsyncWith, counter: list[int]) -> list[ast.stmt]:
+    """async with e as x → await __aenter__ / try / await __aexit__(None,None,None)."""
+    body = _rewrite_async_loops(list(node.body), counter)
+    for item in reversed(node.items):
+        counter[0] += 1
+        n = counter[0]
+        mgr = f"_aim_am{n}"
+        ent = f"_aim_ae{n}"
+        inner: list[ast.stmt] = [
+            ast.Assign(
+                targets=[ast.Name(id=mgr, ctx=ast.Store())],
+                value=item.context_expr,
+            ),
+            ast.Assign(
+                targets=[ast.Name(id=ent, ctx=ast.Store())],
+                value=ast.Await(
+                    value=ast.Call(
+                        func=ast.Attribute(
+                            value=ast.Name(id=mgr, ctx=ast.Load()),
+                            attr="__aenter__",
+                            ctx=ast.Load(),
+                        ),
+                        args=[],
+                        keywords=[],
+                    )
+                ),
+            ),
+        ]
+        if item.optional_vars is not None:
+            inner.append(
+                ast.Assign(targets=[item.optional_vars], value=ast.Name(id=ent, ctx=ast.Load()))
+            )
+        inner.append(
+            ast.Try(
+                body=body if body else [ast.Pass()],
+                handlers=[],
+                orelse=[],
+                finalbody=[
+                    ast.Expr(
+                        value=ast.Await(
+                            value=ast.Call(
+                                func=ast.Attribute(
+                                    value=ast.Name(id=mgr, ctx=ast.Load()),
+                                    attr="__aexit__",
+                                    ctx=ast.Load(),
+                                ),
+                                args=[
+                                    ast.Constant(value=None),
+                                    ast.Constant(value=None),
+                                    ast.Constant(value=None),
+                                ],
+                                keywords=[],
+                            )
+                        )
+                    )
+                ],
+            )
+        )
+        body = inner
+    return body
+
+
+def _lift_awaits_in_body(body: list[ast.stmt], counter: list[int]) -> list[ast.stmt]:
+    out: list[ast.stmt] = []
+    for stmt in body:
+        out.extend(_lift_awaits_stmt(stmt, counter))
+    return out
+
+
+def _lift_awaits_stmt(stmt: ast.stmt, counter: list[int]) -> list[ast.stmt]:
+    if isinstance(stmt, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+        return [stmt]
+    if isinstance(stmt, ast.If):
+        pre, test = _lift_expr(stmt.test, counter)
+        body = _lift_awaits_in_body(list(stmt.body), counter)
+        orelse = _lift_awaits_in_body(list(stmt.orelse), counter)
+        return pre + [ast.If(test=test, body=body if body else [ast.Pass()], orelse=orelse)]
+    if isinstance(stmt, ast.While):
+        if _expr_has_await(stmt.test):
+            counter[0] += 1
+            c = f"_aim_wc{counter[0]}"
+            inner = [
+                ast.Assign(
+                    targets=[ast.Name(id=c, ctx=ast.Store())],
+                    value=stmt.test,
+                ),
+                ast.If(
+                    test=ast.UnaryOp(
+                        op=ast.Not(), operand=ast.Name(id=c, ctx=ast.Load())
+                    ),
+                    body=[ast.Break()],
+                    orelse=[],
+                ),
+            ] + list(stmt.body)
+            inner = _lift_awaits_in_body(inner, counter)
+            orelse = _lift_awaits_in_body(list(stmt.orelse), counter)
+            return [
+                ast.While(
+                    test=ast.Constant(value=True),
+                    body=inner,
+                    orelse=orelse,
+                )
+            ]
+        body = _lift_awaits_in_body(list(stmt.body), counter)
+        orelse = _lift_awaits_in_body(list(stmt.orelse), counter)
+        return [ast.While(test=stmt.test, body=body if body else [ast.Pass()], orelse=orelse)]
+    if isinstance(stmt, ast.For):
+        pre, it = _lift_expr(stmt.iter, counter)
+        body = _lift_awaits_in_body(list(stmt.body), counter)
+        orelse = _lift_awaits_in_body(list(stmt.orelse), counter)
+        return pre + [
+            ast.For(
+                target=stmt.target,
+                iter=it,
+                body=body if body else [ast.Pass()],
+                orelse=orelse,
+            )
+        ]
+    if isinstance(stmt, ast.Try):
+        body = _lift_awaits_in_body(list(stmt.body), counter)
+        handlers = [
+            ast.ExceptHandler(
+                type=h.type,
+                name=h.name,
+                body=_lift_awaits_in_body(list(h.body), counter) or [ast.Pass()],
+            )
+            for h in stmt.handlers
+        ]
+        orelse = _lift_awaits_in_body(list(stmt.orelse), counter)
+        finalbody = _lift_awaits_in_body(list(stmt.finalbody), counter)
+        return [
+            ast.Try(
+                body=body if body else [ast.Pass()],
+                handlers=handlers,
+                orelse=orelse,
+                finalbody=finalbody,
+            )
+        ]
+    if isinstance(stmt, ast.With):
+        pres: list[ast.stmt] = []
+        items = []
+        for it in stmt.items:
+            p, ctx = _lift_expr(it.context_expr, counter)
+            pres.extend(p)
+            items.append(ast.withitem(context_expr=ctx, optional_vars=it.optional_vars))
+        body = _lift_awaits_in_body(list(stmt.body), counter)
+        return pres + [ast.With(items=items, body=body if body else [ast.Pass()])]
+    if isinstance(stmt, ast.Return):
+        if stmt.value is None:
+            return [stmt]
+        pre, v = _lift_expr(stmt.value, counter)
+        return pre + [ast.Return(value=v)]
+    if isinstance(stmt, ast.Assign) and len(stmt.targets) == 1 and isinstance(stmt.value, ast.Await):
+        pre, v = _lift_expr(stmt.value.value, counter)
+        return pre + [ast.Assign(targets=stmt.targets, value=ast.Await(value=v))]
+    if isinstance(stmt, ast.Expr) and isinstance(stmt.value, ast.Await):
+        pre, v = _lift_expr(stmt.value.value, counter)
+        return pre + [ast.Expr(value=ast.Await(value=v))]
+    if isinstance(stmt, ast.Assign):
+        pre, v = _lift_expr(stmt.value, counter)
+        return pre + [ast.Assign(targets=stmt.targets, value=v)]
+    if isinstance(stmt, ast.AnnAssign) and stmt.value is not None:
+        pre, v = _lift_expr(stmt.value, counter)
+        return pre + [
+            ast.AnnAssign(
+                target=stmt.target, annotation=stmt.annotation, value=v, simple=stmt.simple
+            )
+        ]
+    if isinstance(stmt, ast.AugAssign):
+        pre, v = _lift_expr(stmt.value, counter)
+        return pre + [ast.AugAssign(target=stmt.target, op=stmt.op, value=v)]
+    if isinstance(stmt, ast.Raise):
+        pres: list[ast.stmt] = []
+        exc = stmt.exc
+        cause = stmt.cause
+        if exc is not None:
+            p, exc = _lift_expr(exc, counter)
+            pres.extend(p)
+        if cause is not None:
+            p, cause = _lift_expr(cause, counter)
+            pres.extend(p)
+        return pres + [ast.Raise(exc=exc, cause=cause)]
+    if isinstance(stmt, ast.Assert):
+        pre, test = _lift_expr(stmt.test, counter)
+        msg = stmt.msg
+        more: list[ast.stmt] = []
+        if msg is not None:
+            p, msg = _lift_expr(msg, counter)
+            more = p
+        return pre + more + [ast.Assert(test=test, msg=msg)]
+    if isinstance(stmt, ast.Expr):
+        pre, v = _lift_expr(stmt.value, counter)
+        return pre + [ast.Expr(value=v)]
+    lifter = _LiftAwait(counter)
+    new = lifter.visit(stmt)
+    return lifter.pre + [new]
+
+
+def _async_prep(node: ast.AsyncFunctionDef, counter: list[int]) -> ast.FunctionDef:
+    body = _rewrite_async_loops(list(node.body), counter)
+    body = _lift_awaits_in_body(body, counter)
+    return ast.FunctionDef(
+        name=node.name,
+        args=node.args,
+        body=body if body else [ast.Pass()],
+        decorator_list=[],
+        returns=node.returns,
+        type_params=getattr(node, "type_params", []),
+    )
 
 
 def _gen_self_attr(name: str, ctx) -> ast.Attribute:
@@ -1444,6 +1828,7 @@ _GEN_SKIP_FIELDS = {
     "__aim_raise",
     "__next__",
     "__iter__",
+    "__await__",
     "__init__",
     "__class__",
     "__data__",
@@ -1588,13 +1973,14 @@ class _GenNameRew(ast.NodeTransformer):
 
 
 class _GenSM:
-    def __init__(self, mapping: dict[str, str]):
+    def __init__(self, mapping: dict[str, str], coro: bool = False):
         self.rew = _GenNameRew(mapping)
         self.states: list[list[ast.stmt]] = [[_throw_if_stmt()]]
         self.cur = 0
         self.it_n = 0
         self.loops: list[tuple[int, int]] = []
         self.wrapped: set[int] = set()
+        self.coro = coro
 
     def news(self) -> int:
         sid = len(self.states)
@@ -1629,6 +2015,13 @@ class _GenSM:
                 value=ast.Constant(value=None),
             )
         )
+        if self.coro:
+            self.add(
+                ast.Assign(
+                    targets=[_gen_self_attr("cr_frame", ast.Store())],
+                    value=ast.Constant(value=None),
+                )
+            )
         self.add(
             ast.If(
                 test=_gen_self_attr("_closing", ast.Load()),
@@ -1669,13 +2062,26 @@ class _GenSM:
             if isinstance(s, ast.Expr) and isinstance(s.value, ast.YieldFrom):
                 self._yield_from(s.value.value, None, rest, after)
                 return
+            if isinstance(s, ast.Expr) and isinstance(s.value, ast.Await):
+                self._await(s.value.value, None, rest, after)
+                return
             if isinstance(s, ast.Assign) and len(s.targets) == 1 and isinstance(s.value, ast.Yield):
                 self._yield_stmt(s.value.value, s.targets[0], rest, after)
                 return
             if isinstance(s, ast.Assign) and len(s.targets) == 1 and isinstance(s.value, ast.YieldFrom):
                 self._yield_from(s.value.value, s.targets[0], rest, after)
                 return
+            if isinstance(s, ast.Assign) and len(s.targets) == 1 and isinstance(s.value, ast.Await):
+                self._await(s.value.value, s.targets[0], rest, after)
+                return
             if isinstance(s, ast.Return):
+                val = s.value if s.value is not None else ast.Constant(value=None)
+                self.add(
+                    ast.Assign(
+                        targets=[_gen_self_attr("_ret", ast.Store())],
+                        value=self.rw(val),
+                    )
+                )
                 self.stop()
                 return
             if isinstance(s, ast.Break) and self.loops:
@@ -1785,6 +2191,74 @@ class _GenSM:
                 ast.Assign(
                     targets=[self.rw(target)],
                     value=_gen_self_attr("_sent", ast.Load()),
+                )
+            )
+        self.build(rest, after)
+        self.cur = old
+
+    def _await(self, expr, target, rest, after):
+        """await expr → iterate expr.__await__(); result is iterator._ret."""
+        it = f"_i{self.it_n}"
+        self.it_n += 1
+        self.add(
+            ast.Assign(
+                targets=[_gen_self_attr(it, ast.Store())],
+                value=ast.Call(
+                    func=ast.Attribute(
+                        value=self.rw(expr),
+                        attr="__await__",
+                        ctx=ast.Load(),
+                    ),
+                    args=[],
+                    keywords=[],
+                ),
+            )
+        )
+        head = self.news()
+        after_aw = self.news()
+        self.goto(head)
+        old = self.cur
+        self.cur = head
+        tmp = f"_v{self.it_n}"
+        self._next_or_stop(it, _gen_self_attr(tmp, ast.Store()), after_aw)
+        self.yield_to(_gen_self_attr(tmp, ast.Load()), head)
+        self.cur = after_aw
+        retv = f"_r{self.it_n}"
+        self.it_n += 1
+        self.add(
+            ast.Assign(
+                targets=[_gen_self_attr(retv, ast.Store())],
+                value=ast.Constant(value=None),
+            )
+        )
+        self.add(
+            ast.Try(
+                body=[
+                    ast.Assign(
+                        targets=[_gen_self_attr(retv, ast.Store())],
+                        value=ast.Attribute(
+                            value=_gen_self_attr(it, ast.Load()),
+                            attr="_ret",
+                            ctx=ast.Load(),
+                        ),
+                    )
+                ],
+                handlers=[
+                    ast.ExceptHandler(
+                        type=ast.Name(id="AttributeError", ctx=ast.Load()),
+                        name=None,
+                        body=[ast.Pass()],
+                    )
+                ],
+                orelse=[],
+                finalbody=[],
+            )
+        )
+        if target is not None:
+            self.add(
+                ast.Assign(
+                    targets=[self.rw(target)],
+                    value=_gen_self_attr(retv, ast.Load()),
                 )
             )
         self.build(rest, after)
@@ -2122,10 +2596,13 @@ def _gen_wrap_unwrapped_close(sm: _GenSM) -> None:
 
 
 def _gen_convert(
-    fn: ast.FunctionDef, enclosing: set[str], counter: list[int]
+    fn: ast.FunctionDef,
+    enclosing: set[str],
+    counter: list[int],
+    coro: bool = False,
 ) -> tuple[ast.ClassDef, ast.FunctionDef]:
     counter[0] += 1
-    cname = f"__aim_gen_{counter[0]}"
+    cname = f"_aim_coro_{counter[0]}" if coro else f"_aim_gen_{counter[0]}"
     params = [a.arg for a in fn.args.args]
     frees = _clos_freevars(fn, enclosing)
     locs = _clos_direct_assigned(fn)
@@ -2133,7 +2610,7 @@ def _gen_convert(
     for n in params + list(locs) + frees:
         if n not in mapping and n not in ("_s", "_sent"):
             mapping[n] = f"_g_{n}"
-    sm = _GenSM(mapping)
+    sm = _GenSM(mapping, coro=coro)
     sm.build(list(fn.body), None)
     _gen_wrap_unwrapped_close(sm)
     init_args = [ast.arg(arg="self")]
@@ -2166,7 +2643,24 @@ def _gen_convert(
             targets=[_gen_self_attr("gi_frame", ast.Store())],
             value=_frame_dummy(),
         ),
+        ast.Assign(
+            targets=[_gen_self_attr("_ret", ast.Store())],
+            value=ast.Constant(value=None),
+        ),
     ]
+    if coro:
+        init_body.extend(
+            [
+                ast.Assign(
+                    targets=[_gen_self_attr("cr_frame", ast.Store())],
+                    value=_frame_dummy(),
+                ),
+                ast.Assign(
+                    targets=[_gen_self_attr("cr_running", ast.Store())],
+                    value=ast.Constant(value=0),
+                ),
+            ]
+        )
     factory_args: list[ast.expr] = []
     seen_init: set[str] = set()
     param_attrs: set[str] = set()
@@ -2206,6 +2700,9 @@ def _gen_convert(
                 "gi_running",
                 "_closing",
                 "gi_frame",
+                "_ret",
+                "cr_frame",
+                "cr_running",
             )
             or attr in param_attrs
             or attr in _GEN_SKIP_FIELDS
@@ -2511,11 +3008,28 @@ def _gen_convert(
         ],
         decorator_list=[],
     )
+    methods = [init, aim_raise, send, dunder_next, throw, close]
+    if not coro:
+        methods.insert(4, dunder_iter)
+    else:
+        dunder_await = ast.FunctionDef(
+            name="__await__",
+            args=ast.arguments(
+                posonlyargs=[],
+                args=[ast.arg(arg="self")],
+                kwonlyargs=[],
+                kw_defaults=[],
+                defaults=[],
+            ),
+            body=[ast.Return(value=ast.Name(id="self", ctx=ast.Load()))],
+            decorator_list=[],
+        )
+        methods.insert(4, dunder_await)
     cls = ast.ClassDef(
         name=cname,
         bases=[],
         keywords=[],
-        body=[init, aim_raise, send, dunder_next, dunder_iter, throw, close],
+        body=methods,
         decorator_list=[],
     )
     new_fn = ast.FunctionDef(
@@ -2645,9 +3159,10 @@ def _rewrite_for_over_gens(tree: ast.AST, gen_names: set[str]) -> ast.AST:
 def desugar_generators(src: str) -> str:
     """Generator functions → class with __next__/send (pause at yield).
 
-    Codegen currently collects yields into a list and runs the body at
-    call time, so `g = f()` already prints side effects. Isolation files
-    without generator functions stay byte-identical.
+    Undecorated async def (no yield) → coroutine class with send/throw/close
+    and __await__ (pause at await). Decorated async and async generators stay
+    on the stub path. Isolation files without generators or async def stay
+    byte-identical.
     """
     try:
         tree = ast.parse(src)
@@ -2671,7 +3186,7 @@ def desugar_generators(src: str) -> str:
                 if isinstance(stmt, ast.FunctionDef):
                     new_body.append(self._visit_fn(stmt, inner_h))
                 elif isinstance(stmt, ast.AsyncFunctionDef):
-                    new_body.append(stmt)
+                    new_body.append(self._visit_async_fn(stmt, inner_h))
                 elif isinstance(stmt, ast.ClassDef):
                     new_body.append(self.visit(stmt))
                 else:
@@ -2689,6 +3204,36 @@ def desugar_generators(src: str) -> str:
                 return fn
             return node
 
+        def _visit_async_fn(self, node: ast.AsyncFunctionDef, hoisted: list[ast.stmt]):
+            assigned = _clos_direct_assigned(node)
+            self.stack.append(assigned | {node.name})
+            inner_h: list[ast.stmt] = []
+            new_body: list[ast.stmt] = []
+            for stmt in node.body:
+                if isinstance(stmt, ast.FunctionDef):
+                    new_body.append(self._visit_fn(stmt, inner_h))
+                elif isinstance(stmt, ast.AsyncFunctionDef):
+                    new_body.append(self._visit_async_fn(stmt, inner_h))
+                elif isinstance(stmt, ast.ClassDef):
+                    new_body.append(self.visit(stmt))
+                else:
+                    new_body.append(stmt)
+            self.stack.pop()
+            node.body = inner_h + new_body
+            if node.decorator_list:
+                return node
+            if _fn_own_yields(node):
+                # async generator (yield in async def): leave on the stub path
+                return node
+            enclosing: set[str] = set()
+            for e in self.stack:
+                enclosing |= e
+            fn = _async_prep(node, counter)
+            cls, new_fn = _gen_convert(fn, enclosing, counter, coro=True)
+            hoisted.append(cls)
+            changed[0] = True
+            return new_fn
+
         def visit_Module(self, node: ast.Module):
             self.stack.append(set())
             hoisted: list[ast.stmt] = []
@@ -2696,6 +3241,8 @@ def desugar_generators(src: str) -> str:
             for stmt in node.body:
                 if isinstance(stmt, ast.FunctionDef):
                     new_body.append(self._visit_fn(stmt, hoisted))
+                elif isinstance(stmt, ast.AsyncFunctionDef):
+                    new_body.append(self._visit_async_fn(stmt, hoisted))
                 elif isinstance(stmt, ast.ClassDef):
                     new_body.append(self.visit(stmt))
                 else:
@@ -2710,6 +3257,8 @@ def desugar_generators(src: str) -> str:
             for stmt in node.body:
                 if isinstance(stmt, ast.FunctionDef):
                     new_body.append(self._visit_fn(stmt, hoisted))
+                elif isinstance(stmt, ast.AsyncFunctionDef):
+                    new_body.append(self._visit_async_fn(stmt, hoisted))
                 elif isinstance(stmt, ast.ClassDef):
                     new_body.append(self.visit(stmt))
                 else:
