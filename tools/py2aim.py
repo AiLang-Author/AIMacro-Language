@@ -1826,6 +1826,7 @@ _GEN_SKIP_FIELDS = {
     "throw",
     "close",
     "__aim_raise",
+    "__aim_catch_throw",
     "__next__",
     "__iter__",
     "__await__",
@@ -2549,33 +2550,73 @@ class _GenSM:
         self.cur = old
 
 
-def _gen_wrap_unwrapped_close(sm: _GenSM) -> None:
-    """Swallow GeneratorExit on close in states with no user try.
+def _self_method_call(attr: str) -> ast.Call:
+    return ast.Call(
+        func=ast.Attribute(
+            value=ast.Name(id="self", ctx=ast.Load()),
+            attr=attr,
+            ctx=ast.Load(),
+        ),
+        args=[],
+        keywords=[],
+    )
 
-    Wrap only throw_if. Wrapping the yield Return leaks ExcEnter
-    (Return/Continue skip ExcLeave) and SEGVs later next() calls.
+
+def _raise_named(name: str) -> ast.Raise:
+    return ast.Raise(
+        exc=ast.Call(
+            func=ast.Name(id=name, ctx=ast.Load()),
+            args=[],
+            keywords=[],
+        ),
+        cause=None,
+    )
+
+
+def _close_stop_body() -> list[ast.stmt]:
+    return [
+        ast.Assign(
+            targets=[_gen_self_attr("_s", ast.Store())],
+            value=ast.Constant(value=-1),
+        ),
+        ast.Assign(
+            targets=[_gen_self_attr("gi_frame", ast.Store())],
+            value=ast.Constant(value=None),
+        ),
+        ast.Return(value=ast.Constant(value=1)),
+    ]
+
+
+def _aim_catch_throw_fn() -> ast.FunctionDef:
+    """One module-level throw/close handler for every generator class.
+
+    Per-state Try/except copies made leftover test_coroutines 40k lines
+    and py2aim 19s / runner 10s timeout. A per-class method still copied
+    the handler ~160 times; send() calls this Function with self.
     """
-    for sid, body in enumerate(sm.states):
-        if sid in sm.wrapped:
-            continue
-        orig = list(body) if body else [_throw_if_stmt()]
-        throw_if = orig[0] if orig else _throw_if_stmt()
-        rest = orig[1:] if orig else []
-        flag = f"_kc{sid}"
-        head: list[ast.stmt] = [
+    return ast.FunctionDef(
+        name="__aim_catch_throw",
+        args=ast.arguments(
+            posonlyargs=[],
+            args=[ast.arg(arg="self")],
+            kwonlyargs=[],
+            kw_defaults=[],
+            defaults=[],
+        ),
+        body=[
             ast.Assign(
-                targets=[_gen_self_attr(flag, ast.Store())],
+                targets=[_gen_self_attr("_kc", ast.Store())],
                 value=ast.Constant(value=0),
             ),
             ast.Try(
-                body=[throw_if],
+                body=[_throw_if_stmt()],
                 handlers=[
                     ast.ExceptHandler(
                         type=ast.Name(id="GeneratorExit", ctx=ast.Load()),
                         name=None,
                         body=[
                             ast.Assign(
-                                targets=[_gen_self_attr(flag, ast.Store())],
+                                targets=[_gen_self_attr("_kc", ast.Store())],
                                 value=ast.Constant(value=1),
                             )
                         ],
@@ -2585,7 +2626,7 @@ def _gen_wrap_unwrapped_close(sm: _GenSM) -> None:
                         name=None,
                         body=[
                             ast.Assign(
-                                targets=[_gen_self_attr(flag, ast.Store())],
+                                targets=[_gen_self_attr("_kc", ast.Store())],
                                 value=ast.Constant(value=2),
                             )
                         ],
@@ -2595,7 +2636,7 @@ def _gen_wrap_unwrapped_close(sm: _GenSM) -> None:
                         name=None,
                         body=[
                             ast.Assign(
-                                targets=[_gen_self_attr(flag, ast.Store())],
+                                targets=[_gen_self_attr("_kc", ast.Store())],
                                 value=ast.Constant(value=3),
                             )
                         ],
@@ -2606,79 +2647,37 @@ def _gen_wrap_unwrapped_close(sm: _GenSM) -> None:
             ),
             ast.If(
                 test=ast.Compare(
-                    left=_gen_self_attr(flag, ast.Load()),
+                    left=_gen_self_attr("_kc", ast.Load()),
                     ops=[ast.Eq()],
                     comparators=[ast.Constant(value=1)],
                 ),
                 body=[
                     ast.If(
                         test=_gen_self_attr("_closing", ast.Load()),
-                        body=[
-                            ast.Assign(
-                                targets=[_gen_self_attr("_s", ast.Store())],
-                                value=ast.Constant(value=-1),
-                            ),
-                            ast.Assign(
-                                targets=[_gen_self_attr("gi_frame", ast.Store())],
-                                value=ast.Constant(value=None),
-                            ),
-                            ast.Return(value=ast.Constant(value=None)),
-                        ],
-                        orelse=[
-                            ast.Raise(
-                                exc=ast.Call(
-                                    func=ast.Name(
-                                        id="GeneratorExit", ctx=ast.Load()
-                                    ),
-                                    args=[],
-                                    keywords=[],
-                                ),
-                                cause=None,
-                            )
-                        ],
+                        body=_close_stop_body(),
+                        orelse=[_raise_named("GeneratorExit")],
                     )
                 ],
                 orelse=[],
             ),
             ast.If(
                 test=ast.Compare(
-                    left=_gen_self_attr(flag, ast.Load()),
+                    left=_gen_self_attr("_kc", ast.Load()),
                     ops=[ast.Eq()],
                     comparators=[ast.Constant(value=2)],
                 ),
                 body=[
                     ast.If(
                         test=_gen_self_attr("_closing", ast.Load()),
-                        body=[
-                            ast.Assign(
-                                targets=[_gen_self_attr("_s", ast.Store())],
-                                value=ast.Constant(value=-1),
-                            ),
-                            ast.Assign(
-                                targets=[_gen_self_attr("gi_frame", ast.Store())],
-                                value=ast.Constant(value=None),
-                            ),
-                            ast.Return(value=ast.Constant(value=None)),
-                        ],
-                        orelse=[
-                            ast.Raise(
-                                exc=ast.Call(
-                                    func=ast.Name(
-                                        id="StopIteration", ctx=ast.Load()
-                                    ),
-                                    args=[],
-                                    keywords=[],
-                                ),
-                                cause=None,
-                            )
-                        ],
+                        body=_close_stop_body(),
+                        orelse=[_raise_named("StopIteration")],
                     )
                 ],
                 orelse=[],
             ),
             ast.If(
                 test=ast.Compare(
-                    left=_gen_self_attr(flag, ast.Load()),
+                    left=_gen_self_attr("_kc", ast.Load()),
                     ops=[ast.Eq()],
                     comparators=[ast.Constant(value=3)],
                 ),
@@ -2695,23 +2694,44 @@ def _gen_wrap_unwrapped_close(sm: _GenSM) -> None:
                         targets=[_gen_self_attr("_tkind", ast.Store())],
                         value=_gen_self_attr("_tkind_save", ast.Load()),
                     ),
-                    ast.Expr(
-                        value=ast.Call(
-                            func=ast.Attribute(
-                                value=ast.Name(id="self", ctx=ast.Load()),
-                                attr="__aim_raise",
-                                ctx=ast.Load(),
-                            ),
-                            args=[],
-                            keywords=[],
-                        )
-                    ),
-                    ast.Return(value=ast.Constant(value=None)),
+                    ast.Expr(value=_self_method_call("__aim_raise")),
+                    ast.Return(value=ast.Constant(value=1)),
                 ],
                 orelse=[],
             ),
-        ]
-        sm.states[sid] = head + rest
+            ast.Return(value=ast.Constant(value=0)),
+        ],
+        decorator_list=[],
+    )
+
+
+def _state_throw_guard() -> list[ast.stmt]:
+    return [
+        ast.If(
+            test=ast.Call(
+                func=ast.Name(id="__aim_catch_throw", ctx=ast.Load()),
+                args=[ast.Name(id="self", ctx=ast.Load())],
+                keywords=[],
+            ),
+            body=[ast.Return(value=ast.Constant(value=None))],
+            orelse=[],
+        )
+    ]
+
+
+def _gen_wrap_unwrapped_close(sm: _GenSM) -> None:
+    """Swallow GeneratorExit on close in states with no user try.
+
+    Wrap only throw_if. Wrapping the yield Return leaks ExcEnter
+    (Return/Continue skip ExcLeave) and SEGVs later next() calls.
+    One module-level __aim_catch_throw keeps send() small.
+    """
+    for sid, body in enumerate(sm.states):
+        if sid in sm.wrapped:
+            continue
+        orig = list(body) if body else [_throw_if_stmt()]
+        rest = orig[1:] if orig else []
+        sm.states[sid] = _state_throw_guard() + rest
 
 
 def _gen_convert(
@@ -2760,6 +2780,10 @@ def _gen_convert(
         ),
         ast.Assign(
             targets=[_gen_self_attr("_closing", ast.Store())],
+            value=ast.Constant(value=0),
+        ),
+        ast.Assign(
+            targets=[_gen_self_attr("_kc", ast.Store())],
             value=ast.Constant(value=0),
         ),
         ast.Assign(
@@ -2823,6 +2847,7 @@ def _gen_convert(
                 "_tf",
                 "gi_running",
                 "_closing",
+                "_kc",
                 "gi_frame",
                 "_ret",
                 "cr_frame",
@@ -3134,7 +3159,7 @@ def _gen_convert(
     )
     methods = [init, aim_raise, send, dunder_next, throw, close]
     if not coro:
-        methods.insert(4, dunder_iter)
+        methods.insert(3, dunder_iter)
     else:
         dunder_await = ast.FunctionDef(
             name="__await__",
@@ -3148,7 +3173,7 @@ def _gen_convert(
             body=[ast.Return(value=ast.Name(id="self", ctx=ast.Load()))],
             decorator_list=[],
         )
-        methods.insert(4, dunder_await)
+        methods.insert(3, dunder_await)
     cls = ast.ClassDef(
         name=cname,
         bases=[],
@@ -3473,20 +3498,8 @@ def _aim_gen_cm_class() -> ast.ClassDef:
     )
 
 
-def desugar_generators(src: str) -> str:
-    """Generator functions → class with __next__/send (pause at yield).
-
-    Undecorated async def (no yield) → coroutine class with send/throw/close
-    and __await__ (pause at await). Decorated async and async generators stay
-    on the stub path. A single Name `@contextmanager` gen is converted and
-    wrapped in `_AimGenCM` so with-as works; `@contextlib.contextmanager`
-    (Attribute) stays stubbed so isolation golds stay byte-identical.
-    Isolation files without generators or async def stay byte-identical.
-    """
-    try:
-        tree = ast.parse(src)
-    except SyntaxError:
-        return src
+def _desugar_generators_tree(tree: ast.AST) -> tuple[ast.AST, bool]:
+    """Generator/async def → class. Returns (tree, changed)."""
     counter = [0]
     changed = [False]
     need_cm = [False]
@@ -3574,8 +3587,13 @@ def desugar_generators(src: str) -> str:
                     new_body.append(stmt)
             self.stack.pop()
             node.body = hoisted + new_body
+            prefix: list[ast.stmt] = []
+            if changed[0]:
+                prefix.append(_aim_catch_throw_fn())
             if need_cm[0]:
-                node.body = [_aim_gen_cm_class()] + node.body
+                prefix.append(_aim_gen_cm_class())
+            if prefix:
+                node.body = prefix + node.body
             return node
 
         def visit_ClassDef(self, node: ast.ClassDef):
@@ -3595,8 +3613,28 @@ def desugar_generators(src: str) -> str:
 
     new_tree = _G().visit(tree)
     if not changed[0]:
-        return src
+        return new_tree, False
     new_tree = _rewrite_for_over_gens(new_tree, gen_names)
+    return new_tree, True
+
+
+def desugar_generators(src: str) -> str:
+    """Generator functions → class with __next__/send (pause at yield).
+
+    Undecorated async def (no yield) → coroutine class with send/throw/close
+    and __await__ (pause at await). Decorated async and async generators stay
+    on the stub path. A single Name `@contextmanager` gen is converted and
+    wrapped in `_AimGenCM` so with-as works; `@contextlib.contextmanager`
+    (Attribute) stays stubbed so isolation golds stay byte-identical.
+    Isolation files without generators or async def stay byte-identical.
+    """
+    try:
+        tree = ast.parse(src)
+    except SyntaxError:
+        return src
+    new_tree, changed = _desugar_generators_tree(tree)
+    if not changed:
+        return src
     ast.fix_missing_locations(new_tree)
     try:
         return ast.unparse(new_tree) + "\n"
@@ -3604,16 +3642,12 @@ def desugar_generators(src: str) -> str:
         return src
 
 
-def desugar_nested_class_cells(src: str) -> str:
+def _desugar_nested_class_cells_tree(tree: ast.AST) -> tuple[ast.AST, bool]:
     """Capture enclosing locals used by nested class methods into a module dict.
 
     Codegen flattens nested class methods to top-level Functions without closures.
     Mutating module-level `_aim_ncells` needs no `global` (aimacro has no global).
     """
-    try:
-        tree = ast.parse(src)
-    except SyntaxError:
-        return src
     cell_counter = [0]
     need_dict = [False]
 
@@ -3758,6 +3792,20 @@ def desugar_nested_class_cells(src: str) -> str:
             value=ast.Dict(keys=[], values=[]),
         )
         new_tree.body.insert(0, assign)
+    return new_tree, need_dict[0]
+
+
+def desugar_nested_class_cells(src: str) -> str:
+    """Capture enclosing locals used by nested class methods into a module dict.
+
+    Always unparses so isolation golds without earlier desugars stay on the
+    same comment-stripped emit they already golded.
+    """
+    try:
+        tree = ast.parse(src)
+    except SyntaxError:
+        return src
+    new_tree, _ = _desugar_nested_class_cells_tree(tree)
     ast.fix_missing_locations(new_tree)
     try:
         return ast.unparse(new_tree) + "\n"
@@ -4340,19 +4388,8 @@ def _clos_replace_nested(
     return new_body, cell_maps
 
 
-def desugar_nested_func_closures(src: str) -> str:
-    """Nested def/lambda/class with freevars → per-call cell dict + callable class.
-
-    Codegen flattens nested Functions and stores freevars in one PyMod.x,
-    so make_adder(1) then make_adder(10) share the cell. Isolation golds
-    that only close over self/cls are left byte-identical. Lambdas are
-    lifted to nested defs first so the same cell path applies. Nested
-    class with __call__ gets __init__(self, _c) and a bound-hash ctor.
-    """
-    try:
-        tree = ast.parse(src)
-    except SyntaxError:
-        return src
+def _desugar_nested_func_closures_tree(tree: ast.AST) -> tuple[ast.AST, bool]:
+    """Nested def/lambda/class with freevars → per-call cell dict + callable class."""
     counter = [0]
     changed = [False]
     tree = _hoist_lambdas_tree(tree, counter, changed)
@@ -4408,7 +4445,24 @@ def desugar_nested_func_closures(src: str) -> str:
         visit_AsyncFunctionDef = visit_FunctionDef
 
     new_tree = _X().visit(tree)
-    if not changed[0]:
+    return new_tree, changed[0]
+
+
+def desugar_nested_func_closures(src: str) -> str:
+    """Nested def/lambda/class with freevars → per-call cell dict + callable class.
+
+    Codegen flattens nested Functions and stores freevars in one PyMod.x,
+    so make_adder(1) then make_adder(10) share the cell. Isolation golds
+    that only close over self/cls are left byte-identical. Lambdas are
+    lifted to nested defs first so the same cell path applies. Nested
+    class with __call__ gets __init__(self, _c) and a bound-hash ctor.
+    """
+    try:
+        tree = ast.parse(src)
+    except SyntaxError:
+        return src
+    new_tree, changed = _desugar_nested_func_closures_tree(tree)
+    if not changed:
         return src
     ast.fix_missing_locations(new_tree)
     try:
@@ -4417,12 +4471,9 @@ def desugar_nested_func_closures(src: str) -> str:
         return src
 
 
-def desugar_dict_call(src: str) -> str:
+def _desugar_dict_call_tree(tree: ast.AST) -> tuple[ast.AST, bool]:
     """dict(a=1, b=2) → {'a': 1, 'b': 2} so keyword args survive AIMacro CALL."""
-    try:
-        tree = ast.parse(src)
-    except SyntaxError:
-        return src
+    changed = [False]
 
     class _DictKw(ast.NodeTransformer):
         def visit_Call(self, node):
@@ -4438,10 +4489,23 @@ def desugar_dict_call(src: str) -> str:
                     return node
                 keys.append(ast.Constant(kw.arg))
                 vals.append(kw.value)
+            changed[0] = True
             return ast.copy_location(ast.Dict(keys=keys, values=vals), node)
 
+    return _DictKw().visit(tree), changed[0]
+
+
+def desugar_dict_call(src: str) -> str:
+    """dict(a=1, b=2) → {'a': 1, 'b': 2} so keyword args survive AIMacro CALL."""
     try:
-        return ast.unparse(_DictKw().visit(tree)) + "\n"
+        tree = ast.parse(src)
+    except SyntaxError:
+        return src
+    new_tree, changed = _desugar_dict_call_tree(tree)
+    if not changed:
+        return src
+    try:
+        return ast.unparse(new_tree) + "\n"
     except Exception:
         return src
 
@@ -4459,10 +4523,23 @@ def convert(src: str) -> str:
     src = desugar_from_import_as(src)
     src = desugar_tuple_unpack(src)
     src = desugar_for_unpack(src)
-    src = desugar_generators(src)
-    src = desugar_nested_class_cells(src)
-    src = desugar_nested_func_closures(src)
-    src = desugar_dict_call(src)
+    # One parse + one unparse for generators/class_cells/closures/dict_call.
+    # Isolation golds already went through class_cells always-unparse, so
+    # always unparsing here keeps that comment-stripped emit.
+    try:
+        _late = ast.parse(src)
+    except SyntaxError:
+        _late = None
+    if _late is not None:
+        _late, _ = _desugar_generators_tree(_late)
+        _late, _ = _desugar_nested_class_cells_tree(_late)
+        _late, _ = _desugar_nested_func_closures_tree(_late)
+        _late, _ = _desugar_dict_call_tree(_late)
+        ast.fix_missing_locations(_late)
+        try:
+            src = ast.unparse(_late) + "\n"
+        except Exception:
+            pass
     """Insert `{` / `}` from indentation. Preserve comments."""
     raw_lines = src.splitlines()
     if src.endswith("\n"):
