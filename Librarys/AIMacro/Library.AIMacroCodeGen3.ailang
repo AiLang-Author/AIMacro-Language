@@ -1180,6 +1180,86 @@ Function.Gen_FlattenExpr {
                 ReturnValue(Gen_MakeIdent(temp))
             }
 
+            // Nested leftover CALL pads omitted defaults with packed SmartCallN
+            // (multi-stmt Array.Create/Push). Wrapping as "temp = Array.Create"
+            // is Unexpected token in statement (leftover test_generators
+            // iter(_gen3(i)) at col 51). Same gate as Gen_CallExpr.
+            cv_sc = Gen_IsCallableVar(call_name)
+            pm_sc = Gen_IsParam(call_name)
+            mv_sc = Gen_IsModuleVar(call_name)
+            ep_sc = Gen_IsEnclosingParam(call_name)
+            pad_sc = Or(cv_sc, pm_sc)
+            pad_sc2 = Or(mv_sc, ep_sc)
+            pad_sc = Or(pad_sc, pad_sc2)
+            IfCondition EqualTo(pad_sc, 1) ThenBlock: {
+                nest_sc = Gen_ResolveNestFunc(call_name)
+                params_sc = Gen_LookupParams(nest_sc)
+                n_need_sc = 0
+                IfCondition NotEqual(params_sc, 0) ThenBlock: {
+                    n_need_sc = Array.Size(params_sc)
+                }
+                IfCondition And(GreaterThan(n_need_sc, 3), GreaterThan(n_need_sc, n_sc)) ThenBlock: {
+                    defs_sc = Gen_LookupDefaults(nest_sc)
+                    pack_sc = Gen_TempName()
+                    Gen_EmitIndent()
+                    Gen_Emit(pack_sc)
+                    Gen_Emit(" = Array.Create(")
+                    Gen_EmitNumber(n_need_sc)
+                    Gen_Emit(")\n")
+                    di_sc = 0
+                    WhileLoop LessThan(di_sc, n_need_sc) {
+                        Gen_EmitIndent()
+                        Gen_Emit("Array.Push(")
+                        Gen_Emit(pack_sc)
+                        Gen_Emit(", ")
+                        IfCondition LessThan(di_sc, n_sc) ThenBlock: {
+                            darg_sc = Array.Get(args, di_sc)
+                            hc_sc = 0
+                            IfCondition NotEqual(darg_sc, 0) ThenBlock: {
+                                hc_sc = Gen_HasCall(darg_sc)
+                            }
+                            IfCondition EqualTo(hc_sc, 1) ThenBlock: {
+                                darg_sc = Gen_FlattenExpr(darg_sc)
+                            }
+                            IfCondition EqualTo(darg_sc, 0) ThenBlock: {
+                                Gen_Emit("Types.GetNone()")
+                            } ElseBlock: {
+                                Gen_Expr(darg_sc)
+                            }
+                        } ElseBlock: {
+                            dnode_sc = 0
+                            dsz_sc = 0
+                            IfCondition NotEqual(defs_sc, 0) ThenBlock: {
+                                dsz_sc = Array.Size(defs_sc)
+                            }
+                            IfCondition LessThan(di_sc, dsz_sc) ThenBlock: {
+                                dnode_sc = Array.Get(defs_sc, di_sc)
+                            }
+                            IfCondition EqualTo(dnode_sc, 0) ThenBlock: {
+                                Gen_Emit("Types.GetNone()")
+                            } ElseBlock: {
+                                hc_dsc = Gen_HasCall(dnode_sc)
+                                IfCondition EqualTo(hc_dsc, 1) ThenBlock: {
+                                    dnode_sc = Gen_FlattenExpr(dnode_sc)
+                                }
+                                Gen_Expr(dnode_sc)
+                            }
+                        }
+                        Gen_Emit(")\n")
+                        di_sc = Add(di_sc, 1)
+                    }
+                    temp_sc = Gen_TempName()
+                    Gen_EmitIndent()
+                    Gen_Emit(temp_sc)
+                    Gen_Emit(" = AIMacro.SmartCallN(")
+                    Gen_EmitIdent(call_name)
+                    Gen_Emit(", ")
+                    Gen_Emit(pack_sc)
+                    Gen_Emit(")\n")
+                    ReturnValue(Gen_MakeIdent(temp_sc))
+                }
+            }
+
             // Fill HasCall defaults before "temp = name(". fake_pip() with
             // default ensurepip.version() was fake_pip( t = Array.Create.
             args = Gen_PadFlattenDefaults(call_name, args)
