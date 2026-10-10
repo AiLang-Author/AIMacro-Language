@@ -2429,12 +2429,120 @@ class _GenSM:
                 wrapped.extend(tail)
                 self.states[sid] = wrapped
                 self.wrapped.update(wrap_ids)
+        elif s.finalbody:
+            # try/finally with no except: run finally, then re-raise.
+            # _gen_wrap_unwrapped_close would swallow the throw and skip fin.
+            for sid in wrap_ids:
+                orig = list(self.states[sid])
+                head, tail = orig, []
+                if orig and isinstance(orig[-1], (ast.Return, ast.Continue)):
+                    if len(orig) >= 2 and isinstance(orig[-2], ast.Assign):
+                        head, tail = orig[:-2], orig[-2:]
+                    else:
+                        head, tail = orig[:-1], orig[-1:]
+                wrapped = [
+                    ast.Assign(
+                        targets=[_gen_self_attr(flag, ast.Store())],
+                        value=ast.Constant(value=0),
+                    ),
+                    ast.Try(
+                        body=head if head else [ast.Pass()],
+                        handlers=[
+                            ast.ExceptHandler(
+                                type=ast.Name(id="GeneratorExit", ctx=ast.Load()),
+                                name=None,
+                                body=[
+                                    ast.Assign(
+                                        targets=[_gen_self_attr(flag, ast.Store())],
+                                        value=ast.Constant(value=1),
+                                    )
+                                ],
+                            ),
+                            ast.ExceptHandler(
+                                type=ast.Name(id="Exception", ctx=ast.Load()),
+                                name=None,
+                                body=[
+                                    ast.Assign(
+                                        targets=[_gen_self_attr(flag, ast.Store())],
+                                        value=ast.Constant(value=1),
+                                    )
+                                ],
+                            ),
+                        ],
+                        orelse=[],
+                        finalbody=[],
+                    ),
+                    ast.If(
+                        test=_gen_self_attr(flag, ast.Load()),
+                        body=[
+                            ast.Assign(
+                                targets=[_gen_self_attr("_tf", ast.Store())],
+                                value=ast.Constant(value=1),
+                            ),
+                            ast.If(
+                                test=_gen_self_attr("_tkind", ast.Load()),
+                                body=[
+                                    ast.Assign(
+                                        targets=[_gen_self_attr("_tkind_save", ast.Store())],
+                                        value=_gen_self_attr("_tkind", ast.Load()),
+                                    ),
+                                    ast.Assign(
+                                        targets=[_gen_self_attr("_tkind", ast.Store())],
+                                        value=ast.Constant(value=0),
+                                    ),
+                                ],
+                                orelse=[],
+                            ),
+                            self.set_s(fin),
+                            ast.Continue(),
+                        ],
+                        orelse=[],
+                    ),
+                ]
+                wrapped.extend(tail)
+                self.states[sid] = wrapped
+            self.wrapped.update(wrap_ids)
         for h, hsid in zip(s.handlers, handler_sids):
             self.cur = hsid
             self.build(list(h.body), fin if isinstance(fin, int) else join)
         if s.finalbody:
+            chk = self.news()
+            fin_after = join if join is not None else after
             self.cur = fin
-            self.build(list(s.finalbody), join if join is not None else after)
+            self.build(list(s.finalbody), chk)
+            self.cur = chk
+            self.add(
+                ast.If(
+                    test=_gen_self_attr("_tf", ast.Load()),
+                    body=[
+                        ast.Assign(
+                            targets=[_gen_self_attr("_tf", ast.Store())],
+                            value=ast.Constant(value=0),
+                        ),
+                        ast.Assign(
+                            targets=[_gen_self_attr("_tkind", ast.Store())],
+                            value=_gen_self_attr("_tkind_save", ast.Load()),
+                        ),
+                        ast.Expr(
+                            value=ast.Call(
+                                func=ast.Attribute(
+                                    value=ast.Name(id="self", ctx=ast.Load()),
+                                    attr="__aim_raise",
+                                    ctx=ast.Load(),
+                                ),
+                                args=[],
+                                keywords=[],
+                            )
+                        ),
+                        ast.Return(value=ast.Constant(value=None)),
+                    ],
+                    orelse=[],
+                )
+            )
+            if fin_after is not None:
+                self.goto(fin_after)
+            else:
+                self.stop()
         if join is not None:
             self.cur = join
             self.build(rest, after)
@@ -2643,6 +2751,10 @@ def _gen_convert(
             value=ast.Constant(value=0),
         ),
         ast.Assign(
+            targets=[_gen_self_attr("_tf", ast.Store())],
+            value=ast.Constant(value=0),
+        ),
+        ast.Assign(
             targets=[_gen_self_attr("gi_running", ast.Store())],
             value=ast.Constant(value=0),
         ),
@@ -2708,6 +2820,7 @@ def _gen_convert(
                 "_sent",
                 "_tkind",
                 "_tkind_save",
+                "_tf",
                 "gi_running",
                 "_closing",
                 "gi_frame",

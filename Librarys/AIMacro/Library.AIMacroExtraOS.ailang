@@ -1064,10 +1064,17 @@ Function.AIMacro.WithExit {
                 typ = none_v
                 val = none_v
                 tb = none_v
+                had = 0
+                ek = 0
+                emsg = ""
                 IfCondition EqualTo(AIMacro.ExcPending(), 1) ThenBlock: {
+                    had = 1
                     ev = AIMacro.ExcValue()
                     val = ev
-                    typ = ev
+                    ek = AIMacro.ExcKind()
+                    typ = ek
+                    emsg = AIMacro.ExcMsg()
+                    AIMacro.ExcClear()
                 }
                 xargs = Array.Create(4)
                 Array.Push(xargs, typ)
@@ -1078,6 +1085,14 @@ Function.AIMacro.WithExit {
                     sv = AIMacro.BoolVal(swallowed)
                     IfCondition NotEqual(sv, 0) ThenBlock: {
                         AIMacro.ExcClear()
+                    }
+                }
+                ElseBlock: {
+                    IfCondition EqualTo(had, 1) ThenBlock: {
+                        sv2 = AIMacro.BoolVal(swallowed)
+                        IfCondition EqualTo(sv2, 0) ThenBlock: {
+                            AIMacro.RaiseKind(ek, emsg)
+                        }
                     }
                 }
             }
