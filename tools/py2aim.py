@@ -3156,13 +3156,208 @@ def _rewrite_for_over_gens(tree: ast.AST, gen_names: set[str]) -> ast.AST:
     return _F().visit(tree)
 
 
+def _is_cm_name_deco(node: ast.FunctionDef) -> bool:
+    """True for a single Name decorator `contextmanager`.
+
+    Isolation golds use `@contextlib.contextmanager` (Attribute) and
+    stay on the __yields stub so their emit stays byte-identical.
+    leftover `from contextlib import contextmanager` is a Name.
+    """
+    if len(node.decorator_list) != 1:
+        return False
+    d = node.decorator_list[0]
+    return isinstance(d, ast.Name) and d.id == "contextmanager"
+
+
+def _wrap_factory_cm(fn: ast.FunctionDef) -> ast.FunctionDef:
+    """Strip @contextmanager and wrap the factory return in _AimGenCM."""
+    fn.decorator_list = []
+    if fn.body and isinstance(fn.body[0], ast.Return) and fn.body[0].value is not None:
+        fn.body[0] = ast.Return(
+            value=ast.Call(
+                func=ast.Name(id="_AimGenCM", ctx=ast.Load()),
+                args=[fn.body[0].value],
+                keywords=[],
+            )
+        )
+    return fn
+
+
+def _aim_gen_cm_class() -> ast.ClassDef:
+    """PEP 343 wrapper: __enter__ = next(gen), __exit__ next/throw.
+
+    Return inside except skips AILANG ExcLeave, so StopIteration is
+    recorded in a flag and the return sits after the try.
+    """
+    def _n(i, ctx=None):
+        return ast.Name(id=i, ctx=ctx or ast.Load())
+
+    def _a(obj, attr, ctx=None):
+        return ast.Attribute(value=_n(obj), attr=attr, ctx=ctx or ast.Load())
+
+    init = ast.FunctionDef(
+        name="__init__",
+        args=ast.arguments(
+            posonlyargs=[],
+            args=[ast.arg(arg="self"), ast.arg(arg="gen")],
+            kwonlyargs=[],
+            kw_defaults=[],
+            defaults=[],
+        ),
+        body=[
+            ast.Assign(targets=[_a("self", "gen", ast.Store())], value=_n("gen")),
+        ],
+        decorator_list=[],
+    )
+    enter = ast.FunctionDef(
+        name="__enter__",
+        args=ast.arguments(
+            posonlyargs=[],
+            args=[ast.arg(arg="self")],
+            kwonlyargs=[],
+            kw_defaults=[],
+            defaults=[],
+        ),
+        body=[
+            ast.Assign(targets=[_n("g", ast.Store())], value=_a("self", "gen")),
+            ast.Return(
+                value=ast.Call(func=_n("next"), args=[_n("g")], keywords=[])
+            ),
+        ],
+        decorator_list=[],
+    )
+    exit_fn = ast.FunctionDef(
+        name="__exit__",
+        args=ast.arguments(
+            posonlyargs=[],
+            args=[
+                ast.arg(arg="self"),
+                ast.arg(arg="t"),
+                ast.arg(arg="v"),
+                ast.arg(arg="tb"),
+            ],
+            kwonlyargs=[],
+            kw_defaults=[],
+            defaults=[],
+        ),
+        body=[
+            ast.Assign(targets=[_n("g", ast.Store())], value=_a("self", "gen")),
+            ast.If(
+                test=ast.Compare(
+                    left=_n("t"),
+                    ops=[ast.Is()],
+                    comparators=[ast.Constant(value=None)],
+                ),
+                body=[
+                    ast.Assign(
+                        targets=[_n("_ok", ast.Store())],
+                        value=ast.Constant(value=0),
+                    ),
+                    ast.Try(
+                        body=[
+                            ast.Expr(
+                                value=ast.Call(
+                                    func=_n("next"), args=[_n("g")], keywords=[]
+                                )
+                            )
+                        ],
+                        handlers=[
+                            ast.ExceptHandler(
+                                type=_n("StopIteration"),
+                                name=None,
+                                body=[
+                                    ast.Assign(
+                                        targets=[_n("_ok", ast.Store())],
+                                        value=ast.Constant(value=1),
+                                    )
+                                ],
+                            )
+                        ],
+                        orelse=[],
+                        finalbody=[],
+                    ),
+                    ast.If(
+                        test=ast.Compare(
+                            left=_n("_ok"),
+                            ops=[ast.Eq()],
+                            comparators=[ast.Constant(value=1)],
+                        ),
+                        body=[ast.Return(value=ast.Constant(value=False))],
+                        orelse=[],
+                    ),
+                    ast.Raise(
+                        exc=ast.Call(
+                            func=_n("RuntimeError"),
+                            args=[
+                                ast.Constant(value="generator didn't stop")
+                            ],
+                            keywords=[],
+                        ),
+                        cause=None,
+                    ),
+                ],
+                orelse=[
+                    ast.Assign(
+                        targets=[_n("_sw", ast.Store())],
+                        value=ast.Constant(value=0),
+                    ),
+                    ast.Try(
+                        body=[
+                            ast.Expr(
+                                value=ast.Call(
+                                    func=_a("g", "throw"),
+                                    args=[_n("t")],
+                                    keywords=[],
+                                )
+                            )
+                        ],
+                        handlers=[
+                            ast.ExceptHandler(
+                                type=_n("StopIteration"),
+                                name=None,
+                                body=[
+                                    ast.Assign(
+                                        targets=[_n("_sw", ast.Store())],
+                                        value=ast.Constant(value=1),
+                                    )
+                                ],
+                            )
+                        ],
+                        orelse=[],
+                        finalbody=[],
+                    ),
+                    ast.If(
+                        test=ast.Compare(
+                            left=_n("_sw"),
+                            ops=[ast.Eq()],
+                            comparators=[ast.Constant(value=1)],
+                        ),
+                        body=[ast.Return(value=ast.Constant(value=True))],
+                        orelse=[ast.Return(value=ast.Constant(value=False))],
+                    ),
+                ],
+            ),
+        ],
+        decorator_list=[],
+    )
+    return ast.ClassDef(
+        name="_AimGenCM",
+        bases=[],
+        keywords=[],
+        body=[init, enter, exit_fn],
+        decorator_list=[],
+    )
+
+
 def desugar_generators(src: str) -> str:
     """Generator functions → class with __next__/send (pause at yield).
 
     Undecorated async def (no yield) → coroutine class with send/throw/close
     and __await__ (pause at await). Decorated async and async generators stay
-    on the stub path. Isolation files without generators or async def stay
-    byte-identical.
+    on the stub path. A single Name `@contextmanager` gen is converted and
+    wrapped in `_AimGenCM` so with-as works; `@contextlib.contextmanager`
+    (Attribute) stays stubbed so isolation golds stay byte-identical.
+    Isolation files without generators or async def stay byte-identical.
     """
     try:
         tree = ast.parse(src)
@@ -3170,6 +3365,7 @@ def desugar_generators(src: str) -> str:
         return src
     counter = [0]
     changed = [False]
+    need_cm = [False]
     gen_names: set[str] = set()
     tree = _hoist_genexps(tree, counter, changed)
 
@@ -3193,14 +3389,19 @@ def desugar_generators(src: str) -> str:
                     new_body.append(stmt)
             self.stack.pop()
             node.body = inner_h + new_body
-            if _fn_own_yields(node) and not node.decorator_list:
+            is_cm = _is_cm_name_deco(node)
+            if _fn_own_yields(node) and (not node.decorator_list or is_cm):
                 enclosing: set[str] = set()
                 for e in self.stack:
                     enclosing |= e
                 cls, fn = _gen_convert(node, enclosing, counter)
+                if is_cm:
+                    fn = _wrap_factory_cm(fn)
+                    need_cm[0] = True
+                else:
+                    gen_names.add(node.name)
                 hoisted.append(cls)
                 changed[0] = True
-                gen_names.add(node.name)
                 return fn
             return node
 
@@ -3249,6 +3450,8 @@ def desugar_generators(src: str) -> str:
                     new_body.append(stmt)
             self.stack.pop()
             node.body = hoisted + new_body
+            if need_cm[0]:
+                node.body = [_aim_gen_cm_class()] + node.body
             return node
 
         def visit_ClassDef(self, node: ast.ClassDef):
