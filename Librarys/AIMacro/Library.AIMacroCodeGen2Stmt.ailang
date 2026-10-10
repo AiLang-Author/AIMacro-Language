@@ -1438,34 +1438,40 @@ Function.Gen_With {
         IfCondition EqualTo(has_call, 1) ThenBlock: {
             expr = Gen_FlattenExpr(expr)
         }
-        ctx = Gen_TempName()
+        // Unique names: Gen_Body resets temp_counter per statement, so a
+        // nested with must not reuse _aim_t0 as the outer manager.
+        wid = NumberToString(Gen.lambda_counter)
+        Gen.lambda_counter = Add(Gen.lambda_counter, 1)
+        ctx = StringConcat("_aim_wm", wid)
         Gen_EmitIndent()
         Gen_Emit(ctx)
         Gen_Emit(" = ")
         Gen_Expr(expr)
         Gen_Emit("\n")
-        Gen_EmitIndent()
-        Gen_Emit("AIMacro.WithEnter(")
-        Gen_Emit(ctx)
-        Gen_Emit(")\n")
         IfCondition NotEqual(as_name, 0) ThenBlock: {
             nn = Array.Size(as_name)
             IfCondition EqualTo(nn, 1) ThenBlock: {
                 nm = Array.Get(as_name, 0)
                 Gen_EmitIndent()
-                Gen_Emit(nm)
-                Gen_Emit(" = ")
+                Gen_EmitIdentLhs(nm)
+                Gen_Emit(" = AIMacro.WithEnter(")
                 Gen_Emit(ctx)
-                Gen_Emit("\n")
+                Gen_Emit(")\n")
                 Gen_MarkEnclosingLocal(nm)
             } ElseBlock: {
+                ent = StringConcat("_aim_we", wid)
+                Gen_EmitIndent()
+                Gen_Emit(ent)
+                Gen_Emit(" = AIMacro.WithEnter(")
+                Gen_Emit(ctx)
+                Gen_Emit(")\n")
                 wi = 0
                 WhileLoop LessThan(wi, nn) {
                     nm = Array.Get(as_name, wi)
                     Gen_EmitIndent()
-                    Gen_Emit(nm)
+                    Gen_EmitIdentLhs(nm)
                     Gen_Emit(" = AIMacro.IterGet(")
-                    Gen_Emit(ctx)
+                    Gen_Emit(ent)
                     Gen_Emit(", ")
                     Gen_EmitNumber(wi)
                     Gen_Emit(")\n")
@@ -1473,6 +1479,11 @@ Function.Gen_With {
                     wi = Add(wi, 1)
                 }
             }
+        } ElseBlock: {
+            Gen_EmitIndent()
+            Gen_Emit("AIMacro.WithEnter(")
+            Gen_Emit(ctx)
+            Gen_Emit(")\n")
         }
         Gen.try_depth = Add(Gen.try_depth, 1)
         Gen_Body(body)

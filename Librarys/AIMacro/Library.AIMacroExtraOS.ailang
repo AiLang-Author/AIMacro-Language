@@ -1002,13 +1002,25 @@ Function.AIMacro.ExcKindMatches {
 
 Function.AIMacro.WithEnter {
     Input: ctx: Address
+    Output: Address
     Body: {
         IfCondition EqualTo(Hash.IsHash(ctx), 1) ThenBlock: {
             IfCondition NotEqual(Hash.Get(ctx, "__raises__"), 0) ThenBlock: {
                 AIMacro.ExcEnter()
+                ReturnValue(ctx)
+            }
+            IfCondition NotEqual(Hash.Get(ctx, "__capture__"), 0) ThenBlock: {
+                ReturnValue(ctx)
             }
         }
-        ReturnValue(0)
+        mx = OOP.MethodExists(ctx, "__enter__")
+        IfCondition EqualTo(mx, 1) ThenBlock: {
+            AIMacro.ExcEnter()
+            eargs = Array.Create(1)
+            r = OOP.MethodCall(ctx, "__enter__", eargs)
+            ReturnValue(r)
+        }
+        ReturnValue(ctx)
     }
 }
 
@@ -1037,6 +1049,34 @@ Function.AIMacro.WithExit {
                 IoCapture.on = 0
                 ReturnValue(1)
             }
+        }
+        mxn = OOP.MethodExists(ctx, "__enter__")
+        mxx = OOP.MethodExists(ctx, "__exit__")
+        IfCondition Or(EqualTo(mxn, 1), EqualTo(mxx, 1)) ThenBlock: {
+            IfCondition EqualTo(mxx, 1) ThenBlock: {
+                none_v = Types.GetNone()
+                typ = none_v
+                val = none_v
+                tb = none_v
+                IfCondition EqualTo(AIMacro.ExcPending(), 1) ThenBlock: {
+                    ev = AIMacro.ExcValue()
+                    val = ev
+                    typ = ev
+                }
+                xargs = Array.Create(4)
+                Array.Push(xargs, typ)
+                Array.Push(xargs, val)
+                Array.Push(xargs, tb)
+                swallowed = OOP.MethodCall(ctx, "__exit__", xargs)
+                IfCondition EqualTo(AIMacro.ExcPending(), 1) ThenBlock: {
+                    sv = AIMacro.BoolVal(swallowed)
+                    IfCondition NotEqual(sv, 0) ThenBlock: {
+                        AIMacro.ExcClear()
+                    }
+                }
+            }
+            AIMacro.ExcLeave()
+            ReturnValue(1)
         }
         AIMacro.FileClose(ctx)
         ReturnValue(1)
