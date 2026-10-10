@@ -2090,6 +2090,17 @@ class _GenSM:
             if isinstance(s, ast.Continue) and self.loops:
                 self.goto(self.loops[-1][0])
                 return
+            if isinstance(s, ast.For):
+                # For without yield stays a for-loop; _GenNameRew then
+                # emits `for self._g_i in ...`, which the parser rejects.
+                # Lower to while/next so the target is an assignment.
+                c = [self.it_n]
+                pieces = _for_to_while(s, c)
+                self.it_n = c[0]
+                for p in pieces:
+                    self.add(self.rw(p))
+                i += 1
+                continue
             self.add(self.rw(s))
             i += 1
         if after is None:
