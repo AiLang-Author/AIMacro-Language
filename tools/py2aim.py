@@ -3836,11 +3836,27 @@ def _clos_params(node: ast.AST) -> set[str]:
 
 
 def _clos_direct_assigned(node: ast.AST) -> set[str]:
-    """Params plus stores in this function, not in nested def/class bodies."""
+    """Params plus stores in this function, not in nested def/class bodies.
+
+    Nested def/class names are locals of this function (Python). Omitting
+    them left sibling `async def bar` unbound in foo.send(), so leftover
+    test_coroutines bound every `bar` to the last flattened factory and
+    `await bar()` on an int 42 SEGVd in strlen.
+    """
     assigned = _clos_params(node)
     body = getattr(node, "body", None) or []
     for stmt in body:
-        if isinstance(stmt, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+        if isinstance(stmt, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            assigned.add(stmt.name)
+            continue
+        if isinstance(stmt, ast.ClassDef):
+            # Generated gen/coro classes are hoisted into the function; they
+            # are not user locals. Capturing them filled _aim_c before the
+            # ClassDef ran and ObjectNewInit lost send().
+            if not stmt.name.startswith(
+                ("_aim_coro_", "_aim_gen_", "__aim_clos_", "_aim_gx_")
+            ):
+                assigned.add(stmt.name)
             continue
         for n in ast.walk(stmt):
             if isinstance(n, ast.Name) and isinstance(n.ctx, ast.Store):
@@ -4136,7 +4152,7 @@ def _clos_class(
     )
     call_body = [_ClosRewrite(mapping, "_c", True).visit(s) for s in inner.body]
     call_body = _clos_copy_parent_into_cell(call_body, mapping)
-    call_body, _frees = _clos_replace_nested(
+    call_body, _frees, _ren = _clos_replace_nested(
         call_body, enclosing, _clos_self_c(), counter, changed
     )
     if not call_body:
@@ -4324,7 +4340,7 @@ def _clos_replace_nested(
     cell_expr: ast.expr,
     counter: list[int],
     changed: list[bool],
-) -> tuple[list[ast.stmt], list[tuple[str, str]]]:
+) -> tuple[list[ast.stmt], list[tuple[str, str]], dict[str, str]]:
     """Turn nested defs that close over enclosing names into bound classes."""
     new_body: list[ast.stmt] = []
     cell_maps: list[tuple[str, str]] = []
@@ -4385,7 +4401,7 @@ def _clos_replace_nested(
             else _Ren().visit(s)
             for s in new_body
         ]
-    return new_body, cell_maps
+    return new_body, cell_maps, renames
 
 
 def _desugar_nested_func_closures_tree(tree: ast.AST) -> tuple[ast.AST, bool]:
@@ -4399,7 +4415,7 @@ def _desugar_nested_func_closures_tree(tree: ast.AST) -> tuple[ast.AST, bool]:
             node = self.generic_visit(node)
             enclosing = _clos_direct_assigned(node)
             cell_name = "_aim_c"
-            new_body, cell_maps = _clos_replace_nested(
+            new_body, cell_maps, renames = _clos_replace_nested(
                 list(node.body),
                 enclosing,
                 ast.Name(id=cell_name, ctx=ast.Load()),
@@ -4407,6 +4423,7 @@ def _desugar_nested_func_closures_tree(tree: ast.AST) -> tuple[ast.AST, bool]:
                 changed,
             )
             if cell_maps:
+                params = _clos_params(node)
                 inits: list[ast.stmt] = [
                     ast.Assign(
                         targets=[ast.Name(id=cell_name, ctx=ast.Store())],
@@ -4414,19 +4431,26 @@ def _desugar_nested_func_closures_tree(tree: ast.AST) -> tuple[ast.AST, bool]:
                     )
                 ]
                 for v, key in cell_maps:
-                    inits.append(
-                        ast.Assign(
-                            targets=[
-                                ast.Subscript(
-                                    value=ast.Name(id=cell_name, ctx=ast.Load()),
-                                    slice=ast.Constant(value=key),
-                                    ctx=ast.Store(),
-                                )
-                            ],
-                            value=ast.Name(id=v, ctx=ast.Load()),
+                    # Params exist at entry. Nested def/class names are
+                    # assigned later; storing them here is GetNone and
+                    # leftover await bar() then strlen(42) SEGVd.
+                    if v in params:
+                        inits.append(
+                            ast.Assign(
+                                targets=[
+                                    ast.Subscript(
+                                        value=ast.Name(
+                                            id=cell_name, ctx=ast.Load()
+                                        ),
+                                        slice=ast.Constant(value=key),
+                                        ctx=ast.Store(),
+                                    )
+                                ],
+                                value=ast.Name(id=v, ctx=ast.Load()),
+                            )
                         )
-                    )
                 mapping = {v: k for v, k in cell_maps}
+                fn_to_orig = {fn: orig for orig, fn in renames.items()}
                 rewritten = []
                 for stmt in new_body:
                     if isinstance(stmt, ast.ClassDef) and stmt.name.startswith(
@@ -4437,7 +4461,51 @@ def _desugar_nested_func_closures_tree(tree: ast.AST) -> tuple[ast.AST, bool]:
                         rewritten.append(
                             _ClosRewrite(mapping, cell_name, False).visit(stmt)
                         )
-                node.body = inits + rewritten
+                patched: list[ast.stmt] = []
+                for stmt in rewritten:
+                    patched.append(stmt)
+                    stored: list[str] = []
+                    if isinstance(stmt, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                        stored.append(stmt.name)
+                    elif isinstance(stmt, ast.ClassDef):
+                        stored.append(stmt.name)
+                    elif isinstance(stmt, ast.Assign):
+                        for t in stmt.targets:
+                            if isinstance(t, ast.Name):
+                                stored.append(t.id)
+                    for nm in stored:
+                        if nm in mapping:
+                            patched.append(
+                                ast.Assign(
+                                    targets=[
+                                        ast.Subscript(
+                                            value=ast.Name(
+                                                id=cell_name, ctx=ast.Load()
+                                            ),
+                                            slice=ast.Constant(value=mapping[nm]),
+                                            ctx=ast.Store(),
+                                        )
+                                    ],
+                                    value=ast.Name(id=nm, ctx=ast.Load()),
+                                )
+                            )
+                        orig = fn_to_orig.get(nm)
+                        if orig is not None and orig in mapping:
+                            patched.append(
+                                ast.Assign(
+                                    targets=[
+                                        ast.Subscript(
+                                            value=ast.Name(
+                                                id=cell_name, ctx=ast.Load()
+                                            ),
+                                            slice=ast.Constant(value=mapping[orig]),
+                                            ctx=ast.Store(),
+                                        )
+                                    ],
+                                    value=ast.Name(id=nm, ctx=ast.Load()),
+                                )
+                            )
+                node.body = inits + patched
             else:
                 node.body = new_body
             return node

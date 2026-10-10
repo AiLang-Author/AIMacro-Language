@@ -1842,7 +1842,9 @@ Function.AIMacro.MethodCall {
         }
         IfCondition EqualTo(func_addr, 0) ThenBlock: {
             fn = AIMacro.ObjectGet(obj, method_name)
-            IfCondition NotEqual(fn, 0) ThenBlock: {
+            // ELF function pointers start at 0x400000. ObjectGet integer
+            // stubs (getrefcount=2) are not callables; MethodShim handles them.
+            IfCondition And(NotEqual(fn, 0), GreaterEqual(fn, 4194304)) ThenBlock: {
                 ReturnValue(AIMacro.SmartCallN(fn, args))
             }
         }

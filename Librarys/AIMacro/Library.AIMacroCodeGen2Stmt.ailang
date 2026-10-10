@@ -1324,6 +1324,7 @@ Function.Gen_Try {
                 i = Add(i, 1)
             }
             
+            had_default = 0
             IfCondition EqualTo(typed, 0) ThenBlock: {
                 i = 0
                 WhileLoop LessThan(i, num_clauses) {
@@ -1334,7 +1335,12 @@ Function.Gen_Try {
                         Gen_EmitIdentLhs(as_name)
                         Gen_Emit(" = AIMacro.ExcValue()\n")
                     }
+                    // Handler is not remaining try-body. Nested try leaves
+                    // try_depth>0, and pending==0 guards would skip the body.
+                    saved_td = Gen.try_depth
+                    Gen.try_depth = 0
                     Gen_Body(ArrayGet(clause, 4))
+                    Gen.try_depth = saved_td
                     Gen_EmitIndent()
                     Gen_Emit("AIMacro.ExcClear()\n")
                     i = Add(i, 1)
@@ -1353,6 +1359,7 @@ Function.Gen_Try {
                             k = Gen_MapExcKind(ArrayGet(exc_type, 3))
                         }
                         IfCondition Or(EqualTo(k, 1), EqualTo(k, 13)) ThenBlock: {
+                            had_default = 1
                             Gen_EmitIndent()
                             Gen_Emit("Default: {\n")
                         } ElseBlock: {
@@ -1368,7 +1375,10 @@ Function.Gen_Try {
                             Gen_EmitIdentLhs(as_name)
                             Gen_Emit(" = AIMacro.ExcValue()\n")
                         }
+                        saved_td = Gen.try_depth
+                        Gen.try_depth = 0
                         Gen_Body(ArrayGet(clause, 4))
+                        Gen.try_depth = saved_td
                         Gen_EmitIndent()
                         Gen_Emit("AIMacro.ExcClear()\n")
                         Gen.indent = Subtract(Gen.indent, 1)
@@ -1376,6 +1386,20 @@ Function.Gen_Try {
                         Gen_Emit("}\n")
                     }
                     i = Add(i, 1)
+                }
+                IfCondition And(EqualTo(bare, 0), EqualTo(had_default, 0)) ThenBlock: {
+                    // Unmatched kind must leave the Function so
+                    // `while True: try: send() except StopIteration` does
+                    // not spin on Method-not-found (kind 8) or TypeError.
+                    // Pending stays; UnittestRun sees it after return.
+                    Gen_EmitIndent()
+                    Gen_Emit("Default: {\n")
+                    Gen.indent = Add(Gen.indent, 1)
+                    Gen_EmitIndent()
+                    Gen_Emit("ReturnValue(0)\n")
+                    Gen.indent = Subtract(Gen.indent, 1)
+                    Gen_EmitIndent()
+                    Gen_Emit("}\n")
                 }
                 IfCondition GreaterThan(bare, 0) ThenBlock: {
                     Gen_EmitIndent()
@@ -1391,7 +1415,10 @@ Function.Gen_Try {
                                 Gen_EmitIdentLhs(as_name)
                                 Gen_Emit(" = AIMacro.ExcValue()\n")
                             }
+                            saved_td = Gen.try_depth
+                            Gen.try_depth = 0
                             Gen_Body(ArrayGet(clause, 4))
+                            Gen.try_depth = saved_td
                             Gen_EmitIndent()
                             Gen_Emit("AIMacro.ExcClear()\n")
                         }

@@ -1100,9 +1100,33 @@ Function.AIMacro.TrueDiv {
                 ReturnValue(rb)
             }
         }
+        IfCondition Or(EqualTo(b, 0), EqualTo(b, AIMacro.IntZero())) ThenBlock: {
+            AIMacro.RaiseKind(7, "division by zero")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(Types.IsFloat(b), 1) ThenBlock: {
+            fb = AIMacro.FloatBits(b)
+            IfCondition EqualTo(fb, 0) ThenBlock: {
+                AIMacro.RaiseKind(7, "division by zero")
+                ReturnValue(0)
+            }
+        }
+        IfCondition EqualTo(Types.IsBigInt(b), 1) ThenBlock: {
+            IfCondition EqualTo(AIMacro.UnboxIntZero(b), 0) ThenBlock: {
+                AIMacro.RaiseKind(7, "division by zero")
+                ReturnValue(0)
+            }
+        }
         a = AIMacro.BoolVal(a)
         b = AIMacro.BoolVal(b)
-        ReturnValue(AIMacro.FloatBox(Float_Div(AIMacro.ToFloatBits(a), AIMacro.ToFloatBits(b))))
+        ib = AIMacro.UnboxIntZero(b)
+        IfCondition EqualTo(ib, 0) ThenBlock: {
+            AIMacro.RaiseKind(7, "division by zero")
+            ReturnValue(0)
+        }
+        ba = AIMacro.ToFloatBits(a)
+        bb = AIMacro.ToFloatBits(b)
+        ReturnValue(AIMacro.FloatBox(Float_Div(ba, bb)))
     }
 }
 
