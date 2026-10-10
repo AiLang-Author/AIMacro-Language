@@ -2027,16 +2027,7 @@ class _GenSM:
             ast.If(
                 test=_gen_self_attr("_closing", ast.Load()),
                 body=[ast.Return(value=ast.Constant(value=None))],
-                orelse=[
-                    ast.Raise(
-                        exc=ast.Call(
-                            func=ast.Name(id="StopIteration", ctx=ast.Load()),
-                            args=[],
-                            keywords=[],
-                        ),
-                        cause=None,
-                    )
-                ],
+                orelse=[_raise_stop_iteration()],
             )
         )
 
@@ -2573,6 +2564,18 @@ def _raise_named(name: str) -> ast.Raise:
     )
 
 
+def _raise_stop_iteration() -> ast.Raise:
+    """Generator return: StopIteration.value is self._ret."""
+    return ast.Raise(
+        exc=ast.Call(
+            func=ast.Name(id="StopIteration", ctx=ast.Load()),
+            args=[_gen_self_attr("_ret", ast.Load())],
+            keywords=[],
+        ),
+        cause=None,
+    )
+
+
 def _close_stop_body() -> list[ast.stmt]:
     return [
         ast.Assign(
@@ -2890,16 +2893,7 @@ def _gen_convert(
                 ast.If(
                     test=_gen_self_attr("_closing", ast.Load()),
                     body=[ast.Return(value=ast.Constant(value=None))],
-                    orelse=[
-                        ast.Raise(
-                            exc=ast.Call(
-                                func=ast.Name(id="StopIteration", ctx=ast.Load()),
-                                args=[],
-                                keywords=[],
-                            ),
-                            cause=None,
-                        )
-                    ],
+                    orelse=[_raise_stop_iteration()],
                 ),
             ],
             orelse=[],
@@ -2919,16 +2913,7 @@ def _gen_convert(
                 orelse=[],
             )
         )
-    send_ifs.append(
-        ast.Raise(
-            exc=ast.Call(
-                func=ast.Name(id="StopIteration", ctx=ast.Load()),
-                args=[],
-                keywords=[],
-            ),
-            cause=None,
-        )
-    )
+    send_ifs.append(_raise_stop_iteration())
     send = ast.FunctionDef(
         name="send",
         args=ast.arguments(

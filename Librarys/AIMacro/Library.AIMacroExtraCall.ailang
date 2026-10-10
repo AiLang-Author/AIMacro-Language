@@ -1912,16 +1912,21 @@ Function.AIMacro.SmartCall {
             empty = AIMacro.EmptyList()
             ReturnValue(AIMacro.SmartCallN(fn, empty))
         }
-        IfCondition EqualTo(OOP.ClassExists(fn), 1) ThenBlock: {
-            empty = Array.Create(0)
-            ReturnValue(OOP.ObjectNewInit(fn, empty))
-        }
         IfCondition EqualTo(AIMacro.LooksLikeString(fn), 1) ThenBlock: {
+            IfCondition EqualTo(OOP.ClassExists(fn), 1) ThenBlock: {
+                empty = Array.Create(0)
+                ReturnValue(OOP.ObjectNewInit(fn, empty))
+            }
             OOP.ClassDefine(fn, 0)
             empty = Array.Create(0)
             ReturnValue(OOP.ObjectNewInit(fn, empty))
         }
-        ReturnValue(CallIndirect(fn))
+        // ELF function pointers start at 0x400000. Match captures dumped
+        // to PyMod.f leave an integer; ClassExists/CallIndirect is strlen.
+        IfCondition GreaterEqual(fn, 4194304) ThenBlock: {
+            ReturnValue(CallIndirect(fn))
+        }
+        ReturnValue(Types.GetNone())
     }
 }
 
@@ -1941,12 +1946,12 @@ Function.AIMacro.SmartCall1 {
             Array.Push(a, arg)
             ReturnValue(AIMacro.SmartCallN(fn, a))
         }
-        IfCondition EqualTo(OOP.ClassExists(fn), 1) ThenBlock: {
-            a = Array.Create(1)
-            Array.Push(a, arg)
-            ReturnValue(OOP.ObjectNewInit(fn, a))
-        }
         IfCondition EqualTo(AIMacro.LooksLikeString(fn), 1) ThenBlock: {
+            IfCondition EqualTo(OOP.ClassExists(fn), 1) ThenBlock: {
+                a = Array.Create(1)
+                Array.Push(a, arg)
+                ReturnValue(OOP.ObjectNewInit(fn, a))
+            }
             OOP.ClassDefine(fn, 0)
             a = Array.Create(1)
             Array.Push(a, arg)
@@ -1956,7 +1961,10 @@ Function.AIMacro.SmartCall1 {
         IfCondition EqualTo(carg, 0) ThenBlock: {
             carg = AIMacro.IntZero()
         }
-        ReturnValue(CallIndirect(fn, carg))
+        IfCondition GreaterEqual(fn, 4194304) ThenBlock: {
+            ReturnValue(CallIndirect(fn, carg))
+        }
+        ReturnValue(Types.GetNone())
     }
 }
 
@@ -2062,7 +2070,7 @@ Function.AIMacro.SmartCallN {
                 ReturnValue(AIMacro.MethodCall(mcobj, mcname, mcargs))
             }
         }
-        IfCondition EqualTo(OOP.ClassExists(fn), 1) ThenBlock: {
+        IfCondition And(EqualTo(AIMacro.LooksLikeString(fn), 1), EqualTo(OOP.ClassExists(fn), 1)) ThenBlock: {
             is_enum_cls = 0
             walk_e = fn
             eh_e = 0
@@ -2138,6 +2146,9 @@ Function.AIMacro.SmartCallN {
             IfCondition EqualTo(ns, 2) ThenBlock: {
                 ReturnValue(AIMacro.Enumerate2(Array.Get(args, 0), Array.Get(args, 1)))
             }
+        }
+        IfCondition LessThan(fn, 4194304) ThenBlock: {
+            ReturnValue(Types.GetNone())
         }
         n = Array.Size(args)
         IfCondition EqualTo(n, 0) ThenBlock: {

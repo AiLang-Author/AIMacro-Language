@@ -393,6 +393,11 @@ Function.AIMacro.ClassAttrGet {
         IfCondition Or(EqualTo(cls, 0), EqualTo(field, 0)) ThenBlock: {
             ReturnValue(0)
         }
+        // RaiseKind stores __class__ as an ExcKind int. StringConcat(9, ".")
+        // is strlen(9) — leftover test_generators SEGV on exc.value.
+        IfCondition EqualTo(AIMacro.LooksLikeString(cls), 0) ThenBlock: {
+            ReturnValue(0)
+        }
         IfCondition EqualTo(ClassAttrs.table, 0) ThenBlock: {
             ReturnValue(0)
         }

@@ -2251,6 +2251,7 @@ Function.AIMacro.RaiseKind {
             Hash.Set(h, "__context__", Types.GetNone())
             Hash.Set(h, "__suppress_context__", AIMacro.FalseVal())
             Hash.Set(h, "args", msg)
+            Hash.Set(h, "value", msg)
             AIMacroExc.pending = 1
             AIMacroExc.kind = kind
             AIMacroExc.msg = msg

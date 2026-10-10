@@ -82,25 +82,29 @@ def run_cmd(
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
-            text=True,
             start_new_session=True,
             preexec_fn=_limit_child,
         )
     except OSError as e:
         return 127, "", str(e)
+    feed = stdin_text.encode("utf-8") if stdin_text is not None else None
+
+    def _decode(b: bytes | None) -> str:
+        return (b or b"").decode("utf-8", errors="replace")
+
     try:
-        out, err = p.communicate(stdin_text, timeout=timeout)
-        return p.returncode if p.returncode is not None else 137, out, err
+        out_b, err_b = p.communicate(feed, timeout=timeout)
+        return p.returncode if p.returncode is not None else 137, _decode(out_b), _decode(err_b)
     except subprocess.TimeoutExpired:
         try:
             os.killpg(p.pid, signal.SIGKILL)
         except (ProcessLookupError, PermissionError):
             p.kill()
         try:
-            out, err = p.communicate(timeout=0.2)
+            out_b, err_b = p.communicate(timeout=0.2)
         except Exception:
-            out, err = "", "timeout"
-        return 124, out or "", (err or "") + "timeout"
+            return 124, "", "timeout"
+        return 124, _decode(out_b), _decode(err_b) + "timeout"
 
 
 def file_key(src: Path, stdlib: Path) -> str:
