@@ -9,10 +9,10 @@ results/grind_db.json is the living database. Passing files are dropped from the
 grind until --full. Work a batch with --only @results/batch10.txt. When remaining
 is empty, rerun --full.
 
-Pipeline per file (one ailang.x at a time, RLIMIT_AS 4GiB, 10s CPU / 10s wall):
+Pipeline per file (one ailang.x at a time, RLIMIT_AS 4GiB, 15s CPU / 15s wall):
   1. py2aim.py     indent Python → AIMacro `{ }`
   2. ./aimacro.x   .aim → .ailang
-  3. ./ailang.x    compile
+  3. ./ailang.x -TS compile (tree-shake unreachable Extra/OOP)
   4. run the ELF; UnittestDone ProcessExit(1) if scheduled tests did not run
 
 Usage:
@@ -40,14 +40,17 @@ from collections import Counter
 from datetime import date
 from pathlib import Path
 
-# One ailang.x at a time. 4 GiB AS. 10s CPU / 10s wall per child.
+# One ailang.x at a time. 4 GiB AS. 15s CPU / 15s wall per child.
 # 2s killed real tests (enumerate). 90s wall on 31 large py2aim files
 # is ~45 min of timeouts; unbounded compile swapped the box. killpg
-# stays. 10s still kills a tight loop. RLIMIT_CPU hard equals soft.
+# stays. 15s still kills a tight loop. RLIMIT_CPU hard equals soft.
 # --timeout sets both.
+# ailang.x self-compiles ~8-9s at 15-20k loc. leftover test_coroutines
+# is 80k generated lines / 380k nodes / ~10s compile; a 10s cap killed
+# it after Success during AST free. 15s is that plus a little headroom.
 RSS_AS_BYTES = 4 * 1024 * 1024 * 1024
-CPU_SEC = 10
-DEFAULT_TIMEOUT = 10.0
+CPU_SEC = 15
+DEFAULT_TIMEOUT = 15.0
 LOCK_PATH = Path("/tmp/aimacro-runner.lock")
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -229,8 +232,10 @@ def run_aimacro_stage(
         return rc, "", f"transpile: {(out or '')[-300:]}\n{(err or '')}".strip(), "transpile"
     if stage == "transpile":
         return 0, "", "", ""
+    # -TS: Extra+OOP programs import far more than they call. Shake drops
+    # unreachable functions. AddressOf in ClassDefine keeps packed methods.
     rc, out, err = run_cmd(
-        [str(AILANG), str(ailang_out), str(bin_out)], timeout, cwd=ROOT
+        [str(AILANG), "-TS", str(ailang_out), str(bin_out)], timeout, cwd=ROOT
     )
     if rc != 0:
         # ailang.x prints parse/codegen errors on stdout; SIGSEGV is rc < 0.
@@ -476,7 +481,7 @@ def main() -> int:
         "--timeout",
         type=float,
         default=DEFAULT_TIMEOUT,
-        help="Wall seconds per child (py2aim, aimacro, ailang, ELF). Default 10. "
+        help="Wall seconds per child (py2aim, aimacro, ailang, ELF). Default 15. "
         "RLIMIT_CPU uses the same ceiling. A hit is a stall or a perf hole.",
     )
     ap.add_argument("--output-json", type=Path)
