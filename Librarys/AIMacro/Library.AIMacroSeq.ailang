@@ -636,7 +636,7 @@ Function.AIMacro.IsSliceObj {
     Input: v: Address
     Output: Integer
     Body: {
-        IfCondition EqualTo(Hash.IsHash(v), 0) ThenBlock: {
+        IfCondition EqualTo(AIMacro.SafeIsHash(v), 0) ThenBlock: {
             ReturnValue(0)
         }
         ca = Hash.Get(v, "__class__")
@@ -1746,6 +1746,19 @@ Function.AIMacro.FileWrite {
     Output: Integer
     Body: {
         IfCondition EqualTo(AIMacro.IsFile(handle), 0) ThenBlock: {
+            IfCondition EqualTo(AIMacro.SafeIsHash(handle), 1) ThenBlock: {
+                old = Hash.Get(handle, "_buf")
+                IfCondition EqualTo(old, 0) ThenBlock: {
+                    old = ""
+                }
+                chunk = data
+                IfCondition EqualTo(chunk, 0) ThenBlock: {
+                    chunk = ""
+                }
+                nw = StringConcat(old, chunk)
+                Hash.Set(handle, "_buf", nw)
+                ReturnValue(StringLength(chunk))
+            }
             ReturnValue(0)
         }
         fd = Dereference(Add(handle, 8))

@@ -824,9 +824,12 @@ Function.AIMacro.IsInstance {
             }
         }
         IfCondition EqualTo(AIMacro.LooksLikeString(type_id), 1) ThenBlock: {
-            oi2 = OOP.ObjectIsInstance(value, type_id)
-            IfCondition EqualTo(oi2, 1) ThenBlock: {
-                ReturnValue(AIMacro.TrueVal())
+            ishv = AIMacro.SafeIsHash(value)
+            IfCondition EqualTo(ishv, 1) ThenBlock: {
+                oi2 = OOP.ObjectIsInstance(value, type_id)
+                IfCondition EqualTo(oi2, 1) ThenBlock: {
+                    ReturnValue(AIMacro.TrueVal())
+                }
             }
         }
         IfCondition And(GreaterEqual(value, 0), LessThan(value, 4000000)) ThenBlock: {

@@ -33,6 +33,7 @@ FixedPool.Gen {
     "func_varargs": Initialize=0, CanChange=True
     "func_params": Initialize=0, CanChange=True
     "try_depth": Initialize=0, CanChange=True
+    "with_stack": Initialize=0, CanChange=True
     "loop_depth": Initialize=0, CanChange=True
     "loop_else_flag": Initialize=0, CanChange=True
     "lambda_counter": Initialize=0, CanChange=True
@@ -82,6 +83,7 @@ Function.Gen_Init {
         Gen.func_varargs = Array.Create(32)
         Gen.func_params = Array.Create(32)
         Gen.try_depth = 0
+        Gen.with_stack = Array.Create(8)
         Gen.loop_depth = 0
         Gen.loop_else_flag = 0
         Gen.lambda_counter = 0
@@ -1266,6 +1268,23 @@ Function.Gen_LoopLeave {
     Body: {
         IfCondition GreaterThan(Gen.loop_depth, 0) ThenBlock: {
             Gen.loop_depth = Subtract(Gen.loop_depth, 1)
+        }
+    }
+}
+
+Function.Gen_EmitWithExits {
+    Body: {
+        IfCondition EqualTo(Gen.with_stack, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        n = Array.Size(Gen.with_stack)
+        WhileLoop GreaterThan(n, 0) {
+            n = Subtract(n, 1)
+            ctx = Array.Get(Gen.with_stack, n)
+            Gen_EmitIndent()
+            Gen_Emit("AIMacro.WithExit(")
+            Gen_Emit(ctx)
+            Gen_Emit(")\n")
         }
     }
 }

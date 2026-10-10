@@ -43,7 +43,6 @@ Function.AIMacro.InitMethodSkip {
         Hash.Set(h, "add_callers", 1)
         Hash.Set(h, "flock", 1)
         Hash.Set(h, "mksalt", 1)
-        Hash.Set(h, "isdir", 1)
         Hash.Set(h, "create_modules", 1)
         Hash.Set(h, "is_package", 1)
         Hash.Set(h, "SequenceMatcher", 1)
@@ -1658,6 +1657,98 @@ Function.AIMacro.MethodShim {
                 Hash.Set(obj, "locked", 0)
             }
             ReturnValue(Types.GetNone())
+        }
+        IfCondition EqualTo(StringCompare(method_name, "encode"), 0) ThenBlock: {
+            lsenc = AIMacro.LooksLikeString(obj)
+            IfCondition EqualTo(lsenc, 1) ThenBlock: {
+                enc = "utf-8"
+                err = "strict"
+                IfCondition GreaterThan(n, 0) ThenBlock: {
+                    enc = a0
+                }
+                IfCondition GreaterThan(n, 1) ThenBlock: {
+                    err = a1
+                }
+                encv = AIMacro.Encode(obj, enc, err)
+                ReturnValue(encv)
+            }
+        }
+        IfCondition EqualTo(StringCompare(method_name, "decode"), 0) ThenBlock: {
+            lsdec = AIMacro.LooksLikeString(obj)
+            IfCondition EqualTo(lsdec, 1) ThenBlock: {
+                denc = "utf-8"
+                derr = "strict"
+                IfCondition GreaterThan(n, 0) ThenBlock: {
+                    denc = a0
+                }
+                IfCondition GreaterThan(n, 1) ThenBlock: {
+                    derr = a1
+                }
+                decv = AIMacro.Decode(obj, denc, derr)
+                ReturnValue(decv)
+            }
+        }
+        IfCondition EqualTo(StringCompare(method_name, "setdefault"), 0) ThenBlock: {
+            IfCondition EqualTo(Hash.IsHash(obj), 1) ThenBlock: {
+                cls_sd = Hash.Get(obj, "__class__")
+                plain = 0
+                IfCondition EqualTo(cls_sd, 0) ThenBlock: {
+                    plain = 1
+                }
+                IfCondition EqualTo(AIMacro.LooksLikeString(cls_sd), 1) ThenBlock: {
+                    IfCondition EqualTo(StringCompare(cls_sd, "dict"), 0) ThenBlock: {
+                        plain = 1
+                    }
+                }
+                IfCondition EqualTo(plain, 1) ThenBlock: {
+                    hask = Hash.Contains(obj, a0)
+                    IfCondition EqualTo(hask, 1) ThenBlock: {
+                        got = Hash.Get(obj, a0)
+                        ReturnValue(got)
+                    }
+                    defv = Types.GetNone()
+                    IfCondition GreaterThan(n, 1) ThenBlock: {
+                        defv = a1
+                    }
+                    Hash.Set(obj, a0, defv)
+                    ReturnValue(defv)
+                }
+            }
+        }
+        IfCondition EqualTo(StringCompare(method_name, "Lock"), 0) ThenBlock: {
+            lk = AIMacro.AllocateLock()
+            ReturnValue(lk)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "StringIO"), 0) ThenBlock: {
+            sio = AIMacro.MakeStringIO(a0)
+            ReturnValue(sio)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "isdir"), 0) ThenBlock: {
+            ip = AIMacro.PathArg(obj, a0)
+            idr = AIMacro.IsDir(ip)
+            ReturnValue(idr)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "setUp"), 0) ThenBlock: {
+            none_su = Types.GetNone()
+            ReturnValue(none_su)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "mkdtemp"), 0) ThenBlock: {
+            mtd = AIMacro.Mkdtemp(a0)
+            ReturnValue(mtd)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "getcwd"), 0) ThenBlock: {
+            cwd = AIMacro.Getcwd()
+            ReturnValue(cwd)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "chdir"), 0) ThenBlock: {
+            cp = AIMacro.PathArg(obj, a0)
+            ch = AIMacro.Chdir(cp)
+            ReturnValue(ch)
+        }
+        IfCondition EqualTo(StringCompare(method_name, "stat"), 0) ThenBlock: {
+            sp = AIMacro.PathArg(obj, a0)
+            stv = AIMacro.Stat(sp)
+            ReturnValue(stv)
         }
         IfCondition EqualTo(StringCompare(method_name, "import_tool"), 0) ThenBlock: {
             itl = Types.GetNone()

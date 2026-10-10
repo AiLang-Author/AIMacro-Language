@@ -923,6 +923,12 @@ Function.AIMacro.IoGetValue {
     Input: obj: Address
     Output: Address
     Body: {
+        IfCondition EqualTo(AIMacro.SafeIsHash(obj), 1) ThenBlock: {
+            b = Hash.Get(obj, "_buf")
+            IfCondition NotEqual(b, 0) ThenBlock: {
+                ReturnValue(b)
+            }
+        }
         IfCondition EqualTo(IoCapture.buf, 0) ThenBlock: {
             ReturnValue("")
         }
@@ -1211,5 +1217,111 @@ Function.AIMacro.ListStorage {
             }
         }
         ReturnValue(0)
+    }
+}
+
+Function.AIMacro.Getcwd {
+    Output: Address
+    Body: {
+        buf = Allocate(4096)
+        rc = SystemCall(79, buf, 4096)
+        IfCondition LessThan(rc, 0) ThenBlock: {
+            ReturnValue("/")
+        }
+        ReturnValue(buf)
+    }
+}
+
+Function.AIMacro.Chdir {
+    Input: path: Address
+    Output: Address
+    Body: {
+        lsp = AIMacro.LooksLikeString(path)
+        IfCondition EqualTo(lsp, 0) ThenBlock: {
+            none_cd = Types.GetNone()
+            ReturnValue(none_cd)
+        }
+        crc = SystemCall(80, path)
+        IfCondition LessThan(crc, 0) ThenBlock: {
+            AIMacro.RaiseKind(4, "chdir")
+            ReturnValue(0)
+        }
+        none_ok = Types.GetNone()
+        ReturnValue(none_ok)
+    }
+}
+
+Function.AIMacro.StatMode {
+    Input: path: Address
+    Output: Integer
+    Body: {
+        lsp = AIMacro.LooksLikeString(path)
+        IfCondition EqualTo(lsp, 0) ThenBlock: {
+            ReturnValue(Subtract(0, 1))
+        }
+        st = Allocate(144)
+        src = SystemCall(4, path, st)
+        IfCondition LessThan(src, 0) ThenBlock: {
+            ReturnValue(Subtract(0, 1))
+        }
+        raw = Dereference(Add(st, 24))
+        ReturnValue(And(raw, 65535))
+    }
+}
+
+Function.AIMacro.IsDir {
+    Input: path: Address
+    Output: Address
+    Body: {
+        mode = AIMacro.StatMode(path)
+        IfCondition EqualTo(mode, Subtract(0, 1)) ThenBlock: {
+            ReturnValue(AIMacro.FalseVal())
+        }
+        kind = And(mode, 61440)
+        IfCondition EqualTo(kind, 16384) ThenBlock: {
+            ReturnValue(AIMacro.TrueVal())
+        }
+        ReturnValue(AIMacro.FalseVal())
+    }
+}
+
+Function.AIMacro.Stat {
+    Input: path: Address
+    Output: Address
+    Body: {
+        mode = AIMacro.StatMode(path)
+        h = Hash.Create(8)
+        Hash.Set(h, "__class__", "stat_result")
+        Hash.Set(h, "st_mode", mode)
+        Hash.Set(h, "st_size", 0)
+        ReturnValue(h)
+    }
+}
+
+Function.AIMacro.Mkdtemp {
+    Input: suffix: Address
+    Output: Address
+    Body: {
+        pid = SystemCall(39, 0)
+        pids = NumberToString(pid)
+        path = StringConcat("/tmp/aimtd", pids)
+        AIMacro.Mkdir(path, 448)
+        ReturnValue(path)
+    }
+}
+
+Function.AIMacro.MakeStringIO {
+    Input: initial: Address
+    Output: Address
+    Body: {
+        h = Hash.Create(8)
+        Hash.Set(h, "__class__", "StringIO")
+        buf = ""
+        ls = AIMacro.LooksLikeString(initial)
+        IfCondition EqualTo(ls, 1) ThenBlock: {
+            buf = initial
+        }
+        Hash.Set(h, "_buf", buf)
+        ReturnValue(h)
     }
 }

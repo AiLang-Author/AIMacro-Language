@@ -1486,8 +1486,13 @@ Function.Gen_With {
             Gen_Emit(")\n")
         }
         Gen.try_depth = Add(Gen.try_depth, 1)
+        Array.Push(Gen.with_stack, ctx)
         Gen_Body(body)
         Gen.try_depth = Subtract(Gen.try_depth, 1)
+        nws = Array.Size(Gen.with_stack)
+        IfCondition GreaterThan(nws, 0) ThenBlock: {
+            Array.Pop(Gen.with_stack)
+        }
         Gen_EmitIndent()
         Gen_Emit("AIMacro.WithExit(")
         Gen_Emit(ctx)

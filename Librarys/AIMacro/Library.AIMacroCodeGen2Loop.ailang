@@ -666,6 +666,7 @@ Function.Gen_Return {
         value = ArrayGet(node, 3)
         
         IfCondition EqualTo(value, 0) ThenBlock: {
+            Gen_EmitWithExits()
             Gen_EmitIndent()
             Gen_Emit("ReturnValue(0)\n")
             ReturnValue(0)
@@ -685,6 +686,7 @@ Function.Gen_Return {
                 instance_var = OOPGen_InstanceCreation(call_name, call_args)
                 
                 // Return the instance
+                Gen_EmitWithExits()
                 Gen_EmitIndent()
                 Gen_Emit("ReturnValue(")
                 Gen_Emit(instance_var)
@@ -707,6 +709,7 @@ Function.Gen_Return {
                 Gen_Emit(" = ")
                 Gen_EmitDropRecvMethod(method, args)
                 Gen_Emit("\n")
+                Gen_EmitWithExits()
                 Gen_EmitIndent()
                 Gen_Emit("ReturnValue(")
                 Gen_Emit(result_var)
@@ -781,6 +784,7 @@ Function.Gen_Return {
                 Gen_Emit(args_var)
                 Gen_Emit(")\n")
                 
+                Gen_EmitWithExits()
                 Gen_EmitIndent()
                 Gen_Emit("ReturnValue(")
                 Gen_Emit(result_var)
@@ -798,6 +802,7 @@ Function.Gen_Return {
             value = Gen_FlattenExpr(value)
         }
         
+        Gen_EmitWithExits()
         Gen_EmitIndent()
         Gen_Emit("ReturnValue(")
         Gen_Expr(value)
