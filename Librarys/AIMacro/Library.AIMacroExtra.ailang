@@ -644,6 +644,13 @@ Function.AIMacro.ObjectGet {
             }
             ReturnValue(v)
         }
+        cls_kind = Hash.Get(obj, "__class__")
+        // RaiseKind stores __class__ as an integer ExcKind. MethodExists then
+        // _MethodLookupWithInheritance(8, "msg") is strlen(8). leftover
+        // test_exceptions testSyntaxErrorMissingParens after UnittestFail.
+        IfCondition And(NotEqual(cls_kind, 0), EqualTo(AIMacro.LooksLikeString(cls_kind), 0)) ThenBlock: {
+            ReturnValue(0)
+        }
         mx = OOP.MethodExists(obj, field)
         IfCondition EqualTo(mx, 1) ThenBlock: {
             ReturnValue(AIMacro.BoundMethod(obj, field))
