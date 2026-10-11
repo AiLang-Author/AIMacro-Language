@@ -115,16 +115,45 @@ Function.AIMacro.UnittestEq {
         }
         IfCondition EqualTo(AIMacro.SafeIsHash(a), 1) ThenBlock: {
             IfCondition EqualTo(AIMacro.SafeIsHash(b), 1) ThenBlock: {
+                la = Hash.Get(a, "__list__")
+                lb = Hash.Get(b, "__list__")
+                IfCondition EqualTo(AIMacro.SafeIsArray(la), 1) ThenBlock: {
+                    IfCondition EqualTo(AIMacro.SafeIsArray(lb), 1) ThenBlock: {
+                        ca0 = Hash.Get(a, "__class__")
+                        cb0 = Hash.Get(b, "__class__")
+                        same_seq = 0
+                        IfCondition EqualTo(AIMacro.LooksLikeString(ca0), 1) ThenBlock: {
+                            IfCondition EqualTo(AIMacro.LooksLikeString(cb0), 1) ThenBlock: {
+                                IfCondition EqualTo(StringCompare(ca0, cb0), 0) ThenBlock: {
+                                    same_seq = 1
+                                }
+                            }
+                        }
+                        IfCondition EqualTo(same_seq, 1) ThenBlock: {
+                            ReturnValue(AIMacro.UnittestEq(la, lb))
+                        }
+                    }
+                }
                 ca = Hash.Get(a, "__class__")
                 cb = Hash.Get(b, "__class__")
                 use_deep = 1
                 IfCondition NotEqual(ca, 0) ThenBlock: {
-                    IfCondition NotEqual(StringCompare(ca, "dict"), 0) ThenBlock: {
+                    IfCondition EqualTo(AIMacro.LooksLikeString(ca), 1) ThenBlock: {
+                        IfCondition NotEqual(StringCompare(ca, "dict"), 0) ThenBlock: {
+                            use_deep = 0
+                        }
+                    }
+                    ElseBlock: {
                         use_deep = 0
                     }
                 }
                 IfCondition NotEqual(cb, 0) ThenBlock: {
-                    IfCondition NotEqual(StringCompare(cb, "dict"), 0) ThenBlock: {
+                    IfCondition EqualTo(AIMacro.LooksLikeString(cb), 1) ThenBlock: {
+                        IfCondition NotEqual(StringCompare(cb, "dict"), 0) ThenBlock: {
+                            use_deep = 0
+                        }
+                    }
+                    ElseBlock: {
                         use_deep = 0
                     }
                 }

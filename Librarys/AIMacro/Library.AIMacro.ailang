@@ -1139,6 +1139,49 @@ Function.AIMacro.Repr {
                 ReturnValue(String.Concat("[", rb))
             }
             IfCondition EqualTo(Hash.IsHash(value), 1) ThenBlock: {
+                cls_r = Hash.Get(value, "__class__")
+                lst_r = Hash.Get(value, "__list__")
+                IfCondition EqualTo(Array.IsArray(lst_r), 1) ThenBlock: {
+                    is_tup = 0
+                    is_lst = 0
+                    IfCondition EqualTo(AIMacro.LooksLikeString(cls_r), 1) ThenBlock: {
+                        IfCondition EqualTo(StringCompare(cls_r, "tuple"), 0) ThenBlock: {
+                            is_tup = 1
+                        }
+                        IfCondition EqualTo(StringCompare(cls_r, "list"), 0) ThenBlock: {
+                            is_lst = 1
+                        }
+                    }
+                    IfCondition Or(EqualTo(is_tup, 1), EqualTo(is_lst, 1)) ThenBlock: {
+                        nr = Array.Size(lst_r)
+                        IfCondition EqualTo(nr, 0) ThenBlock: {
+                            IfCondition EqualTo(is_tup, 1) ThenBlock: {
+                                ReturnValue("()")
+                            }
+                            ReturnValue("[]")
+                        }
+                        parts = Array.Create(nr)
+                        ir = 0
+                        WhileLoop LessThan(ir, nr) {
+                            el = Array.Get(lst_r, ir)
+                            er = AIMacro.Repr(el)
+                            Array.Push(parts, er)
+                            ir = Add(ir, 1)
+                        }
+                        inner = String.Join(", ", parts)
+                        IfCondition EqualTo(is_tup, 1) ThenBlock: {
+                            IfCondition EqualTo(nr, 1) ThenBlock: {
+                                one = String.Concat(inner, ",")
+                                op = String.Concat("(", one)
+                                ReturnValue(String.Concat(op, ")"))
+                            }
+                            op2 = String.Concat("(", inner)
+                            ReturnValue(String.Concat(op2, ")"))
+                        }
+                        ob = String.Concat("[", inner)
+                        ReturnValue(String.Concat(ob, "]"))
+                    }
+                }
                 keys = Hash.Keys(value)
                 n = Array.Size(keys)
                 IfCondition EqualTo(n, 0) ThenBlock: {
@@ -1153,7 +1196,8 @@ Function.AIMacro.Repr {
                     k = Array.Get(keys, i)
                     s = String.Concat(s, AIMacro.Repr(k))
                     s = String.Concat(s, ": ")
-                    s = String.Concat(s, AIMacro.Repr(Hash.Get(value, k)))
+                    vk = Hash.Get(value, k)
+                    s = String.Concat(s, AIMacro.Repr(vk))
                     i = Add(i, 1)
                 }
                 ReturnValue(String.Concat(s, "}"))

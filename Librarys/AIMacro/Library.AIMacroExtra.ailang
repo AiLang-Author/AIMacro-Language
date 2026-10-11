@@ -620,9 +620,31 @@ Function.AIMacro.ObjectGet {
         IfCondition EqualTo(AIMacro.SafeIsHash(obj), 0) ThenBlock: {
             IfCondition EqualTo(AIMacro.LooksLikeString(obj), 1) ThenBlock: {
                 IfCondition EqualTo(OOP.ClassExists(obj), 1) ThenBlock: {
-                    ReturnValue(AIMacro.ClassAttrGet(obj, field))
+                    cv0 = AIMacro.ClassAttrGet(obj, field)
+                    IfCondition NotEqual(cv0, 0) ThenBlock: {
+                        ReturnValue(cv0)
+                    }
+                    IfCondition EqualTo(Types.IsString(field), 1) ThenBlock: {
+                        IfCondition EqualTo(StringCompare(field, "__name__"), 0) ThenBlock: {
+                            ReturnValue(obj)
+                        }
+                    }
+                    ReturnValue(0)
                 }
                 ReturnValue(0)
+            }
+            IfCondition And(GreaterEqual(obj, 1), LessThan(obj, 41)) ThenBlock: {
+                IfCondition EqualTo(Types.IsString(field), 1) ThenBlock: {
+                    IfCondition EqualTo(StringCompare(field, "__name__"), 0) ThenBlock: {
+                        ReturnValue(AIMacro.ExcKindName(obj))
+                    }
+                    IfCondition EqualTo(StringCompare(field, "__qualname__"), 0) ThenBlock: {
+                        ReturnValue(AIMacro.ExcKindName(obj))
+                    }
+                    IfCondition EqualTo(StringCompare(field, "__module__"), 0) ThenBlock: {
+                        ReturnValue("builtins")
+                    }
+                }
             }
             ReturnValue(0)
         }

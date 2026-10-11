@@ -197,9 +197,14 @@ Function.AIMacro.GetAttr {
                 ReturnValue(AIMacro.KeywordSoftKwlist())
             }
         }
+        v = AIMacro.ObjectGet(obj, name)
+        IfCondition NotEqual(v, 0) ThenBlock: {
+            ReturnValue(v)
+        }
         IfCondition NotEqual(default, 0) ThenBlock: {
             ReturnValue(default)
         }
+        AIMacro.RaiseKind(14, name)
         ReturnValue(0)
     }
 }

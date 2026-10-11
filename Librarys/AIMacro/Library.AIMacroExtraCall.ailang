@@ -1898,6 +1898,228 @@ Function.AIMacro.MethodCall {
     }
 }
 
+// leftover test_exceptions: exception type names emit ExcKind ints 1..27.
+// BaseException(*args) is SmartCall1(13, tuple). Do not set ExcPending.
+Function.AIMacro.ExcKindName {
+    Input: kind: Integer
+    Output: Address
+    Body: {
+        IfCondition EqualTo(kind, 1) ThenBlock: { ReturnValue("Exception") }
+        IfCondition EqualTo(kind, 2) ThenBlock: { ReturnValue("ValueError") }
+        IfCondition EqualTo(kind, 3) ThenBlock: { ReturnValue("OSError") }
+        IfCondition EqualTo(kind, 4) ThenBlock: { ReturnValue("FileNotFoundError") }
+        IfCondition EqualTo(kind, 5) ThenBlock: { ReturnValue("TypeError") }
+        IfCondition EqualTo(kind, 6) ThenBlock: { ReturnValue("RuntimeError") }
+        IfCondition EqualTo(kind, 7) ThenBlock: { ReturnValue("ZeroDivisionError") }
+        IfCondition EqualTo(kind, 8) ThenBlock: { ReturnValue("AssertionError") }
+        IfCondition EqualTo(kind, 9) ThenBlock: { ReturnValue("StopIteration") }
+        IfCondition EqualTo(kind, 10) ThenBlock: { ReturnValue("StopAsyncIteration") }
+        IfCondition EqualTo(kind, 11) ThenBlock: { ReturnValue("BaseExceptionGroup") }
+        IfCondition EqualTo(kind, 12) ThenBlock: { ReturnValue("ExceptionGroup") }
+        IfCondition EqualTo(kind, 13) ThenBlock: { ReturnValue("BaseException") }
+        IfCondition EqualTo(kind, 14) ThenBlock: { ReturnValue("AttributeError") }
+        IfCondition EqualTo(kind, 15) ThenBlock: { ReturnValue("KeyError") }
+        IfCondition EqualTo(kind, 16) ThenBlock: { ReturnValue("NameError") }
+        IfCondition EqualTo(kind, 17) ThenBlock: { ReturnValue("IndexError") }
+        IfCondition EqualTo(kind, 18) ThenBlock: { ReturnValue("LookupError") }
+        IfCondition EqualTo(kind, 19) ThenBlock: { ReturnValue("EOFError") }
+        IfCondition EqualTo(kind, 20) ThenBlock: { ReturnValue("ImportError") }
+        IfCondition EqualTo(kind, 21) ThenBlock: { ReturnValue("NotImplementedError") }
+        IfCondition EqualTo(kind, 22) ThenBlock: { ReturnValue("OverflowError") }
+        IfCondition EqualTo(kind, 23) ThenBlock: { ReturnValue("MemoryError") }
+        IfCondition EqualTo(kind, 24) ThenBlock: { ReturnValue("SyntaxError") }
+        IfCondition EqualTo(kind, 25) ThenBlock: { ReturnValue("SystemExit") }
+        IfCondition EqualTo(kind, 26) ThenBlock: { ReturnValue("KeyboardInterrupt") }
+        IfCondition EqualTo(kind, 27) ThenBlock: { ReturnValue("GeneratorExit") }
+        ReturnValue("Exception")
+    }
+}
+
+Function.AIMacro.ExcUnpackArg {
+    Input: arg: Address
+    Output: Address
+    Body: {
+        IfCondition Or(EqualTo(arg, 0), EqualTo(AIMacro.IsNone(arg), 1)) ThenBlock: {
+            ReturnValue(AIMacro.EmptyList())
+        }
+        IfCondition EqualTo(Array.IsArray(arg), 1) ThenBlock: {
+            ReturnValue(arg)
+        }
+        IfCondition EqualTo(AIMacro.SafeIsHash(arg), 1) ThenBlock: {
+            cls_a = Hash.Get(arg, "__class__")
+            lst_a = Hash.Get(arg, "__list__")
+            IfCondition EqualTo(Array.IsArray(lst_a), 1) ThenBlock: {
+                is_seq = 0
+                IfCondition EqualTo(AIMacro.LooksLikeString(cls_a), 1) ThenBlock: {
+                    IfCondition EqualTo(StringCompare(cls_a, "tuple"), 0) ThenBlock: {
+                        is_seq = 1
+                    }
+                    IfCondition EqualTo(StringCompare(cls_a, "list"), 0) ThenBlock: {
+                        is_seq = 1
+                    }
+                }
+                IfCondition EqualTo(is_seq, 1) ThenBlock: {
+                    ReturnValue(lst_a)
+                }
+            }
+        }
+        out = AIMacro.EmptyList()
+        Array.Push(out, arg)
+        ReturnValue(out)
+    }
+}
+
+Function.AIMacro.MakeExc {
+    Input: kind: Integer
+    Input: raw: Address
+    Output: Address
+    Body: {
+        items = AIMacro.ExcUnpackArg(raw)
+        n = Array.Size(items)
+        none = Types.GetNone()
+        fv = AIMacro.FalseVal()
+        args_items = items
+        IfCondition EqualTo(kind, 3) ThenBlock: {
+            IfCondition GreaterThan(n, 2) ThenBlock: {
+                args_items = AIMacro.EmptyList()
+                a0t = Array.Get(items, 0)
+                a1t = Array.Get(items, 1)
+                Array.Push(args_items, a0t)
+                Array.Push(args_items, a1t)
+            }
+        }
+        args_t = AIMacro.WrapSeq(args_items, "tuple")
+        h = Hash.Create(16)
+        Hash.Set(h, "__class__", kind)
+        Hash.Set(h, "__cause__", none)
+        Hash.Set(h, "__context__", none)
+        Hash.Set(h, "__suppress_context__", fv)
+        Hash.Set(h, "args", args_t)
+        IfCondition GreaterThan(n, 0) ThenBlock: {
+            v0 = Array.Get(items, 0)
+            Hash.Set(h, "value", v0)
+        }
+        ElseBlock: {
+            Hash.Set(h, "value", "")
+        }
+        IfCondition EqualTo(kind, 3) ThenBlock: {
+            Hash.Set(h, "filename", none)
+            Hash.Set(h, "filename2", none)
+            Hash.Set(h, "errno", none)
+            Hash.Set(h, "strerror", none)
+            Hash.Set(h, "winerror", none)
+            IfCondition GreaterThan(n, 1) ThenBlock: {
+                e0 = Array.Get(items, 0)
+                e1 = Array.Get(items, 1)
+                Hash.Set(h, "errno", e0)
+                Hash.Set(h, "strerror", e1)
+            }
+            IfCondition GreaterThan(n, 2) ThenBlock: {
+                e2 = Array.Get(items, 2)
+                Hash.Set(h, "filename", e2)
+            }
+            IfCondition GreaterThan(n, 4) ThenBlock: {
+                e4 = Array.Get(items, 4)
+                Hash.Set(h, "filename2", e4)
+            }
+        }
+        IfCondition EqualTo(kind, 24) ThenBlock: {
+            Hash.Set(h, "msg", none)
+            Hash.Set(h, "text", none)
+            Hash.Set(h, "filename", none)
+            Hash.Set(h, "lineno", none)
+            Hash.Set(h, "offset", none)
+            Hash.Set(h, "end_offset", none)
+            Hash.Set(h, "end_lineno", none)
+            Hash.Set(h, "print_file_and_line", none)
+            IfCondition GreaterThan(n, 0) ThenBlock: {
+                m0 = Array.Get(items, 0)
+                Hash.Set(h, "msg", m0)
+            }
+            IfCondition EqualTo(n, 2) ThenBlock: {
+                info = Array.Get(items, 1)
+                infolst = 0
+                IfCondition EqualTo(Array.IsArray(info), 1) ThenBlock: {
+                    infolst = info
+                }
+                ElseBlock: {
+                    IfCondition EqualTo(AIMacro.SafeIsHash(info), 1) ThenBlock: {
+                        infolst = Hash.Get(info, "__list__")
+                    }
+                }
+                IfCondition EqualTo(Array.IsArray(infolst), 1) ThenBlock: {
+                    ni = Array.Size(infolst)
+                    IfCondition GreaterThan(ni, 0) ThenBlock: {
+                        i0 = Array.Get(infolst, 0)
+                        Hash.Set(h, "filename", i0)
+                    }
+                    IfCondition GreaterThan(ni, 1) ThenBlock: {
+                        i1 = Array.Get(infolst, 1)
+                        Hash.Set(h, "lineno", i1)
+                    }
+                    IfCondition GreaterThan(ni, 2) ThenBlock: {
+                        i2 = Array.Get(infolst, 2)
+                        Hash.Set(h, "offset", i2)
+                    }
+                    IfCondition GreaterThan(ni, 3) ThenBlock: {
+                        i3 = Array.Get(infolst, 3)
+                        Hash.Set(h, "text", i3)
+                    }
+                    IfCondition GreaterThan(ni, 4) ThenBlock: {
+                        i4 = Array.Get(infolst, 4)
+                        Hash.Set(h, "end_lineno", i4)
+                    }
+                    IfCondition GreaterThan(ni, 5) ThenBlock: {
+                        i5 = Array.Get(infolst, 5)
+                        Hash.Set(h, "end_offset", i5)
+                    }
+                }
+            }
+        }
+        IfCondition EqualTo(kind, 25) ThenBlock: {
+            IfCondition EqualTo(n, 0) ThenBlock: {
+                Hash.Set(h, "code", none)
+            }
+            ElseBlock: {
+                IfCondition EqualTo(n, 1) ThenBlock: {
+                    c0 = Array.Get(items, 0)
+                    Hash.Set(h, "code", c0)
+                }
+                ElseBlock: {
+                    Hash.Set(h, "code", args_t)
+                }
+            }
+        }
+        IfCondition EqualTo(kind, 2) ThenBlock: {
+            IfCondition GreaterThan(n, 4) ThenBlock: {
+                u0 = Array.Get(items, 0)
+                u1 = Array.Get(items, 1)
+                u2 = Array.Get(items, 2)
+                u3 = Array.Get(items, 3)
+                u4 = Array.Get(items, 4)
+                Hash.Set(h, "encoding", u0)
+                Hash.Set(h, "object", u1)
+                Hash.Set(h, "start", u2)
+                Hash.Set(h, "end", u3)
+                Hash.Set(h, "reason", u4)
+            }
+            ElseBlock: {
+                IfCondition EqualTo(n, 4) ThenBlock: {
+                    t0 = Array.Get(items, 0)
+                    t1 = Array.Get(items, 1)
+                    t2 = Array.Get(items, 2)
+                    t3 = Array.Get(items, 3)
+                    Hash.Set(h, "object", t0)
+                    Hash.Set(h, "start", t1)
+                    Hash.Set(h, "end", t2)
+                    Hash.Set(h, "reason", t3)
+                }
+            }
+        }
+        ReturnValue(h)
+    }
+}
+
 Function.AIMacro.SmartCall {
     Input: fn: Address
     Output: Address
@@ -1920,6 +2142,10 @@ Function.AIMacro.SmartCall {
             OOP.ClassDefine(fn, 0)
             empty = Array.Create(0)
             ReturnValue(OOP.ObjectNewInit(fn, empty))
+        }
+        IfCondition And(GreaterEqual(fn, 1), LessThan(fn, 41)) ThenBlock: {
+            empty = AIMacro.EmptyList()
+            ReturnValue(AIMacro.MakeExc(fn, empty))
         }
         // ELF function pointers start at 0x400000. Match captures dumped
         // to PyMod.f leave an integer; ClassExists/CallIndirect is strlen.
@@ -1967,6 +2193,9 @@ Function.AIMacro.SmartCall1 {
             a = Array.Create(1)
             Array.Push(a, arg)
             ReturnValue(OOP.ObjectNewInit(fn, a))
+        }
+        IfCondition And(GreaterEqual(fn, 1), LessThan(fn, 41)) ThenBlock: {
+            ReturnValue(AIMacro.MakeExc(fn, arg))
         }
         IfCondition EqualTo(Array.IsArray(fn), 1) ThenBlock: {
             ReturnValue(Types.GetNone())
@@ -2185,6 +2414,9 @@ Function.AIMacro.SmartCallN {
         }
         IfCondition EqualTo(Array.IsArray(fn), 1) ThenBlock: {
             ReturnValue(Types.GetNone())
+        }
+        IfCondition And(GreaterEqual(fn, 1), LessThan(fn, 41)) ThenBlock: {
+            ReturnValue(AIMacro.MakeExc(fn, args))
         }
         IfCondition LessThan(fn, 4194304) ThenBlock: {
             ReturnValue(Types.GetNone())
