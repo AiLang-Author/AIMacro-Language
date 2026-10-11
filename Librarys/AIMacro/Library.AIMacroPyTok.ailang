@@ -80,6 +80,7 @@ FixedPool.PyTok {
     "altstack": Initialize=0
     "paren": Initialize=0
     "paren_line": Initialize=0
+    "paren_off": Initialize=0
     "types": Initialize=0
     "lines": Initialize=0
     "offs": Initialize=0
@@ -94,7 +95,7 @@ Function.PyTok_IsIdentStart {
         IfCondition And(GreaterEqual(c, 97), LessThan(c, 123)) ThenBlock: { ReturnValue(1) }
         IfCondition And(GreaterEqual(c, 65), LessThan(c, 91)) ThenBlock: { ReturnValue(1) }
         IfCondition EqualTo(c, 95) ThenBlock: { ReturnValue(1) }
-        IfCondition GreaterEqual(c, 128) ThenBlock: { ReturnValue(1) }
+        IfCondition And(GreaterEqual(c, 195), LessThan(c, 245)) ThenBlock: { ReturnValue(1) }
         ReturnValue(0)
     }
 }
@@ -105,6 +106,7 @@ Function.PyTok_IsIdentChar {
     Body: {
         IfCondition EqualTo(PyTok_IsIdentStart(c), 1) ThenBlock: { ReturnValue(1) }
         IfCondition And(GreaterEqual(c, 48), LessThan(c, 58)) ThenBlock: { ReturnValue(1) }
+        IfCondition And(GreaterEqual(c, 128), LessThan(c, 192)) ThenBlock: { ReturnValue(1) }
         ReturnValue(0)
     }
 }
@@ -234,14 +236,17 @@ Function.PyTok_Init {
         PyTok.altstack = alt
         par = Array.Create(200)
         parln = Array.Create(200)
+        paroff = Array.Create(200)
         j = 0
         WhileLoop LessThan(j, 200) {
             Array.Push(par, 0)
             Array.Push(parln, 0)
+            Array.Push(paroff, 0)
             j = Add(j, 1)
         }
         PyTok.paren = par
         PyTok.paren_line = parln
+        PyTok.paren_off = paroff
         PyTok.types = Array.Create(64)
         PyTok.lines = Array.Create(64)
         PyTok.offs = Array.Create(64)
@@ -333,6 +338,42 @@ Function.PyTok_Backup {
     }
 }
 
+Function.PyTok_LineAt {
+    Input: want: Integer
+    Output: Address
+    Body: {
+        a = 0
+        ln = 1
+        WhileLoop And(LessThan(a, PyTok.len), LessThan(ln, want)) {
+            ch = GetByte(PyTok.src, a)
+            a = Add(a, 1)
+            IfCondition EqualTo(ch, 10) ThenBlock: {
+                ln = Add(ln, 1)
+            }
+        }
+        b = a
+        WhileLoop LessThan(b, PyTok.len) {
+            ch2 = GetByte(PyTok.src, b)
+            IfCondition EqualTo(ch2, 10) ThenBlock: {
+                BreakLoop
+            }
+            b = Add(b, 1)
+        }
+        n = Subtract(b, a)
+        IfCondition LessThan(n, 0) ThenBlock: {
+            n = 0
+        }
+        s = Allocate(Add(n, 1))
+        i = 0
+        WhileLoop LessThan(i, n) {
+            SetByte(s, i, GetByte(PyTok.src, Add(a, i)))
+            i = Add(i, 1)
+        }
+        SetByte(s, n, 0)
+        ReturnValue(s)
+    }
+}
+
 Function.PyTok_LineText {
     Output: Address
     Body: {
@@ -383,6 +424,55 @@ Function.PyTok_Slice {
     }
 }
 
+Function.PyTok_ColBefore {
+    Input: pos: Integer
+    Output: Integer
+    Body: {
+        i = PyTok.line_start
+        IfCondition LessThan(i, 0) ThenBlock: {
+            i = 0
+        }
+        n = 0
+        WhileLoop And(LessThan(i, pos), LessThan(i, PyTok.len)) {
+            b = GetByte(PyTok.src, i)
+            IfCondition LessThan(b, 128) ThenBlock: {
+                n = Add(n, 1)
+                i = Add(i, 1)
+            }
+            ElseBlock: {
+                IfCondition GreaterEqual(b, 192) ThenBlock: {
+                    n = Add(n, 1)
+                    i = Add(i, 1)
+                }
+                ElseBlock: {
+                    i = Add(i, 1)
+                }
+            }
+        }
+        ReturnValue(n)
+    }
+}
+
+Function.PyTok_LineOf {
+    Input: pos: Integer
+    Output: Integer
+    Body: {
+        i = 0
+        ln = 1
+        IfCondition LessThan(pos, 0) ThenBlock: {
+            ReturnValue(1)
+        }
+        WhileLoop And(LessThan(i, pos), LessThan(i, PyTok.len)) {
+            b = GetByte(PyTok.src, i)
+            IfCondition EqualTo(b, 10) ThenBlock: {
+                ln = Add(ln, 1)
+            }
+            i = Add(i, 1)
+        }
+        ReturnValue(ln)
+    }
+}
+
 Function.PyTok_Syntax {
     Input: msg: Address
     Output: Integer
@@ -390,7 +480,7 @@ Function.PyTok_Syntax {
         PyTok.done = 17
         PyTok.err_msg = msg
         PyTok.err_line = PyTok.lineno
-        off = Subtract(PyTok.cur, PyTok.line_start)
+        off = PyTok_ColBefore(PyTok.cur)
         IfCondition LessThan(off, 1) ThenBlock: {
             off = 1
         }
@@ -660,7 +750,7 @@ Function.PyTok_Number {
             }
             IfCondition EqualTo(nonzero, 1) ThenBlock: {
                 PyTok_Backup(c)
-                zoff = Add(Subtract(PyTok.start, PyTok.line_start), 1)
+                zoff = Add(PyTok_ColBefore(PyTok.start), 1)
                 IfCondition LessThan(zoff, 1) ThenBlock: {
                     zoff = 1
                 }
@@ -849,8 +939,10 @@ Function.PyTok_Get {
                             PyTok.done = 21
                             PyTok.err_msg = "unindent does not match any outer indentation level"
                             PyTok.err_line = PyTok.lineno
-                            PyTok.err_off = 1
-                            PyTok.err_text = PyTok_LineText()
+                            utext = PyTok_LineText()
+                            ulen = StringLength(utext)
+                            PyTok.err_off = Add(ulen, 1)
+                            PyTok.err_text = utext
                             ReturnValue(PyTokT.ERRORTOKEN)
                         }
                         IfCondition NotEqual(altcol, Array.Get(PyTok.altstack, PyTok.indent)) ThenBlock: {
@@ -886,10 +978,23 @@ Function.PyTok_Get {
         }
         IfCondition EqualTo(c, -1) ThenBlock: {
             IfCondition NotEqual(PyTok.level, 0) ThenBlock: {
+                opener = Array.Get(PyTok.paren, 0)
                 PyTok.err_msg = "unexpected EOF while parsing"
-                PyTok.err_line = PyTok.lineno
-                PyTok.err_off = Add(Subtract(PyTok.cur, PyTok.line_start), 1)
-                PyTok.err_text = PyTok_LineText()
+                IfCondition EqualTo(opener, 40) ThenBlock: {
+                    PyTok.err_msg = "'(' was never closed"
+                }
+                IfCondition EqualTo(opener, 91) ThenBlock: {
+                    PyTok.err_msg = "'[' was never closed"
+                }
+                IfCondition EqualTo(opener, 123) ThenBlock: {
+                    PyTok.err_msg = "'{' was never closed"
+                }
+                PyTok.err_line = Array.Get(PyTok.paren_line, 0)
+                PyTok.err_off = Array.Get(PyTok.paren_off, 0)
+                IfCondition LessThan(PyTok.err_off, 1) ThenBlock: {
+                    PyTok.err_off = 1
+                }
+                PyTok.err_text = PyTok_LineAt(PyTok.err_line)
                 PyTok.done = 11
                 ReturnValue(PyTokT.ERRORTOKEN)
             }
@@ -980,6 +1085,11 @@ Function.PyTok_Get {
             }
             Array.Set(PyTok.paren, PyTok.level, c)
             Array.Set(PyTok.paren_line, PyTok.level, PyTok.lineno)
+            poff = Add(PyTok_ColBefore(PyTok.start), 1)
+            IfCondition LessThan(poff, 1) ThenBlock: {
+                poff = 1
+            }
+            Array.Set(PyTok.paren_off, PyTok.level, poff)
             PyTok.level = Add(PyTok.level, 1)
             ReturnValue(PyTok_OneChar(c))
         }
@@ -1005,18 +1115,14 @@ Function.PyTok_Tokenize {
         guard = 0
         WhileLoop LessThan(guard, 100000) {
             guard = Add(guard, 1)
-            line_at = PyTok.lineno
-            start_at = PyTok.cur
             t = PyTok_Get()
             IfCondition EqualTo(t, PyTokT.ERRORTOKEN) ThenBlock: {
                 ReturnValue(0)
             }
-            off = Subtract(PyTok.start, PyTok.line_start)
+            line_at = PyTok_LineOf(PyTok.start)
+            off = Add(PyTok_ColBefore(PyTok.start), 1)
             IfCondition LessThan(off, 1) ThenBlock: {
                 off = 1
-            }
-            ElseBlock: {
-                off = Add(off, 1)
             }
             val = ""
             IfCondition Or(EqualTo(t, PyTokT.NAME), Or(EqualTo(t, PyTokT.NUMBER), EqualTo(t, PyTokT.STRING))) ThenBlock: {

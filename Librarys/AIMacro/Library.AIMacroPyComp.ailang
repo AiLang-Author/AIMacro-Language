@@ -19,6 +19,19 @@ FixedPool.PyComp {
     "seen": Initialize=0
     "fn": Initialize=0
     "failed": Initialize=0
+    "params": Initialize=0
+    "nparams": Initialize=0
+    "bare_ex": Initialize=0
+    "bare_line": Initialize=0
+    "bare_off": Initialize=0
+    "gnames": Initialize=0
+    "glines": Initialize=0
+    "goffs": Initialize=0
+    "ng": Initialize=0
+    "nnames": Initialize=0
+    "nlines": Initialize=0
+    "noffs": Initialize=0
+    "nn": Initialize=0
 }
 
 Function.PyComp_T {
@@ -135,6 +148,38 @@ Function.PyComp_SkipNL {
     }
 }
 
+Function.PyComp_IsAtom {
+    Input: t: Integer
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(t, PyTokT.NAME) ThenBlock: { ReturnValue(1) }
+        IfCondition EqualTo(t, PyTokT.NUMBER) ThenBlock: { ReturnValue(1) }
+        IfCondition EqualTo(t, PyTokT.STRING) ThenBlock: { ReturnValue(1) }
+        ReturnValue(0)
+    }
+}
+
+Function.PyComp_NameNotAtom {
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(PyComp_IsKw("for"), 1) ThenBlock: { ReturnValue(1) }
+        IfCondition EqualTo(PyComp_IsKw("in"), 1) ThenBlock: { ReturnValue(1) }
+        IfCondition EqualTo(PyComp_IsKw("if"), 1) ThenBlock: { ReturnValue(1) }
+        IfCondition EqualTo(PyComp_IsKw("else"), 1) ThenBlock: { ReturnValue(1) }
+        IfCondition EqualTo(PyComp_IsKw("and"), 1) ThenBlock: { ReturnValue(1) }
+        IfCondition EqualTo(PyComp_IsKw("or"), 1) ThenBlock: { ReturnValue(1) }
+        IfCondition EqualTo(PyComp_IsKw("not"), 1) ThenBlock: { ReturnValue(1) }
+        IfCondition EqualTo(PyComp_IsKw("is"), 1) ThenBlock: { ReturnValue(1) }
+        IfCondition EqualTo(PyComp_IsKw("as"), 1) ThenBlock: { ReturnValue(1) }
+        IfCondition EqualTo(PyComp_IsKw("yield"), 1) ThenBlock: { ReturnValue(1) }
+        IfCondition EqualTo(PyComp_IsKw("lambda"), 1) ThenBlock: { ReturnValue(1) }
+        IfCondition EqualTo(PyComp_IsKw("await"), 1) ThenBlock: { ReturnValue(1) }
+        IfCondition EqualTo(PyComp_IsKw("match"), 1) ThenBlock: { ReturnValue(1) }
+        IfCondition EqualTo(PyComp_IsKw("case"), 1) ThenBlock: { ReturnValue(1) }
+        ReturnValue(0)
+    }
+}
+
 Function.PyComp_Simple {
     Input: filename: Address
     Output: Integer
@@ -143,10 +188,33 @@ Function.PyComp_Simple {
         last_off = PyComp_Off()
         last_line = PyComp_Line()
         depth = 0
+        star_off = 0
+        gen_off = 0
+        saw_for = 0
+        yoff = 0
+        last_kw = 0
+        expect_tgt = 0
+        tgt_line = 0
+        tgt_off = 0
+        had_comma = 0
+        last_val = ""
+        last_case = 0
+        in_map = 0
+        saw_dstar = 0
+        dstar_tail = 0
+        nfor = 0
+        wnames = Array.Create(8)
+        nw = 0
+        ann_off = 0
+        ann_line = 0
+        saw_ann_comma = 0
         WhileLoop EqualTo(1, 1) {
             t = PyComp_T()
+            cline = PyComp_Line()
+            coff = PyComp_Off()
             IfCondition EqualTo(t, PyTokT.ENDMARKER) ThenBlock: {
-                IfCondition EqualTo(PyComp_BinOp(last), 1) ThenBlock: {
+                isb = PyComp_BinOp(last)
+                IfCondition EqualTo(isb, 1) ThenBlock: {
                     PyComp_Fail("unexpected EOF while parsing", last_line, Add(last_off, 1), filename)
                     ReturnValue(0)
                 }
@@ -154,7 +222,8 @@ Function.PyComp_Simple {
             }
             IfCondition EqualTo(t, PyTokT.NEWLINE) ThenBlock: {
                 IfCondition EqualTo(depth, 0) ThenBlock: {
-                    IfCondition EqualTo(PyComp_BinOp(last), 1) ThenBlock: {
+                    isb2 = PyComp_BinOp(last)
+                    IfCondition EqualTo(isb2, 1) ThenBlock: {
                         PyComp_Fail("unexpected EOF while parsing", last_line, Add(last_off, 1), filename)
                         ReturnValue(0)
                     }
@@ -168,14 +237,177 @@ Function.PyComp_Simple {
                     ReturnValue(1)
                 }
             }
-            IfCondition EqualTo(t, PyTokT.COLON) ThenBlock: {
-                IfCondition EqualTo(depth, 0) ThenBlock: {
-                    ReturnValue(1)
+            IfCondition EqualTo(t, PyTokT.OP) ThenBlock: {
+                PyComp_Fail("invalid syntax", cline, coff, filename)
+                ReturnValue(0)
+            }
+            isb3 = PyComp_BinOp(last)
+            IfCondition EqualTo(isb3, 1) ThenBlock: {
+                IfCondition Or(EqualTo(t, PyTokT.RPAR), Or(EqualTo(t, PyTokT.RSQB), EqualTo(t, PyTokT.RBRACE))) ThenBlock: {
+                    PyComp_Fail("invalid syntax", last_line, Add(last_off, 1), filename)
+                    ReturnValue(0)
                 }
             }
-            IfCondition EqualTo(t, PyTokT.OP) ThenBlock: {
-                PyComp_Fail("invalid syntax", PyComp_Line(), PyComp_Off(), filename)
+            notatom = PyComp_NameNotAtom()
+            atom_t = PyComp_IsAtom(t)
+            atom_l = PyComp_IsAtom(last)
+            IfCondition And(EqualTo(atom_t, 1), And(EqualTo(atom_l, 1), And(GreaterThan(depth, 0), And(EqualTo(notatom, 0), EqualTo(last_kw, 0))))) ThenBlock: {
+                PyComp_Fail("invalid syntax", last_line, last_off, filename)
                 ReturnValue(0)
+            }
+            IfCondition And(EqualTo(last, PyTokT.NAME), And(EqualTo(t, PyTokT.LBRACE), EqualTo(last_kw, 0))) ThenBlock: {
+                PyComp_Fail("invalid syntax", cline, coff, filename)
+                ReturnValue(0)
+            }
+            IfCondition And(EqualTo(t, PyTokT.LBRACE), EqualTo(last_case, 1)) ThenBlock: {
+                in_map = 1
+                saw_dstar = 0
+                dstar_tail = 0
+            }
+            IfCondition EqualTo(dstar_tail, 1) ThenBlock: {
+                IfCondition NotEqual(t, PyTokT.NEWLINE) ThenBlock: {
+                    IfCondition NotEqual(t, PyTokT.RBRACE) ThenBlock: {
+                        PyComp_Fail("invalid syntax", cline, coff, filename)
+                        ReturnValue(0)
+                    }
+                    dstar_tail = 0
+                }
+            }
+            IfCondition And(EqualTo(t, PyTokT.DOUBLESTAR), EqualTo(in_map, 1)) ThenBlock: {
+                saw_dstar = 1
+            }
+            IfCondition And(EqualTo(t, PyTokT.COMMA), And(EqualTo(saw_dstar, 1), EqualTo(in_map, 1))) ThenBlock: {
+                dstar_tail = 1
+            }
+            IfCondition And(EqualTo(t, PyTokT.COLONEQUAL), EqualTo(last, PyTokT.NAME)) ThenBlock: {
+                IfCondition EqualTo(AIMacro.LooksLikeString(last_val), 1) ThenBlock: {
+                    Array.Push(wnames, last_val)
+                    nw = Add(nw, 1)
+                }
+            }
+            IfCondition And(EqualTo(t, PyTokT.COLON), And(EqualTo(depth, 0), And(GreaterThan(PyComp.fn_depth, 0), EqualTo(saw_ann_comma, 1)))) ThenBlock: {
+                ao = ann_off
+                IfCondition EqualTo(ao, 0) ThenBlock: {
+                    ao = coff
+                }
+                al = ann_line
+                IfCondition EqualTo(al, 0) ThenBlock: {
+                    al = cline
+                }
+                PyComp_Fail("only single target (not tuple) can be annotated", al, ao, filename)
+                ReturnValue(0)
+            }
+            IfCondition And(EqualTo(depth, 0), GreaterThan(PyComp.fn_depth, 0)) ThenBlock: {
+                IfCondition And(EqualTo(t, PyTokT.NAME), EqualTo(ann_off, 0)) ThenBlock: {
+                    ann_off = coff
+                    ann_line = cline
+                }
+                IfCondition EqualTo(t, PyTokT.COMMA) ThenBlock: {
+                    saw_ann_comma = 1
+                }
+            }
+            IfCondition And(EqualTo(t, PyTokT.EQUAL), GreaterThan(depth, 0)) ThenBlock: {
+                IfCondition EqualTo(last, PyTokT.NUMBER) ThenBlock: {
+                    PyComp_Fail("expression cannot contain assignment, perhaps you meant \"==\"?", last_line, last_off, filename)
+                    ReturnValue(0)
+                }
+                IfCondition EqualTo(last, PyTokT.STRING) ThenBlock: {
+                    PyComp_Fail("cannot assign to literal here. Maybe you meant '==' instead of '='?", last_line, last_off, filename)
+                    ReturnValue(0)
+                }
+            }
+            isy = PyComp_IsKw("yield")
+            IfCondition EqualTo(isy, 1) ThenBlock: {
+                yoff = coff
+                IfCondition GreaterThan(depth, 1) ThenBlock: {
+                    PyComp_Fail("'yield' inside list comprehension", cline, coff, filename)
+                    ReturnValue(0)
+                }
+            }
+            IfCondition And(EqualTo(t, PyTokT.EQUAL), EqualTo(last, PyTokT.RPAR)) ThenBlock: {
+                IfCondition And(NotEqual(yoff, 0), EqualTo(depth, 0)) ThenBlock: {
+                    PyComp_Fail("cannot assign to yield expression", cline, yoff, filename)
+                    ReturnValue(0)
+                }
+            }
+            IfCondition EqualTo(t, PyTokT.STAR) ThenBlock: {
+                IfCondition Or(EqualTo(last, PyTokT.LSQB), EqualTo(last, PyTokT.COMMA)) ThenBlock: {
+                    star_off = coff
+                }
+            }
+            IfCondition EqualTo(expect_tgt, 1) ThenBlock: {
+                IfCondition NotEqual(t, PyTokT.NEWLINE) ThenBlock: {
+                    IfCondition Or(EqualTo(t, PyTokT.NUMBER), EqualTo(t, PyTokT.STRING)) ThenBlock: {
+                        PyComp_Fail("cannot assign to literal", cline, coff, filename)
+                        ReturnValue(0)
+                    }
+                    IfCondition EqualTo(t, PyTokT.NAME) ThenBlock: {
+                        tgt_line = cline
+                        tgt_off = coff
+                        expect_tgt = 2
+                        IfCondition GreaterThan(nfor, 1) ThenBlock: {
+                            tv = PyComp_Val()
+                            wi = 0
+                            WhileLoop LessThan(wi, nw) {
+                                wn = Array.Get(wnames, wi)
+                                IfCondition EqualTo(StringCompare(wn, tv), 0) ThenBlock: {
+                                    PyComp_Fail("comprehension inner loop cannot rebind assignment expression target", cline, coff, filename)
+                                    ReturnValue(0)
+                                }
+                                wi = Add(wi, 1)
+                            }
+                        }
+                    }
+                    ElseBlock: {
+                        PyComp_Fail("invalid syntax", cline, coff, filename)
+                        ReturnValue(0)
+                    }
+                }
+            }
+            ElseBlock: {
+                IfCondition EqualTo(expect_tgt, 2) ThenBlock: {
+                    IfCondition EqualTo(t, PyTokT.LPAR) ThenBlock: {
+                        PyComp_Fail("invalid syntax", tgt_line, tgt_off, filename)
+                        ReturnValue(0)
+                    }
+                    IfCondition NotEqual(t, PyTokT.NEWLINE) ThenBlock: {
+                        expect_tgt = 0
+                    }
+                }
+            }
+            isfor = PyComp_IsKw("for")
+            IfCondition EqualTo(isfor, 1) ThenBlock: {
+                saw_for = 1
+                expect_tgt = 1
+                nfor = Add(nfor, 1)
+                IfCondition EqualTo(had_comma, depth) ThenBlock: {
+                    IfCondition GreaterThan(depth, 0) ThenBlock: {
+                        PyComp_Fail("Generator expression must be parenthesized", last_line, last_off, filename)
+                        ReturnValue(0)
+                    }
+                }
+                IfCondition NotEqual(star_off, 0) ThenBlock: {
+                    PyComp_Fail("iterable unpacking cannot be used in comprehension", cline, star_off, filename)
+                    ReturnValue(0)
+                }
+                IfCondition EqualTo(gen_off, 0) ThenBlock: {
+                    IfCondition GreaterThan(last_off, 0) ThenBlock: {
+                        gen_off = last_off
+                    }
+                }
+            }
+            IfCondition And(EqualTo(t, PyTokT.COMMA), GreaterThan(depth, 0)) ThenBlock: {
+                had_comma = depth
+            }
+            IfCondition And(EqualTo(t, PyTokT.COMMA), EqualTo(saw_for, 1)) ThenBlock: {
+                IfCondition GreaterThan(depth, 0) ThenBlock: {
+                    go = gen_off
+                    IfCondition EqualTo(go, 0) ThenBlock: {
+                        go = coff
+                    }
+                    PyComp_Fail("Generator expression must be parenthesized", cline, go, filename)
+                    ReturnValue(0)
+                }
             }
             IfCondition Or(EqualTo(t, PyTokT.LPAR), Or(EqualTo(t, PyTokT.LSQB), EqualTo(t, PyTokT.LBRACE))) ThenBlock: {
                 depth = Add(depth, 1)
@@ -184,10 +416,28 @@ Function.PyComp_Simple {
                 IfCondition GreaterThan(depth, 0) ThenBlock: {
                     depth = Subtract(depth, 1)
                 }
+                IfCondition GreaterThan(had_comma, depth) ThenBlock: {
+                    had_comma = 0
+                }
+                IfCondition EqualTo(t, PyTokT.RBRACE) ThenBlock: {
+                    in_map = 0
+                    saw_dstar = 0
+                    dstar_tail = 0
+                }
+                IfCondition EqualTo(depth, 0) ThenBlock: {
+                    saw_for = 0
+                    star_off = 0
+                    gen_off = 0
+                    nfor = 0
+                    nw = 0
+                }
             }
             last = t
-            last_off = PyComp_Off()
-            last_line = PyComp_Line()
+            last_off = coff
+            last_line = cline
+            last_kw = notatom
+            last_case = PyComp_IsKw("case")
+            last_val = PyComp_Val()
             PyComp_Adv()
         }
         ReturnValue(1)
@@ -300,6 +550,202 @@ Function.PyComp_Suite {
     }
 }
 
+Function.PyComp_HasParam {
+    Input: nm: Address
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(PyComp.params, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(AIMacro.LooksLikeString(nm), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        i = 0
+        WhileLoop LessThan(i, PyComp.nparams) {
+            p = Array.Get(PyComp.params, i)
+            IfCondition EqualTo(StringCompare(p, nm), 0) ThenBlock: {
+                ReturnValue(1)
+            }
+            i = Add(i, 1)
+        }
+        ReturnValue(0)
+    }
+}
+
+Function.PyComp_DefHead {
+    Input: filename: Address
+    Output: Integer
+    Body: {
+        ps = Array.Create(8)
+        PyComp.params = ps
+        PyComp.nparams = 0
+        PyComp.gnames = Array.Create(8)
+        PyComp.glines = Array.Create(8)
+        PyComp.goffs = Array.Create(8)
+        PyComp.ng = 0
+        PyComp.nnames = Array.Create(8)
+        PyComp.nlines = Array.Create(8)
+        PyComp.noffs = Array.Create(8)
+        PyComp.nn = 0
+        nt = PyComp_T()
+        IfCondition NotEqual(nt, PyTokT.NAME) ThenBlock: {
+            ReturnValue(1)
+        }
+        PyComp_Adv()
+        IfCondition NotEqual(PyComp_T(), PyTokT.LPAR) ThenBlock: {
+            ReturnValue(1)
+        }
+        PyComp_Adv()
+        depth = 1
+        in_def = 0
+        saw_bare = 0
+        star_off = 0
+        star_line = 0
+        WhileLoop EqualTo(1, 1) {
+            t = PyComp_T()
+            cline = PyComp_Line()
+            coff = PyComp_Off()
+            IfCondition EqualTo(t, PyTokT.ENDMARKER) ThenBlock: {
+                PyComp_Fail("unexpected EOF while parsing", cline, coff, filename)
+                ReturnValue(0)
+            }
+            IfCondition And(EqualTo(t, PyTokT.RPAR), EqualTo(depth, 1)) ThenBlock: {
+                PyComp_Adv()
+                IfCondition EqualTo(saw_bare, 1) ThenBlock: {
+                    IfCondition EqualTo(PyComp_T(), PyTokT.COLON) ThenBlock: {
+                        PyComp_Fail("named arguments must follow bare *", star_line, star_off, filename)
+                        ReturnValue(0)
+                    }
+                }
+                ReturnValue(1)
+            }
+            IfCondition EqualTo(t, PyTokT.STAR) ThenBlock: {
+                star_off = coff
+                star_line = cline
+                PyComp_Adv()
+                nt2 = PyComp_T()
+                IfCondition EqualTo(nt2, PyTokT.RPAR) ThenBlock: {
+                    saw_bare = 1
+                }
+            }
+            ElseBlock: {
+            IfCondition And(EqualTo(t, PyTokT.NAME), And(EqualTo(depth, 1), EqualTo(in_def, 0))) ThenBlock: {
+                nm = PyComp_Val()
+                hp = PyComp_HasParam(nm)
+                IfCondition EqualTo(hp, 1) ThenBlock: {
+                    PyComp_Fail("duplicate argument", cline, coff, filename)
+                    ReturnValue(0)
+                }
+                Array.Push(ps, nm)
+                PyComp.nparams = Add(PyComp.nparams, 1)
+            }
+            IfCondition And(EqualTo(t, PyTokT.EQUAL), EqualTo(depth, 1)) ThenBlock: {
+                in_def = 1
+            }
+            IfCondition And(EqualTo(t, PyTokT.COMMA), EqualTo(depth, 1)) ThenBlock: {
+                in_def = 0
+            }
+            IfCondition Or(EqualTo(t, PyTokT.LPAR), Or(EqualTo(t, PyTokT.LSQB), EqualTo(t, PyTokT.LBRACE))) ThenBlock: {
+                depth = Add(depth, 1)
+            }
+            IfCondition Or(EqualTo(t, PyTokT.RPAR), Or(EqualTo(t, PyTokT.RSQB), EqualTo(t, PyTokT.RBRACE))) ThenBlock: {
+                IfCondition GreaterThan(depth, 1) ThenBlock: {
+                    depth = Subtract(depth, 1)
+                }
+            }
+            PyComp_Adv()
+            }
+        }
+        ReturnValue(1)
+    }
+}
+
+Function.PyComp_ForHead {
+    Input: filename: Address
+    Output: Integer
+    Body: {
+        t = PyComp_T()
+        cline = PyComp_Line()
+        coff = PyComp_Off()
+        IfCondition Or(EqualTo(t, PyTokT.NUMBER), EqualTo(t, PyTokT.STRING)) ThenBlock: {
+            PyComp_Fail("cannot assign to literal", cline, coff, filename)
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t, PyTokT.NAME) ThenBlock: {
+            PyComp_Adv()
+            t2 = PyComp_T()
+            IfCondition EqualTo(t2, PyTokT.NAME) ThenBlock: {
+                v = PyComp_Val()
+                IfCondition NotEqual(StringCompare(v, "in"), 0) ThenBlock: {
+                    c2 = PyComp_Line()
+                    o2 = PyComp_Off()
+                    PyComp_Fail("invalid syntax", c2, o2, filename)
+                    ReturnValue(0)
+                }
+            }
+            ReturnValue(1)
+        }
+        ReturnValue(1)
+    }
+}
+
+Function.PyComp_TryTail {
+    Input: filename: Address
+    Output: Integer
+    Body: {
+        PyComp.bare_ex = 0
+        PyComp_SkipNL()
+        WhileLoop EqualTo(PyComp_IsKw("except"), 1) {
+            eline = PyComp_Line()
+            eoff = PyComp_Off()
+            IfCondition EqualTo(PyComp.bare_ex, 1) ThenBlock: {
+                PyComp_Fail("default 'except:' must be last", PyComp.bare_line, PyComp.bare_off, filename)
+                ReturnValue(0)
+            }
+            PyComp_Adv()
+            IfCondition EqualTo(PyComp_T(), PyTokT.STAR) ThenBlock: {
+                PyComp_Adv()
+                IfCondition EqualTo(PyComp_T(), PyTokT.COLON) ThenBlock: {
+                    c2 = PyComp_Line()
+                    o2 = PyComp_Off()
+                    PyComp_Fail("expected one or more exception types", c2, o2, filename)
+                    ReturnValue(0)
+                }
+            }
+            IfCondition EqualTo(PyComp_T(), PyTokT.COLON) ThenBlock: {
+                PyComp.bare_ex = 1
+                PyComp.bare_line = eline
+                PyComp.bare_off = eoff
+            }
+            eg = 0
+            WhileLoop LessThan(eg, 1000) {
+                eg = Add(eg, 1)
+                et = PyComp_T()
+                IfCondition EqualTo(et, PyTokT.COLON) ThenBlock: {
+                    BreakLoop
+                }
+                IfCondition Or(EqualTo(et, PyTokT.ENDMARKER), EqualTo(et, PyTokT.NEWLINE)) ThenBlock: {
+                    PyComp_Fail("invalid syntax", PyComp_Line(), PyComp_Off(), filename)
+                    ReturnValue(0)
+                }
+                PyComp_Adv()
+            }
+            r = PyComp_Suite(filename, "except", eline)
+            IfCondition EqualTo(r, 0) ThenBlock: {
+                ReturnValue(0)
+            }
+            PyComp_SkipNL()
+        }
+        IfCondition EqualTo(PyComp_IsKw("finally"), 1) ThenBlock: {
+            fl = PyComp_Line()
+            PyComp_Adv()
+            r2 = PyComp_Suite(filename, "finally", fl)
+            ReturnValue(r2)
+        }
+        ReturnValue(1)
+    }
+}
+
 Function.PyComp_Stmt {
     Input: filename: Address
     Output: Integer
@@ -340,6 +786,68 @@ Function.PyComp_Stmt {
                 ReturnValue(0)
             }
             PyComp_Adv()
+            ReturnValue(PyComp_Simple(filename))
+        }
+        IfCondition EqualTo(PyComp_IsKw("nonlocal"), 1) ThenBlock: {
+            nline = PyComp_Line()
+            noff = PyComp_Off()
+            IfCondition EqualTo(PyComp.fn_depth, 0) ThenBlock: {
+                PyComp_Fail("nonlocal declaration not allowed at module level", nline, noff, filename)
+                ReturnValue(0)
+            }
+            PyComp_Adv()
+            nm = PyComp_Val()
+            hp = PyComp_HasParam(nm)
+            IfCondition EqualTo(hp, 1) ThenBlock: {
+                PyComp_Fail("name is parameter and nonlocal", nline, noff, filename)
+                ReturnValue(0)
+            }
+            gi = 0
+            WhileLoop LessThan(gi, PyComp.ng) {
+                gn = Array.Get(PyComp.gnames, gi)
+                IfCondition EqualTo(StringCompare(gn, nm), 0) ThenBlock: {
+                    gl = Array.Get(PyComp.glines, gi)
+                    go = Array.Get(PyComp.goffs, gi)
+                    PyComp_Fail("name is nonlocal and global", gl, go, filename)
+                    ReturnValue(0)
+                }
+                gi = Add(gi, 1)
+            }
+            IfCondition NotEqual(PyComp.nnames, 0) ThenBlock: {
+                Array.Push(PyComp.nnames, nm)
+                Array.Push(PyComp.nlines, nline)
+                Array.Push(PyComp.noffs, noff)
+                PyComp.nn = Add(PyComp.nn, 1)
+            }
+            ReturnValue(PyComp_Simple(filename))
+        }
+        IfCondition EqualTo(PyComp_IsKw("global"), 1) ThenBlock: {
+            gline = PyComp_Line()
+            goff = PyComp_Off()
+            PyComp_Adv()
+            gnm = PyComp_Val()
+            hp2 = PyComp_HasParam(gnm)
+            IfCondition EqualTo(hp2, 1) ThenBlock: {
+                PyComp_Fail("name is parameter and global", gline, goff, filename)
+                ReturnValue(0)
+            }
+            ni = 0
+            WhileLoop LessThan(ni, PyComp.nn) {
+                nnm = Array.Get(PyComp.nnames, ni)
+                IfCondition EqualTo(StringCompare(nnm, gnm), 0) ThenBlock: {
+                    nl = Array.Get(PyComp.nlines, ni)
+                    no = Array.Get(PyComp.noffs, ni)
+                    PyComp_Fail("name is nonlocal and global", nl, no, filename)
+                    ReturnValue(0)
+                }
+                ni = Add(ni, 1)
+            }
+            IfCondition NotEqual(PyComp.gnames, 0) ThenBlock: {
+                Array.Push(PyComp.gnames, gnm)
+                Array.Push(PyComp.glines, gline)
+                Array.Push(PyComp.goffs, goff)
+                PyComp.ng = Add(PyComp.ng, 1)
+            }
             ReturnValue(PyComp_Simple(filename))
         }
         IfCondition EqualTo(PyComp_IsKw("lambda"), 1) ThenBlock: {
@@ -415,6 +923,40 @@ Function.PyComp_Stmt {
                     ReturnValue(PyComp_Simple(filename))
                 }
             }
+            IfCondition GreaterThan(PyComp.fn_depth, 0) ThenBlock: {
+                PyComp.pos = save
+                PyComp_Adv()
+                walk = 1
+                WhileLoop EqualTo(walk, 1) {
+                    wt = PyComp_T()
+                    IfCondition EqualTo(wt, PyTokT.DOT) ThenBlock: {
+                        PyComp_Adv()
+                    }
+                    ElseBlock: {
+                        IfCondition EqualTo(wt, PyTokT.NAME) ThenBlock: {
+                            IfCondition EqualTo(PyComp_IsKw("import"), 1) ThenBlock: {
+                                walk = 0
+                            }
+                            ElseBlock: {
+                                PyComp_Adv()
+                            }
+                        }
+                        ElseBlock: {
+                            walk = 0
+                        }
+                    }
+                }
+                isimp2 = PyComp_IsKw("import")
+                IfCondition EqualTo(isimp2, 1) ThenBlock: {
+                    PyComp_Adv()
+                    IfCondition EqualTo(PyComp_T(), PyTokT.STAR) ThenBlock: {
+                        sline = PyComp_Line()
+                        soff = PyComp_Off()
+                        PyComp_Fail("import * only allowed at module level", sline, soff, filename)
+                        ReturnValue(0)
+                    }
+                }
+            }
             PyComp.pos = save
         }
         IfCondition EqualTo(PyComp_IsKw("print"), 1) ThenBlock: {
@@ -448,12 +990,31 @@ Function.PyComp_Stmt {
         IfCondition NotEqual(StringCompare(kw, ""), 0) ThenBlock: {
             kwline = PyComp_Line()
             PyComp_Adv()
+            IfCondition EqualTo(StringCompare(kw, "def"), 0) ThenBlock: {
+                dh = PyComp_DefHead(filename)
+                IfCondition EqualTo(dh, 0) ThenBlock: {
+                    ReturnValue(0)
+                }
+            }
+            IfCondition EqualTo(StringCompare(kw, "for"), 0) ThenBlock: {
+                fh = PyComp_ForHead(filename)
+                IfCondition EqualTo(fh, 0) ThenBlock: {
+                    ReturnValue(0)
+                }
+            }
             guard = 0
             WhileLoop LessThan(guard, 10000) {
                 guard = Add(guard, 1)
                 tt = PyComp_T()
                 IfCondition EqualTo(tt, PyTokT.COLON) ThenBlock: {
-                    ReturnValue(PyComp_Suite(filename, kw, kwline))
+                    sr = PyComp_Suite(filename, kw, kwline)
+                    IfCondition EqualTo(sr, 0) ThenBlock: {
+                        ReturnValue(0)
+                    }
+                    IfCondition EqualTo(StringCompare(kw, "try"), 0) ThenBlock: {
+                        ReturnValue(PyComp_TryTail(filename))
+                    }
+                    ReturnValue(sr)
                 }
                 IfCondition EqualTo(tt, PyTokT.NEWLINE) ThenBlock: {
                     PyComp_Fail("invalid syntax", PyComp_Line(), PyComp_Off(), filename)
@@ -514,6 +1075,17 @@ Function.AIMacro.PyCompile {
         PyComp.loop = 0
         PyComp.fn_depth = 0
         PyComp.seen = 0
+        PyComp.params = Array.Create(8)
+        PyComp.nparams = 0
+        PyComp.bare_ex = 0
+        PyComp.gnames = Array.Create(8)
+        PyComp.glines = Array.Create(8)
+        PyComp.goffs = Array.Create(8)
+        PyComp.ng = 0
+        PyComp.nnames = Array.Create(8)
+        PyComp.nlines = Array.Create(8)
+        PyComp.noffs = Array.Create(8)
+        PyComp.nn = 0
         PyComp.fn = fn
         PyComp.failed = 0
         guard = 0
