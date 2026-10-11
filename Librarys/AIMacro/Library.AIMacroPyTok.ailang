@@ -1,0 +1,1036 @@
+// Library.AIMacroPyTok.ailang
+// CPython 3.11 Parser/tokenizer.c, in AILANG. Leftover compile() frontend.
+//
+// Copyright (c) 2025-2026 Sean Collins, 2 Paws Machine and Engineering. All rights reserved.
+// Licensed under the Sean Collins Software License (SCSL v1.0).
+
+LibraryImport.Array
+LibraryImport.Hash
+LibraryImport.AIMacro.AIMacroTypes
+LibraryImport.AIMacro.AIMacro
+
+
+FixedPool.PyTokT {
+    "ENDMARKER": Initialize=0
+    "NAME": Initialize=1
+    "NUMBER": Initialize=2
+    "STRING": Initialize=3
+    "NEWLINE": Initialize=4
+    "INDENT": Initialize=5
+    "DEDENT": Initialize=6
+    "LPAR": Initialize=7
+    "RPAR": Initialize=8
+    "LSQB": Initialize=9
+    "RSQB": Initialize=10
+    "COLON": Initialize=11
+    "COMMA": Initialize=12
+    "SEMI": Initialize=13
+    "PLUS": Initialize=14
+    "MINUS": Initialize=15
+    "STAR": Initialize=16
+    "SLASH": Initialize=17
+    "VBAR": Initialize=18
+    "AMPER": Initialize=19
+    "LESS": Initialize=20
+    "GREATER": Initialize=21
+    "EQUAL": Initialize=22
+    "DOT": Initialize=23
+    "PERCENT": Initialize=24
+    "LBRACE": Initialize=25
+    "RBRACE": Initialize=26
+    "EQEQUAL": Initialize=27
+    "NOTEQUAL": Initialize=28
+    "LESSEQUAL": Initialize=29
+    "GREATEREQUAL": Initialize=30
+    "TILDE": Initialize=31
+    "CIRCUMFLEX": Initialize=32
+    "LEFTSHIFT": Initialize=33
+    "RIGHTSHIFT": Initialize=34
+    "DOUBLESTAR": Initialize=35
+    "AT": Initialize=49
+    "ELLIPSIS": Initialize=52
+    "COLONEQUAL": Initialize=53
+    "OP": Initialize=54
+    "ERRORTOKEN": Initialize=60
+}
+
+FixedPool.PyTok {
+    "src": Initialize=0
+    "len": Initialize=0
+    "cur": Initialize=0
+    "start": Initialize=0
+    "line_start": Initialize=0
+    "lineno": Initialize=1
+    "first_lineno": Initialize=1
+    "atbol": Initialize=1
+    "indent": Initialize=0
+    "pendin": Initialize=0
+    "level": Initialize=0
+    "tabsize": Initialize=8
+    "done": Initialize=10
+    "need_nl": Initialize=0
+    "blankline": Initialize=0
+    "err_msg": Initialize=0
+    "err_line": Initialize=1
+    "err_off": Initialize=1
+    "err_end": Initialize=1
+    "err_text": Initialize=0
+    "err_kind": Initialize=24
+    "indstack": Initialize=0
+    "altstack": Initialize=0
+    "paren": Initialize=0
+    "paren_line": Initialize=0
+    "types": Initialize=0
+    "lines": Initialize=0
+    "offs": Initialize=0
+    "vals": Initialize=0
+    "n": Initialize=0
+}
+
+Function.PyTok_IsIdentStart {
+    Input: c: Integer
+    Output: Integer
+    Body: {
+        IfCondition And(GreaterEqual(c, 97), LessThan(c, 123)) ThenBlock: { ReturnValue(1) }
+        IfCondition And(GreaterEqual(c, 65), LessThan(c, 91)) ThenBlock: { ReturnValue(1) }
+        IfCondition EqualTo(c, 95) ThenBlock: { ReturnValue(1) }
+        IfCondition GreaterEqual(c, 128) ThenBlock: { ReturnValue(1) }
+        ReturnValue(0)
+    }
+}
+
+Function.PyTok_IsIdentChar {
+    Input: c: Integer
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(PyTok_IsIdentStart(c), 1) ThenBlock: { ReturnValue(1) }
+        IfCondition And(GreaterEqual(c, 48), LessThan(c, 58)) ThenBlock: { ReturnValue(1) }
+        ReturnValue(0)
+    }
+}
+
+Function.PyTok_IsDigit {
+    Input: c: Integer
+    Output: Integer
+    Body: {
+        IfCondition And(GreaterEqual(c, 48), LessThan(c, 58)) ThenBlock: { ReturnValue(1) }
+        ReturnValue(0)
+    }
+}
+
+Function.PyTok_IsXDigit {
+    Input: c: Integer
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(PyTok_IsDigit(c), 1) ThenBlock: { ReturnValue(1) }
+        IfCondition And(GreaterEqual(c, 97), LessThan(c, 103)) ThenBlock: { ReturnValue(1) }
+        IfCondition And(GreaterEqual(c, 65), LessThan(c, 71)) ThenBlock: { ReturnValue(1) }
+        ReturnValue(0)
+    }
+}
+
+Function.PyTok_Peek {
+    Output: Integer
+    Body: {
+        IfCondition GreaterEqual(PyTok.cur, PyTok.len) ThenBlock: {
+            IfCondition EqualTo(PyTok.need_nl, 1) ThenBlock: {
+                ReturnValue(10)
+            }
+            ReturnValue(-1)
+        }
+        ReturnValue(GetByte(PyTok.src, PyTok.cur))
+    }
+}
+
+Function.PyTok_Lower {
+    Input: c: Integer
+    Output: Integer
+    Body: {
+        IfCondition And(GreaterEqual(c, 65), LessThan(c, 91)) ThenBlock: {
+            ReturnValue(Add(c, 32))
+        }
+        ReturnValue(c)
+    }
+}
+
+Function.PyTok_IsStrPrefix {
+    Input: s: Address
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(AIMacro.LooksLikeString(s), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        n = StringLength(s)
+        IfCondition Or(EqualTo(n, 0), GreaterThan(n, 2)) ThenBlock: {
+            ReturnValue(0)
+        }
+        a0 = GetByte(s, 0)
+        a = PyTok_Lower(a0)
+        IfCondition EqualTo(n, 1) ThenBlock: {
+            IfCondition Or(EqualTo(a, 98), Or(EqualTo(a, 114), Or(EqualTo(a, 117), EqualTo(a, 102)))) ThenBlock: {
+                ReturnValue(1)
+            }
+            ReturnValue(0)
+        }
+        b0 = GetByte(s, 1)
+        b = PyTok_Lower(b0)
+        IfCondition And(EqualTo(a, 98), EqualTo(b, 114)) ThenBlock: { ReturnValue(1) }
+        IfCondition And(EqualTo(a, 114), EqualTo(b, 98)) ThenBlock: { ReturnValue(1) }
+        IfCondition And(EqualTo(a, 102), EqualTo(b, 114)) ThenBlock: { ReturnValue(1) }
+        IfCondition And(EqualTo(a, 114), EqualTo(b, 102)) ThenBlock: { ReturnValue(1) }
+        ReturnValue(0)
+    }
+}
+
+Function.PyTok_Init {
+    Input: src: Address
+    Body: {
+        raw = src
+        IfCondition EqualTo(Hash.IsHash(src), 1) ThenBlock: {
+            raws = Hash.Get(src, "__src__")
+            IfCondition NotEqual(raws, 0) ThenBlock: {
+                raw = raws
+            }
+        }
+        IfCondition EqualTo(AIMacro.LooksLikeString(raw), 0) ThenBlock: {
+            raw = ""
+        }
+        PyTok.src = raw
+        n = StringLength(raw)
+        PyTok.len = n
+        PyTok.cur = 0
+        PyTok.start = 0
+        PyTok.line_start = 0
+        PyTok.lineno = 1
+        PyTok.first_lineno = 1
+        PyTok.atbol = 1
+        PyTok.indent = 0
+        PyTok.pendin = 0
+        PyTok.level = 0
+        PyTok.tabsize = 8
+        PyTok.done = 10
+        PyTok.need_nl = 0
+        PyTok.blankline = 0
+        PyTok.err_msg = 0
+        PyTok.err_kind = 24
+        IfCondition GreaterThan(n, 0) ThenBlock: {
+            lastb = GetByte(raw, Subtract(n, 1))
+            IfCondition NotEqual(lastb, 10) ThenBlock: {
+                PyTok.need_nl = 1
+            }
+        }
+        ElseBlock: {
+            PyTok.need_nl = 1
+        }
+        ind = Array.Create(100)
+        alt = Array.Create(100)
+        i = 0
+        WhileLoop LessThan(i, 100) {
+            Array.Push(ind, 0)
+            Array.Push(alt, 0)
+            i = Add(i, 1)
+        }
+        PyTok.indstack = ind
+        PyTok.altstack = alt
+        par = Array.Create(200)
+        parln = Array.Create(200)
+        j = 0
+        WhileLoop LessThan(j, 200) {
+            Array.Push(par, 0)
+            Array.Push(parln, 0)
+            j = Add(j, 1)
+        }
+        PyTok.paren = par
+        PyTok.paren_line = parln
+        PyTok.types = Array.Create(64)
+        PyTok.lines = Array.Create(64)
+        PyTok.offs = Array.Create(64)
+        PyTok.vals = Array.Create(64)
+        PyTok.n = 0
+    }
+}
+
+Function.PyTok_NextC {
+    Output: Integer
+    Body: {
+        IfCondition GreaterEqual(PyTok.cur, PyTok.len) ThenBlock: {
+            IfCondition EqualTo(PyTok.need_nl, 1) ThenBlock: {
+                PyTok.need_nl = 0
+                PyTok.lineno = Add(PyTok.lineno, 1)
+                PyTok.line_start = PyTok.cur
+                ReturnValue(10)
+            }
+            ReturnValue(-1)
+        }
+        c = GetByte(PyTok.src, PyTok.cur)
+        PyTok.cur = Add(PyTok.cur, 1)
+        IfCondition EqualTo(c, 13) ThenBlock: {
+            IfCondition LessThan(PyTok.cur, PyTok.len) ThenBlock: {
+                n2 = GetByte(PyTok.src, PyTok.cur)
+                IfCondition EqualTo(n2, 10) ThenBlock: {
+                    PyTok.cur = Add(PyTok.cur, 1)
+                }
+            }
+            c = 10
+        }
+        IfCondition EqualTo(c, 10) ThenBlock: {
+            PyTok.lineno = Add(PyTok.lineno, 1)
+            PyTok.line_start = PyTok.cur
+        }
+        ReturnValue(c)
+    }
+}
+
+Function.PyTok_Backup {
+    Input: c: Integer
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(c, -1) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(c, 10) ThenBlock: {
+            lastnl = 0
+            IfCondition GreaterThan(PyTok.len, 0) ThenBlock: {
+                lastnl = GetByte(PyTok.src, Subtract(PyTok.len, 1))
+            }
+            IfCondition And(GreaterEqual(PyTok.cur, PyTok.len), NotEqual(lastnl, 10)) ThenBlock: {
+                PyTok.need_nl = 1
+                IfCondition GreaterThan(PyTok.lineno, 1) ThenBlock: {
+                    PyTok.lineno = Subtract(PyTok.lineno, 1)
+                }
+                p = PyTok.len
+                WhileLoop GreaterThan(p, 0) {
+                    p = Subtract(p, 1)
+                    b = GetByte(PyTok.src, p)
+                    IfCondition EqualTo(b, 10) ThenBlock: {
+                        PyTok.line_start = Add(p, 1)
+                        ReturnValue(0)
+                    }
+                }
+                PyTok.line_start = 0
+                ReturnValue(0)
+            }
+        }
+        IfCondition GreaterThan(PyTok.cur, 0) ThenBlock: {
+            PyTok.cur = Subtract(PyTok.cur, 1)
+            IfCondition EqualTo(c, 10) ThenBlock: {
+                IfCondition GreaterThan(PyTok.lineno, 1) ThenBlock: {
+                    PyTok.lineno = Subtract(PyTok.lineno, 1)
+                }
+                p = PyTok.cur
+                WhileLoop GreaterThan(p, 0) {
+                    p = Subtract(p, 1)
+                    b = GetByte(PyTok.src, p)
+                    IfCondition EqualTo(b, 10) ThenBlock: {
+                        PyTok.line_start = Add(p, 1)
+                        ReturnValue(0)
+                    }
+                }
+                PyTok.line_start = 0
+            }
+        }
+        ReturnValue(0)
+    }
+}
+
+Function.PyTok_LineText {
+    Output: Address
+    Body: {
+        a = PyTok.line_start
+        IfCondition LessThan(a, 0) ThenBlock: {
+            a = 0
+        }
+        b = a
+        WhileLoop LessThan(b, PyTok.len) {
+            ch = GetByte(PyTok.src, b)
+            IfCondition EqualTo(ch, 10) ThenBlock: {
+                BreakLoop
+            }
+            b = Add(b, 1)
+        }
+        n = Subtract(b, a)
+        IfCondition LessThan(n, 0) ThenBlock: {
+            n = 0
+        }
+        s = Allocate(Add(n, 1))
+        i = 0
+        WhileLoop LessThan(i, n) {
+            SetByte(s, i, GetByte(PyTok.src, Add(a, i)))
+            i = Add(i, 1)
+        }
+        SetByte(s, n, 0)
+        ReturnValue(s)
+    }
+}
+
+Function.PyTok_Slice {
+    Output: Address
+    Body: {
+        a = PyTok.start
+        b = PyTok.cur
+        IfCondition LessThan(b, a) ThenBlock: {
+            ReturnValue("")
+        }
+        n = Subtract(b, a)
+        s = Allocate(Add(n, 1))
+        i = 0
+        WhileLoop LessThan(i, n) {
+            SetByte(s, i, GetByte(PyTok.src, Add(a, i)))
+            i = Add(i, 1)
+        }
+        SetByte(s, n, 0)
+        ReturnValue(s)
+    }
+}
+
+Function.PyTok_Syntax {
+    Input: msg: Address
+    Output: Integer
+    Body: {
+        PyTok.done = 17
+        PyTok.err_msg = msg
+        PyTok.err_line = PyTok.lineno
+        off = Subtract(PyTok.cur, PyTok.line_start)
+        IfCondition LessThan(off, 1) ThenBlock: {
+            off = 1
+        }
+        PyTok.err_off = off
+        PyTok.err_end = off
+        PyTok.err_text = PyTok_LineText()
+        PyTok.err_kind = 24
+        ReturnValue(PyTokT.ERRORTOKEN)
+    }
+}
+
+Function.PyTok_TabErr {
+    Output: Integer
+    Body: {
+        PyTok.done = 18
+        PyTok.err_msg = "inconsistent use of tabs and spaces in indentation"
+        PyTok.err_line = PyTok.lineno
+        PyTok.err_off = 1
+        PyTok.err_end = 1
+        PyTok.err_text = PyTok_LineText()
+        PyTok.err_kind = 24
+        ReturnValue(PyTokT.ERRORTOKEN)
+    }
+}
+
+Function.PyTok_OneChar {
+    Input: c: Integer
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(c, 37) ThenBlock: { ReturnValue(PyTokT.PERCENT) }
+        IfCondition EqualTo(c, 38) ThenBlock: { ReturnValue(PyTokT.AMPER) }
+        IfCondition EqualTo(c, 40) ThenBlock: { ReturnValue(PyTokT.LPAR) }
+        IfCondition EqualTo(c, 41) ThenBlock: { ReturnValue(PyTokT.RPAR) }
+        IfCondition EqualTo(c, 42) ThenBlock: { ReturnValue(PyTokT.STAR) }
+        IfCondition EqualTo(c, 43) ThenBlock: { ReturnValue(PyTokT.PLUS) }
+        IfCondition EqualTo(c, 44) ThenBlock: { ReturnValue(PyTokT.COMMA) }
+        IfCondition EqualTo(c, 45) ThenBlock: { ReturnValue(PyTokT.MINUS) }
+        IfCondition EqualTo(c, 46) ThenBlock: { ReturnValue(PyTokT.DOT) }
+        IfCondition EqualTo(c, 47) ThenBlock: { ReturnValue(PyTokT.SLASH) }
+        IfCondition EqualTo(c, 58) ThenBlock: { ReturnValue(PyTokT.COLON) }
+        IfCondition EqualTo(c, 59) ThenBlock: { ReturnValue(PyTokT.SEMI) }
+        IfCondition EqualTo(c, 60) ThenBlock: { ReturnValue(PyTokT.LESS) }
+        IfCondition EqualTo(c, 61) ThenBlock: { ReturnValue(PyTokT.EQUAL) }
+        IfCondition EqualTo(c, 62) ThenBlock: { ReturnValue(PyTokT.GREATER) }
+        IfCondition EqualTo(c, 64) ThenBlock: { ReturnValue(PyTokT.AT) }
+        IfCondition EqualTo(c, 91) ThenBlock: { ReturnValue(PyTokT.LSQB) }
+        IfCondition EqualTo(c, 93) ThenBlock: { ReturnValue(PyTokT.RSQB) }
+        IfCondition EqualTo(c, 94) ThenBlock: { ReturnValue(PyTokT.CIRCUMFLEX) }
+        IfCondition EqualTo(c, 123) ThenBlock: { ReturnValue(PyTokT.LBRACE) }
+        IfCondition EqualTo(c, 124) ThenBlock: { ReturnValue(PyTokT.VBAR) }
+        IfCondition EqualTo(c, 125) ThenBlock: { ReturnValue(PyTokT.RBRACE) }
+        IfCondition EqualTo(c, 126) ThenBlock: { ReturnValue(PyTokT.TILDE) }
+        ReturnValue(PyTokT.OP)
+    }
+}
+
+Function.PyTok_TwoChar {
+    Input: c1: Integer
+    Input: c2: Integer
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(c1, 33) ThenBlock: {
+            IfCondition EqualTo(c2, 61) ThenBlock: { ReturnValue(PyTokT.NOTEQUAL) }
+        }
+        IfCondition EqualTo(c1, 37) ThenBlock: {
+            IfCondition EqualTo(c2, 61) ThenBlock: { ReturnValue(40) }
+        }
+        IfCondition EqualTo(c1, 38) ThenBlock: {
+            IfCondition EqualTo(c2, 61) ThenBlock: { ReturnValue(41) }
+        }
+        IfCondition EqualTo(c1, 42) ThenBlock: {
+            IfCondition EqualTo(c2, 42) ThenBlock: { ReturnValue(PyTokT.DOUBLESTAR) }
+            IfCondition EqualTo(c2, 61) ThenBlock: { ReturnValue(38) }
+        }
+        IfCondition EqualTo(c1, 43) ThenBlock: {
+            IfCondition EqualTo(c2, 61) ThenBlock: { ReturnValue(36) }
+        }
+        IfCondition EqualTo(c1, 45) ThenBlock: {
+            IfCondition EqualTo(c2, 61) ThenBlock: { ReturnValue(37) }
+            IfCondition EqualTo(c2, 62) ThenBlock: { ReturnValue(51) }
+        }
+        IfCondition EqualTo(c1, 47) ThenBlock: {
+            IfCondition EqualTo(c2, 47) ThenBlock: { ReturnValue(47) }
+            IfCondition EqualTo(c2, 61) ThenBlock: { ReturnValue(39) }
+        }
+        IfCondition EqualTo(c1, 58) ThenBlock: {
+            IfCondition EqualTo(c2, 61) ThenBlock: { ReturnValue(PyTokT.COLONEQUAL) }
+        }
+        IfCondition EqualTo(c1, 60) ThenBlock: {
+            IfCondition EqualTo(c2, 60) ThenBlock: { ReturnValue(PyTokT.LEFTSHIFT) }
+            IfCondition EqualTo(c2, 61) ThenBlock: { ReturnValue(PyTokT.LESSEQUAL) }
+            IfCondition EqualTo(c2, 62) ThenBlock: { ReturnValue(PyTokT.NOTEQUAL) }
+        }
+        IfCondition EqualTo(c1, 61) ThenBlock: {
+            IfCondition EqualTo(c2, 61) ThenBlock: { ReturnValue(PyTokT.EQEQUAL) }
+        }
+        IfCondition EqualTo(c1, 62) ThenBlock: {
+            IfCondition EqualTo(c2, 61) ThenBlock: { ReturnValue(PyTokT.GREATEREQUAL) }
+            IfCondition EqualTo(c2, 62) ThenBlock: { ReturnValue(PyTokT.RIGHTSHIFT) }
+        }
+        IfCondition EqualTo(c1, 64) ThenBlock: {
+            IfCondition EqualTo(c2, 61) ThenBlock: { ReturnValue(50) }
+        }
+        IfCondition EqualTo(c1, 94) ThenBlock: {
+            IfCondition EqualTo(c2, 61) ThenBlock: { ReturnValue(43) }
+        }
+        IfCondition EqualTo(c1, 124) ThenBlock: {
+            IfCondition EqualTo(c2, 61) ThenBlock: { ReturnValue(42) }
+        }
+        ReturnValue(PyTokT.OP)
+    }
+}
+
+Function.PyTok_DecTail {
+    Output: Integer
+    Body: {
+        c = PyTok_NextC()
+        WhileLoop EqualTo(1, 1) {
+            WhileLoop EqualTo(PyTok_IsDigit(c), 1) {
+                c = PyTok_NextC()
+            }
+            IfCondition NotEqual(c, 95) ThenBlock: {
+                ReturnValue(c)
+            }
+            c = PyTok_NextC()
+            IfCondition EqualTo(PyTok_IsDigit(c), 0) ThenBlock: {
+                PyTok_Backup(c)
+                PyTok_Syntax("invalid decimal literal")
+                ReturnValue(0)
+            }
+        }
+        ReturnValue(c)
+    }
+}
+
+Function.PyTok_Number {
+    Input: first: Integer
+    Output: Integer
+    Body: {
+        c = first
+        IfCondition EqualTo(c, 48) ThenBlock: {
+            c = PyTok_NextC()
+            IfCondition Or(EqualTo(c, 120), EqualTo(c, 88)) ThenBlock: {
+                c = PyTok_NextC()
+                IfCondition EqualTo(c, 95) ThenBlock: {
+                    c = PyTok_NextC()
+                }
+                IfCondition EqualTo(PyTok_IsXDigit(c), 0) ThenBlock: {
+                    PyTok_Backup(c)
+                    ReturnValue(PyTok_Syntax("invalid hexadecimal literal"))
+                }
+                WhileLoop EqualTo(PyTok_IsXDigit(c), 1) {
+                    c = PyTok_NextC()
+                    IfCondition EqualTo(c, 95) ThenBlock: {
+                        c = PyTok_NextC()
+                        IfCondition EqualTo(PyTok_IsXDigit(c), 0) ThenBlock: {
+                            PyTok_Backup(c)
+                            ReturnValue(PyTok_Syntax("invalid hexadecimal literal"))
+                        }
+                    }
+                }
+                PyTok_Backup(c)
+                ReturnValue(PyTokT.NUMBER)
+            }
+            IfCondition Or(EqualTo(c, 111), EqualTo(c, 79)) ThenBlock: {
+                c = PyTok_NextC()
+                IfCondition EqualTo(c, 95) ThenBlock: {
+                    c = PyTok_NextC()
+                }
+                IfCondition Or(LessThan(c, 48), GreaterEqual(c, 56)) ThenBlock: {
+                    IfCondition EqualTo(PyTok_IsDigit(c), 1) ThenBlock: {
+                        ReturnValue(PyTok_Syntax("invalid digit in octal literal"))
+                    }
+                    PyTok_Backup(c)
+                    ReturnValue(PyTok_Syntax("invalid octal literal"))
+                }
+                WhileLoop And(GreaterEqual(c, 48), LessThan(c, 56)) {
+                    c = PyTok_NextC()
+                    IfCondition EqualTo(c, 95) ThenBlock: {
+                        c = PyTok_NextC()
+                        IfCondition Or(LessThan(c, 48), GreaterEqual(c, 56)) ThenBlock: {
+                            PyTok_Backup(c)
+                            ReturnValue(PyTok_Syntax("invalid octal literal"))
+                        }
+                    }
+                }
+                IfCondition EqualTo(PyTok_IsDigit(c), 1) ThenBlock: {
+                    ReturnValue(PyTok_Syntax("invalid digit in octal literal"))
+                }
+                PyTok_Backup(c)
+                ReturnValue(PyTokT.NUMBER)
+            }
+            IfCondition Or(EqualTo(c, 98), EqualTo(c, 66)) ThenBlock: {
+                c = PyTok_NextC()
+                IfCondition EqualTo(c, 95) ThenBlock: {
+                    c = PyTok_NextC()
+                }
+                IfCondition And(NotEqual(c, 48), NotEqual(c, 49)) ThenBlock: {
+                    IfCondition EqualTo(PyTok_IsDigit(c), 1) ThenBlock: {
+                        ReturnValue(PyTok_Syntax("invalid digit in binary literal"))
+                    }
+                    PyTok_Backup(c)
+                    ReturnValue(PyTok_Syntax("invalid binary literal"))
+                }
+                WhileLoop Or(EqualTo(c, 48), EqualTo(c, 49)) {
+                    c = PyTok_NextC()
+                    IfCondition EqualTo(c, 95) ThenBlock: {
+                        c = PyTok_NextC()
+                        IfCondition And(NotEqual(c, 48), NotEqual(c, 49)) ThenBlock: {
+                            PyTok_Backup(c)
+                            ReturnValue(PyTok_Syntax("invalid binary literal"))
+                        }
+                    }
+                }
+                IfCondition EqualTo(PyTok_IsDigit(c), 1) ThenBlock: {
+                    ReturnValue(PyTok_Syntax("invalid digit in binary literal"))
+                }
+                PyTok_Backup(c)
+                ReturnValue(PyTokT.NUMBER)
+            }
+            nonzero = 0
+            WhileLoop EqualTo(c, 48) {
+                c = PyTok_NextC()
+                IfCondition EqualTo(c, 95) ThenBlock: {
+                    c = PyTok_NextC()
+                    IfCondition EqualTo(PyTok_IsDigit(c), 0) ThenBlock: {
+                        PyTok_Backup(c)
+                        ReturnValue(PyTok_Syntax("invalid decimal literal"))
+                    }
+                }
+            }
+            IfCondition EqualTo(PyTok_IsDigit(c), 1) ThenBlock: {
+                nonzero = 1
+                c = PyTok_DecTail()
+                IfCondition EqualTo(c, 0) ThenBlock: {
+                    ReturnValue(PyTokT.ERRORTOKEN)
+                }
+            }
+            IfCondition EqualTo(c, 46) ThenBlock: {
+                c = PyTok_NextC()
+                IfCondition EqualTo(PyTok_IsDigit(c), 1) ThenBlock: {
+                    c = PyTok_DecTail()
+                    IfCondition EqualTo(c, 0) ThenBlock: {
+                        ReturnValue(PyTokT.ERRORTOKEN)
+                    }
+                }
+            }
+            IfCondition Or(EqualTo(c, 101), EqualTo(c, 69)) ThenBlock: {
+                c = PyTok_NextC()
+                IfCondition Or(EqualTo(c, 43), EqualTo(c, 45)) ThenBlock: {
+                    c = PyTok_NextC()
+                    IfCondition EqualTo(PyTok_IsDigit(c), 0) ThenBlock: {
+                        PyTok_Backup(c)
+                        ReturnValue(PyTok_Syntax("invalid decimal literal"))
+                    }
+                }
+                ElseBlock: {
+                    IfCondition EqualTo(PyTok_IsDigit(c), 0) ThenBlock: {
+                        PyTok_Backup(c)
+                        ReturnValue(PyTok_Syntax("invalid decimal literal"))
+                    }
+                }
+                c = PyTok_DecTail()
+                IfCondition EqualTo(c, 0) ThenBlock: {
+                    ReturnValue(PyTokT.ERRORTOKEN)
+                }
+            }
+            IfCondition EqualTo(nonzero, 1) ThenBlock: {
+                PyTok_Backup(c)
+                zoff = Add(Subtract(PyTok.start, PyTok.line_start), 1)
+                IfCondition LessThan(zoff, 1) ThenBlock: {
+                    zoff = 1
+                }
+                rlead = PyTok_Syntax("leading zeros in decimal integer literals are not permitted; use an 0o prefix for octal integers")
+                PyTok.err_off = zoff
+                PyTok.err_end = zoff
+                ReturnValue(rlead)
+            }
+            IfCondition Or(EqualTo(c, 106), EqualTo(c, 74)) ThenBlock: {
+                c = PyTok_NextC()
+            }
+            PyTok_Backup(c)
+            ReturnValue(PyTokT.NUMBER)
+        }
+        c = PyTok_DecTail()
+        IfCondition EqualTo(c, 0) ThenBlock: {
+            ReturnValue(PyTokT.ERRORTOKEN)
+        }
+        IfCondition EqualTo(c, 46) ThenBlock: {
+            c = PyTok_NextC()
+            IfCondition EqualTo(PyTok_IsDigit(c), 1) ThenBlock: {
+                c = PyTok_DecTail()
+                IfCondition EqualTo(c, 0) ThenBlock: {
+                    ReturnValue(PyTokT.ERRORTOKEN)
+                }
+            }
+        }
+        IfCondition Or(EqualTo(c, 101), EqualTo(c, 69)) ThenBlock: {
+            c = PyTok_NextC()
+            IfCondition Or(EqualTo(c, 43), EqualTo(c, 45)) ThenBlock: {
+                c = PyTok_NextC()
+                IfCondition EqualTo(PyTok_IsDigit(c), 0) ThenBlock: {
+                    PyTok_Backup(c)
+                    ReturnValue(PyTok_Syntax("invalid decimal literal"))
+                }
+            }
+            ElseBlock: {
+                IfCondition EqualTo(PyTok_IsDigit(c), 0) ThenBlock: {
+                    PyTok_Backup(c)
+                    ReturnValue(PyTok_Syntax("invalid decimal literal"))
+                }
+            }
+            c = PyTok_DecTail()
+            IfCondition EqualTo(c, 0) ThenBlock: {
+                ReturnValue(PyTokT.ERRORTOKEN)
+            }
+        }
+        IfCondition Or(EqualTo(c, 106), EqualTo(c, 74)) ThenBlock: {
+            c = PyTok_NextC()
+        }
+        PyTok_Backup(c)
+        ReturnValue(PyTokT.NUMBER)
+    }
+}
+
+Function.PyTok_String {
+    Input: quote: Integer
+    Output: Integer
+    Body: {
+        quote_size = 1
+        end_quote = 0
+        PyTok.first_lineno = PyTok.lineno
+        c = PyTok_NextC()
+        IfCondition EqualTo(c, quote) ThenBlock: {
+            c = PyTok_NextC()
+            IfCondition EqualTo(c, quote) ThenBlock: {
+                quote_size = 3
+            }
+            ElseBlock: {
+                end_quote = 1
+            }
+        }
+        IfCondition NotEqual(c, quote) ThenBlock: {
+            PyTok_Backup(c)
+        }
+        start_line = PyTok.first_lineno
+        WhileLoop NotEqual(end_quote, quote_size) {
+            c = PyTok_NextC()
+            IfCondition Or(EqualTo(c, -1), And(EqualTo(quote_size, 1), EqualTo(c, 10))) ThenBlock: {
+                PyTok.cur = Add(PyTok.start, 1)
+                PyTok.lineno = PyTok.first_lineno
+                p = PyTok.start
+                WhileLoop GreaterThan(p, 0) {
+                    p = Subtract(p, 1)
+                    b = GetByte(PyTok.src, p)
+                    IfCondition EqualTo(b, 10) ThenBlock: {
+                        PyTok.line_start = Add(p, 1)
+                        BreakLoop
+                    }
+                    IfCondition EqualTo(p, 0) ThenBlock: {
+                        PyTok.line_start = 0
+                    }
+                }
+                IfCondition EqualTo(quote_size, 3) ThenBlock: {
+                    ReturnValue(PyTok_Syntax("unterminated triple-quoted string literal (detected at line 1)"))
+                }
+                ReturnValue(PyTok_Syntax("unterminated string literal (detected at line 1)"))
+            }
+            IfCondition EqualTo(c, quote) ThenBlock: {
+                end_quote = Add(end_quote, 1)
+            }
+            ElseBlock: {
+                end_quote = 0
+                IfCondition EqualTo(c, 92) ThenBlock: {
+                    PyTok_NextC()
+                }
+            }
+        }
+        ReturnValue(PyTokT.STRING)
+    }
+}
+
+Function.PyTok_Get {
+    Output: Integer
+    Body: {
+        IfCondition NotEqual(PyTok.pendin, 0) ThenBlock: {
+            IfCondition LessThan(PyTok.pendin, 0) ThenBlock: {
+                PyTok.pendin = Add(PyTok.pendin, 1)
+                ReturnValue(PyTokT.DEDENT)
+            }
+            PyTok.pendin = Subtract(PyTok.pendin, 1)
+            ReturnValue(PyTokT.INDENT)
+        }
+        IfCondition EqualTo(PyTok.atbol, 1) ThenBlock: {
+            col = 0
+            altcol = 0
+            PyTok.atbol = 0
+            PyTok.blankline = 0
+            c = PyTok_NextC()
+            WhileLoop EqualTo(1, 1) {
+                IfCondition EqualTo(c, 32) ThenBlock: {
+                    col = Add(col, 1)
+                    altcol = Add(altcol, 1)
+                    c = PyTok_NextC()
+                }
+                ElseBlock: {
+                    IfCondition EqualTo(c, 9) ThenBlock: {
+                        ts = PyTok.tabsize
+                        col = Multiply(Add(Divide(col, ts), 1), ts)
+                        altcol = Add(altcol, 1)
+                        c = PyTok_NextC()
+                    }
+                    ElseBlock: {
+                        IfCondition EqualTo(c, 12) ThenBlock: {
+                            col = 0
+                            altcol = 0
+                            c = PyTok_NextC()
+                        }
+                        ElseBlock: {
+                            BreakLoop
+                        }
+                    }
+                }
+            }
+            PyTok_Backup(c)
+            IfCondition Or(EqualTo(c, 35), EqualTo(c, 10)) ThenBlock: {
+                PyTok.blankline = 1
+            }
+            IfCondition And(EqualTo(PyTok.blankline, 0), EqualTo(PyTok.level, 0)) ThenBlock: {
+                ind = Array.Get(PyTok.indstack, PyTok.indent)
+                alt = Array.Get(PyTok.altstack, PyTok.indent)
+                IfCondition EqualTo(col, ind) ThenBlock: {
+                    IfCondition NotEqual(altcol, alt) ThenBlock: {
+                        ReturnValue(PyTok_TabErr())
+                    }
+                }
+                ElseBlock: {
+                    IfCondition GreaterThan(col, ind) ThenBlock: {
+                        IfCondition GreaterEqual(Add(PyTok.indent, 1), 100) ThenBlock: {
+                            ReturnValue(PyTok_Syntax("too many levels of indentation"))
+                        }
+                        IfCondition LessEqual(altcol, alt) ThenBlock: {
+                            ReturnValue(PyTok_TabErr())
+                        }
+                        PyTok.pendin = Add(PyTok.pendin, 1)
+                        PyTok.indent = Add(PyTok.indent, 1)
+                        Array.Set(PyTok.indstack, PyTok.indent, col)
+                        Array.Set(PyTok.altstack, PyTok.indent, altcol)
+                    }
+                    ElseBlock: {
+                        WhileLoop And(GreaterThan(PyTok.indent, 0), LessThan(col, Array.Get(PyTok.indstack, PyTok.indent))) {
+                            PyTok.pendin = Subtract(PyTok.pendin, 1)
+                            PyTok.indent = Subtract(PyTok.indent, 1)
+                        }
+                        IfCondition NotEqual(col, Array.Get(PyTok.indstack, PyTok.indent)) ThenBlock: {
+                            PyTok.done = 21
+                            PyTok.err_msg = "unindent does not match any outer indentation level"
+                            PyTok.err_line = PyTok.lineno
+                            PyTok.err_off = 1
+                            PyTok.err_text = PyTok_LineText()
+                            ReturnValue(PyTokT.ERRORTOKEN)
+                        }
+                        IfCondition NotEqual(altcol, Array.Get(PyTok.altstack, PyTok.indent)) ThenBlock: {
+                            ReturnValue(PyTok_TabErr())
+                        }
+                    }
+                }
+            }
+            IfCondition NotEqual(PyTok.pendin, 0) ThenBlock: {
+                IfCondition LessThan(PyTok.pendin, 0) ThenBlock: {
+                    PyTok.pendin = Add(PyTok.pendin, 1)
+                    ReturnValue(PyTokT.DEDENT)
+                }
+                PyTok.pendin = Subtract(PyTok.pendin, 1)
+                ReturnValue(PyTokT.INDENT)
+            }
+        }
+        c = PyTok_NextC()
+        WhileLoop Or(EqualTo(c, 32), Or(EqualTo(c, 9), EqualTo(c, 12))) {
+            c = PyTok_NextC()
+        }
+        PyTok.start = Subtract(PyTok.cur, 1)
+        IfCondition EqualTo(c, 10) ThenBlock: {
+            PyTok.start = Subtract(PyTok.cur, 1)
+        }
+        IfCondition EqualTo(c, -1) ThenBlock: {
+            PyTok.start = PyTok.cur
+        }
+        IfCondition EqualTo(c, 35) ThenBlock: {
+            WhileLoop And(NotEqual(c, -1), NotEqual(c, 10)) {
+                c = PyTok_NextC()
+            }
+        }
+        IfCondition EqualTo(c, -1) ThenBlock: {
+            IfCondition NotEqual(PyTok.level, 0) ThenBlock: {
+                PyTok.err_msg = "unexpected EOF while parsing"
+                PyTok.err_line = PyTok.lineno
+                PyTok.err_off = Add(Subtract(PyTok.cur, PyTok.line_start), 1)
+                PyTok.err_text = PyTok_LineText()
+                PyTok.done = 11
+                ReturnValue(PyTokT.ERRORTOKEN)
+            }
+            ReturnValue(PyTokT.ENDMARKER)
+        }
+        IfCondition EqualTo(PyTok_IsIdentStart(c), 1) ThenBlock: {
+            ident_c = c
+            isid = PyTok_IsIdentChar(ident_c)
+            WhileLoop EqualTo(isid, 1) {
+                ident_c = PyTok_NextC()
+                isid = PyTok_IsIdentChar(ident_c)
+            }
+            dummy = PyTok_Backup(ident_c)
+            nxtq = PyTok_Peek()
+            IfCondition Or(EqualTo(nxtq, 34), EqualTo(nxtq, 39)) ThenBlock: {
+                pre = PyTok_Slice()
+                ispre = PyTok_IsStrPrefix(pre)
+                IfCondition EqualTo(ispre, 1) ThenBlock: {
+                    qch = PyTok_NextC()
+                    stok = PyTok_String(qch)
+                    ReturnValue(stok)
+                }
+            }
+            ReturnValue(PyTokT.NAME)
+        }
+        IfCondition EqualTo(c, 10) ThenBlock: {
+            PyTok.atbol = 1
+            IfCondition Or(EqualTo(PyTok.blankline, 1), GreaterThan(PyTok.level, 0)) ThenBlock: {
+                ReturnValue(PyTok_Get())
+            }
+            ReturnValue(PyTokT.NEWLINE)
+        }
+        IfCondition EqualTo(c, 46) ThenBlock: {
+            c2 = PyTok_NextC()
+            IfCondition EqualTo(PyTok_IsDigit(c2), 1) ThenBlock: {
+                PyTok_Backup(c2)
+                ReturnValue(PyTok_Number(46))
+            }
+            IfCondition EqualTo(c2, 46) ThenBlock: {
+                c3 = PyTok_NextC()
+                IfCondition EqualTo(c3, 46) ThenBlock: {
+                    ReturnValue(PyTokT.ELLIPSIS)
+                }
+                PyTok_Backup(c3)
+                PyTok_Backup(c2)
+                ReturnValue(PyTokT.DOT)
+            }
+            PyTok_Backup(c2)
+            ReturnValue(PyTokT.DOT)
+        }
+        IfCondition EqualTo(PyTok_IsDigit(c), 1) ThenBlock: {
+            ReturnValue(PyTok_Number(c))
+        }
+        IfCondition Or(EqualTo(c, 39), EqualTo(c, 34)) ThenBlock: {
+            ReturnValue(PyTok_String(c))
+        }
+        IfCondition EqualTo(c, 92) ThenBlock: {
+            c2 = PyTok_NextC()
+            IfCondition NotEqual(c2, 10) ThenBlock: {
+                PyTok.done = 25
+                ReturnValue(PyTok_Syntax("unexpected character after line continuation character"))
+            }
+            ReturnValue(PyTok_Get())
+        }
+        c2 = PyTok_NextC()
+        two = PyTok_TwoChar(c, c2)
+        IfCondition NotEqual(two, PyTokT.OP) ThenBlock: {
+            c3 = PyTok_NextC()
+            IfCondition And(EqualTo(c, 42), And(EqualTo(c2, 42), EqualTo(c3, 61))) ThenBlock: {
+                ReturnValue(46)
+            }
+            IfCondition And(EqualTo(c, 47), And(EqualTo(c2, 47), EqualTo(c3, 61))) ThenBlock: {
+                ReturnValue(48)
+            }
+            IfCondition And(EqualTo(c, 60), And(EqualTo(c2, 60), EqualTo(c3, 61))) ThenBlock: {
+                ReturnValue(44)
+            }
+            IfCondition And(EqualTo(c, 62), And(EqualTo(c2, 62), EqualTo(c3, 61))) ThenBlock: {
+                ReturnValue(45)
+            }
+            PyTok_Backup(c3)
+            ReturnValue(two)
+        }
+        PyTok_Backup(c2)
+        IfCondition Or(EqualTo(c, 40), Or(EqualTo(c, 91), EqualTo(c, 123))) ThenBlock: {
+            IfCondition GreaterEqual(PyTok.level, 200) ThenBlock: {
+                ReturnValue(PyTok_Syntax("too many nested parentheses"))
+            }
+            Array.Set(PyTok.paren, PyTok.level, c)
+            Array.Set(PyTok.paren_line, PyTok.level, PyTok.lineno)
+            PyTok.level = Add(PyTok.level, 1)
+            ReturnValue(PyTok_OneChar(c))
+        }
+        IfCondition Or(EqualTo(c, 41), Or(EqualTo(c, 93), EqualTo(c, 125))) ThenBlock: {
+            IfCondition EqualTo(PyTok.level, 0) ThenBlock: {
+                ReturnValue(PyTok_Syntax("unmatched closing parenthesis"))
+            }
+            PyTok.level = Subtract(PyTok.level, 1)
+            ReturnValue(PyTok_OneChar(c))
+        }
+        IfCondition And(GreaterThan(c, 0), LessThan(c, 32)) ThenBlock: {
+            ReturnValue(PyTok_Syntax("invalid non-printable character"))
+        }
+        ReturnValue(PyTok_OneChar(c))
+    }
+}
+
+Function.PyTok_Tokenize {
+    Input: src: Address
+    Output: Integer
+    Body: {
+        PyTok_Init(src)
+        guard = 0
+        WhileLoop LessThan(guard, 100000) {
+            guard = Add(guard, 1)
+            line_at = PyTok.lineno
+            start_at = PyTok.cur
+            t = PyTok_Get()
+            IfCondition EqualTo(t, PyTokT.ERRORTOKEN) ThenBlock: {
+                ReturnValue(0)
+            }
+            off = Subtract(PyTok.start, PyTok.line_start)
+            IfCondition LessThan(off, 1) ThenBlock: {
+                off = 1
+            }
+            ElseBlock: {
+                off = Add(off, 1)
+            }
+            val = ""
+            IfCondition Or(EqualTo(t, PyTokT.NAME), Or(EqualTo(t, PyTokT.NUMBER), EqualTo(t, PyTokT.STRING))) ThenBlock: {
+                val = PyTok_Slice()
+            }
+            Array.Push(PyTok.types, t)
+            Array.Push(PyTok.lines, line_at)
+            Array.Push(PyTok.offs, off)
+            Array.Push(PyTok.vals, val)
+            PyTok.n = Add(PyTok.n, 1)
+            IfCondition EqualTo(t, PyTokT.ENDMARKER) ThenBlock: {
+                ReturnValue(1)
+            }
+        }
+        ReturnValue(0)
+    }
+}

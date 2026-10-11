@@ -14,6 +14,8 @@ LibraryImport.AIMacro.AIMacroOperator
 LibraryImport.AIMacro.AIMacroUnittest
 LibraryImport.AIMacro.AIMacroFormat
 LibraryImport.AIMacro.AIMacroExtra
+LibraryImport.AIMacro.AIMacroPyTok
+LibraryImport.AIMacro.AIMacroPyComp
 
 
 Function.AIMacro.PyType {
@@ -196,42 +198,6 @@ Function.AIMacro.OsIsatty {
             ReturnValue(AIMacro.TrueVal())
         }
         ReturnValue(AIMacro.FalseVal())
-    }
-}
-
-Function.AIMacro.PyCompile {
-    Input: src: Address
-    Input: filename: Address
-    Input: mode: Address
-    Output: Address
-    Body: {
-        raw = src
-        IfCondition EqualTo(Hash.IsHash(src), 1) ThenBlock: {
-            raws = Hash.Get(src, "__src__")
-            IfCondition NotEqual(raws, 0) ThenBlock: {
-                raw = raws
-            }
-        }
-        fn = filename
-        IfCondition EqualTo(fn, 0) ThenBlock: {
-            fn = "<string>"
-        }
-        IfCondition EqualTo(AIMacro.LooksLikeString(raw), 1) ThenBlock: {
-            IfCondition EqualTo(AIMacro.StrContains(raw, "<>"), 1) ThenBlock: {
-                AIMacro.RaiseSyntax("invalid syntax", fn, 1, 3, raw)
-                ReturnValue(0)
-            }
-            nr = StringLength(raw)
-            IfCondition GreaterThan(nr, 0) ThenBlock: {
-                IfCondition EqualTo(GetByte(raw, Subtract(nr, 1)), 92) ThenBlock: {
-                    AIMacro.RaiseSyntax("unexpected EOF while parsing (<string>, line 1)", fn, 1, 1, raw)
-                    ReturnValue(0)
-                }
-            }
-        }
-        h = Hash.Create(4)
-        Hash.Set(h, "__src__", raw)
-        ReturnValue(h)
     }
 }
 

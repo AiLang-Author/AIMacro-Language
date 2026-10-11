@@ -1,0 +1,543 @@
+// Library.AIMacroPyComp.ailang
+// Leftover compile() frontend: CPython tokenizer plus statement/semantic checks.
+// Does not emit bytecode. Raises SyntaxError like Parser/pegen_errors.c.
+//
+// Copyright (c) 2025-2026 Sean Collins, 2 Paws Machine and Engineering. All rights reserved.
+// Licensed under the Sean Collins Software License (SCSL v1.0).
+
+LibraryImport.Array
+LibraryImport.Hash
+LibraryImport.AIMacro.AIMacroTypes
+LibraryImport.AIMacro.AIMacro
+LibraryImport.AIMacro.AIMacroPyTok
+
+
+FixedPool.PyComp {
+    "pos": Initialize=0
+    "loop": Initialize=0
+    "fn_depth": Initialize=0
+    "seen": Initialize=0
+    "fn": Initialize=0
+    "failed": Initialize=0
+}
+
+Function.PyComp_T {
+    Output: Integer
+    Body: {
+        IfCondition GreaterEqual(PyComp.pos, PyTok.n) ThenBlock: {
+            ReturnValue(PyTokT.ENDMARKER)
+        }
+        ReturnValue(Array.Get(PyTok.types, PyComp.pos))
+    }
+}
+
+Function.PyComp_Val {
+    Output: Address
+    Body: {
+        IfCondition GreaterEqual(PyComp.pos, PyTok.n) ThenBlock: {
+            ReturnValue("")
+        }
+        ReturnValue(Array.Get(PyTok.vals, PyComp.pos))
+    }
+}
+
+Function.PyComp_Line {
+    Output: Integer
+    Body: {
+        IfCondition GreaterEqual(PyComp.pos, PyTok.n) ThenBlock: {
+            ReturnValue(PyTok.lineno)
+        }
+        ReturnValue(Array.Get(PyTok.lines, PyComp.pos))
+    }
+}
+
+Function.PyComp_Off {
+    Output: Integer
+    Body: {
+        IfCondition GreaterEqual(PyComp.pos, PyTok.n) ThenBlock: {
+            ReturnValue(1)
+        }
+        ReturnValue(Array.Get(PyTok.offs, PyComp.pos))
+    }
+}
+
+Function.PyComp_Adv {
+    Body: {
+        IfCondition LessThan(PyComp.pos, PyTok.n) ThenBlock: {
+            PyComp.pos = Add(PyComp.pos, 1)
+        }
+    }
+}
+
+Function.PyComp_Fail {
+    Input: msg: Address
+    Input: line: Integer
+    Input: off: Integer
+    Input: filename: Address
+    Body: {
+        PyComp.failed = 1
+        text = ""
+        IfCondition EqualTo(AIMacro.LooksLikeString(PyTok.err_text), 1) ThenBlock: {
+            text = PyTok.err_text
+        }
+        AIMacro.RaiseSyntax(msg, filename, line, off, text)
+        ev = AIMacro.ExcValue()
+        IfCondition EqualTo(Hash.IsHash(ev), 1) ThenBlock: {
+            Hash.Set(ev, "end_lineno", line)
+            Hash.Set(ev, "end_offset", off)
+        }
+    }
+}
+
+Function.PyComp_IsKw {
+    Input: s: Address
+    Output: Integer
+    Body: {
+        IfCondition NotEqual(PyComp_T(), PyTokT.NAME) ThenBlock: {
+            ReturnValue(0)
+        }
+        v = PyComp_Val()
+        IfCondition EqualTo(AIMacro.LooksLikeString(v), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(v, s), 0) ThenBlock: {
+            ReturnValue(1)
+        }
+        ReturnValue(0)
+    }
+}
+
+Function.PyComp_BinOp {
+    Input: t: Integer
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(t, PyTokT.PLUS) ThenBlock: { ReturnValue(1) }
+        IfCondition EqualTo(t, PyTokT.MINUS) ThenBlock: { ReturnValue(1) }
+        IfCondition EqualTo(t, PyTokT.STAR) ThenBlock: { ReturnValue(1) }
+        IfCondition EqualTo(t, PyTokT.SLASH) ThenBlock: { ReturnValue(1) }
+        IfCondition EqualTo(t, PyTokT.PERCENT) ThenBlock: { ReturnValue(1) }
+        IfCondition EqualTo(t, PyTokT.VBAR) ThenBlock: { ReturnValue(1) }
+        IfCondition EqualTo(t, PyTokT.AMPER) ThenBlock: { ReturnValue(1) }
+        IfCondition EqualTo(t, PyTokT.CIRCUMFLEX) ThenBlock: { ReturnValue(1) }
+        IfCondition EqualTo(t, PyTokT.LEFTSHIFT) ThenBlock: { ReturnValue(1) }
+        IfCondition EqualTo(t, PyTokT.RIGHTSHIFT) ThenBlock: { ReturnValue(1) }
+        IfCondition EqualTo(t, PyTokT.DOUBLESTAR) ThenBlock: { ReturnValue(1) }
+        IfCondition EqualTo(t, 47) ThenBlock: { ReturnValue(1) }
+        ReturnValue(0)
+    }
+}
+
+Function.PyComp_SkipNL {
+    Body: {
+        WhileLoop EqualTo(PyComp_T(), PyTokT.NEWLINE) {
+            PyComp_Adv()
+        }
+    }
+}
+
+Function.PyComp_Simple {
+    Input: filename: Address
+    Output: Integer
+    Body: {
+        last = PyTokT.ENDMARKER
+        last_off = PyComp_Off()
+        last_line = PyComp_Line()
+        depth = 0
+        WhileLoop EqualTo(1, 1) {
+            t = PyComp_T()
+            IfCondition EqualTo(t, PyTokT.ENDMARKER) ThenBlock: {
+                IfCondition EqualTo(PyComp_BinOp(last), 1) ThenBlock: {
+                    PyComp_Fail("unexpected EOF while parsing", last_line, Add(last_off, 1), filename)
+                    ReturnValue(0)
+                }
+                ReturnValue(1)
+            }
+            IfCondition EqualTo(t, PyTokT.NEWLINE) ThenBlock: {
+                IfCondition EqualTo(depth, 0) ThenBlock: {
+                    IfCondition EqualTo(PyComp_BinOp(last), 1) ThenBlock: {
+                        PyComp_Fail("unexpected EOF while parsing", last_line, Add(last_off, 1), filename)
+                        ReturnValue(0)
+                    }
+                    PyComp_Adv()
+                    ReturnValue(1)
+                }
+            }
+            IfCondition EqualTo(t, PyTokT.SEMI) ThenBlock: {
+                IfCondition EqualTo(depth, 0) ThenBlock: {
+                    PyComp_Adv()
+                    ReturnValue(1)
+                }
+            }
+            IfCondition EqualTo(t, PyTokT.COLON) ThenBlock: {
+                IfCondition EqualTo(depth, 0) ThenBlock: {
+                    ReturnValue(1)
+                }
+            }
+            IfCondition EqualTo(t, PyTokT.OP) ThenBlock: {
+                PyComp_Fail("invalid syntax", PyComp_Line(), PyComp_Off(), filename)
+                ReturnValue(0)
+            }
+            IfCondition Or(EqualTo(t, PyTokT.LPAR), Or(EqualTo(t, PyTokT.LSQB), EqualTo(t, PyTokT.LBRACE))) ThenBlock: {
+                depth = Add(depth, 1)
+            }
+            IfCondition Or(EqualTo(t, PyTokT.RPAR), Or(EqualTo(t, PyTokT.RSQB), EqualTo(t, PyTokT.RBRACE))) ThenBlock: {
+                IfCondition GreaterThan(depth, 0) ThenBlock: {
+                    depth = Subtract(depth, 1)
+                }
+            }
+            last = t
+            last_off = PyComp_Off()
+            last_line = PyComp_Line()
+            PyComp_Adv()
+        }
+        ReturnValue(1)
+    }
+}
+
+Function.PyComp_EnterKw {
+    Input: kw: Address
+    Output: Integer
+    Body: {
+        flag = 0
+        IfCondition Or(EqualTo(StringCompare(kw, "while"), 0), EqualTo(StringCompare(kw, "for"), 0)) ThenBlock: {
+            PyComp.loop = Add(PyComp.loop, 1)
+            flag = Add(flag, 1)
+        }
+        IfCondition Or(EqualTo(StringCompare(kw, "def"), 0), EqualTo(StringCompare(kw, "async"), 0)) ThenBlock: {
+            PyComp.fn_depth = Add(PyComp.fn_depth, 1)
+            flag = Add(flag, 2)
+        }
+        ReturnValue(flag)
+    }
+}
+
+Function.PyComp_LeaveKw {
+    Input: flag: Integer
+    Body: {
+        IfCondition Or(EqualTo(flag, 1), EqualTo(flag, 3)) ThenBlock: {
+            IfCondition GreaterThan(PyComp.loop, 0) ThenBlock: {
+                PyComp.loop = Subtract(PyComp.loop, 1)
+            }
+        }
+        IfCondition Or(EqualTo(flag, 2), EqualTo(flag, 3)) ThenBlock: {
+            IfCondition GreaterThan(PyComp.fn_depth, 0) ThenBlock: {
+                PyComp.fn_depth = Subtract(PyComp.fn_depth, 1)
+            }
+        }
+    }
+}
+
+Function.PyComp_Suite {
+    Input: filename: Address
+    Input: kw: Address
+    Input: kwline: Integer
+    Output: Integer
+    Body: {
+        ct = PyComp_T()
+        IfCondition NotEqual(ct, PyTokT.COLON) ThenBlock: {
+            cline = PyComp_Line()
+            coff = PyComp_Off()
+            PyComp_Fail("expected ':'", cline, coff, filename)
+            ReturnValue(0)
+        }
+        PyComp_Adv()
+        flag = PyComp_EnterKw(kw)
+        nt = PyComp_T()
+        IfCondition EqualTo(nt, PyTokT.NEWLINE) ThenBlock: {
+            PyComp_Adv()
+            it = PyComp_T()
+            IfCondition NotEqual(it, PyTokT.INDENT) ThenBlock: {
+                msg = "expected an indented block after 'if' statement on line 1"
+                IfCondition EqualTo(StringCompare(kw, "if"), 0) ThenBlock: {
+                    msg = "expected an indented block after 'if' statement on line 1"
+                }
+                IfCondition EqualTo(StringCompare(kw, "while"), 0) ThenBlock: {
+                    msg = "expected an indented block after 'while' statement on line 1"
+                }
+                IfCondition EqualTo(StringCompare(kw, "for"), 0) ThenBlock: {
+                    msg = "expected an indented block after 'for' statement on line 1"
+                }
+                IfCondition EqualTo(StringCompare(kw, "def"), 0) ThenBlock: {
+                    msg = "expected an indented block after function definition on line 1"
+                }
+                IfCondition EqualTo(StringCompare(kw, "class"), 0) ThenBlock: {
+                    msg = "expected an indented block after class definition on line 1"
+                }
+                IfCondition EqualTo(StringCompare(kw, "try"), 0) ThenBlock: {
+                    msg = "expected an indented block after 'try' statement on line 1"
+                }
+                IfCondition EqualTo(StringCompare(kw, "with"), 0) ThenBlock: {
+                    msg = "expected an indented block after 'with' statement on line 1"
+                }
+                iline = PyComp_Line()
+                ioff = PyComp_Off()
+                PyComp_Fail(msg, iline, ioff, filename)
+                PyComp_LeaveKw(flag)
+                ReturnValue(0)
+            }
+            PyComp_Adv()
+            WhileLoop EqualTo(1, 1) {
+                t = PyComp_T()
+                IfCondition EqualTo(t, PyTokT.DEDENT) ThenBlock: {
+                    PyComp_Adv()
+                    BreakLoop
+                }
+                IfCondition EqualTo(t, PyTokT.ENDMARKER) ThenBlock: {
+                    BreakLoop
+                }
+                r = PyComp_Stmt(filename)
+                IfCondition EqualTo(r, 0) ThenBlock: {
+                    PyComp_LeaveKw(flag)
+                    ReturnValue(0)
+                }
+            }
+            PyComp_LeaveKw(flag)
+            ReturnValue(1)
+        }
+        r2 = PyComp_Stmt(filename)
+        PyComp_LeaveKw(flag)
+        ReturnValue(r2)
+    }
+}
+
+Function.PyComp_Stmt {
+    Input: filename: Address
+    Output: Integer
+    Body: {
+        PyComp_SkipNL()
+        t = PyComp_T()
+        IfCondition EqualTo(t, PyTokT.ENDMARKER) ThenBlock: {
+            ReturnValue(1)
+        }
+        IfCondition EqualTo(t, PyTokT.DEDENT) ThenBlock: {
+            ReturnValue(1)
+        }
+        IfCondition EqualTo(PyComp_IsKw("continue"), 1) ThenBlock: {
+            IfCondition EqualTo(PyComp.loop, 0) ThenBlock: {
+                cline = PyComp_Line()
+                coff = PyComp_Off()
+                PyComp_Fail("'continue' not properly in loop", cline, coff, filename)
+                ReturnValue(0)
+            }
+            PyComp_Adv()
+            ReturnValue(PyComp_Simple(filename))
+        }
+        IfCondition EqualTo(PyComp_IsKw("break"), 1) ThenBlock: {
+            IfCondition EqualTo(PyComp.loop, 0) ThenBlock: {
+                bline = PyComp_Line()
+                boff = PyComp_Off()
+                PyComp_Fail("'break' outside loop", bline, boff, filename)
+                ReturnValue(0)
+            }
+            PyComp_Adv()
+            ReturnValue(PyComp_Simple(filename))
+        }
+        IfCondition EqualTo(PyComp_IsKw("return"), 1) ThenBlock: {
+            IfCondition EqualTo(PyComp.fn_depth, 0) ThenBlock: {
+                rline = PyComp_Line()
+                roff = PyComp_Off()
+                PyComp_Fail("'return' outside function", rline, roff, filename)
+                ReturnValue(0)
+            }
+            PyComp_Adv()
+            ReturnValue(PyComp_Simple(filename))
+        }
+        IfCondition EqualTo(PyComp_IsKw("lambda"), 1) ThenBlock: {
+            lam_line = PyComp_Line()
+            lam_off = PyComp_Off()
+            depth = 0
+            seen_eq = 0
+            WhileLoop EqualTo(1, 1) {
+                lt = PyComp_T()
+                IfCondition EqualTo(lt, PyTokT.ENDMARKER) ThenBlock: {
+                    BreakLoop
+                }
+                IfCondition And(EqualTo(lt, PyTokT.NEWLINE), EqualTo(depth, 0)) ThenBlock: {
+                    BreakLoop
+                }
+                IfCondition And(EqualTo(lt, PyTokT.SEMI), EqualTo(depth, 0)) ThenBlock: {
+                    BreakLoop
+                }
+                IfCondition And(EqualTo(lt, PyTokT.EQUAL), EqualTo(depth, 0)) ThenBlock: {
+                    seen_eq = 1
+                }
+                IfCondition Or(EqualTo(lt, PyTokT.LPAR), Or(EqualTo(lt, PyTokT.LSQB), EqualTo(lt, PyTokT.LBRACE))) ThenBlock: {
+                    depth = Add(depth, 1)
+                }
+                IfCondition Or(EqualTo(lt, PyTokT.RPAR), Or(EqualTo(lt, PyTokT.RSQB), EqualTo(lt, PyTokT.RBRACE))) ThenBlock: {
+                    IfCondition GreaterThan(depth, 0) ThenBlock: {
+                        depth = Subtract(depth, 1)
+                    }
+                }
+                PyComp_Adv()
+            }
+            IfCondition EqualTo(seen_eq, 1) ThenBlock: {
+                PyComp_Fail("cannot assign to lambda", lam_line, lam_off, filename)
+                ReturnValue(0)
+            }
+            ReturnValue(1)
+        }
+        IfCondition EqualTo(PyComp_IsKw("from"), 1) ThenBlock: {
+            from_line = PyComp_Line()
+            from_off = PyComp_Off()
+            save = PyComp.pos
+            PyComp_Adv()
+            featmod = PyComp_Val()
+            IfCondition EqualTo(StringCompare(featmod, "__future__"), 0) ThenBlock: {
+                PyComp_Adv()
+                isimp = PyComp_IsKw("import")
+                IfCondition EqualTo(isimp, 1) ThenBlock: {
+                    IfCondition EqualTo(PyComp.seen, 1) ThenBlock: {
+                        PyComp_Fail("from __future__ imports must occur at the beginning of the file", from_line, from_off, filename)
+                        ReturnValue(0)
+                    }
+                    PyComp_Adv()
+                    feat = PyComp_Val()
+                    IfCondition EqualTo(StringCompare(feat, "braces"), 0) ThenBlock: {
+                        PyComp_Fail("not a chance", from_line, from_off, filename)
+                        ReturnValue(0)
+                    }
+                    okfeat = 0
+                    IfCondition EqualTo(StringCompare(feat, "nested_scopes"), 0) ThenBlock: { okfeat = 1 }
+                    IfCondition EqualTo(StringCompare(feat, "generators"), 0) ThenBlock: { okfeat = 1 }
+                    IfCondition EqualTo(StringCompare(feat, "division"), 0) ThenBlock: { okfeat = 1 }
+                    IfCondition EqualTo(StringCompare(feat, "absolute_import"), 0) ThenBlock: { okfeat = 1 }
+                    IfCondition EqualTo(StringCompare(feat, "with_statement"), 0) ThenBlock: { okfeat = 1 }
+                    IfCondition EqualTo(StringCompare(feat, "print_function"), 0) ThenBlock: { okfeat = 1 }
+                    IfCondition EqualTo(StringCompare(feat, "unicode_literals"), 0) ThenBlock: { okfeat = 1 }
+                    IfCondition EqualTo(StringCompare(feat, "barry_as_FLUFL"), 0) ThenBlock: { okfeat = 1 }
+                    IfCondition EqualTo(StringCompare(feat, "generator_stop"), 0) ThenBlock: { okfeat = 1 }
+                    IfCondition EqualTo(StringCompare(feat, "annotations"), 0) ThenBlock: { okfeat = 1 }
+                    IfCondition EqualTo(okfeat, 0) ThenBlock: {
+                        PyComp_Fail("future feature is not defined", from_line, from_off, filename)
+                        ReturnValue(0)
+                    }
+                    ReturnValue(PyComp_Simple(filename))
+                }
+            }
+            PyComp.pos = save
+        }
+        IfCondition EqualTo(PyComp_IsKw("print"), 1) ThenBlock: {
+            PyComp_Adv()
+            nt = PyComp_T()
+            IfCondition And(NotEqual(nt, PyTokT.LPAR), And(NotEqual(nt, PyTokT.NEWLINE), And(NotEqual(nt, PyTokT.ENDMARKER), And(NotEqual(nt, PyTokT.EQUAL), And(NotEqual(nt, PyTokT.COLON), NotEqual(nt, PyTokT.SEMI)))))) ThenBlock: {
+                PyComp_Fail("Missing parentheses in call to 'print'. Did you mean print(...)?", PyComp_Line(), PyComp_Off(), filename)
+                ReturnValue(0)
+            }
+            ReturnValue(PyComp_Simple(filename))
+        }
+        IfCondition EqualTo(PyComp_IsKw("exec"), 1) ThenBlock: {
+            PyComp_Adv()
+            nt2 = PyComp_T()
+            IfCondition And(NotEqual(nt2, PyTokT.LPAR), And(NotEqual(nt2, PyTokT.NEWLINE), And(NotEqual(nt2, PyTokT.ENDMARKER), And(NotEqual(nt2, PyTokT.EQUAL), And(NotEqual(nt2, PyTokT.COLON), NotEqual(nt2, PyTokT.SEMI)))))) ThenBlock: {
+                PyComp_Fail("Missing parentheses in call to 'exec'. Did you mean exec(...)?", PyComp_Line(), PyComp_Off(), filename)
+                ReturnValue(0)
+            }
+            ReturnValue(PyComp_Simple(filename))
+        }
+        kw = ""
+        IfCondition EqualTo(PyComp_IsKw("if"), 1) ThenBlock: { kw = "if" }
+        IfCondition EqualTo(PyComp_IsKw("while"), 1) ThenBlock: { kw = "while" }
+        IfCondition EqualTo(PyComp_IsKw("for"), 1) ThenBlock: { kw = "for" }
+        IfCondition EqualTo(PyComp_IsKw("def"), 1) ThenBlock: { kw = "def" }
+        IfCondition EqualTo(PyComp_IsKw("class"), 1) ThenBlock: { kw = "class" }
+        IfCondition EqualTo(PyComp_IsKw("try"), 1) ThenBlock: { kw = "try" }
+        IfCondition EqualTo(PyComp_IsKw("with"), 1) ThenBlock: { kw = "with" }
+        IfCondition EqualTo(PyComp_IsKw("match"), 1) ThenBlock: { kw = "match" }
+        IfCondition EqualTo(PyComp_IsKw("async"), 1) ThenBlock: { kw = "async" }
+        IfCondition NotEqual(StringCompare(kw, ""), 0) ThenBlock: {
+            kwline = PyComp_Line()
+            PyComp_Adv()
+            guard = 0
+            WhileLoop LessThan(guard, 10000) {
+                guard = Add(guard, 1)
+                tt = PyComp_T()
+                IfCondition EqualTo(tt, PyTokT.COLON) ThenBlock: {
+                    ReturnValue(PyComp_Suite(filename, kw, kwline))
+                }
+                IfCondition EqualTo(tt, PyTokT.NEWLINE) ThenBlock: {
+                    PyComp_Fail("invalid syntax", PyComp_Line(), PyComp_Off(), filename)
+                    ReturnValue(0)
+                }
+                IfCondition EqualTo(tt, PyTokT.ENDMARKER) ThenBlock: {
+                    PyComp_Fail("unexpected EOF while parsing", PyComp_Line(), PyComp_Off(), filename)
+                    ReturnValue(0)
+                }
+                IfCondition EqualTo(tt, PyTokT.OP) ThenBlock: {
+                    PyComp_Fail("invalid syntax", PyComp_Line(), PyComp_Off(), filename)
+                    ReturnValue(0)
+                }
+                PyComp_Adv()
+            }
+            ReturnValue(0)
+        }
+        ReturnValue(PyComp_Simple(filename))
+    }
+}
+
+Function.AIMacro.PyCompile {
+    Input: src: Address
+    Input: filename: Address
+    Input: mode: Address
+    Output: Address
+    Body: {
+        raw = src
+        IfCondition EqualTo(Hash.IsHash(src), 1) ThenBlock: {
+            raws = Hash.Get(src, "__src__")
+            IfCondition NotEqual(raws, 0) ThenBlock: {
+                raw = raws
+            }
+        }
+        fn = filename
+        IfCondition EqualTo(fn, 0) ThenBlock: {
+            fn = "<string>"
+        }
+        IfCondition EqualTo(AIMacro.LooksLikeString(fn), 0) ThenBlock: {
+            fn = "<string>"
+        }
+        ok = PyTok_Tokenize(raw)
+        IfCondition EqualTo(ok, 0) ThenBlock: {
+            msg = PyTok.err_msg
+            IfCondition EqualTo(msg, 0) ThenBlock: {
+                msg = "invalid syntax"
+            }
+            line = PyTok.err_line
+            off = PyTok.err_off
+            text = PyTok.err_text
+            IfCondition EqualTo(text, 0) ThenBlock: {
+                text = raw
+            }
+            AIMacro.RaiseSyntax(msg, fn, line, off, text)
+            ReturnValue(0)
+        }
+        PyComp.pos = 0
+        PyComp.loop = 0
+        PyComp.fn_depth = 0
+        PyComp.seen = 0
+        PyComp.fn = fn
+        PyComp.failed = 0
+        guard = 0
+        WhileLoop LessThan(guard, 100000) {
+            guard = Add(guard, 1)
+            IfCondition EqualTo(PyComp.failed, 1) ThenBlock: {
+                ReturnValue(0)
+            }
+            IfCondition EqualTo(PyComp_T(), PyTokT.ENDMARKER) ThenBlock: {
+                BreakLoop
+            }
+            IfCondition EqualTo(PyComp_T(), PyTokT.DEDENT) ThenBlock: {
+                PyComp_Adv()
+            }
+            ElseBlock: {
+                r = PyComp_Stmt(fn)
+                IfCondition EqualTo(r, 0) ThenBlock: {
+                    ReturnValue(0)
+                }
+                PyComp.seen = 1
+            }
+        }
+        h = Hash.Create(4)
+        Hash.Set(h, "__src__", raw)
+        ReturnValue(h)
+    }
+}
