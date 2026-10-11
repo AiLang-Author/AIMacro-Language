@@ -86,6 +86,9 @@ FixedPool.PyTok {
     "offs": Initialize=0
     "vals": Initialize=0
     "n": Initialize=0
+    "starts": Initialize=0
+    "stop": Initialize=0
+    "orig": Initialize=0
 }
 
 Function.PyTok_IsIdentStart {
@@ -214,6 +217,10 @@ Function.PyTok_Init {
         PyTok.need_nl = 0
         PyTok.blankline = 0
         PyTok.err_msg = 0
+        PyTok.err_line = 1
+        PyTok.err_off = 1
+        PyTok.err_end = 1
+        PyTok.err_text = 0
         PyTok.err_kind = 24
         IfCondition GreaterThan(n, 0) ThenBlock: {
             lastb = GetByte(raw, Subtract(n, 1))
@@ -251,13 +258,18 @@ Function.PyTok_Init {
         PyTok.lines = Array.Create(64)
         PyTok.offs = Array.Create(64)
         PyTok.vals = Array.Create(64)
+        PyTok.starts = Array.Create(64)
         PyTok.n = 0
+        PyTok.stop = 0
     }
 }
 
 Function.PyTok_NextC {
     Output: Integer
     Body: {
+        IfCondition And(GreaterThan(PyTok.stop, 0), GreaterEqual(PyTok.cur, PyTok.stop)) ThenBlock: {
+            ReturnValue(-1)
+        }
         IfCondition GreaterEqual(PyTok.cur, PyTok.len) ThenBlock: {
             IfCondition EqualTo(PyTok.need_nl, 1) ThenBlock: {
                 PyTok.need_nl = 0
@@ -374,6 +386,50 @@ Function.PyTok_LineAt {
     }
 }
 
+Function.PyTok_LineFrom {
+    Input: s: Address
+    Input: want: Integer
+    Output: Address
+    Body: {
+        IfCondition EqualTo(AIMacro.LooksLikeString(s), 0) ThenBlock: {
+            ReturnValue("")
+        }
+        ln = StringLength(s)
+        a = 0
+        line = 1
+        IfCondition LessThan(want, 1) ThenBlock: {
+            ReturnValue("")
+        }
+        WhileLoop And(LessThan(a, ln), LessThan(line, want)) {
+            ch = GetByte(s, a)
+            a = Add(a, 1)
+            IfCondition EqualTo(ch, 10) ThenBlock: {
+                line = Add(line, 1)
+            }
+        }
+        b = a
+        WhileLoop LessThan(b, ln) {
+            ch2 = GetByte(s, b)
+            IfCondition EqualTo(ch2, 10) ThenBlock: {
+                BreakLoop
+            }
+            b = Add(b, 1)
+        }
+        n = Subtract(b, a)
+        IfCondition LessThan(n, 0) ThenBlock: {
+            n = 0
+        }
+        out = Allocate(Add(n, 1))
+        i = 0
+        WhileLoop LessThan(i, n) {
+            SetByte(out, i, GetByte(s, Add(a, i)))
+            i = Add(i, 1)
+        }
+        SetByte(out, n, 0)
+        ReturnValue(out)
+    }
+}
+
 Function.PyTok_LineText {
     Output: Address
     Body: {
@@ -486,7 +542,11 @@ Function.PyTok_Syntax {
         }
         PyTok.err_off = off
         PyTok.err_end = off
-        PyTok.err_text = PyTok_LineText()
+        osrc = PyTok.orig
+        IfCondition EqualTo(osrc, 0) ThenBlock: {
+            osrc = PyTok.src
+        }
+        PyTok.err_text = PyTok_LineFrom(osrc, PyTok.lineno)
         PyTok.err_kind = 24
         ReturnValue(PyTokT.ERRORTOKEN)
     }
@@ -1132,11 +1192,529 @@ Function.PyTok_Tokenize {
             Array.Push(PyTok.lines, line_at)
             Array.Push(PyTok.offs, off)
             Array.Push(PyTok.vals, val)
+            Array.Push(PyTok.starts, PyTok.start)
             PyTok.n = Add(PyTok.n, 1)
             IfCondition EqualTo(t, PyTokT.ENDMARKER) ThenBlock: {
                 ReturnValue(1)
             }
         }
         ReturnValue(0)
+    }
+}
+
+Function.PyTok_LineStartOf {
+    Input: pos: Integer
+    Output: Integer
+    Body: {
+        i = 0
+        ls = 0
+        IfCondition LessThan(pos, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        WhileLoop And(LessThan(i, pos), LessThan(i, PyTok.len)) {
+            b = GetByte(PyTok.src, i)
+            IfCondition EqualTo(b, 10) ThenBlock: {
+                ls = Add(i, 1)
+            }
+            i = Add(i, 1)
+        }
+        ReturnValue(ls)
+    }
+}
+
+Function.PyTok_CatByte {
+    Input: dst: Address
+    Input: b: Integer
+    Output: Address
+    Body: {
+        n = 0
+        IfCondition EqualTo(AIMacro.LooksLikeString(dst), 1) ThenBlock: {
+            n = StringLength(dst)
+        }
+        s = Allocate(Add(n, 2))
+        i = 0
+        WhileLoop LessThan(i, n) {
+            SetByte(s, i, GetByte(dst, i))
+            i = Add(i, 1)
+        }
+        SetByte(s, n, b)
+        SetByte(s, Add(n, 1), 0)
+        ReturnValue(s)
+    }
+}
+
+Function.PyTok_AppendCp {
+    Input: dst: Address
+    Input: cp: Integer
+    Output: Address
+    Body: {
+        IfCondition LessThan(cp, 128) ThenBlock: {
+            ReturnValue(PyTok_CatByte(dst, cp))
+        }
+        IfCondition LessThan(cp, 2048) ThenBlock: {
+            b1 = Add(192, Divide(cp, 64))
+            b2 = Add(128, Subtract(cp, Multiply(Divide(cp, 64), 64)))
+            ReturnValue(PyTok_CatByte(PyTok_CatByte(dst, b1), b2))
+        }
+        IfCondition LessThan(cp, 65536) ThenBlock: {
+            b1 = Add(224, Divide(cp, 4096))
+            r1 = Subtract(cp, Multiply(Divide(cp, 4096), 4096))
+            b2 = Add(128, Divide(r1, 64))
+            b3 = Add(128, Subtract(r1, Multiply(Divide(r1, 64), 64)))
+            ReturnValue(PyTok_CatByte(PyTok_CatByte(PyTok_CatByte(dst, b1), b2), b3))
+        }
+        b1 = Add(240, Divide(cp, 262144))
+        r1 = Subtract(cp, Multiply(Divide(cp, 262144), 262144))
+        b2 = Add(128, Divide(r1, 4096))
+        r2 = Subtract(r1, Multiply(Divide(r1, 4096), 4096))
+        b3 = Add(128, Divide(r2, 64))
+        b4 = Add(128, Subtract(r2, Multiply(Divide(r2, 64), 64)))
+        ReturnValue(PyTok_CatByte(PyTok_CatByte(PyTok_CatByte(PyTok_CatByte(dst, b1), b2), b3), b4))
+    }
+}
+
+Function.PyTok_Utf8At {
+    Input: s: Address
+    Input: idx: Integer
+    Output: Integer
+    Body: {
+        i = 0
+        nch = 0
+        ln = StringLength(s)
+        WhileLoop LessThan(i, ln) {
+            b = GetByte(s, i)
+            cp = b
+            w = 1
+            IfCondition GreaterEqual(b, 192) ThenBlock: {
+                IfCondition LessThan(b, 224) ThenBlock: {
+                    w = 2
+                    IfCondition LessThan(Add(i, 1), ln) ThenBlock: {
+                        cp = Add(Multiply(Subtract(b, 192), 64), Subtract(GetByte(s, Add(i, 1)), 128))
+                    }
+                }
+                ElseBlock: {
+                    IfCondition LessThan(b, 240) ThenBlock: {
+                        w = 3
+                        IfCondition LessThan(Add(i, 2), ln) ThenBlock: {
+                            cp = Add(Multiply(Subtract(b, 224), 4096), Add(Multiply(Subtract(GetByte(s, Add(i, 1)), 128), 64), Subtract(GetByte(s, Add(i, 2)), 128)))
+                        }
+                    }
+                    ElseBlock: {
+                        w = 4
+                    }
+                }
+            }
+            IfCondition EqualTo(nch, idx) ThenBlock: {
+                ReturnValue(cp)
+            }
+            nch = Add(nch, 1)
+            i = Add(i, w)
+        }
+        ReturnValue(65533)
+    }
+}
+
+Function.PyTok_Utf8Bad {
+    Input: s: Address
+    Output: Integer
+    Body: {
+        i = 0
+        ln = StringLength(s)
+        WhileLoop LessThan(i, ln) {
+            b = GetByte(s, i)
+            w = 1
+            IfCondition LessThan(b, 128) ThenBlock: {
+                w = 1
+            }
+            ElseBlock: {
+                IfCondition LessThan(b, 194) ThenBlock: {
+                    ReturnValue(i)
+                }
+                IfCondition LessThan(b, 224) ThenBlock: {
+                    IfCondition GreaterEqual(Add(i, 1), ln) ThenBlock: {
+                        ReturnValue(i)
+                    }
+                    c1 = GetByte(s, Add(i, 1))
+                    IfCondition Or(LessThan(c1, 128), GreaterEqual(c1, 192)) ThenBlock: {
+                        ReturnValue(i)
+                    }
+                    w = 2
+                }
+                ElseBlock: {
+                    IfCondition LessThan(b, 240) ThenBlock: {
+                        IfCondition GreaterEqual(Add(i, 2), ln) ThenBlock: {
+                            ReturnValue(i)
+                        }
+                        c1 = GetByte(s, Add(i, 1))
+                        c2 = GetByte(s, Add(i, 2))
+                        IfCondition Or(LessThan(c1, 128), GreaterEqual(c1, 192)) ThenBlock: {
+                            ReturnValue(i)
+                        }
+                        IfCondition Or(LessThan(c2, 128), GreaterEqual(c2, 192)) ThenBlock: {
+                            ReturnValue(i)
+                        }
+                        IfCondition And(EqualTo(b, 224), LessThan(c1, 160)) ThenBlock: {
+                            ReturnValue(i)
+                        }
+                        w = 3
+                    }
+                    ElseBlock: {
+                        IfCondition LessThan(b, 245) ThenBlock: {
+                            IfCondition GreaterEqual(Add(i, 3), ln) ThenBlock: {
+                                ReturnValue(i)
+                            }
+                            w = 4
+                            c1 = GetByte(s, Add(i, 1))
+                            IfCondition Or(LessThan(c1, 128), GreaterEqual(c1, 192)) ThenBlock: {
+                                ReturnValue(i)
+                            }
+                        }
+                        ElseBlock: {
+                            ReturnValue(i)
+                        }
+                    }
+                }
+            }
+            i = Add(i, w)
+        }
+        ReturnValue(-1)
+    }
+}
+
+Function.PyTok_NormEnc {
+    Input: s: Address
+    Output: Address
+    Body: {
+        IfCondition EqualTo(AIMacro.LooksLikeString(s), 0) ThenBlock: {
+            ReturnValue(s)
+        }
+        n = StringLength(s)
+        buf = Allocate(Add(n, 1))
+        i = 0
+        WhileLoop LessThan(i, n) {
+            c = GetByte(s, i)
+            IfCondition EqualTo(c, 95) ThenBlock: {
+                c = 45
+            }
+            IfCondition And(GreaterEqual(c, 65), LessThan(c, 91)) ThenBlock: {
+                c = Add(c, 32)
+            }
+            SetByte(buf, i, c)
+            i = Add(i, 1)
+        }
+        SetByte(buf, n, 0)
+        IfCondition EqualTo(StringCompare(buf, "utf-8"), 0) ThenBlock: {
+            ReturnValue("utf-8")
+        }
+        IfCondition EqualTo(StringCompare(buf, "latin-1"), 0) ThenBlock: {
+            ReturnValue("iso-8859-1")
+        }
+        IfCondition EqualTo(StringCompare(buf, "iso-8859-1"), 0) ThenBlock: {
+            ReturnValue("iso-8859-1")
+        }
+        IfCondition EqualTo(StringCompare(buf, "iso-latin-1"), 0) ThenBlock: {
+            ReturnValue("iso-8859-1")
+        }
+        ReturnValue(buf)
+    }
+}
+
+Function.PyTok_LineCookie {
+    Input: s: Address
+    Input: a: Integer
+    Input: b: Integer
+    Output: Address
+    Body: {
+        i = a
+        WhileLoop LessThan(i, b) {
+            c = GetByte(s, i)
+            IfCondition EqualTo(c, 35) ThenBlock: {
+                BreakLoop
+            }
+            IfCondition And(NotEqual(c, 32), And(NotEqual(c, 9), NotEqual(c, 12))) ThenBlock: {
+                ReturnValue(0)
+            }
+            i = Add(i, 1)
+        }
+        WhileLoop LessThan(Add(i, 6), b) {
+            IfCondition And(EqualTo(GetByte(s, i), 99), And(EqualTo(GetByte(s, Add(i, 1)), 111), And(EqualTo(GetByte(s, Add(i, 2)), 100), And(EqualTo(GetByte(s, Add(i, 3)), 105), And(EqualTo(GetByte(s, Add(i, 4)), 110), EqualTo(GetByte(s, Add(i, 5)), 103)))))) ThenBlock: {
+                t = Add(i, 6)
+                IfCondition And(NotEqual(GetByte(s, t), 58), NotEqual(GetByte(s, t), 61)) ThenBlock: {
+                    i = Add(i, 1)
+                }
+                ElseBlock: {
+                    t = Add(t, 1)
+                    WhileLoop And(LessThan(t, b), Or(EqualTo(GetByte(s, t), 32), EqualTo(GetByte(s, t), 9))) {
+                        t = Add(t, 1)
+                    }
+                    begin = t
+                    WhileLoop LessThan(t, b) {
+                        ch = GetByte(s, t)
+                        okch = 0
+                        IfCondition And(GreaterEqual(ch, 48), LessThan(ch, 58)) ThenBlock: { okch = 1 }
+                        IfCondition And(GreaterEqual(ch, 65), LessThan(ch, 91)) ThenBlock: { okch = 1 }
+                        IfCondition And(GreaterEqual(ch, 97), LessThan(ch, 123)) ThenBlock: { okch = 1 }
+                        IfCondition Or(EqualTo(ch, 45), Or(EqualTo(ch, 95), EqualTo(ch, 46))) ThenBlock: { okch = 1 }
+                        IfCondition EqualTo(okch, 0) ThenBlock: {
+                            BreakLoop
+                        }
+                        t = Add(t, 1)
+                    }
+                    IfCondition GreaterThan(t, begin) ThenBlock: {
+                        n = Subtract(t, begin)
+                        name = Allocate(Add(n, 1))
+                        k = 0
+                        WhileLoop LessThan(k, n) {
+                            SetByte(name, k, GetByte(s, Add(begin, k)))
+                            k = Add(k, 1)
+                        }
+                        SetByte(name, n, 0)
+                        ReturnValue(PyTok_NormEnc(name))
+                    }
+                    i = Add(i, 1)
+                }
+            }
+            ElseBlock: {
+                i = Add(i, 1)
+            }
+        }
+        ReturnValue(0)
+    }
+}
+
+Function.PyTok_Cookie {
+    Input: s: Address
+    Output: Address
+    Body: {
+        ln = StringLength(s)
+        i = 0
+        line = 0
+        a = 0
+        WhileLoop And(LessThan(i, ln), LessThan(line, 2)) {
+            IfCondition EqualTo(GetByte(s, i), 10) ThenBlock: {
+                ck = PyTok_LineCookie(s, a, i)
+                IfCondition NotEqual(ck, 0) ThenBlock: {
+                    ReturnValue(ck)
+                }
+                line = Add(line, 1)
+                a = Add(i, 1)
+            }
+            i = Add(i, 1)
+        }
+        IfCondition LessThan(line, 2) ThenBlock: {
+            ck2 = PyTok_LineCookie(s, a, ln)
+            IfCondition NotEqual(ck2, 0) ThenBlock: {
+                ReturnValue(ck2)
+            }
+        }
+        ReturnValue(0)
+    }
+}
+
+Function.PyTok_MapHigh {
+    Input: enc: Address
+    Input: b: Integer
+    Output: Integer
+    Body: {
+        IfCondition LessThan(b, 128) ThenBlock: {
+            ReturnValue(b)
+        }
+        idx = Subtract(b, 128)
+        IfCondition Or(EqualTo(StringCompare(enc, "cp1251"), 0), EqualTo(StringCompare(enc, "windows-1251"), 0)) ThenBlock: {
+            ReturnValue(PyTok_Utf8At("ЂЃ‚ѓ„…†‡€‰Љ‹ЊЌЋЏђ‘’“”•–—�™љ›њќћџ ЎўЈ¤Ґ¦§Ё©Є«¬­®Ї°±Ііґµ¶·ё№є»јЅѕїАБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯабвгдежзийклмнопрстуфхцчшщъыьэюя", idx))
+        }
+        IfCondition Or(EqualTo(StringCompare(enc, "iso8859-7"), 0), Or(EqualTo(StringCompare(enc, "iso-8859-7"), 0), EqualTo(StringCompare(enc, "greek"), 0))) ThenBlock: {
+            IfCondition LessThan(b, 160) ThenBlock: {
+                ReturnValue(b)
+            }
+            ReturnValue(PyTok_Utf8At(" ‘’£€₯¦§¨©ͺ«¬­�―°±²³΄΅Ά·ΈΉΊ»Ό½ΎΏΐΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡ�ΣΤΥΦΧΨΩΪΫάέήίΰαβγδεζηθικλμνξοπρςστυφχψωϊϋόύώ�", Subtract(b, 160)))
+        }
+        ReturnValue(b)
+    }
+}
+
+Function.PyTok_DecodeEnc {
+    Input: s: Address
+    Input: enc: Address
+    Output: Address
+    Body: {
+        IfCondition Or(EqualTo(StringCompare(enc, "utf-8"), 0), EqualTo(StringCompare(enc, "utf8"), 0)) ThenBlock: {
+            ReturnValue(s)
+        }
+        IfCondition EqualTo(StringCompare(enc, "iso-8859-1"), 0) ThenBlock: {
+            out = ""
+            i = 0
+            ln = StringLength(s)
+            WhileLoop LessThan(i, ln) {
+                out = PyTok_AppendCp(out, GetByte(s, i))
+                i = Add(i, 1)
+            }
+            ReturnValue(out)
+        }
+        out2 = ""
+        i2 = 0
+        ln2 = StringLength(s)
+        WhileLoop LessThan(i2, ln2) {
+            out2 = PyTok_AppendCp(out2, PyTok_MapHigh(enc, GetByte(s, i2)))
+            i2 = Add(i2, 1)
+        }
+        ReturnValue(out2)
+    }
+}
+
+Function.PyTok_PrepareSrc {
+    Input: src: Address
+    Output: Address
+    Body: {
+        s = src
+        IfCondition EqualTo(AIMacro.LooksLikeString(s), 0) ThenBlock: {
+            ReturnValue("")
+        }
+        PyTok.orig = s
+        ln = StringLength(s)
+        bom = 0
+        IfCondition GreaterEqual(ln, 3) ThenBlock: {
+            IfCondition And(EqualTo(GetByte(s, 0), 239), And(EqualTo(GetByte(s, 1), 187), EqualTo(GetByte(s, 2), 191))) ThenBlock: {
+                bom = 1
+            }
+        }
+        rest = s
+        IfCondition EqualTo(bom, 1) ThenBlock: {
+            nrest = Subtract(ln, 3)
+            rest = Allocate(Add(nrest, 1))
+            k = 0
+            WhileLoop LessThan(k, nrest) {
+                SetByte(rest, k, GetByte(s, Add(k, 3)))
+                k = Add(k, 1)
+            }
+            SetByte(rest, nrest, 0)
+        }
+        ck = PyTok_Cookie(rest)
+        IfCondition EqualTo(bom, 1) ThenBlock: {
+            IfCondition NotEqual(ck, 0) ThenBlock: {
+                IfCondition NotEqual(StringCompare(ck, "utf-8"), 0) ThenBlock: {
+                    PyTok.err_msg = "encoding problem: utf8 with BOM"
+                    IfCondition EqualTo(StringCompare(ck, "utf8"), 0) ThenBlock: {
+                        PyTok.err_msg = "encoding problem: utf8 with BOM"
+                    }
+                    PyTok.err_line = 0
+                    PyTok.err_off = Subtract(0, 1)
+                    PyTok.err_text = 0
+                    ReturnValue(0)
+                }
+            }
+            ReturnValue(rest)
+        }
+        IfCondition NotEqual(ck, 0) ThenBlock: {
+            IfCondition And(NotEqual(StringCompare(ck, "utf-8"), 0), NotEqual(StringCompare(ck, "utf8"), 0)) ThenBlock: {
+                ReturnValue(PyTok_DecodeEnc(s, ck))
+            }
+        }
+        bad = PyTok_Utf8Bad(s)
+        IfCondition GreaterEqual(bad, 0) ThenBlock: {
+            PyTok.err_msg = "(unicode error) 'utf-8' codec can't decode byte"
+            PyTok.err_line = 1
+            PyTok.err_off = ln
+            IfCondition EqualTo(ln, 0) ThenBlock: {
+                PyTok.err_off = 1
+            }
+            txt = PyTok_LineFrom(s, 1)
+            txt = PyTok_CatByte(txt, 10)
+            PyTok.err_text = txt
+            ReturnValue(0)
+        }
+        ReturnValue(s)
+    }
+}
+
+Function.PyTok_TokenizeSlice {
+    Input: a: Integer
+    Input: b: Integer
+    Output: Integer
+    Body: {
+        PyTok.cur = a
+        PyTok.start = a
+        PyTok.stop = b
+        PyTok.lineno = PyTok_LineOf(a)
+        PyTok.line_start = PyTok_LineStartOf(a)
+        PyTok.atbol = 0
+        PyTok.need_nl = 0
+        PyTok.level = 0
+        PyTok.indent = 0
+        PyTok.pendin = 0
+        PyTok.blankline = 0
+        PyTok.done = 10
+        PyTok.types = Array.Create(16)
+        PyTok.lines = Array.Create(16)
+        PyTok.offs = Array.Create(16)
+        PyTok.vals = Array.Create(16)
+        PyTok.starts = Array.Create(16)
+        PyTok.n = 0
+        guard = 0
+        WhileLoop LessThan(guard, 100000) {
+            guard = Add(guard, 1)
+            t = PyTok_Get()
+            IfCondition EqualTo(t, PyTokT.ERRORTOKEN) ThenBlock: {
+                PyTok.stop = 0
+                ReturnValue(0)
+            }
+            skip = 0
+            IfCondition Or(EqualTo(t, PyTokT.NEWLINE), Or(EqualTo(t, PyTokT.INDENT), EqualTo(t, PyTokT.DEDENT))) ThenBlock: {
+                skip = 1
+            }
+            IfCondition EqualTo(skip, 0) ThenBlock: {
+                line_at = PyTok_LineOf(PyTok.start)
+                off = Add(PyTok_ColBefore(PyTok.start), 1)
+                IfCondition LessThan(off, 1) ThenBlock: {
+                    off = 1
+                }
+                val = ""
+                IfCondition Or(EqualTo(t, PyTokT.NAME), Or(EqualTo(t, PyTokT.NUMBER), EqualTo(t, PyTokT.STRING))) ThenBlock: {
+                    val = PyTok_Slice()
+                }
+                Array.Push(PyTok.types, t)
+                Array.Push(PyTok.lines, line_at)
+                Array.Push(PyTok.offs, off)
+                Array.Push(PyTok.vals, val)
+                Array.Push(PyTok.starts, PyTok.start)
+                PyTok.n = Add(PyTok.n, 1)
+                IfCondition EqualTo(t, PyTokT.ENDMARKER) ThenBlock: {
+                    PyTok.stop = 0
+                    ReturnValue(1)
+                }
+            }
+        }
+        PyTok.stop = 0
+        ReturnValue(0)
+    }
+}
+
+Function.PyTok_HasFPrefix {
+    Input: val: Address
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(AIMacro.LooksLikeString(val), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        n = StringLength(val)
+        IfCondition LessThan(n, 2) ThenBlock: {
+            ReturnValue(0)
+        }
+        i = 0
+        sawf = 0
+        WhileLoop LessThan(i, n) {
+            c = GetByte(val, i)
+            IfCondition Or(EqualTo(c, 34), EqualTo(c, 39)) ThenBlock: {
+                BreakLoop
+            }
+            IfCondition Or(EqualTo(c, 102), EqualTo(c, 70)) ThenBlock: {
+                sawf = 1
+            }
+            i = Add(i, 1)
+        }
+        IfCondition Or(EqualTo(i, 0), EqualTo(i, n)) ThenBlock: {
+            ReturnValue(0)
+        }
+        ReturnValue(sawf)
     }
 }

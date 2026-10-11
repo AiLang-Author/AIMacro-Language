@@ -32,6 +32,7 @@ FixedPool.PyComp {
     "nlines": Initialize=0
     "noffs": Initialize=0
     "nn": Initialize=0
+    "fmode": Initialize=0
 }
 
 Function.PyComp_T {
@@ -89,9 +90,13 @@ Function.PyComp_Fail {
     Input: filename: Address
     Body: {
         PyComp.failed = 1
+        osrc = PyTok.orig
+        IfCondition EqualTo(osrc, 0) ThenBlock: {
+            osrc = PyTok.src
+        }
         text = ""
-        IfCondition EqualTo(AIMacro.LooksLikeString(PyTok.err_text), 1) ThenBlock: {
-            text = PyTok.err_text
+        IfCondition GreaterThan(line, 0) ThenBlock: {
+            text = PyTok_LineFrom(osrc, line)
         }
         AIMacro.RaiseSyntax(msg, filename, line, off, text)
         ev = AIMacro.ExcValue()
@@ -188,6 +193,9 @@ Function.PyComp_Simple {
         last_off = PyComp_Off()
         last_line = PyComp_Line()
         depth = 0
+        IfCondition EqualTo(PyComp.fmode, 1) ThenBlock: {
+            depth = 1
+        }
         star_off = 0
         gen_off = 0
         saw_for = 0
@@ -1036,6 +1044,231 @@ Function.PyComp_Stmt {
     }
 }
 
+Function.PyComp_FindFExprEnd {
+    Input: a: Integer
+    Input: endp: Integer
+    Output: Integer
+    Body: {
+        p = a
+        qch = 0
+        qsz = 0
+        nest = 0
+        WhileLoop LessThan(p, endp) {
+            ch = GetByte(PyTok.src, p)
+            IfCondition NotEqual(qch, 0) ThenBlock: {
+                IfCondition EqualTo(ch, qch) ThenBlock: {
+                    IfCondition EqualTo(qsz, 3) ThenBlock: {
+                        IfCondition And(LessThan(Add(p, 2), endp), And(EqualTo(GetByte(PyTok.src, Add(p, 1)), ch), EqualTo(GetByte(PyTok.src, Add(p, 2)), ch))) ThenBlock: {
+                            p = Add(p, 2)
+                            qch = 0
+                            qsz = 0
+                        }
+                    }
+                    ElseBlock: {
+                        qch = 0
+                        qsz = 0
+                    }
+                }
+            }
+            ElseBlock: {
+                IfCondition Or(EqualTo(ch, 39), EqualTo(ch, 34)) ThenBlock: {
+                    qch = ch
+                    qsz = 1
+                    IfCondition And(LessThan(Add(p, 2), endp), And(EqualTo(GetByte(PyTok.src, Add(p, 1)), ch), EqualTo(GetByte(PyTok.src, Add(p, 2)), ch))) ThenBlock: {
+                        qsz = 3
+                        p = Add(p, 2)
+                    }
+                }
+                ElseBlock: {
+                    IfCondition Or(EqualTo(ch, 91), Or(EqualTo(ch, 123), EqualTo(ch, 40))) ThenBlock: {
+                        nest = Add(nest, 1)
+                    }
+                    ElseBlock: {
+                        IfCondition And(EqualTo(nest, 0), Or(EqualTo(ch, 33), Or(EqualTo(ch, 58), Or(EqualTo(ch, 125), EqualTo(ch, 61))))) ThenBlock: {
+                            IfCondition LessThan(Add(p, 1), endp) ThenBlock: {
+                                nx = GetByte(PyTok.src, Add(p, 1))
+                                IfCondition EqualTo(nx, 61) ThenBlock: {
+                                    IfCondition Or(EqualTo(ch, 33), Or(EqualTo(ch, 61), Or(EqualTo(ch, 60), EqualTo(ch, 62)))) ThenBlock: {
+                                        p = Add(p, 1)
+                                    }
+                                }
+                                ElseBlock: {
+                                    IfCondition Or(EqualTo(ch, 60), EqualTo(ch, 62)) ThenBlock: {
+                                    }
+                                    ElseBlock: {
+                                        ReturnValue(p)
+                                    }
+                                }
+                            }
+                            ElseBlock: {
+                                ReturnValue(p)
+                            }
+                        }
+                        ElseBlock: {
+                            IfCondition Or(EqualTo(ch, 93), Or(EqualTo(ch, 125), EqualTo(ch, 41))) ThenBlock: {
+                                IfCondition GreaterThan(nest, 0) ThenBlock: {
+                                    nest = Subtract(nest, 1)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            p = Add(p, 1)
+        }
+        ReturnValue(p)
+    }
+}
+
+Function.PyComp_CompileFExpr {
+    Input: a: Integer
+    Input: b: Integer
+    Input: filename: Address
+    Output: Integer
+    Body: {
+        IfCondition GreaterEqual(a, b) ThenBlock: {
+            ReturnValue(1)
+        }
+        ot = PyTok.types
+        oln = PyTok.lines
+        oo = PyTok.offs
+        ov = PyTok.vals
+        os = PyTok.starts
+        on = PyTok.n
+        ocur = PyTok.cur
+        olineno = PyTok.lineno
+        ols = PyTok.line_start
+        ostop = PyTok.stop
+        oatbol = PyTok.atbol
+        oneed = PyTok.need_nl
+        olev = PyTok.level
+        opos = PyComp.pos
+        ofmode = PyComp.fmode
+        tokok = PyTok_TokenizeSlice(a, b)
+        IfCondition EqualTo(tokok, 0) ThenBlock: {
+            msg = PyTok.err_msg
+            IfCondition EqualTo(msg, 0) ThenBlock: {
+                msg = "invalid syntax"
+            }
+            AIMacro.RaiseSyntax(msg, filename, PyTok.err_line, PyTok.err_off, PyTok.err_text)
+            ReturnValue(0)
+        }
+        fs = PyComp_FStrings(filename)
+        IfCondition EqualTo(fs, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        PyComp.pos = 0
+        PyComp.fmode = 1
+        sr = PyComp_Simple(filename)
+        PyComp.fmode = ofmode
+        PyTok.types = ot
+        PyTok.lines = oln
+        PyTok.offs = oo
+        PyTok.vals = ov
+        PyTok.starts = os
+        PyTok.n = on
+        PyTok.cur = ocur
+        PyTok.lineno = olineno
+        PyTok.line_start = ols
+        PyTok.stop = ostop
+        PyTok.atbol = oatbol
+        PyTok.need_nl = oneed
+        PyTok.level = olev
+        PyComp.pos = opos
+        ReturnValue(sr)
+    }
+}
+
+Function.PyComp_ScanFBody {
+    Input: startb: Integer
+    Input: val: Address
+    Input: filename: Address
+    Output: Integer
+    Body: {
+        n = StringLength(val)
+        i = 0
+        WhileLoop LessThan(i, n) {
+            c = GetByte(val, i)
+            IfCondition Or(EqualTo(c, 34), EqualTo(c, 39)) ThenBlock: {
+                BreakLoop
+            }
+            i = Add(i, 1)
+        }
+        IfCondition EqualTo(i, n) ThenBlock: {
+            ReturnValue(1)
+        }
+        q = GetByte(val, i)
+        qsz = 1
+        IfCondition And(LessThan(Add(i, 2), n), And(EqualTo(GetByte(val, Add(i, 1)), q), EqualTo(GetByte(val, Add(i, 2)), q))) ThenBlock: {
+            qsz = 3
+        }
+        body_a = Add(startb, Add(i, qsz))
+        body_b = Subtract(Add(startb, n), qsz)
+        p = body_a
+        WhileLoop LessThan(p, body_b) {
+            ch = GetByte(PyTok.src, p)
+            IfCondition EqualTo(ch, 123) ThenBlock: {
+                IfCondition And(LessThan(Add(p, 1), body_b), EqualTo(GetByte(PyTok.src, Add(p, 1)), 123)) ThenBlock: {
+                    p = Add(p, 2)
+                }
+                ElseBlock: {
+                    ea = Add(p, 1)
+                    eb = PyComp_FindFExprEnd(ea, body_b)
+                    cr = PyComp_CompileFExpr(ea, eb, filename)
+                    IfCondition EqualTo(cr, 0) ThenBlock: {
+                        ReturnValue(0)
+                    }
+                    p = eb
+                    WhileLoop And(LessThan(p, body_b), NotEqual(GetByte(PyTok.src, p), 125)) {
+                        p = Add(p, 1)
+                    }
+                    IfCondition And(LessThan(p, body_b), EqualTo(GetByte(PyTok.src, p), 125)) ThenBlock: {
+                        p = Add(p, 1)
+                    }
+                }
+            }
+            ElseBlock: {
+                IfCondition EqualTo(ch, 125) ThenBlock: {
+                    IfCondition And(LessThan(Add(p, 1), body_b), EqualTo(GetByte(PyTok.src, Add(p, 1)), 125)) ThenBlock: {
+                        p = Add(p, 2)
+                    }
+                    ElseBlock: {
+                        p = Add(p, 1)
+                    }
+                }
+                ElseBlock: {
+                    p = Add(p, 1)
+                }
+            }
+        }
+        ReturnValue(1)
+    }
+}
+
+Function.PyComp_FStrings {
+    Input: filename: Address
+    Output: Integer
+    Body: {
+        i = 0
+        WhileLoop LessThan(i, PyTok.n) {
+            t = Array.Get(PyTok.types, i)
+            IfCondition EqualTo(t, PyTokT.STRING) ThenBlock: {
+                val = Array.Get(PyTok.vals, i)
+                hf = PyTok_HasFPrefix(val)
+                IfCondition EqualTo(hf, 1) ThenBlock: {
+                    st = Array.Get(PyTok.starts, i)
+                    sr = PyComp_ScanFBody(st, val, filename)
+                    IfCondition EqualTo(sr, 0) ThenBlock: {
+                        ReturnValue(0)
+                    }
+                }
+            }
+            i = Add(i, 1)
+        }
+        ReturnValue(1)
+    }
+}
+
 Function.AIMacro.PyCompile {
     Input: src: Address
     Input: filename: Address
@@ -1056,7 +1289,23 @@ Function.AIMacro.PyCompile {
         IfCondition EqualTo(AIMacro.LooksLikeString(fn), 0) ThenBlock: {
             fn = "<string>"
         }
-        ok = PyTok_Tokenize(raw)
+        PyTok.orig = raw
+        dec = PyTok_PrepareSrc(raw)
+        IfCondition EqualTo(dec, 0) ThenBlock: {
+            msg = PyTok.err_msg
+            IfCondition EqualTo(msg, 0) ThenBlock: {
+                msg = "invalid syntax"
+            }
+            line = PyTok.err_line
+            off = PyTok.err_off
+            text = PyTok.err_text
+            IfCondition EqualTo(line, 0) ThenBlock: {
+                text = AIMacro.GetNone()
+            }
+            AIMacro.RaiseSyntax(msg, fn, line, off, text)
+            ReturnValue(0)
+        }
+        ok = PyTok_Tokenize(dec)
         IfCondition EqualTo(ok, 0) ThenBlock: {
             msg = PyTok.err_msg
             IfCondition EqualTo(msg, 0) ThenBlock: {
@@ -1066,7 +1315,12 @@ Function.AIMacro.PyCompile {
             off = PyTok.err_off
             text = PyTok.err_text
             IfCondition EqualTo(text, 0) ThenBlock: {
-                text = raw
+                IfCondition NotEqual(line, 0) ThenBlock: {
+                    text = PyTok_LineFrom(raw, line)
+                }
+            }
+            IfCondition EqualTo(line, 0) ThenBlock: {
+                text = AIMacro.GetNone()
             }
             AIMacro.RaiseSyntax(msg, fn, line, off, text)
             ReturnValue(0)
@@ -1088,6 +1342,11 @@ Function.AIMacro.PyCompile {
         PyComp.nn = 0
         PyComp.fn = fn
         PyComp.failed = 0
+        PyComp.fmode = 0
+        fs = PyComp_FStrings(fn)
+        IfCondition EqualTo(fs, 0) ThenBlock: {
+            ReturnValue(0)
+        }
         guard = 0
         WhileLoop LessThan(guard, 100000) {
             guard = Add(guard, 1)
