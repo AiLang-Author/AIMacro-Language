@@ -148,7 +148,12 @@ Function.AIMacro.SmartLen {
         IfCondition EqualTo(Array.IsArray(container), 1) ThenBlock: {
             ReturnValue(Array.Size(container))
         }
-        ReturnValue(StringLength(container))
+        IfCondition EqualTo(AIMacro.LooksLikeString(container), 1) ThenBlock: {
+            ReturnValue(StringLength(container))
+        }
+        // Integer 42 used to strlen(42) — leftover match [1,2] against 42.
+        AIMacro.RaiseKind(5, "len")
+        ReturnValue(AIMacro.IntZero())
     }
 }
 
