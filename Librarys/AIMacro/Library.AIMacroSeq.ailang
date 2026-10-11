@@ -786,6 +786,20 @@ Function.AIMacro.SafeIsHash {
     }
 }
 
+Function.AIMacro.SafeIsArray {
+    Input: v: Address
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(v, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(Types.CanDeref(v), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        ReturnValue(Array.IsArray(v))
+    }
+}
+
 Function.AIMacro.GetNotImpl {
     Output: Address
     Body: {

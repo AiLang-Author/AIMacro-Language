@@ -258,6 +258,12 @@ Function.Types.IsBool {
         IfCondition Or(EqualTo(value, 0), LessThan(value, TypeMagic.PTR_MIN)) ThenBlock: {
             ReturnValue(0)
         }
+        // PTR_MIN is only a lower bound. 2^63-1 (sys.maxsize) sits above mmap
+        // and Dereference is a non-canonical SEGV. leftover test_grammar
+        // NumEq -> BoolVal -> IsBool.
+        IfCondition EqualTo(Types.CanDeref(value), 0) ThenBlock: {
+            ReturnValue(0)
+        }
         mag = Dereference(value)
         IfCondition EqualTo(mag, TypeMagic.BOOL) ThenBlock: {
             ReturnValue(1)

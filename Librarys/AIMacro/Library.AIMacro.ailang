@@ -917,6 +917,11 @@ Function.AIMacro.LooksLikeString {
         IfCondition And(GreaterEqual(value, 500000000), LessThan(value, 1099511627776)) ThenBlock: {
             ReturnValue(0)
         }
+        // 2^63-1 and other unboxed ints above user mmap (2^47). GetByte is non-canonical SEGV.
+        // leftover test_grammar: 0 == 9223372036854775807 (sys.maxsize).
+        IfCondition GreaterEqual(value, 140737488355328) ThenBlock: {
+            ReturnValue(0)
+        }
         firstb = GetByte(value, 0)
         IfCondition EqualTo(firstb, 85) ThenBlock: {
             ReturnValue(0)

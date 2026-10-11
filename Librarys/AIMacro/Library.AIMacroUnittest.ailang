@@ -41,7 +41,7 @@ Function.AIMacro.UnittestEq {
         IfCondition EqualTo(a, 0) ThenBlock: {
             IfCondition EqualTo(AIMacro.IsNone(b), 0) ThenBlock: {
                 IfCondition EqualTo(AIMacro.LooksLikeString(b), 0) ThenBlock: {
-                    IfCondition EqualTo(Array.IsArray(b), 0) ThenBlock: {
+                    IfCondition EqualTo(AIMacro.SafeIsArray(b), 0) ThenBlock: {
                         IfCondition EqualTo(AIMacro.SafeIsHash(b), 0) ThenBlock: {
                             IfCondition EqualTo(AIMacro.UnboxIntZero(b), 0) ThenBlock: {
                                 ReturnValue(1)
@@ -54,7 +54,7 @@ Function.AIMacro.UnittestEq {
         IfCondition EqualTo(b, 0) ThenBlock: {
             IfCondition EqualTo(AIMacro.IsNone(a), 0) ThenBlock: {
                 IfCondition EqualTo(AIMacro.LooksLikeString(a), 0) ThenBlock: {
-                    IfCondition EqualTo(Array.IsArray(a), 0) ThenBlock: {
+                    IfCondition EqualTo(AIMacro.SafeIsArray(a), 0) ThenBlock: {
                         IfCondition EqualTo(AIMacro.SafeIsHash(a), 0) ThenBlock: {
                             IfCondition EqualTo(AIMacro.UnboxIntZero(a), 0) ThenBlock: {
                                 ReturnValue(1)
@@ -94,7 +94,7 @@ Function.AIMacro.UnittestEq {
             }
             ReturnValue(0)
         }
-        IfCondition And(EqualTo(Array.IsArray(a), 1), EqualTo(Array.IsArray(b), 1)) ThenBlock: {
+        IfCondition And(EqualTo(AIMacro.SafeIsArray(a), 1), EqualTo(AIMacro.SafeIsArray(b), 1)) ThenBlock: {
             na = Array.Size(a)
             nb = Array.Size(b)
             IfCondition NotEqual(na, nb) ThenBlock: {

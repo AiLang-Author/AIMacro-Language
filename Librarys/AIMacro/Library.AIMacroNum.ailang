@@ -1403,7 +1403,7 @@ Function.AIMacro.NumEq {
                 ReturnValue(AIMacro.NormBool(ra))
             }
         }
-        IfCondition And(EqualTo(Array.IsArray(a), 1), EqualTo(Array.IsArray(b), 1)) ThenBlock: {
+        IfCondition And(EqualTo(AIMacro.SafeIsArray(a), 1), EqualTo(AIMacro.SafeIsArray(b), 1)) ThenBlock: {
             na = Array.Size(a)
             nb = Array.Size(b)
             IfCondition NotEqual(na, nb) ThenBlock: {
@@ -1493,7 +1493,7 @@ Function.AIMacro.NumEq {
             }
             ReturnValue(AIMacro.FalseVal())
         }
-        IfCondition And(EqualTo(Array.IsArray(a), 1), EqualTo(Array.IsArray(b), 1)) ThenBlock: {
+        IfCondition And(EqualTo(AIMacro.SafeIsArray(a), 1), EqualTo(AIMacro.SafeIsArray(b), 1)) ThenBlock: {
             na = Array.Size(a)
             nb = Array.Size(b)
             IfCondition NotEqual(na, nb) ThenBlock: {
@@ -1762,7 +1762,7 @@ Function.AIMacro.SeqKind {
         IfCondition EqualTo(AIMacro.LooksLikeString(v), 1) ThenBlock: {
             ReturnValue(1)
         }
-        IfCondition EqualTo(Array.IsArray(v), 1) ThenBlock: {
+        IfCondition EqualTo(AIMacro.SafeIsArray(v), 1) ThenBlock: {
             ReturnValue(3)
         }
         ReturnValue(0)
@@ -1814,7 +1814,7 @@ Function.AIMacro.TrySeqOrd {
                 }
             }
         } ElseBlock: {
-            IfCondition EqualTo(Array.IsArray(a), 1) ThenBlock: {
+            IfCondition EqualTo(AIMacro.SafeIsArray(a), 1) ThenBlock: {
                 aa = a
             } ElseBlock: {
                 astr = AIMacro.SeqStrOf(a)
@@ -1839,7 +1839,7 @@ Function.AIMacro.TrySeqOrd {
                 }
             }
         } ElseBlock: {
-            IfCondition EqualTo(Array.IsArray(b), 1) ThenBlock: {
+            IfCondition EqualTo(AIMacro.SafeIsArray(b), 1) ThenBlock: {
                 bb = b
             } ElseBlock: {
                 bstr = AIMacro.SeqStrOf(b)
@@ -1951,7 +1951,7 @@ Function.AIMacro.IsPyNumber {
         IfCondition EqualTo(AIMacro.LooksLikeString(v), 1) ThenBlock: {
             ReturnValue(0)
         }
-        IfCondition EqualTo(Array.IsArray(v), 1) ThenBlock: {
+        IfCondition EqualTo(AIMacro.SafeIsArray(v), 1) ThenBlock: {
             ReturnValue(0)
         }
         IfCondition EqualTo(Hash.IsHash(v), 1) ThenBlock: {
