@@ -365,12 +365,14 @@ Function.AIMacro.UnittestAssertIn {
         IfCondition EqualTo(member, 0) ThenBlock: {
             member = ContainsZero.box
         }
-        IfCondition EqualTo(Hash.IsHash(member), 1) ThenBlock: {
-            IfCondition EqualTo(Hash.IsHash(container), 0) ThenBlock: {
-                IfCondition EqualTo(Array.IsArray(container), 0) ThenBlock: {
-                    swapped = member
-                    member = ContainsZero.box
-                    container = swapped
+        IfCondition EqualTo(AIMacro.LooksLikeString(member), 0) ThenBlock: {
+            IfCondition EqualTo(AIMacro.SafeIsHash(member), 1) ThenBlock: {
+                IfCondition EqualTo(AIMacro.SafeIsHash(container), 0) ThenBlock: {
+                    IfCondition EqualTo(Array.IsArray(container), 0) ThenBlock: {
+                        swapped = member
+                        member = ContainsZero.box
+                        container = swapped
+                    }
                 }
             }
         }
@@ -396,12 +398,14 @@ Function.AIMacro.UnittestAssertNotIn {
         IfCondition EqualTo(member, 0) ThenBlock: {
             member = ContainsZero.box
         }
-        IfCondition EqualTo(Hash.IsHash(member), 1) ThenBlock: {
-            IfCondition EqualTo(Hash.IsHash(container), 0) ThenBlock: {
-                IfCondition EqualTo(Array.IsArray(container), 0) ThenBlock: {
-                    swapped = member
-                    member = ContainsZero.box
-                    container = swapped
+        IfCondition EqualTo(AIMacro.LooksLikeString(member), 0) ThenBlock: {
+            IfCondition EqualTo(AIMacro.SafeIsHash(member), 1) ThenBlock: {
+                IfCondition EqualTo(AIMacro.SafeIsHash(container), 0) ThenBlock: {
+                    IfCondition EqualTo(Array.IsArray(container), 0) ThenBlock: {
+                        swapped = member
+                        member = ContainsZero.box
+                        container = swapped
+                    }
                 }
             }
         }

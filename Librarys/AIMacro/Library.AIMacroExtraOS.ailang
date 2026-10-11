@@ -813,13 +813,26 @@ Function.AIMacro.Contains {
             }
             ReturnValue(AIMacro.FalseVal())
         }
-        IfCondition EqualTo(Hash.IsHash(container), 1) ThenBlock: {
+        IfCondition EqualTo(AIMacro.LooksLikeString(container), 1) ThenBlock: {
+            IfCondition EqualTo(AIMacro.LooksLikeString(item), 1) ThenBlock: {
+                IfCondition EqualTo(String.Contains(container, item), 1) ThenBlock: {
+                    ReturnValue(AIMacro.TrueVal())
+                }
+            }
+            ReturnValue(AIMacro.FalseVal())
+        }
+        IfCondition EqualTo(AIMacro.SafeIsHash(container), 1) ThenBlock: {
             wcon = Hash.Get(container, "__list__")
             IfCondition EqualTo(Array.IsArray(wcon), 1) ThenBlock: {
                 ReturnValue(AIMacro.Contains(wcon, item))
             }
             cls = Hash.Get(container, "__class__")
             IfCondition NotEqual(cls, 0) ThenBlock: {
+                // RaiseKind hashes store __class__ as an integer kind.
+                // MethodExists then _MethodLookupWithInheritance(8, ...) strlen(kind).
+                IfCondition EqualTo(AIMacro.LooksLikeString(cls), 0) ThenBlock: {
+                    ReturnValue(AIMacro.FalseVal())
+                }
                 blocked = AIMacro.ClassAttrGet(cls, "__contains__")
                 IfCondition EqualTo(AIMacro.IsNone(blocked), 1) ThenBlock: {
                     AIMacro.RaiseKind(5, "argument is not iterable")
@@ -1010,7 +1023,7 @@ Function.AIMacro.WithEnter {
     Input: ctx: Address
     Output: Address
     Body: {
-        IfCondition EqualTo(Hash.IsHash(ctx), 1) ThenBlock: {
+        IfCondition EqualTo(AIMacro.SafeIsHash(ctx), 1) ThenBlock: {
             IfCondition NotEqual(Hash.Get(ctx, "__raises__"), 0) ThenBlock: {
                 AIMacro.ExcEnter()
                 ReturnValue(ctx)
@@ -1034,7 +1047,7 @@ Function.AIMacro.WithExit {
     Input: ctx: Address
     Output: Integer
     Body: {
-        IfCondition EqualTo(Hash.IsHash(ctx), 1) ThenBlock: {
+        IfCondition EqualTo(AIMacro.SafeIsHash(ctx), 1) ThenBlock: {
             IfCondition NotEqual(Hash.Get(ctx, "__raises__"), 0) ThenBlock: {
                 want = Hash.Get(ctx, "exc")
                 IfCondition EqualTo(AIMacro.ExcPending(), 1) ThenBlock: {
