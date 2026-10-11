@@ -1923,6 +1923,10 @@ Function.AIMacro.SmartCall {
         }
         // ELF function pointers start at 0x400000. Match captures dumped
         // to PyMod.f leave an integer; ClassExists/CallIndirect is strlen.
+        // Array / list pointers are also > 0x400000 — do not CallIndirect them.
+        IfCondition EqualTo(Array.IsArray(fn), 1) ThenBlock: {
+            ReturnValue(Types.GetNone())
+        }
         IfCondition GreaterEqual(fn, 4194304) ThenBlock: {
             ReturnValue(CallIndirect(fn))
         }
@@ -1956,6 +1960,9 @@ Function.AIMacro.SmartCall1 {
             a = Array.Create(1)
             Array.Push(a, arg)
             ReturnValue(OOP.ObjectNewInit(fn, a))
+        }
+        IfCondition EqualTo(Array.IsArray(fn), 1) ThenBlock: {
+            ReturnValue(Types.GetNone())
         }
         carg = arg
         IfCondition EqualTo(carg, 0) ThenBlock: {
@@ -2069,6 +2076,12 @@ Function.AIMacro.SmartCallN {
                 }
                 ReturnValue(AIMacro.MethodCall(mcobj, mcname, mcargs))
             }
+            // OOP instance / plain dict: CallIndirect(hash) is execute-heap SEGV.
+            // leftover TestTracing._trace PackedGet(0) is self; func(*args) SmartCall1.
+            IfCondition EqualTo(OOP.MethodExists(fn, "__call__"), 1) ThenBlock: {
+                ReturnValue(AIMacro.MethodCall(fn, "__call__", args))
+            }
+            ReturnValue(Types.GetNone())
         }
         IfCondition And(EqualTo(AIMacro.LooksLikeString(fn), 1), EqualTo(OOP.ClassExists(fn), 1)) ThenBlock: {
             is_enum_cls = 0
@@ -2146,6 +2159,9 @@ Function.AIMacro.SmartCallN {
             IfCondition EqualTo(ns, 2) ThenBlock: {
                 ReturnValue(AIMacro.Enumerate2(Array.Get(args, 0), Array.Get(args, 1)))
             }
+        }
+        IfCondition EqualTo(Array.IsArray(fn), 1) ThenBlock: {
+            ReturnValue(Types.GetNone())
         }
         IfCondition LessThan(fn, 4194304) ThenBlock: {
             ReturnValue(Types.GetNone())
