@@ -172,11 +172,13 @@ Function.Gen_Expr {
             IfCondition EqualTo(Gen_HasCall(right), 1) ThenBlock: {
                 right = Gen_FlattenExpr(right)
             }
-            Gen_Emit("EqualTo(StringCompare(")
+            // StringCompare(NULL, "hello") is strlen(0) — leftover match
+            // keyword y="hello" when ObjectGet missed.
+            Gen_Emit("AIMacro.NumEq(")
             Gen_Expr(left)
             Gen_Emit(", ")
             Gen_Expr(right)
-            Gen_Emit("), 0)")
+            Gen_Emit(")")
             ReturnValue(0)
         }
 
@@ -189,11 +191,11 @@ Function.Gen_Expr {
             IfCondition EqualTo(Gen_HasCall(right), 1) ThenBlock: {
                 right = Gen_FlattenExpr(right)
             }
-            Gen_Emit("NotEqual(StringCompare(")
+            Gen_Emit("AIMacro.NumNe(")
             Gen_Expr(left)
             Gen_Emit(", ")
             Gen_Expr(right)
-            Gen_Emit("), 0)")
+            Gen_Emit(")")
             ReturnValue(0)
         }
 
@@ -743,11 +745,11 @@ Function.Gen_BinaryOp {
             right_is_str = Gen_InvolvesString(right)
             
             IfCondition Or(EqualTo(left_is_str, 1), EqualTo(right_is_str, 1)) ThenBlock: {
-                Gen_Emit("AIMacro.Bool(EqualTo(StringCompare(")
+                Gen_Emit("AIMacro.NumEq(")
                 Gen_Expr(left)
                 Gen_Emit(", ")
                 Gen_Expr(right)
-                Gen_Emit("), 0))")
+                Gen_Emit(")")
                 ReturnValue(0)
             }
         }
@@ -758,11 +760,11 @@ Function.Gen_BinaryOp {
             right_is_str = Gen_InvolvesString(right)
             
             IfCondition Or(EqualTo(left_is_str, 1), EqualTo(right_is_str, 1)) ThenBlock: {
-                Gen_Emit("AIMacro.Bool(NotEqual(StringCompare(")
+                Gen_Emit("AIMacro.NumNe(")
                 Gen_Expr(left)
                 Gen_Emit(", ")
                 Gen_Expr(right)
-                Gen_Emit("), 0))")
+                Gen_Emit(")")
                 ReturnValue(0)
             }
         }

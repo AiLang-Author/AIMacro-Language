@@ -767,11 +767,11 @@ Function.Gen_FlattenExpr {
             temp = Gen_TempName()
             Gen_EmitIndent()
             Gen_Emit(temp)
-            Gen_Emit(" = EqualTo(StringCompare(")
+            Gen_Emit(" = AIMacro.NumEq(")
             Gen_Expr(flat_l)
             Gen_Emit(", ")
             Gen_Expr(flat_r)
-            Gen_Emit("), 0)\n")
+            Gen_Emit(")\n")
             ReturnValue(Gen_MakeIdent(temp))
         }
         IfCondition EqualTo(t, Node.STR_NE) ThenBlock: {
@@ -784,11 +784,11 @@ Function.Gen_FlattenExpr {
             temp = Gen_TempName()
             Gen_EmitIndent()
             Gen_Emit(temp)
-            Gen_Emit(" = NotEqual(StringCompare(")
+            Gen_Emit(" = AIMacro.NumNe(")
             Gen_Expr(flat_l)
             Gen_Emit(", ")
             Gen_Expr(flat_r)
-            Gen_Emit("), 0)\n")
+            Gen_Emit(")\n")
             ReturnValue(Gen_MakeIdent(temp))
         }
         IfCondition EqualTo(t, Node.LAMBDA) ThenBlock: {
@@ -2256,11 +2256,11 @@ Function.Gen_FlattenExpr {
                     temp = Gen_TempName()
                     Gen_EmitIndent()
                     Gen_Emit(temp)
-                    Gen_Emit(" = AIMacro.Bool(EqualTo(StringCompare(")
+                    Gen_Emit(" = AIMacro.NumEq(")
                     Gen_Expr(flat_left)
                     Gen_Emit(", ")
                     Gen_Expr(flat_right)
-                    Gen_Emit("), 0))\n")
+                    Gen_Emit(")\n")
                     ReturnValue(Gen_MakeIdent(temp))
                 }
             }
@@ -2271,11 +2271,11 @@ Function.Gen_FlattenExpr {
                     temp = Gen_TempName()
                     Gen_EmitIndent()
                     Gen_Emit(temp)
-                    Gen_Emit(" = AIMacro.Bool(NotEqual(StringCompare(")
+                    Gen_Emit(" = AIMacro.NumNe(")
                     Gen_Expr(flat_left)
                     Gen_Emit(", ")
                     Gen_Expr(flat_right)
-                    Gen_Emit("), 0))\n")
+                    Gen_Emit(")\n")
                     ReturnValue(Gen_MakeIdent(temp))
                 }
             }
