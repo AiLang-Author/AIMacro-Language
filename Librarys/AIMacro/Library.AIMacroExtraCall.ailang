@@ -1928,7 +1928,14 @@ Function.AIMacro.SmartCall {
             ReturnValue(Types.GetNone())
         }
         IfCondition GreaterEqual(fn, 4194304) ThenBlock: {
-            ReturnValue(CallIndirect(fn))
+            IfCondition GreaterEqual(AIMacroBool.recdepth, 1000) ThenBlock: {
+                AIMacro.RaiseKind(6, "")
+                ReturnValue(0)
+            }
+            AIMacroBool.recdepth = Add(AIMacroBool.recdepth, 1)
+            rcall = CallIndirect(fn)
+            AIMacroBool.recdepth = Subtract(AIMacroBool.recdepth, 1)
+            ReturnValue(rcall)
         }
         ReturnValue(Types.GetNone())
     }
@@ -1969,7 +1976,14 @@ Function.AIMacro.SmartCall1 {
             carg = AIMacro.IntZero()
         }
         IfCondition GreaterEqual(fn, 4194304) ThenBlock: {
-            ReturnValue(CallIndirect(fn, carg))
+            IfCondition GreaterEqual(AIMacroBool.recdepth, 1000) ThenBlock: {
+                AIMacro.RaiseKind(6, "")
+                ReturnValue(0)
+            }
+            AIMacroBool.recdepth = Add(AIMacroBool.recdepth, 1)
+            rcall = CallIndirect(fn, carg)
+            AIMacroBool.recdepth = Subtract(AIMacroBool.recdepth, 1)
+            ReturnValue(rcall)
         }
         ReturnValue(Types.GetNone())
     }
@@ -2044,9 +2058,18 @@ Function.AIMacro.SmartCallN {
                 ReturnValue(AIMacro.CallOpShim(fn, args))
             }
             IfCondition NotEqual(Hash.Get(fn, "__bound__"), 0) ThenBlock: {
+                // Nested def f(): return f() is a bound __call__ hash.
+                // Without a depth cap, leftover testInfiniteRecursion stack-overflows.
+                IfCondition GreaterEqual(AIMacroBool.recdepth, 1000) ThenBlock: {
+                    AIMacro.RaiseKind(6, "")
+                    ReturnValue(0)
+                }
+                AIMacroBool.recdepth = Add(AIMacroBool.recdepth, 1)
                 bobj = Hash.Get(fn, "obj")
                 bname = Hash.Get(fn, "name")
-                ReturnValue(AIMacro.MethodCall(bobj, bname, args))
+                rbound = AIMacro.MethodCall(bobj, bname, args)
+                AIMacroBool.recdepth = Subtract(AIMacroBool.recdepth, 1)
+                ReturnValue(rbound)
             }
             IfCondition NotEqual(Hash.Get(fn, "__attrgetter__"), 0) ThenBlock: {
                 ReturnValue(AIMacro.ApplyAttrGetter(fn, args))
@@ -2167,31 +2190,46 @@ Function.AIMacro.SmartCallN {
             ReturnValue(Types.GetNone())
         }
         n = Array.Size(args)
+        IfCondition GreaterEqual(AIMacroBool.recdepth, 1000) ThenBlock: {
+            AIMacro.RaiseKind(6, "")
+            ReturnValue(0)
+        }
+        AIMacroBool.recdepth = Add(AIMacroBool.recdepth, 1)
+        rcall = 0
         IfCondition EqualTo(n, 0) ThenBlock: {
             IfCondition EqualTo(fn, AddressOf(AIMacro.TypedReversed)) ThenBlock: {
                 AIMacro.RaiseKind(5, "reversed")
+                AIMacroBool.recdepth = Subtract(AIMacroBool.recdepth, 1)
                 ReturnValue(0)
             }
-            ReturnValue(CallIndirect(fn))
+            rcall = CallIndirect(fn)
         }
-        a0 = Array.Get(args, 0)
-        IfCondition EqualTo(a0, 0) ThenBlock: {
-            a0 = AIMacro.IntZero()
+        ElseBlock: {
+            a0 = Array.Get(args, 0)
+            IfCondition EqualTo(a0, 0) ThenBlock: {
+                a0 = AIMacro.IntZero()
+            }
+            IfCondition EqualTo(n, 1) ThenBlock: {
+                rcall = CallIndirect(fn, a0)
+            }
+            ElseBlock: {
+                a1 = Array.Get(args, 1)
+                IfCondition EqualTo(a1, 0) ThenBlock: {
+                    a1 = AIMacro.IntZero()
+                }
+                IfCondition EqualTo(n, 2) ThenBlock: {
+                    rcall = CallIndirect(fn, a0, a1)
+                }
+                ElseBlock: {
+                    a2 = Array.Get(args, 2)
+                    IfCondition EqualTo(a2, 0) ThenBlock: {
+                        a2 = AIMacro.IntZero()
+                    }
+                    rcall = CallIndirect(fn, a0, a1, a2)
+                }
+            }
         }
-        IfCondition EqualTo(n, 1) ThenBlock: {
-            ReturnValue(CallIndirect(fn, a0))
-        }
-        a1 = Array.Get(args, 1)
-        IfCondition EqualTo(a1, 0) ThenBlock: {
-            a1 = AIMacro.IntZero()
-        }
-        IfCondition EqualTo(n, 2) ThenBlock: {
-            ReturnValue(CallIndirect(fn, a0, a1))
-        }
-        a2 = Array.Get(args, 2)
-        IfCondition EqualTo(a2, 0) ThenBlock: {
-            a2 = AIMacro.IntZero()
-        }
-        ReturnValue(CallIndirect(fn, a0, a1, a2))
+        AIMacroBool.recdepth = Subtract(AIMacroBool.recdepth, 1)
+        ReturnValue(rcall)
     }
 }

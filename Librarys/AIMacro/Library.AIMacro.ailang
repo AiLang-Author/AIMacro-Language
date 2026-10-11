@@ -991,6 +991,7 @@ Function.AIMacro.ExcStr {
 FixedPool.AIMacroBool {
     "true_box": Initialize=0, CanChange=True
     "false_box": Initialize=0, CanChange=True
+    "recdepth": Initialize=0, CanChange=True
 }
 
 Function.AIMacro.TrueVal {
