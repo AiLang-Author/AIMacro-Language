@@ -2096,6 +2096,22 @@ class _GenSM:
                 continue
             if isinstance(s, ast.Return):
                 val = s.value if s.value is not None else ast.Constant(value=None)
+                if isinstance(val, ast.Yield):
+                    self._yield_stmt(
+                        val.value,
+                        _gen_self_attr("_ret", ast.Store()),
+                        [],
+                        None,
+                    )
+                    return
+                if isinstance(val, ast.YieldFrom):
+                    self._yield_from(
+                        val.value,
+                        _gen_self_attr("_ret", ast.Store()),
+                        [],
+                        None,
+                    )
+                    return
                 self.add(
                     ast.Assign(
                         targets=[_gen_self_attr("_ret", ast.Store())],
@@ -2965,6 +2981,25 @@ def _gen_convert(
             defaults=[],
         ),
         body=[
+            ast.If(
+                test=ast.Compare(
+                    left=_gen_self_attr("_s", ast.Load()),
+                    ops=[ast.Eq()],
+                    comparators=[ast.Constant(value=0)],
+                ),
+                body=[
+                    ast.If(
+                        test=ast.Compare(
+                            left=ast.Name(id="_aim_v", ctx=ast.Load()),
+                            ops=[ast.IsNot()],
+                            comparators=[ast.Constant(value=None)],
+                        ),
+                        body=[_raise_named("TypeError")],
+                        orelse=[],
+                    )
+                ],
+                orelse=[],
+            ),
             ast.Assign(
                 targets=[_gen_self_attr("_sent", ast.Store())],
                 value=ast.Name(id="_aim_v", ctx=ast.Load()),
@@ -3549,6 +3584,97 @@ def _aim_gen_cm_class() -> ast.ClassDef:
     )
 
 
+def _lambda_has_yield(lam: ast.Lambda) -> bool:
+    """True if this lambda's own body yields (nested def/lambda skipped)."""
+
+    class _V(ast.NodeVisitor):
+        def __init__(self):
+            self.found = False
+
+        def visit_Lambda(self, n: ast.Lambda):
+            if n is lam:
+                self.generic_visit(n)
+
+        def visit_FunctionDef(self, n: ast.FunctionDef):
+            return
+
+        def visit_AsyncFunctionDef(self, n: ast.AsyncFunctionDef):
+            return
+
+        def visit_ClassDef(self, n: ast.ClassDef):
+            return
+
+        def visit_Yield(self, n: ast.Yield):
+            self.found = True
+
+        def visit_YieldFrom(self, n: ast.YieldFrom):
+            self.found = True
+
+    v = _V()
+    v.visit(lam)
+    return v.found
+
+
+def _hoist_yield_in_stmts(
+    body: list[ast.stmt], counter: list[int], changed: list[bool]
+) -> list[ast.stmt]:
+    """Lift `lambda: (yield ...)` to a FunctionDef so generator convert sees it."""
+    hoisted: list[ast.stmt] = []
+
+    class _R(ast.NodeTransformer):
+        def visit_FunctionDef(self, n: ast.FunctionDef):
+            return n
+
+        def visit_AsyncFunctionDef(self, n: ast.AsyncFunctionDef):
+            return n
+
+        def visit_ClassDef(self, n: ast.ClassDef):
+            return n
+
+        def visit_Lambda(self, n: ast.Lambda):
+            n = self.generic_visit(n)
+            if not _lambda_has_yield(n):
+                return n
+            changed[0] = True
+            counter[0] += 1
+            name = f"_aim_ylam_{counter[0]}"
+            fn = ast.FunctionDef(
+                name=name,
+                args=n.args,
+                body=[ast.Return(value=n.body)],
+                decorator_list=[],
+            )
+            hoisted.append(fn)
+            return ast.Name(id=name, ctx=ast.Load())
+
+    new_body = [_R().visit(s) for s in body]
+    return hoisted + new_body
+
+
+def _hoist_yield_lambdas_tree(
+    tree: ast.AST, counter: list[int], changed: list[bool]
+) -> ast.AST:
+    class _H(ast.NodeTransformer):
+        def visit_FunctionDef(self, node: ast.FunctionDef):
+            node = self.generic_visit(node)
+            node.body = _hoist_yield_in_stmts(list(node.body), counter, changed)
+            return node
+
+        visit_AsyncFunctionDef = visit_FunctionDef
+
+        def visit_ClassDef(self, node: ast.ClassDef):
+            node = self.generic_visit(node)
+            node.body = _hoist_yield_in_stmts(list(node.body), counter, changed)
+            return node
+
+        def visit_Module(self, node: ast.Module):
+            node = self.generic_visit(node)
+            node.body = _hoist_yield_in_stmts(list(node.body), counter, changed)
+            return node
+
+    return _H().visit(tree)
+
+
 def _desugar_generators_tree(tree: ast.AST) -> tuple[ast.AST, bool]:
     """Generator/async def → class. Returns (tree, changed)."""
     counter = [0]
@@ -3556,6 +3682,7 @@ def _desugar_generators_tree(tree: ast.AST) -> tuple[ast.AST, bool]:
     need_cm = [False]
     gen_names: set[str] = set()
     tree = _hoist_genexps(tree, counter, changed)
+    tree = _hoist_yield_lambdas_tree(tree, counter, changed)
 
     class _G(ast.NodeTransformer):
         def __init__(self):
