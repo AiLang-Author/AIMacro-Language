@@ -2722,7 +2722,98 @@ Function.Gen_FlattenLambda {
         Gen_Emit(name)
         Gen_Emit(")\n")
         Gen_MarkCallableVar(temp)
-        ReturnValue(Gen_MakeIdent(temp))
+        // Lambdas with defaults: wrap AddressOf in a hash (__bound__=2)
+        // so SmartCallN can pad omitted args. No-default lambdas stay
+        // raw AddressOf so isolation `lambda: None` is byte-identical.
+        // Defaults are evaluated here (definition time), including
+        // nested `lambda x = lambda y = lambda z=1: z: y(): x()`.
+        defaults = ArrayGet(node, 7)
+        params = ArrayGet(node, 4)
+        nparams = 0
+        IfCondition NotEqual(params, 0) ThenBlock: {
+            nparams = Array.Size(params)
+        }
+        first_def = nparams
+        ndef_src = 0
+        IfCondition NotEqual(defaults, 0) ThenBlock: {
+            ndef_src = Array.Size(defaults)
+        }
+        di = 0
+        WhileLoop LessThan(di, nparams) {
+            dnode = 0
+            IfCondition LessThan(di, ndef_src) ThenBlock: {
+                dnode = Array.Get(defaults, di)
+            }
+            IfCondition NotEqual(dnode, 0) ThenBlock: {
+                IfCondition EqualTo(first_def, nparams) ThenBlock: {
+                    first_def = di
+                }
+            }
+            di = Add(di, 1)
+        }
+        IfCondition EqualTo(first_def, nparams) ThenBlock: {
+            ReturnValue(Gen_MakeIdent(temp))
+        }
+        ndef = Subtract(nparams, first_def)
+        darr = Gen_TempName()
+        Gen_EmitIndent()
+        Gen_Emit(darr)
+        Gen_Emit(" = Array.Create(")
+        Gen_EmitNumber(ndef)
+        Gen_Emit(")\n")
+        di = first_def
+        WhileLoop LessThan(di, nparams) {
+            dnode = 0
+            IfCondition LessThan(di, ndef_src) ThenBlock: {
+                dnode = Array.Get(defaults, di)
+            }
+            IfCondition EqualTo(dnode, 0) ThenBlock: {
+                Gen_EmitIndent()
+                Gen_Emit("Array.Push(")
+                Gen_Emit(darr)
+                Gen_Emit(", Types.GetNone())\n")
+            }
+            ElseBlock: {
+                IfCondition EqualTo(Gen_HasCall(dnode), 1) ThenBlock: {
+                    dnode = Gen_FlattenExpr(dnode)
+                }
+                Gen_EmitIndent()
+                Gen_Emit("Array.Push(")
+                Gen_Emit(darr)
+                Gen_Emit(", ")
+                Gen_Expr(dnode)
+                Gen_Emit(")\n")
+            }
+            di = Add(di, 1)
+        }
+        htmp = Gen_TempName()
+        Gen_EmitIndent()
+        Gen_Emit(htmp)
+        Gen_Emit(" = Hash.Create(8)\n")
+        Gen_EmitIndent()
+        Gen_Emit("Hash.Set(")
+        Gen_Emit(htmp)
+        Gen_Emit(", \"__bound__\", 2)\n")
+        Gen_EmitIndent()
+        Gen_Emit("Hash.Set(")
+        Gen_Emit(htmp)
+        Gen_Emit(", \"obj\", ")
+        Gen_Emit(temp)
+        Gen_Emit(")\n")
+        Gen_EmitIndent()
+        Gen_Emit("Hash.Set(")
+        Gen_Emit(htmp)
+        Gen_Emit(", \"args\", ")
+        Gen_Emit(darr)
+        Gen_Emit(")\n")
+        Gen_EmitIndent()
+        Gen_Emit("Hash.Set(")
+        Gen_Emit(htmp)
+        Gen_Emit(", \"name\", ")
+        Gen_EmitNumber(nparams)
+        Gen_Emit(")\n")
+        Gen_MarkCallableVar(htmp)
+        ReturnValue(Gen_MakeIdent(htmp))
     }
 }
 

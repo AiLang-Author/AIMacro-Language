@@ -2287,6 +2287,39 @@ Function.AIMacro.SmartCallN {
                 ReturnValue(AIMacro.CallOpShim(fn, args))
             }
             IfCondition NotEqual(Hash.Get(fn, "__bound__"), 0) ThenBlock: {
+                boundv = Hash.Get(fn, "__bound__")
+                // __bound__=2: lambda with defaults. obj=AddressOf, args=
+                // trailing defaults, name=nparams. Pad omitted args then
+                // CallIndirect the ELF pointer. Reuses existing hash keys.
+                IfCondition EqualTo(boundv, 2) ThenBlock: {
+                    realfn = Hash.Get(fn, "obj")
+                    lamdefs = Hash.Get(fn, "args")
+                    nparams = Hash.Get(fn, "name")
+                    ndef = 0
+                    IfCondition EqualTo(Array.IsArray(lamdefs), 1) ThenBlock: {
+                        ndef = Array.Size(lamdefs)
+                    }
+                    nargs = Array.Size(args)
+                    IfCondition LessThan(nargs, nparams) ThenBlock: {
+                        nreq = Subtract(nparams, ndef)
+                        IfCondition LessThan(nreq, 0) ThenBlock: {
+                            nreq = 0
+                        }
+                        pi = nargs
+                        WhileLoop LessThan(pi, nparams) {
+                            dv = 0
+                            di = Subtract(pi, nreq)
+                            IfCondition GreaterEqual(di, 0) ThenBlock: {
+                                IfCondition LessThan(di, ndef) ThenBlock: {
+                                    dv = Array.Get(lamdefs, di)
+                                }
+                            }
+                            Array.Push(args, dv)
+                            pi = Add(pi, 1)
+                        }
+                    }
+                    ReturnValue(AIMacro.SmartCallN(realfn, args))
+                }
                 // Nested def f(): return f() is a bound __call__ hash.
                 // Without a depth cap, leftover testInfiniteRecursion stack-overflows.
                 IfCondition GreaterEqual(AIMacroBool.recdepth, 1000) ThenBlock: {
