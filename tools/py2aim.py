@@ -3765,6 +3765,24 @@ def _clos_params(node: ast.AST) -> set[str]:
     return names
 
 
+def _clos_global_names(node: ast.AST) -> set[str]:
+    """Names declared global in this function, not in nested def/class bodies."""
+    names: set[str] = set()
+    body = getattr(node, "body", None)
+    if not isinstance(body, list):
+        return names
+    for stmt in body:
+        if isinstance(stmt, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+            continue
+        if isinstance(stmt, ast.Global):
+            names.update(stmt.names)
+            continue
+        for n in ast.walk(stmt):
+            if isinstance(n, ast.Global):
+                names.update(n.names)
+    return names
+
+
 def _clos_direct_assigned(node: ast.AST) -> set[str]:
     """Params plus stores in this function, not in nested def/class bodies.
 
@@ -3772,12 +3790,15 @@ def _clos_direct_assigned(node: ast.AST) -> set[str]:
     them left sibling `async def bar` unbound in foo.send(), so leftover
     test_coroutines bound every `bar` to the last flattened factory and
     `await bar()` on an int 42 SEGVd in strlen.
+    Global names are module cells, not per-call _aim_c keys (make_adder6).
     """
+    globs = _clos_global_names(node)
     assigned = _clos_params(node)
     body = getattr(node, "body", None) or []
     for stmt in body:
         if isinstance(stmt, (ast.FunctionDef, ast.AsyncFunctionDef)):
-            assigned.add(stmt.name)
+            if stmt.name not in globs:
+                assigned.add(stmt.name)
             continue
         if isinstance(stmt, ast.ClassDef):
             # Generated gen/coro classes are hoisted into the function; they
@@ -3786,11 +3807,13 @@ def _clos_direct_assigned(node: ast.AST) -> set[str]:
             if not stmt.name.startswith(
                 ("_aim_coro_", "_aim_gen_", "__aim_clos_", "_aim_gx_")
             ):
-                assigned.add(stmt.name)
+                if stmt.name not in globs:
+                    assigned.add(stmt.name)
             continue
         for n in ast.walk(stmt):
             if isinstance(n, ast.Name) and isinstance(n.ctx, ast.Store):
-                assigned.add(n.id)
+                if n.id not in globs:
+                    assigned.add(n.id)
     return assigned
 
 
@@ -3804,6 +3827,7 @@ def _clos_inner_locals(node: ast.AST) -> set[str]:
 
 def _clos_freevars(inner: ast.AST, enclosing: set[str]) -> list[str]:
     iloc = _clos_inner_locals(inner)
+    iglob = _clos_global_names(inner)
     for n in ast.walk(inner):
         if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef)):
             iloc.add(n.name)
@@ -3814,6 +3838,7 @@ def _clos_freevars(inner: ast.AST, enclosing: set[str]) -> list[str]:
             and isinstance(n.ctx, ast.Load)
             and n.id in enclosing
             and n.id not in iloc
+            and n.id not in iglob
             and n.id not in _CLOS_SKIP
             and n.id not in seen
         ):
