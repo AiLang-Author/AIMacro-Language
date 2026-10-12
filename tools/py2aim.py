@@ -4513,6 +4513,7 @@ def _clos_class(
     enclosing: set[str],
     counter: list[int],
     changed: list[bool],
+    cc_names: list[str] | None = None,
 ) -> ast.ClassDef:
     """class C: def __init__(self, _c): self._c = _c
     def __call__(self, ...inner args...): rewritten body.
@@ -4558,7 +4559,7 @@ def _clos_class(
     call_body = [_ClosRewrite(mapping, "_c", True).visit(s) for s in inner.body]
     call_body = _clos_copy_parent_into_cell(call_body, mapping)
     call_body, _frees, _ren = _clos_replace_nested(
-        call_body, enclosing, _clos_self_c(), counter, changed
+        call_body, enclosing, _clos_self_c(), counter, changed, cc_names
     )
     if not call_body:
         call_body = [ast.Pass()]
@@ -4622,6 +4623,53 @@ def _clos_init_c_assign() -> ast.Assign:
     )
 
 
+def _clos_init_c_body(cls_name: str) -> list[ast.stmt]:
+    """self._c = _c, or the class cell when C() is called outside the factory."""
+    return [
+        ast.If(
+            test=ast.Compare(
+                left=ast.Name(id="_c", ctx=ast.Load()),
+                ops=[ast.Is()],
+                comparators=[ast.Constant(value=None)],
+            ),
+            body=[
+                ast.Assign(
+                    targets=[ast.Name(id="_c", ctx=ast.Store())],
+                    value=ast.Attribute(
+                        value=ast.Name(id=cls_name, ctx=ast.Load()),
+                        attr="_c",
+                        ctx=ast.Load(),
+                    ),
+                )
+            ],
+            orelse=[],
+        ),
+        _clos_init_c_assign(),
+    ]
+
+
+def _clos_class_cell_bind(
+    cell_expr: ast.expr, counter: list[int], cc_names: list[str]
+) -> tuple[list[ast.stmt], ast.expr]:
+    """Copy the per-call cell to a module name class-body LOAD_NAME can see.
+
+    in_classattrs leftover-GetNones unknown IDENT; params and PyMod win.
+    Nested factory locals (`_aim_c`) become GetNone; a global slot is
+    PyMod._aim_cc_N. Prepend `_aim_cc_N = None` at module level so the
+    FixedPool.PyMod scan sees the name (nested global is not scanned).
+    """
+    counter[0] += 1
+    gname = f"_aim_cc_{counter[0]}"
+    cc_names.append(gname)
+    stmts = [
+        ast.Global(names=[gname]),
+        ast.Assign(
+            targets=[ast.Name(id=gname, ctx=ast.Store())],
+            value=cell_expr,
+        ),
+    ]
+    return stmts, ast.Name(id=gname, ctx=ast.Load())
+
 def _rewrite_method_freevars(
     fn: ast.FunctionDef, mapping: dict[str, str]
 ) -> ast.FunctionDef:
@@ -4652,9 +4700,14 @@ def _rewrite_method_freevars(
 
 
 def _clos_patch_nested_class(
-    cls: ast.ClassDef, mapping: dict[str, str]
+    cls: ast.ClassDef, mapping: dict[str, str], cell_expr: ast.expr
 ) -> ast.ClassDef:
-    """Inject __init__(self, _c) and rewrite method freevars to self._c."""
+    """Inject __init__(self, _c) and rewrite method freevars to self._c.
+
+    Class-body `_c = cell` is ClassAttrSet (inlined in the factory) so
+    `C()` outside the factory can still read the cell. `C._c = cell` as
+    an Attribute store is ObjectSet on the class name string, a no-op.
+    """
     new_body: list[ast.stmt] = []
     has_init = False
     for item in cls.body:
@@ -4676,7 +4729,7 @@ def _clos_patch_nested_class(
                     kwarg=args.kwarg,
                     defaults=list(args.defaults),
                 )
-                item.body = [_clos_init_c_assign()] + list(item.body)
+                item.body = _clos_init_c_body(cls.name) + list(item.body)
             item = _rewrite_method_freevars(item, mapping)
             new_body.append(item)
         else:
@@ -4691,10 +4744,16 @@ def _clos_patch_nested_class(
                 kw_defaults=[],
                 defaults=[],
             ),
-            body=[_clos_init_c_assign()],
+            body=_clos_init_c_body(cls.name),
             decorator_list=[],
         )
         new_body.insert(0, init)
+    new_body.append(
+        ast.Assign(
+            targets=[ast.Name(id="_c", ctx=ast.Store())],
+            value=cell_expr,
+        )
+    )
     return ast.ClassDef(
         name=cls.name,
         bases=list(cls.bases),
@@ -4745,8 +4804,11 @@ def _clos_replace_nested(
     cell_expr: ast.expr,
     counter: list[int],
     changed: list[bool],
+    cc_names: list[str] | None = None,
 ) -> tuple[list[ast.stmt], list[tuple[str, str]], dict[str, str]]:
     """Turn nested defs that close over enclosing names into bound classes."""
+    if cc_names is None:
+        cc_names = []
     new_body: list[ast.stmt] = []
     cell_maps: list[tuple[str, str]] = []
     renames: dict[str, str] = {}
@@ -4765,7 +4827,9 @@ def _clos_replace_nested(
                     if (v, v) not in cell_maps:
                         cell_maps.append((v, v))
                 new_body.append(
-                    _clos_class(cname, stmt, mapping, enclosing, counter, changed)
+                    _clos_class(
+                        cname, stmt, mapping, enclosing, counter, changed, cc_names
+                    )
                 )
                 new_body.append(
                     ast.Assign(
@@ -4783,7 +4847,11 @@ def _clos_replace_nested(
                 for v in frees:
                     if (v, v) not in cell_maps:
                         cell_maps.append((v, v))
-                new_body.append(_clos_patch_nested_class(stmt, mapping))
+                bind, gexpr = _clos_class_cell_bind(cell_expr, counter, cc_names)
+                new_body.extend(bind)
+                new_body.append(
+                    _clos_patch_nested_class(stmt, mapping, gexpr)
+                )
                 if _class_has_call(stmt):
                     ctor_kind[stmt.name] = "bound"
                 else:
@@ -4816,6 +4884,7 @@ def _desugar_nested_func_closures_tree(tree: ast.AST) -> tuple[ast.AST, bool]:
     """Nested def/lambda/class with freevars → per-call cell dict + callable class."""
     counter = [0]
     changed = [False]
+    cc_names: list[str] = []
     tree = _hoist_lambdas_tree(tree, counter, changed)
 
     class _X(ast.NodeTransformer):
@@ -4829,6 +4898,7 @@ def _desugar_nested_func_closures_tree(tree: ast.AST) -> tuple[ast.AST, bool]:
                 ast.Name(id=cell_name, ctx=ast.Load()),
                 counter,
                 changed,
+                cc_names,
             )
             if cell_maps:
                 params = _clos_params(node)
@@ -4929,6 +4999,15 @@ def _desugar_nested_func_closures_tree(tree: ast.AST) -> tuple[ast.AST, bool]:
         visit_AsyncFunctionDef = visit_FunctionDef
 
     new_tree = _X().visit(tree)
+    if cc_names and isinstance(new_tree, ast.Module):
+        inits = [
+            ast.Assign(
+                targets=[ast.Name(id=nm, ctx=ast.Store())],
+                value=ast.Constant(value=None),
+            )
+            for nm in cc_names
+        ]
+        new_tree.body = inits + list(new_tree.body)
     return new_tree, changed[0]
 
 
