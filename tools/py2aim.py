@@ -4012,12 +4012,34 @@ def _clos_self_c() -> ast.expr:
     )
 
 
-def _clos_bound_value(cname: str, cell_expr: ast.expr) -> ast.Dict:
+def _clos_cell_obj(cell_expr: ast.expr, key: str) -> ast.Dict:
+    """Distinct live cell wrapping (dict, key). Two factory calls get
+    different wrappers; cell.cell_contents can later read dict[key]."""
+    return ast.Dict(
+        keys=[
+            ast.Constant(value="_c"),
+            ast.Constant(value="_k"),
+        ],
+        values=[
+            cell_expr,
+            ast.Constant(value=key),
+        ],
+    )
+
+
+def _clos_bound_value(
+    cname: str, cell_expr: ast.expr, frees: list[str] | None = None
+) -> ast.Dict:
+    if frees:
+        clo_elts = [_clos_cell_obj(cell_expr, v) for v in frees]
+    else:
+        clo_elts = [_clos_cell_obj(cell_expr, "_")]
     return ast.Dict(
         keys=[
             ast.Constant(value="__bound__"),
             ast.Constant(value="obj"),
             ast.Constant(value="name"),
+            ast.Constant(value="__closure__"),
         ],
         values=[
             ast.Constant(value=1),
@@ -4027,6 +4049,7 @@ def _clos_bound_value(cname: str, cell_expr: ast.expr) -> ast.Dict:
                 keywords=[],
             ),
             ast.Constant(value="__call__"),
+            ast.Tuple(elts=clo_elts, ctx=ast.Load()),
         ],
     )
 
@@ -4295,7 +4318,7 @@ def _clos_replace_nested(
                 new_body.append(
                     ast.Assign(
                         targets=[ast.Name(id=fn_name, ctx=ast.Store())],
-                        value=_clos_bound_value(cname, cell_expr),
+                        value=_clos_bound_value(cname, cell_expr, list(frees)),
                     )
                 )
                 renames[stmt.name] = fn_name
