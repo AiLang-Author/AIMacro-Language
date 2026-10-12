@@ -617,6 +617,15 @@ Function.AIMacro.Eval {
             AIMacro.RaiseKind(5, "eval")
             ReturnValue(0)
         }
+        IfCondition EqualTo(AIMacro.SafeIsHash(s), 1) ThenBlock: {
+            src2 = Hash.Get(s, "__src__")
+            IfCondition And(NotEqual(src2, 0), EqualTo(Types.IsString(src2), 1)) ThenBlock: {
+                s = src2
+            } ElseBlock: {
+                AIMacro.RaiseKind(5, "eval")
+                ReturnValue(0)
+            }
+        }
         n = StringLength(s)
         i = 0
         WhileLoop LessThan(i, n) {

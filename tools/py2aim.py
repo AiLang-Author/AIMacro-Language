@@ -4032,14 +4032,26 @@ def _clos_bound_value(
 ) -> ast.Dict:
     if frees:
         clo_elts = [_clos_cell_obj(cell_expr, v) for v in frees]
+        fv = list(frees)
     else:
         clo_elts = [_clos_cell_obj(cell_expr, "_")]
+        fv = []
+    code_obj = ast.Dict(
+        keys=[ast.Constant(value="co_freevars")],
+        values=[
+            ast.Tuple(
+                elts=[ast.Constant(value=v) for v in fv],
+                ctx=ast.Load(),
+            )
+        ],
+    )
     return ast.Dict(
         keys=[
             ast.Constant(value="__bound__"),
             ast.Constant(value="obj"),
             ast.Constant(value="name"),
             ast.Constant(value="__closure__"),
+            ast.Constant(value="__code__"),
         ],
         values=[
             ast.Constant(value=1),
@@ -4050,6 +4062,7 @@ def _clos_bound_value(
             ),
             ast.Constant(value="__call__"),
             ast.Tuple(elts=clo_elts, ctx=ast.Load()),
+            code_obj,
         ],
     )
 

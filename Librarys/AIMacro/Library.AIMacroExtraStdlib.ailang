@@ -210,9 +210,11 @@ Function.AIMacro.Exec {
             src = Hash.Get(src, "__src__")
         }
         IfCondition EqualTo(src, 0) ThenBlock: {
+            AIMacro.RaiseKind(5, "eval")
             ReturnValue(0)
         }
         IfCondition EqualTo(Types.IsString(src), 0) ThenBlock: {
+            AIMacro.RaiseKind(5, "eval")
             ReturnValue(0)
         }
         n = StringLength(src)
