@@ -3801,14 +3801,11 @@
     },
     "test_scope.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_scope.py",
-      "status": "fail",
-      "stage": "run",
-      "rc": -11,
-      "err": "",
-      "out": "  ScopeTests.testCellIsArgAndEscapes\nFAIL: assertIsNot\n  ScopeTests.testNearestEnclosingScope\n  ScopeTests.testEvalFreeVars\n  ScopeTests.testComplexDefinitions\nFAIL: assertEqual\n  ScopeTests.testNonLocalFunction\n  ScopeTests.testLambdas\nFAIL: assertEqual\n  ScopeTests.testSimpleAndRebinding\n  ScopeTests.testInteractionWithTraceFunc\n  ScopeTests.testUnoptimizedNamespaces\n  ScopeTests.testClassAndGlobal\n  ScopeTests.testScopeOfGlobalStmt\n  ScopeTests.testSimpleNesting\n  ScopeTests.testExtraNesting\n  ScopeTests.testEvalExecFreeVars\nFAIL: exec should have failed, because code contained free vars\n  ScopeTests.testUnboundLocal_AfterDel\n0\n  ScopeTests.testNestingPlusFreeRefToGlobal\nFAIL: assertEqual\n  ScopeTests.testUnboundLocal\nNone\n  ScopeTests.testNestedNonLocal\n  ScopeTests.testTopIsNotSignificant\n  ScopeTests.testNonLocalClass\n  ScopeTests.testListCompLocalVars\nNone\nbad should not be defined\nNone\n  ScopeTests.testNestingThroughClass\n",
+      "status": "pass",
       "tags": [],
+      "stage_ok": "run",
       "key": "test_scope.py",
-      "updated": "2026-10-09"
+      "updated": "2026-10-12"
     },
     "test_script_helper.py": {
       "file": "/home/bob/tools/oss-cad-suite/lib/python3.11/test/test_script_helper.py",

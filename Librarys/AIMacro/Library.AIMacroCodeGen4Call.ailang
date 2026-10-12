@@ -391,6 +391,69 @@ Function.Gen_CallExpr {
             // `if lock is None` was false and assertIs(cond._lock, lock)
             // failed (test_asyncio/test_locks test_explicit_lock).
             nest_fn = Gen_ResolveNestFunc(name)
+            is_va_c = Gen_LookupVarargs(nest_fn)
+            IfCondition NotEqual(is_va_c, 0) ThenBlock: {
+                n_named_c = Subtract(is_va_c, 1)
+                IfCondition LessThan(n_named_c, 0) ThenBlock: {
+                    n_named_c = 0
+                }
+                IfCondition LessThan(n_named_c, 3) ThenBlock: {
+                    idx_c = 0
+                    WhileLoop LessThan(idx_c, n) {
+                        arg_c = Array.Get(args, idx_c)
+                        hc_c = 0
+                        IfCondition NotEqual(arg_c, 0) ThenBlock: {
+                            hc_c = Gen_HasCall(arg_c)
+                        }
+                        IfCondition EqualTo(hc_c, 1) ThenBlock: {
+                            arg_c = Gen_FlattenExpr(arg_c)
+                            Array.Set(args, idx_c, arg_c)
+                        }
+                        idx_c = Add(idx_c, 1)
+                    }
+                    pack_c = Gen_TempName()
+                    Gen_EmitIndent()
+                    Gen_Emit(pack_c)
+                    Gen_Emit(" = Array.Create(8)\n")
+                    i_c = n_named_c
+                    WhileLoop LessThan(i_c, n) {
+                        Gen_EmitIndent()
+                        Gen_Emit("Array.Push(")
+                        Gen_Emit(pack_c)
+                        Gen_Emit(", ")
+                        arg_pc = Array.Get(args, i_c)
+                        IfCondition EqualTo(arg_pc, 0) ThenBlock: {
+                            Gen_Emit("Types.GetNone()")
+                        } ElseBlock: {
+                            Gen_Expr(arg_pc)
+                        }
+                        Gen_Emit(")\n")
+                        i_c = Add(i_c, 1)
+                    }
+                    Gen_Emit("AIMacro.SmartCall")
+                    n_scall_c = Add(n_named_c, 1)
+                    IfCondition EqualTo(n_scall_c, 1) ThenBlock: {
+                        Gen_Emit("1(")
+                    }
+                    IfCondition EqualTo(n_scall_c, 2) ThenBlock: {
+                        Gen_Emit("2(")
+                    }
+                    IfCondition EqualTo(n_scall_c, 3) ThenBlock: {
+                        Gen_Emit("3(")
+                    }
+                    Gen_EmitIdent(name)
+                    j_c = 0
+                    WhileLoop LessThan(j_c, n_named_c) {
+                        Gen_Emit(", ")
+                        Gen_Expr(Array.Get(args, j_c))
+                        j_c = Add(j_c, 1)
+                    }
+                    Gen_Emit(", ")
+                    Gen_Emit(pack_c)
+                    Gen_Emit(")")
+                    ReturnValue(0)
+                }
+            }
             params_d = Gen_LookupParams(nest_fn)
             n_need = 0
             IfCondition NotEqual(params_d, 0) ThenBlock: {

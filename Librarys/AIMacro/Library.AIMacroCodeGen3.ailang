@@ -1191,6 +1191,75 @@ Function.Gen_FlattenExpr {
             pad_sc = Or(pad_sc, pad_sc2)
             IfCondition EqualTo(pad_sc, 1) ThenBlock: {
                 nest_sc = Gen_ResolveNestFunc(call_name)
+                // Nested *lst leftover is SmartCallN(AddressOf, 1, 2, 3);
+                // LookupVarargs(orig) misses __nest_N_name so the module
+                // pack path never runs. Pack trailing args and SmartCall1.
+                is_va_sc = Gen_LookupVarargs(nest_sc)
+                IfCondition NotEqual(is_va_sc, 0) ThenBlock: {
+                    n_named_va = Subtract(is_va_sc, 1)
+                    IfCondition LessThan(n_named_va, 0) ThenBlock: {
+                        n_named_va = 0
+                    }
+                    IfCondition LessThan(n_named_va, 3) ThenBlock: {
+                        idx_va = 0
+                        WhileLoop LessThan(idx_va, n_sc) {
+                            arg_va = Array.Get(args, idx_va)
+                            hc_va = 0
+                            IfCondition NotEqual(arg_va, 0) ThenBlock: {
+                                hc_va = Gen_HasCall(arg_va)
+                            }
+                            IfCondition EqualTo(hc_va, 1) ThenBlock: {
+                                arg_va = Gen_FlattenExpr(arg_va)
+                                Array.Set(args, idx_va, arg_va)
+                            }
+                            idx_va = Add(idx_va, 1)
+                        }
+                        pack_va = Gen_TempName()
+                        Gen_EmitIndent()
+                        Gen_Emit(pack_va)
+                        Gen_Emit(" = Array.Create(8)\n")
+                        i_va = n_named_va
+                        WhileLoop LessThan(i_va, n_sc) {
+                            Gen_EmitIndent()
+                            Gen_Emit("Array.Push(")
+                            Gen_Emit(pack_va)
+                            Gen_Emit(", ")
+                            arg_pb = Array.Get(args, i_va)
+                            IfCondition EqualTo(arg_pb, 0) ThenBlock: {
+                                Gen_Emit("Types.GetNone()")
+                            } ElseBlock: {
+                                Gen_Expr(arg_pb)
+                            }
+                            Gen_Emit(")\n")
+                            i_va = Add(i_va, 1)
+                        }
+                        temp_va = Gen_TempName()
+                        Gen_EmitIndent()
+                        Gen_Emit(temp_va)
+                        Gen_Emit(" = AIMacro.SmartCall")
+                        n_scall_va = Add(n_named_va, 1)
+                        IfCondition EqualTo(n_scall_va, 1) ThenBlock: {
+                            Gen_Emit("1(")
+                        }
+                        IfCondition EqualTo(n_scall_va, 2) ThenBlock: {
+                            Gen_Emit("2(")
+                        }
+                        IfCondition EqualTo(n_scall_va, 3) ThenBlock: {
+                            Gen_Emit("3(")
+                        }
+                        Gen_EmitIdent(call_name)
+                        j_va = 0
+                        WhileLoop LessThan(j_va, n_named_va) {
+                            Gen_Emit(", ")
+                            Gen_Expr(Array.Get(args, j_va))
+                            j_va = Add(j_va, 1)
+                        }
+                        Gen_Emit(", ")
+                        Gen_Emit(pack_va)
+                        Gen_Emit(")\n")
+                        ReturnValue(Gen_MakeIdent(temp_va))
+                    }
+                }
                 params_sc = Gen_LookupParams(nest_sc)
                 n_need_sc = 0
                 IfCondition NotEqual(params_sc, 0) ThenBlock: {
