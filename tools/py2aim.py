@@ -4125,6 +4125,21 @@ _CLOS_SKIP = {
 }
 
 
+def _clos_is_cell_name(name: str) -> bool:
+    """Per-function cell dict: `_aim_c` or `_aim_c_N`, not `_aim_cc_N`."""
+    if name == "_aim_c":
+        return True
+    return name.startswith("_aim_c_") and not name.startswith("_aim_cc_")
+
+
+def _clos_skip_name(name: str) -> bool:
+    if name in _CLOS_SKIP:
+        return True
+    if name.startswith("_aim_cc_"):
+        return True
+    return _clos_is_cell_name(name)
+
+
 def _clos_params(node: ast.AST) -> set[str]:
     if not hasattr(node, "args"):
         return set()
@@ -4227,7 +4242,7 @@ def _clos_freevars(inner: ast.AST, enclosing: set[str]) -> list[str]:
             and n.id in enclosing
             and n.id not in iloc
             and n.id not in iglob
-            and n.id not in _CLOS_SKIP
+            and not _clos_skip_name(n.id)
             and n.id not in seen
         ):
             seen.append(n.id)
@@ -4235,7 +4250,7 @@ def _clos_freevars(inner: ast.AST, enclosing: set[str]) -> list[str]:
         if (
             n in enclosing
             and n not in iglob
-            and n not in _CLOS_SKIP
+            and not _clos_skip_name(n)
             and n not in seen
         ):
             seen.append(n)
@@ -4420,15 +4435,16 @@ def _clos_copy_parent_into_cell(
             isinstance(stmt, ast.Assign)
             and len(stmt.targets) == 1
             and isinstance(stmt.targets[0], ast.Name)
-            and stmt.targets[0].id == "_aim_c"
+            and _clos_is_cell_name(stmt.targets[0].id)
             and isinstance(stmt.value, ast.Dict)
         ):
+            cnm = stmt.targets[0].id
             for key in mapping.values():
                 out.append(
                     ast.Assign(
                         targets=[
                             ast.Subscript(
-                                value=ast.Name(id="_aim_c", ctx=ast.Load()),
+                                value=ast.Name(id=cnm, ctx=ast.Load()),
                                 slice=ast.Constant(value=key),
                                 ctx=ast.Store(),
                             )
@@ -4602,7 +4618,7 @@ def _clos_class_method_freevars(
                 and isinstance(n.ctx, ast.Load)
                 and n.id in enclosing
                 and n.id not in ml
-                and n.id not in _CLOS_SKIP
+                and not _clos_skip_name(n.id)
                 and n.id != cls.name
                 and n.id not in seen
             ):
@@ -4885,13 +4901,14 @@ def _desugar_nested_func_closures_tree(tree: ast.AST) -> tuple[ast.AST, bool]:
     counter = [0]
     changed = [False]
     cc_names: list[str] = []
+    cell_seq = [0]
     tree = _hoist_lambdas_tree(tree, counter, changed)
 
     class _X(ast.NodeTransformer):
         def visit_FunctionDef(self, node: ast.FunctionDef):
             node = self.generic_visit(node)
             enclosing = _clos_direct_assigned(node)
-            cell_name = "_aim_c"
+            cell_name = f"_aim_c_{cell_seq[0] + 1}"
             new_body, cell_maps, renames = _clos_replace_nested(
                 list(node.body),
                 enclosing,
@@ -4901,6 +4918,7 @@ def _desugar_nested_func_closures_tree(tree: ast.AST) -> tuple[ast.AST, bool]:
                 cc_names,
             )
             if cell_maps:
+                cell_seq[0] += 1
                 params = _clos_params(node)
                 inits: list[ast.stmt] = [
                     ast.Assign(
