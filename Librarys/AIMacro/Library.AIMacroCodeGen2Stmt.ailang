@@ -174,13 +174,41 @@ Function.Gen_Node {
                 Gen_Emit(Gen.loop_else_flag)
                 Gen_Emit(" = 1\n")
             }
-            Gen_EmitIndent()
-            Gen_Emit("BreakLoop\n")
+            jf = Gen.loop_jump_flag
+            use = Gen_LoopJumpActive()
+            IfCondition EqualTo(use, 1) ThenBlock: {
+                Gen_EmitIndent()
+                Gen_Emit(jf)
+                Gen_Emit(" = 2\n")
+                fs = Gen.finally_skip_flag
+                IfCondition NotEqual(fs, 0) ThenBlock: {
+                    Gen_EmitIndent()
+                    Gen_Emit(fs)
+                    Gen_Emit(" = 1\n")
+                }
+            } ElseBlock: {
+                Gen_EmitIndent()
+                Gen_Emit("BreakLoop\n")
+            }
             ReturnValue(0)
         }
         IfCondition EqualTo(t, Node.CONTINUE_STMT) ThenBlock: {
-            Gen_EmitIndent()
-            Gen_Emit("ContinueLoop\n")
+            jf = Gen.loop_jump_flag
+            use = Gen_LoopJumpActive()
+            IfCondition EqualTo(use, 1) ThenBlock: {
+                Gen_EmitIndent()
+                Gen_Emit(jf)
+                Gen_Emit(" = 1\n")
+                fs = Gen.finally_skip_flag
+                IfCondition NotEqual(fs, 0) ThenBlock: {
+                    Gen_EmitIndent()
+                    Gen_Emit(fs)
+                    Gen_Emit(" = 1\n")
+                }
+            } ElseBlock: {
+                Gen_EmitIndent()
+                Gen_Emit("ContinueLoop\n")
+            }
             ReturnValue(0)
         }
 
@@ -609,15 +637,37 @@ Function.Gen_Body {
                 // IfCondition (no empty FalseBlock) skips remaining try stmts
                 // after raise. Fork+empty FalseBlock was ~2 AST nodes extra
                 // per stmt; test_ssl Main sat on a 165556-node compile SEGV cliff.
+                // loop_jump_flag skips the rest of the try after continue/break
+                // so finally still runs.
+                jf = Gen.loop_jump_flag
                 Gen_EmitIndent()
-                Gen_Emit("IfCondition EqualTo(AIMacro.ExcPending(), 0) ThenBlock: {\n")
+                IfCondition NotEqual(jf, 0) ThenBlock: {
+                    Gen_Emit("IfCondition And(EqualTo(AIMacro.ExcPending(), 0), EqualTo(")
+                    Gen_Emit(jf)
+                    Gen_Emit(", 0)) ThenBlock: {\n")
+                } ElseBlock: {
+                    Gen_Emit("IfCondition EqualTo(AIMacro.ExcPending(), 0) ThenBlock: {\n")
+                }
                 Gen.indent = Add(Gen.indent, 1)
                 Gen_Node(stmt)
                 Gen.indent = Subtract(Gen.indent, 1)
                 Gen_EmitIndent()
                 Gen_Emit("}\n")
             } ElseBlock: {
-                Gen_Node(stmt)
+                fs = Gen.finally_skip_flag
+                IfCondition NotEqual(fs, 0) ThenBlock: {
+                    Gen_EmitIndent()
+                    Gen_Emit("IfCondition EqualTo(")
+                    Gen_Emit(fs)
+                    Gen_Emit(", 0) ThenBlock: {\n")
+                    Gen.indent = Add(Gen.indent, 1)
+                    Gen_Node(stmt)
+                    Gen.indent = Subtract(Gen.indent, 1)
+                    Gen_EmitIndent()
+                    Gen_Emit("}\n")
+                } ElseBlock: {
+                    Gen_Node(stmt)
+                }
             }
             i = Add(i, 1)
         }
@@ -890,6 +940,10 @@ Function.Gen_TupleFor {
         body = ArrayGet(node, 6)
         else_body = ArrayGet(node, 7)
         saved_flag = Gen_LoopElseEnter(else_body)
+        saved_jf = Gen.loop_jump_flag
+        saved_base = Gen.loop_try_base
+        Gen.loop_try_base = Gen.try_depth
+        Gen.loop_jump_flag = Gen_LoopJumpSetup(body)
         
         iter_type = AST_Type(iterable)
         
@@ -901,6 +955,8 @@ Function.Gen_TupleFor {
             IfCondition EqualTo(cmp, 0) ThenBlock: {
                 Gen_ForEnumerate(var1, var2, iterable, body)
                 Gen_LoopElseExit(else_body, saved_flag)
+                Gen.loop_jump_flag = saved_jf
+                Gen.loop_try_base = saved_base
                 ReturnValue(0)
             }
             
@@ -908,6 +964,8 @@ Function.Gen_TupleFor {
             IfCondition EqualTo(cmp, 0) ThenBlock: {
                 Gen_ForZip(var1, var2, iterable, body)
                 Gen_LoopElseExit(else_body, saved_flag)
+                Gen.loop_jump_flag = saved_jf
+                Gen.loop_try_base = saved_base
                 ReturnValue(0)
             }
         }
@@ -952,6 +1010,7 @@ Function.Gen_TupleFor {
         Gen_Emit(") {\n")
         
         Gen.indent = Add(Gen.indent, 1)
+        Gen_EmitLoopJumpReset()
         
         // pair = SmartGet(iter, iteri)
         Gen_EmitIndent()
@@ -977,10 +1036,7 @@ Function.Gen_TupleFor {
         Gen_Emit(loop_suffix)
         Gen_Emit(", 1)\n")
         
-        // Body
-        Gen_Body(body)
-        
-        // iteri = Add(iteri, 1)
+        // iteri += 1 before body so continue advances
         Gen_EmitIndent()
         Gen_Emit("iteri")
         Gen_Emit(loop_suffix)
@@ -988,12 +1044,17 @@ Function.Gen_TupleFor {
         Gen_Emit(loop_suffix)
         Gen_Emit(", 1)\n")
         
+        // Body
+        Gen_Body(body)
+        
         Gen.indent = Subtract(Gen.indent, 1)
         Gen_EmitIndent()
         Gen_Emit("}\n")
         
         Gen_LoopLeave()
         Gen_LoopElseExit(else_body, saved_flag)
+        Gen.loop_jump_flag = saved_jf
+        Gen.loop_try_base = saved_base
     }
 }
 
@@ -1447,11 +1508,28 @@ Function.Gen_Try {
         }
         
         IfCondition NotEqual(finally_body, 0) ThenBlock: {
+            saved_fs = Gen.finally_skip_flag
+            Gen.finally_skip_flag = 0
+            jf = Gen.loop_jump_flag
+            IfCondition NotEqual(jf, 0) ThenBlock: {
+                n = Gen.lambda_counter
+                Gen.lambda_counter = Add(n, 1)
+                ns = NumberToString(n)
+                fs = StringConcat("_aim_fs", ns)
+                Gen_EmitIndent()
+                Gen_Emit(fs)
+                Gen_Emit(" = 0\n")
+                Gen.finally_skip_flag = fs
+            }
+            Gen.finally_depth = Add(Gen.finally_depth, 1)
             Gen_Body(finally_body)
+            Gen.finally_depth = Subtract(Gen.finally_depth, 1)
+            Gen.finally_skip_flag = saved_fs
         }
         
         Gen_EmitIndent()
         Gen_Emit("AIMacro.ExcLeave()\n")
+        Gen_EmitLoopJumpApply()
     }
 }
 

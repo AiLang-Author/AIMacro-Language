@@ -36,6 +36,10 @@ FixedPool.Gen {
     "with_stack": Initialize=0, CanChange=True
     "loop_depth": Initialize=0, CanChange=True
     "loop_else_flag": Initialize=0, CanChange=True
+    "loop_jump_flag": Initialize=0, CanChange=True
+    "loop_try_base": Initialize=0, CanChange=True
+    "finally_depth": Initialize=0, CanChange=True
+    "finally_skip_flag": Initialize=0, CanChange=True
     "lambda_counter": Initialize=0, CanChange=True
     "callable_vars": Initialize=0, CanChange=True
     "bound_append_names": Initialize=0, CanChange=True
@@ -86,6 +90,10 @@ Function.Gen_Init {
         Gen.with_stack = Array.Create(8)
         Gen.loop_depth = 0
         Gen.loop_else_flag = 0
+        Gen.loop_jump_flag = 0
+        Gen.loop_try_base = 0
+        Gen.finally_depth = 0
+        Gen.finally_skip_flag = 0
         Gen.lambda_counter = 0
         Gen.callable_vars = Array.Create(32)
         Gen.bound_append_names = Array.Create(16)
@@ -1269,6 +1277,182 @@ Function.Gen_LoopLeave {
         IfCondition GreaterThan(Gen.loop_depth, 0) ThenBlock: {
             Gen.loop_depth = Subtract(Gen.loop_depth, 1)
         }
+    }
+}
+
+// continue/break inside a try that is nested in this loop (not an
+// inner loop, not a try that wraps the loop). Those jumps must run
+// finally + ExcLeave before ContinueLoop/BreakLoop.
+Function.Gen_HasTryJump {
+    Input: node: Address
+    Input: in_try: Integer
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(node, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        is_list = Array.IsArray(node)
+        IfCondition EqualTo(is_list, 1) ThenBlock: {
+            n = Array.Size(node)
+            i = 0
+            WhileLoop LessThan(i, n) {
+                child = Array.Get(node, i)
+                r = Gen_HasTryJump(child, in_try)
+                IfCondition EqualTo(r, 1) ThenBlock: {
+                    ReturnValue(1)
+                }
+                i = Add(i, 1)
+            }
+            ReturnValue(0)
+        }
+        t = AST_Type(node)
+        IfCondition EqualTo(t, Node.CONTINUE_STMT) ThenBlock: {
+            ReturnValue(in_try)
+        }
+        IfCondition EqualTo(t, Node.BREAK_STMT) ThenBlock: {
+            ReturnValue(in_try)
+        }
+        IfCondition EqualTo(t, Node.WHILE_STMT) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t, Node.FOR_STMT) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t, Node.TUPLE_FOR) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t, Node.FUNCTION) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t, Node.CLASS_DEF) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t, Node.TRY_STMT) ThenBlock: {
+            r = Gen_HasTryJump(ArrayGet(node, 3), 1)
+            IfCondition EqualTo(r, 1) ThenBlock: {
+                ReturnValue(1)
+            }
+            r = Gen_HasTryJump(ArrayGet(node, 4), 1)
+            IfCondition EqualTo(r, 1) ThenBlock: {
+                ReturnValue(1)
+            }
+            r = Gen_HasTryJump(ArrayGet(node, 5), 1)
+            IfCondition EqualTo(r, 1) ThenBlock: {
+                ReturnValue(1)
+            }
+            r = Gen_HasTryJump(ArrayGet(node, 6), 1)
+            ReturnValue(r)
+        }
+        IfCondition EqualTo(t, Node.EXCEPT_CLAUSE) ThenBlock: {
+            r = Gen_HasTryJump(ArrayGet(node, 4), 1)
+            ReturnValue(r)
+        }
+        IfCondition EqualTo(t, Node.IF_STMT) ThenBlock: {
+            r = Gen_HasTryJump(ArrayGet(node, 4), in_try)
+            IfCondition EqualTo(r, 1) ThenBlock: {
+                ReturnValue(1)
+            }
+            r = Gen_HasTryJump(ArrayGet(node, 5), in_try)
+            ReturnValue(r)
+        }
+        IfCondition EqualTo(t, Node.WITH_STMT) ThenBlock: {
+            r = Gen_HasTryJump(ArrayGet(node, 5), in_try)
+            ReturnValue(r)
+        }
+        ReturnValue(0)
+    }
+}
+
+Function.Gen_LoopJumpSetup {
+    Input: body: Address
+    Output: Address
+    Body: {
+        has = Gen_HasTryJump(body, 0)
+        IfCondition EqualTo(has, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        n = Gen.lambda_counter
+        Gen.lambda_counter = Add(n, 1)
+        ns = NumberToString(n)
+        flag = StringConcat("_aim_jf", ns)
+        ReturnValue(flag)
+    }
+}
+
+Function.Gen_EmitLoopJumpReset {
+    Body: {
+        jf = Gen.loop_jump_flag
+        IfCondition NotEqual(jf, 0) ThenBlock: {
+            Gen_EmitIndent()
+            Gen_Emit(jf)
+            Gen_Emit(" = 0\n")
+        }
+    }
+}
+
+Function.Gen_LoopJumpActive {
+    Output: Integer
+    Body: {
+        jf = Gen.loop_jump_flag
+        IfCondition EqualTo(jf, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        td = Gen.try_depth
+        base = Gen.loop_try_base
+        IfCondition GreaterThan(td, base) ThenBlock: {
+            ReturnValue(1)
+        }
+        fd = Gen.finally_depth
+        IfCondition GreaterThan(fd, 0) ThenBlock: {
+            ReturnValue(1)
+        }
+        ReturnValue(0)
+    }
+}
+
+Function.Gen_EmitLoopJumpApply {
+    Body: {
+        jf = Gen.loop_jump_flag
+        IfCondition EqualTo(jf, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        td = Gen.try_depth
+        base = Gen.loop_try_base
+        IfCondition NotEqual(td, base) ThenBlock: {
+            ReturnValue(0)
+        }
+        // continue/break out of try/finally discards a pending exception
+        // (`try: 1/0 finally: continue`).
+        Gen_EmitIndent()
+        Gen_Emit("IfCondition NotEqual(")
+        Gen_Emit(jf)
+        Gen_Emit(", 0) ThenBlock: {\n")
+        Gen.indent = Add(Gen.indent, 1)
+        Gen_EmitIndent()
+        Gen_Emit("AIMacro.ExcClear()\n")
+        Gen.indent = Subtract(Gen.indent, 1)
+        Gen_EmitIndent()
+        Gen_Emit("}\n")
+        Gen_EmitIndent()
+        Gen_Emit("IfCondition EqualTo(")
+        Gen_Emit(jf)
+        Gen_Emit(", 1) ThenBlock: {\n")
+        Gen.indent = Add(Gen.indent, 1)
+        Gen_EmitIndent()
+        Gen_Emit("ContinueLoop\n")
+        Gen.indent = Subtract(Gen.indent, 1)
+        Gen_EmitIndent()
+        Gen_Emit("}\n")
+        Gen_EmitIndent()
+        Gen_Emit("IfCondition EqualTo(")
+        Gen_Emit(jf)
+        Gen_Emit(", 2) ThenBlock: {\n")
+        Gen.indent = Add(Gen.indent, 1)
+        Gen_EmitIndent()
+        Gen_Emit("BreakLoop\n")
+        Gen.indent = Subtract(Gen.indent, 1)
+        Gen_EmitIndent()
+        Gen_Emit("}\n")
     }
 }
 

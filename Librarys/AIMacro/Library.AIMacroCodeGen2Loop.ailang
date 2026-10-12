@@ -104,6 +104,7 @@ Function.Gen_ForEnumerate {
         Gen_Emit(") {\n")
         
         Gen.indent = Add(Gen.indent, 1)
+        Gen_EmitLoopJumpReset()
         
         // val_var = SmartGet(iter, idx_var)
         Gen_EmitIndent()
@@ -114,11 +115,12 @@ Function.Gen_ForEnumerate {
         Gen_EmitIdent(idx_var)
         Gen_Emit(")\n")
         
-        // Body
+        // Body. idx is also the while cursor; increment after body so
+        // the body sees the current index. continue-in-enumerate still
+        // skips that increment (ForRange-style internal counter later).
         Gen_TryLoopGuard()
         Gen_Body(body)
         
-        // idx_var = Add(idx_var, 1)
         Gen_EmitIndent()
         Gen_EmitIdentLhs(idx_var)
         Gen_Emit(" = Add(")
@@ -273,6 +275,7 @@ Function.Gen_ForZip {
         Gen_Emit(") {\n")
         
         Gen.indent = Add(Gen.indent, 1)
+        Gen_EmitLoopJumpReset()
         
         // var1 = SmartGet(iter1, iteri)
         Gen_EmitIndent()
@@ -292,17 +295,17 @@ Function.Gen_ForZip {
         Gen_Emit(loop_suffix)
         Gen_Emit(")\n")
         
-        // Body
-        Gen_TryLoopGuard()
-        Gen_Body(body)
-        
-        // iteri = Add(iteri, 1)
+        // iteri = Add(iteri, 1) before body so continue advances
         Gen_EmitIndent()
         Gen_Emit("iteri")
         Gen_Emit(loop_suffix)
         Gen_Emit(" = Add(iteri")
         Gen_Emit(loop_suffix)
         Gen_Emit(", 1)\n")
+        
+        // Body
+        Gen_TryLoopGuard()
+        Gen_Body(body)
         
         Gen.indent = Subtract(Gen.indent, 1)
         Gen_EmitIndent()
@@ -373,14 +376,30 @@ Function.Gen_While {
         body = ArrayGet(node, 4)
         else_body = ArrayGet(node, 5)
         saved_flag = Gen_LoopElseEnter(else_body)
+        saved_jf = Gen.loop_jump_flag
+        saved_base = Gen.loop_try_base
+        Gen.loop_try_base = Gen.try_depth
+        Gen.loop_jump_flag = Gen_LoopJumpSetup(body)
         
         has_call = Gen_HasCall(cond)
+        const_cond = 0
+        ct = AST_Type(cond)
+        is_bool = EqualTo(ct, Node.BOOL_LIT)
+        is_num = EqualTo(ct, Node.NUM_LIT)
+        is_none = EqualTo(ct, Node.NONE_LIT)
+        IfCondition Or(is_bool, is_num) ThenBlock: {
+            const_cond = 1
+        }
+        IfCondition EqualTo(is_none, 1) ThenBlock: {
+            const_cond = 1
+        }
         
-        IfCondition EqualTo(has_call, 1) ThenBlock: {
-            // Use infinite loop + break pattern for complex conditions
+        IfCondition And(EqualTo(has_call, 1), EqualTo(const_cond, 0)) ThenBlock: {
+            // Flatten inside the loop so `while not msg` re-reads msg
             Gen_EmitIndent()
             Gen_Emit("WhileLoop EqualTo(1, 1) {\n")
             Gen.indent = Add(Gen.indent, 1)
+            Gen_EmitLoopJumpReset()
             
             flat_cond = Gen_FlattenExpr(cond)
             Gen_EmitIndent()
@@ -400,12 +419,16 @@ Function.Gen_While {
             Gen_EmitIndent()
             Gen_Emit("}\n")
         } ElseBlock: {
+            IfCondition EqualTo(has_call, 1) ThenBlock: {
+                cond = Gen_FlattenExpr(cond)
+            }
             Gen_EmitIndent()
             Gen_Emit("WhileLoop AIMacro.SmartBool(")
             Gen_Expr(cond)
             Gen_Emit(") {\n")
             
             Gen.indent = Add(Gen.indent, 1)
+            Gen_EmitLoopJumpReset()
             Gen_TryLoopGuard()
             Gen_Body(body)
             Gen.indent = Subtract(Gen.indent, 1)
@@ -414,6 +437,8 @@ Function.Gen_While {
             Gen_Emit("}\n")
         }
         Gen_LoopElseExit(else_body, saved_flag)
+        Gen.loop_jump_flag = saved_jf
+        Gen.loop_try_base = saved_base
     }
 }
 
@@ -429,6 +454,10 @@ Function.Gen_For {
         body = ArrayGet(node, 5)
         else_body = ArrayGet(node, 6)
         saved_flag = Gen_LoopElseEnter(else_body)
+        saved_jf = Gen.loop_jump_flag
+        saved_base = Gen.loop_try_base
+        Gen.loop_try_base = Gen.try_depth
+        Gen.loop_jump_flag = Gen_LoopJumpSetup(body)
         
         iter_type = AST_Type(iterable)
         
@@ -439,6 +468,8 @@ Function.Gen_For {
             IfCondition EqualTo(cmp, 0) ThenBlock: {
                 Gen_ForRange(var_name, iterable, body)
                 Gen_LoopElseExit(else_body, saved_flag)
+                Gen.loop_jump_flag = saved_jf
+                Gen.loop_try_base = saved_base
                 ReturnValue(0)
             }
         }
@@ -485,6 +516,7 @@ Function.Gen_For {
         Gen_Emit(") {\n")
         
         Gen.indent = Add(Gen.indent, 1)
+        Gen_EmitLoopJumpReset()
         
         // Emit: var_name = Array.Get(iter_arr, iter_i)
         Gen_EmitIndent()
@@ -495,17 +527,17 @@ Function.Gen_For {
         Gen_Emit(loop_suffix)
         Gen_Emit(")\n")
         
-        // Emit body
-        Gen_TryLoopGuard()
-        Gen_Body(body)
-        
-        // Emit: iter_i = Add(iter_i, 1)
+        // Increment before body so continue (incl. in try/finally) advances
         Gen_EmitIndent()
         Gen_Emit("iteri")
         Gen_Emit(loop_suffix)
         Gen_Emit(" = Add(iteri")
         Gen_Emit(loop_suffix)
         Gen_Emit(", 1)\n")
+        
+        // Emit body
+        Gen_TryLoopGuard()
+        Gen_Body(body)
         
         Gen.indent = Subtract(Gen.indent, 1)
         
@@ -514,6 +546,8 @@ Function.Gen_For {
         
         Gen_LoopLeave()
         Gen_LoopElseExit(else_body, saved_flag)
+        Gen.loop_jump_flag = saved_jf
+        Gen.loop_try_base = saved_base
     }
 }
 
@@ -621,6 +655,7 @@ Function.Gen_ForRange {
         Gen_Emit(") {\n")
         
         Gen.indent = Add(Gen.indent, 1)
+        Gen_EmitLoopJumpReset()
         
         // CRITICAL: Copy loop counter to user variable FIRST
         // This way continue won't skip the increment
