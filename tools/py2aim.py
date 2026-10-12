@@ -3693,6 +3693,268 @@ def desugar_generators(src: str) -> str:
         return src
 
 
+def _exec_const_true(test: ast.AST) -> bool:
+    return isinstance(test, ast.Constant) and test.value in (1, True)
+
+
+def _exec_store_names(target: ast.AST) -> list[str]:
+    if isinstance(target, ast.Name):
+        return [target.id]
+    if isinstance(target, (ast.Tuple, ast.List)):
+        names: list[str] = []
+        for elt in target.elts:
+            names.extend(_exec_store_names(elt))
+        return names
+    return []
+
+
+def _exec_rewrite_nested_globals(tree: ast.AST, gname: str) -> ast.AST:
+    """global y in a nested def → _aim_eg['y'] so it uses exec globals."""
+
+    class _RW(ast.NodeTransformer):
+        def __init__(self):
+            self.stack: list[set[str]] = []
+
+        def visit_FunctionDef(self, node: ast.FunctionDef):
+            self.stack.append(_clos_global_names(node))
+            node.body = [self.visit(s) for s in node.body]
+            self.stack.pop()
+            return node
+
+        visit_AsyncFunctionDef = visit_FunctionDef
+
+        def visit_Global(self, node: ast.Global):
+            if self.stack:
+                return ast.Pass()
+            return node
+
+        def visit_Name(self, node: ast.Name):
+            if self.stack and node.id in self.stack[-1]:
+                return ast.Subscript(
+                    value=ast.Name(id=gname, ctx=ast.Load()),
+                    slice=ast.Constant(value=node.id),
+                    ctx=node.ctx,
+                )
+            return node
+
+    return _RW().visit(tree)
+
+
+def _exec_export_one(
+    names: list[str], gname: str, lname: str, glob_names: set[str]
+) -> list[ast.stmt]:
+    out: list[ast.stmt] = []
+    for nm in names:
+        dest = gname if nm in glob_names else lname
+        out.append(
+            ast.Assign(
+                targets=[
+                    ast.Subscript(
+                        value=ast.Name(id=dest, ctx=ast.Load()),
+                        slice=ast.Constant(value=nm),
+                        ctx=ast.Store(),
+                    )
+                ],
+                value=ast.Name(id=nm, ctx=ast.Load()),
+            )
+        )
+    return out
+
+
+def _exec_export_top(
+    body: list[ast.stmt],
+    gname: str,
+    lname: str,
+    glob_names: set[str],
+    unpack_n: list[int],
+) -> list[ast.stmt]:
+    """STORE_GLOBAL names → exec globals dict; STORE_NAME → exec locals dict.
+
+    Nested `global y` makes a top-level `y = 9` STORE_GLOBAL (CPython).
+    Tuple assigns are expanded here because convert() already ran
+    desugar_tuple_unpack before this splice.
+    """
+    out: list[ast.stmt] = []
+    for stmt in body:
+        if (
+            isinstance(stmt, ast.If)
+            and _exec_const_true(stmt.test)
+            and not stmt.orelse
+        ):
+            out.extend(
+                _exec_export_top(stmt.body, gname, lname, glob_names, unpack_n)
+            )
+            continue
+        if (
+            isinstance(stmt, ast.Assign)
+            and len(stmt.targets) == 1
+            and isinstance(stmt.targets[0], (ast.Tuple, ast.List))
+        ):
+            unpack_n[0] += 1
+            tmp = f"_aim_unpack_{unpack_n[0]}"
+            binds = _for_unpack_assigns(tmp, stmt.targets[0], unpack_n)
+            out.append(
+                ast.Assign(
+                    targets=[ast.Name(id=tmp, ctx=ast.Store())],
+                    value=stmt.value,
+                )
+            )
+            out.extend(binds)
+            out.extend(
+                _exec_export_one(
+                    _exec_store_names(stmt.targets[0]),
+                    gname,
+                    lname,
+                    glob_names,
+                )
+            )
+            continue
+        out.append(stmt)
+        names: list[str] = []
+        if isinstance(stmt, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+            names = [stmt.name]
+        elif isinstance(stmt, ast.Assign):
+            for t in stmt.targets:
+                names.extend(_exec_store_names(t))
+        elif isinstance(stmt, ast.AugAssign):
+            names.extend(_exec_store_names(stmt.target))
+        elif isinstance(stmt, ast.AnnAssign) and stmt.target is not None:
+            names.extend(_exec_store_names(stmt.target))
+        out.extend(_exec_export_one(names, gname, lname, glob_names))
+    return out
+
+
+def _try_exec_const_stmt(
+    stmt: ast.stmt, counter: list[int]
+) -> list[ast.stmt] | None:
+    """exec('def ...', glob, loc) with nested defs → wrapper that fills the dicts."""
+    if not isinstance(stmt, ast.Expr) or not isinstance(stmt.value, ast.Call):
+        return None
+    call = stmt.value
+    if not isinstance(call.func, ast.Name) or call.func.id != "exec":
+        return None
+    if not call.args:
+        return None
+    src_n = call.args[0]
+    if not isinstance(src_n, ast.Constant) or not isinstance(src_n.value, str):
+        return None
+    glob_e: ast.expr | None = call.args[1] if len(call.args) > 1 else None
+    loc_e: ast.expr | None = call.args[2] if len(call.args) > 2 else None
+    for kw in call.keywords:
+        if kw.arg == "globals":
+            glob_e = kw.value
+        elif kw.arg == "locals":
+            loc_e = kw.value
+    if glob_e is None:
+        return None
+    if loc_e is None:
+        loc_e = glob_e
+    try:
+        parsed = ast.parse(src_n.value)
+    except SyntaxError:
+        return None
+    has_fn = any(
+        isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef))
+        for n in ast.walk(parsed)
+    )
+    if not has_fn:
+        return None
+    counter[0] += 1
+    fname = f"__aim_exec_{counter[0]}"
+    gname = "_aim_eg"
+    lname = "_aim_el"
+    glob_names: set[str] = set()
+    for n in ast.walk(parsed):
+        if isinstance(n, ast.Global):
+            glob_names.update(n.names)
+    parsed = _exec_rewrite_nested_globals(parsed, gname)
+    body = _exec_export_top(
+        list(parsed.body), gname, lname, glob_names, [1000]
+    )
+    if not body:
+        body = [ast.Pass()]
+    fn = ast.FunctionDef(
+        name=fname,
+        args=ast.arguments(
+            posonlyargs=[],
+            args=[ast.arg(arg=gname), ast.arg(arg=lname)],
+            kwonlyargs=[],
+            kw_defaults=[],
+            defaults=[],
+        ),
+        body=body,
+        decorator_list=[],
+    )
+    call_stmt = ast.Expr(
+        value=ast.Call(
+            func=ast.Name(id=fname, ctx=ast.Load()),
+            args=[glob_e, loc_e],
+            keywords=[],
+        )
+    )
+    return [fn, call_stmt]
+
+
+def _desugar_exec_const_tree(tree: ast.AST) -> tuple[ast.AST, bool]:
+    """Constant exec of nested defs: run the body against the two namespaces."""
+    counter = [0]
+    changed = [False]
+
+    def rewrite_stmts(body: list[ast.stmt]) -> list[ast.stmt]:
+        out: list[ast.stmt] = []
+        for stmt in body:
+            if isinstance(stmt, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+                stmt.body = rewrite_stmts(stmt.body)
+                out.append(stmt)
+                continue
+            if isinstance(stmt, ast.If):
+                stmt.body = rewrite_stmts(stmt.body)
+                stmt.orelse = rewrite_stmts(stmt.orelse)
+                out.append(stmt)
+                continue
+            if isinstance(stmt, (ast.For, ast.AsyncFor)):
+                stmt.body = rewrite_stmts(stmt.body)
+                stmt.orelse = rewrite_stmts(stmt.orelse)
+                out.append(stmt)
+                continue
+            if isinstance(stmt, ast.While):
+                stmt.body = rewrite_stmts(stmt.body)
+                stmt.orelse = rewrite_stmts(stmt.orelse)
+                out.append(stmt)
+                continue
+            if isinstance(stmt, (ast.With, ast.AsyncWith)):
+                stmt.body = rewrite_stmts(stmt.body)
+                out.append(stmt)
+                continue
+            if isinstance(stmt, ast.Try):
+                stmt.body = rewrite_stmts(stmt.body)
+                stmt.orelse = rewrite_stmts(stmt.orelse)
+                stmt.finalbody = rewrite_stmts(stmt.finalbody)
+                for h in stmt.handlers:
+                    h.body = rewrite_stmts(h.body)
+                out.append(stmt)
+                continue
+            if isinstance(stmt, ast.TryStar):
+                stmt.body = rewrite_stmts(stmt.body)
+                stmt.orelse = rewrite_stmts(stmt.orelse)
+                stmt.finalbody = rewrite_stmts(stmt.finalbody)
+                for h in stmt.handlers:
+                    h.body = rewrite_stmts(h.body)
+                out.append(stmt)
+                continue
+            pieces = _try_exec_const_stmt(stmt, counter)
+            if pieces is None:
+                out.append(stmt)
+            else:
+                changed[0] = True
+                out.extend(pieces)
+        return out
+
+    if isinstance(tree, ast.Module):
+        tree.body = rewrite_stmts(tree.body)
+    return tree, changed[0]
+
+
 def _is_locals_call(node: ast.AST) -> bool:
     return (
         isinstance(node, ast.Call)
@@ -4837,6 +5099,7 @@ def convert(src: str) -> str:
     except SyntaxError:
         _late = None
     if _late is not None:
+        _late, _ = _desugar_exec_const_tree(_late)
         _late, _ = _desugar_generators_tree(_late)
         _late, _ = _desugar_class_ns_locals_tree(_late)
         _late, _ = _desugar_nested_class_cells_tree(_late)
