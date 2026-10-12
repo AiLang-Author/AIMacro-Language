@@ -79,7 +79,23 @@ Function.AIMacro.AssertPythonOk {
 Function.AIMacro.PyExcClear {
     Output: Integer
     Body: {
-        AIMacro.ExcClear()
+        // Stash the currently handled instance so RaiseKind can set
+        // __context__. ExcClear zeros handled (except block ended).
+        IfCondition EqualTo(AIMacroExc.pending, 1) ThenBlock: {
+            AIMacroExc.handled = AIMacroExc.value
+        }
+        AIMacroExc.pending = 0
+        ReturnValue(0)
+    }
+}
+
+Function.AIMacro.PyExcSetHandled {
+    Input: obj: Address
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(Hash.IsHash(obj), 1) ThenBlock: {
+            AIMacroExc.handled = obj
+        }
         ReturnValue(0)
     }
 }

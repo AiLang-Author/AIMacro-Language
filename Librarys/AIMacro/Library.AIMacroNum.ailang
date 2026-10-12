@@ -2160,6 +2160,7 @@ FixedPool.AIMacroExc {
     "msg": Initialize=0, CanChange=True
     "value": Initialize=0, CanChange=True
     "depth": Initialize=0, CanChange=True
+    "handled": Initialize=0, CanChange=True
 }
 
 Function.AIMacro.ExcEnter {
@@ -2213,6 +2214,7 @@ Function.AIMacro.ExcValue {
 Function.AIMacro.ExcClear {
     Body: {
         AIMacroExc.pending = 0
+        AIMacroExc.handled = 0
     }
 }
 
@@ -2242,15 +2244,48 @@ Function.AIMacro.RaiseKind {
             Plex.Set(node, 0, msg)
             Plex.Set(node, 1, kind)
             Plex.RingSingleton(node, 0)
-            IfCondition And(NotEqual(AIMacroExc.value, 0), EqualTo(Plex.IsLive(AIMacroExc.value), 1)) ThenBlock: {
+            IfCondition EqualTo(AIMacro.IsExc(AIMacroExc.value), 1) ThenBlock: {
                 Plex.RingInsertAfter(AIMacroExc.value, node, 0)
             }
             h = Hash.Create(8)
             Hash.Set(h, "__class__", kind)
             Hash.Set(h, "__cause__", Types.GetNone())
-            Hash.Set(h, "__context__", Types.GetNone())
+            ctx = Types.GetNone()
+            held = AIMacroExc.handled
+            IfCondition EqualTo(Hash.IsHash(held), 1) ThenBlock: {
+                IfCondition NotEqual(held, h) ThenBlock: {
+                    ctx = held
+                }
+                AIMacroExc.handled = 0
+            }
+            ElseBlock: {
+                oldv = AIMacroExc.value
+                IfCondition And(EqualTo(AIMacroExc.pending, 1), EqualTo(Hash.IsHash(oldv), 1)) ThenBlock: {
+                    IfCondition NotEqual(oldv, h) ThenBlock: {
+                        ctx = oldv
+                    }
+                }
+            }
+            // catch_throw swallows then RaiseKind again; copy __context__
+            // off the instance that already chained.
+            IfCondition EqualTo(Hash.IsHash(ctx), 0) ThenBlock: {
+                prev = AIMacroExc.value
+                IfCondition And(EqualTo(Hash.IsHash(prev), 1), NotEqual(prev, h)) ThenBlock: {
+                    prevctx = Hash.Get(prev, "__context__")
+                    IfCondition EqualTo(Hash.IsHash(prevctx), 1) ThenBlock: {
+                        IfCondition NotEqual(prevctx, h) ThenBlock: {
+                            ctx = prevctx
+                        }
+                    }
+                }
+            }
+            Hash.Set(h, "__context__", ctx)
             Hash.Set(h, "__suppress_context__", AIMacro.FalseVal())
-            Hash.Set(h, "args", msg)
+            args_items = AIMacro.EmptyList()
+            IfCondition And(NotEqual(msg, 0), EqualTo(AIMacro.IsNone(msg), 0)) ThenBlock: {
+                Array.Push(args_items, msg)
+            }
+            Hash.Set(h, "args", AIMacro.WrapSeq(args_items, "tuple"))
             Hash.Set(h, "value", msg)
             AIMacroExc.pending = 1
             AIMacroExc.kind = kind

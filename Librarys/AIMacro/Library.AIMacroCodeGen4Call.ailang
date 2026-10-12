@@ -1635,6 +1635,9 @@ Function.Gen_MapBuiltin {
         cmp = StringCompare(name, "__aim_exc_clear__")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.PyExcClear") }
 
+        cmp = StringCompare(name, "__aim_exc_handled__")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.PyExcSetHandled") }
+
         cmp = StringCompare(name, "pow")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.NumPow") }
         

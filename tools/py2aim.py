@@ -1787,13 +1787,12 @@ def _tkind_raise_stmts() -> list[ast.stmt]:
 def _throw_norm_stmts() -> list[ast.stmt]:
     """Store throw(typ) as an ExcKind integer in _tkind.
 
-    leftover type names are integers (ValueError is 2). leftover
-    exception instances are hashes; isinstance(typ, ValueError)
-    is True and assigns the name ValueError so __aim_raise's
-    integer table hits. Type-name __class__ is integer 0, so the
-    isinstance chain is skipped and _tkind stays the type.
+    leftover type names are integers (ValueError is 2); type-name
+    __class__ is 0 so _tkind stays the type. leftover instances are
+    hashes whose __class__ is the kind integer. Do not isinstance()
+    the hash: IsSubclass of two ExcKind ints SEGVs in larger ELFs.
     """
-    stmts: list[ast.stmt] = [
+    return [
         ast.Assign(
             targets=[_gen_self_attr("_texc", ast.Store())],
             value=ast.Name(id="typ", ctx=ast.Load()),
@@ -1802,40 +1801,25 @@ def _throw_norm_stmts() -> list[ast.stmt]:
             targets=[_gen_self_attr("_tkind", ast.Store())],
             value=ast.Name(id="typ", ctx=ast.Load()),
         ),
-    ]
-    isa_body: list[ast.stmt] = []
-    for _kind, name in _GEN_EXC_KINDS:
-        isa_body = [
-            ast.If(
-                test=ast.Call(
-                    func=ast.Name(id="isinstance", ctx=ast.Load()),
-                    args=[
-                        ast.Name(id="typ", ctx=ast.Load()),
-                        ast.Name(id=name, ctx=ast.Load()),
-                    ],
-                    keywords=[],
-                ),
-                body=[
-                    ast.Assign(
-                        targets=[_gen_self_attr("_tkind", ast.Store())],
-                        value=ast.Name(id=name, ctx=ast.Load()),
-                    )
-                ],
-                orelse=isa_body,
-            )
-        ]
-    stmts.append(
         ast.If(
             test=ast.Attribute(
                 value=ast.Name(id="typ", ctx=ast.Load()),
                 attr="__class__",
                 ctx=ast.Load(),
             ),
-            body=isa_body,
+            body=[
+                ast.Assign(
+                    targets=[_gen_self_attr("_tkind", ast.Store())],
+                    value=ast.Attribute(
+                        value=ast.Name(id="typ", ctx=ast.Load()),
+                        attr="__class__",
+                        ctx=ast.Load(),
+                    ),
+                )
+            ],
             orelse=[],
-        )
-    )
-    return stmts
+        ),
+    ]
 
 
 def _throw_if_stmt() -> ast.stmt:
@@ -2474,15 +2458,20 @@ class _GenSM:
                 orig = list(self.states[sid])
                 hs = []
                 for i, h in enumerate(s.handlers):
+                    ename = h.name if h.name else "_aim_e"
                     hs.append(
                         ast.ExceptHandler(
                             type=self.rw(h.type) if h.type is not None else None,
-                            name=h.name,
+                            name=ename,
                             body=[
+                                ast.Assign(
+                                    targets=[_gen_self_attr("_tctx", ast.Store())],
+                                    value=ast.Name(id=ename, ctx=ast.Load()),
+                                ),
                                 ast.Assign(
                                     targets=[_gen_self_attr(flag, ast.Store())],
                                     value=ast.Constant(value=i + 1),
-                                )
+                                ),
                             ],
                         )
                     )
@@ -2595,6 +2584,17 @@ class _GenSM:
         for h, hsid in zip(s.handlers, handler_sids):
             self.cur = hsid
             self.build(list(h.body), fin if isinstance(fin, int) else join)
+        if join is not None and s.handlers:
+            # except ended: later throw() must not chain this instance.
+            st = self.states[join]
+            ins = ast.Assign(
+                targets=[_gen_self_attr("_tctx", ast.Store())],
+                value=ast.Constant(value=None),
+            )
+            if st:
+                st.insert(1, ins)
+            else:
+                st.append(ins)
         if s.finalbody:
             chk = self.news()
             fin_after = join if join is not None else after
@@ -2877,6 +2877,10 @@ def _gen_convert(
             value=ast.Constant(value=None),
         ),
         ast.Assign(
+            targets=[_gen_self_attr("_tctx", ast.Store())],
+            value=ast.Constant(value=None),
+        ),
+        ast.Assign(
             targets=[_gen_self_attr("_tf", ast.Store())],
             value=ast.Constant(value=0),
         ),
@@ -2963,6 +2967,7 @@ def _gen_convert(
                 "_tkind",
                 "_tkind_save",
                 "_texc",
+                "_tctx",
                 "_tf",
                 "gi_running",
                 "_closing",
@@ -3168,7 +3173,22 @@ def _gen_convert(
                     args=[],
                     keywords=[],
                 )
-            )
+            ),
+            ast.If(
+                test=_gen_self_attr("_tctx", ast.Load()),
+                body=[
+                    ast.Expr(
+                        value=ast.Call(
+                            func=ast.Name(
+                                id="__aim_exc_handled__", ctx=ast.Load()
+                            ),
+                            args=[_gen_self_attr("_tctx", ast.Load())],
+                            keywords=[],
+                        )
+                    )
+                ],
+                orelse=[],
+            ),
         ]
         + _throw_norm_stmts()
         + throw_closed
@@ -3318,23 +3338,24 @@ def _gen_convert(
                 value=ctor,
             )
         ]
+        # Dummy loads keep frees in _clos_freevars so g becomes a
+        # cell class and ClosRewrite maps _AIM_CELL to self._c.
         for n in frees:
-            fact_body.append(
-                ast.Assign(
-                    targets=[
-                        ast.Subscript(
-                            value=ast.Attribute(
-                                value=ast.Name(id=gtmp, ctx=ast.Load()),
-                                attr="_g_fv",
-                                ctx=ast.Load(),
-                            ),
-                            slice=ast.Constant(value=n),
-                            ctx=ast.Store(),
-                        )
-                    ],
-                    value=ast.Name(id=n, ctx=ast.Load()),
-                )
+            fact_body.append(ast.Expr(value=ast.Name(id=n, ctx=ast.Load())))
+        # Share the enclosing cell dict so nonlocal stores in the
+        # generator are visible after throw()/send() return.
+        fact_body.append(
+            ast.Assign(
+                targets=[
+                    ast.Attribute(
+                        value=ast.Name(id=gtmp, ctx=ast.Load()),
+                        attr="_g_fv",
+                        ctx=ast.Store(),
+                    )
+                ],
+                value=ast.Name(id="_AIM_CELL", ctx=ast.Load()),
             )
+        )
         fact_body.append(ast.Return(value=ast.Name(id=gtmp, ctx=ast.Load())))
     else:
         fact_body = [ast.Return(value=ctor)]
@@ -4566,6 +4587,8 @@ class _ClosRewrite(ast.NodeTransformer):
         )
 
     def visit_Name(self, node: ast.Name):
+        if node.id == "_AIM_CELL":
+            return self._cell()
         if node.id in self.mapping:
             return self._sub(node.id, node.ctx)
         return node
