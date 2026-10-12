@@ -1127,7 +1127,16 @@ Function.Gen_IsCallableVar {
     Input: name: Address
     Output: Integer
     Body: {
-        IfCondition Or(EqualTo(name, 0), EqualTo(Gen.callable_vars, 0)) ThenBlock: {
+        IfCondition EqualTo(name, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        // Nested-closure bound hashes are locals `_aim_fn_N` inside
+        // __call__ (triple a/b/adder `return b()`). Leftover CALL of an
+        // unmarked local was SmartCall(0) → None.
+        IfCondition EqualTo(Gen_NameStartsWith(name, "_aim_fn_"), 1) ThenBlock: {
+            ReturnValue(1)
+        }
+        IfCondition EqualTo(Gen.callable_vars, 0) ThenBlock: {
             ReturnValue(0)
         }
         sz = Array.Size(Gen.callable_vars)
