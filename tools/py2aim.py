@@ -1925,16 +1925,36 @@ def _hoist_genexps(tree: ast.AST, counter: list[int], changed: list[bool]) -> as
 
 
 class _GenNameRew(ast.NodeTransformer):
-    def __init__(self, mapping: dict[str, str]):
+    def __init__(self, mapping: dict[str, str], cell_names: set[str] | None = None):
         self.mapping = mapping
+        self.cell_names = cell_names or set()
         self._skip: set[str] = set()
 
     def visit_Name(self, n: ast.Name):
         if n.id in self._skip:
             return n
+        if n.id in self.cell_names:
+            return ast.Subscript(
+                value=_gen_self_attr("_g_fv", ast.Load()),
+                slice=ast.Constant(value=n.id),
+                ctx=n.ctx,
+            )
         if n.id in self.mapping:
             return _gen_self_attr(self.mapping[n.id], n.ctx)
         return n
+
+    def visit_AugAssign(self, node: ast.AugAssign):
+        if isinstance(node.target, ast.Name) and node.target.id in self.cell_names:
+            assign = ast.Assign(
+                targets=[ast.Name(id=node.target.id, ctx=ast.Store())],
+                value=ast.BinOp(
+                    left=ast.Name(id=node.target.id, ctx=ast.Load()),
+                    op=node.op,
+                    right=node.value,
+                ),
+            )
+            return self.visit(assign)
+        return self.generic_visit(node)
 
     def _visit_comp(self, n):
         bound: set[str] = set()
@@ -1974,8 +1994,13 @@ class _GenNameRew(ast.NodeTransformer):
 
 
 class _GenSM:
-    def __init__(self, mapping: dict[str, str], coro: bool = False):
-        self.rew = _GenNameRew(mapping)
+    def __init__(
+        self,
+        mapping: dict[str, str],
+        coro: bool = False,
+        cell_names: set[str] | None = None,
+    ):
+        self.rew = _GenNameRew(mapping, cell_names)
         self.states: list[list[ast.stmt]] = [[_throw_if_stmt()]]
         self.cur = 0
         self.it_n = 0
@@ -2066,6 +2091,9 @@ class _GenSM:
             if isinstance(s, ast.Assign) and len(s.targets) == 1 and isinstance(s.value, ast.Await):
                 self._await(s.value.value, s.targets[0], rest, after)
                 return
+            if isinstance(s, (ast.Nonlocal, ast.Global)):
+                i += 1
+                continue
             if isinstance(s, ast.Return):
                 val = s.value if s.value is not None else ast.Constant(value=None)
                 self.add(
@@ -2749,10 +2777,11 @@ def _gen_convert(
     frees = _clos_freevars(fn, enclosing)
     locs = _clos_direct_assigned(fn)
     mapping: dict[str, str] = {}
-    for n in params + list(locs) + frees:
-        if n not in mapping and n not in ("_s", "_sent"):
+    cell_names = set(frees)
+    for n in params + list(locs):
+        if n not in mapping and n not in ("_s", "_sent") and n not in cell_names:
             mapping[n] = f"_g_{n}"
-    sm = _GenSM(mapping, coro=coro)
+    sm = _GenSM(mapping, coro=coro, cell_names=cell_names)
     sm.build(list(fn.body), None)
     _gen_wrap_unwrapped_close(sm)
     init_args = [ast.arg(arg="self")]
@@ -2814,7 +2843,9 @@ def _gen_convert(
     factory_args: list[ast.expr] = []
     seen_init: set[str] = set()
     param_attrs: set[str] = set()
-    for n in params + frees:
+    # Params only in __init__. Freevars are assigned after ObjectNew so a
+    # 0 cell (f(0)) is not PackedGet-defaulted to None.
+    for n in params:
         if n in seen_init or n not in mapping:
             continue
         seen_init.add(n)
@@ -2828,7 +2859,17 @@ def _gen_convert(
         )
         factory_args.append(ast.Name(id=n, ctx=ast.Load()))
         param_attrs.add(pname)
+    if cell_names:
+        init_body.append(
+            ast.Assign(
+                targets=[_gen_self_attr("_g_fv", ast.Store())],
+                value=ast.Dict(keys=[], values=[]),
+            )
+        )
+        param_attrs.add("_g_fv")
     fields: set[str] = set(mapping.values()) | {"_s", "_sent"}
+    if cell_names:
+        fields.add("_g_fv")
     for body in sm.states:
         for stmt in body:
             for n in ast.walk(stmt):
@@ -3166,18 +3207,43 @@ def _gen_convert(
         body=methods,
         decorator_list=[],
     )
+    ctor = ast.Call(
+        func=ast.Name(id=cname, ctx=ast.Load()),
+        args=factory_args,
+        keywords=[],
+    )
+    if frees:
+        gtmp = "_aim_g"
+        fact_body: list[ast.stmt] = [
+            ast.Assign(
+                targets=[ast.Name(id=gtmp, ctx=ast.Store())],
+                value=ctor,
+            )
+        ]
+        for n in frees:
+            fact_body.append(
+                ast.Assign(
+                    targets=[
+                        ast.Subscript(
+                            value=ast.Attribute(
+                                value=ast.Name(id=gtmp, ctx=ast.Load()),
+                                attr="_g_fv",
+                                ctx=ast.Load(),
+                            ),
+                            slice=ast.Constant(value=n),
+                            ctx=ast.Store(),
+                        )
+                    ],
+                    value=ast.Name(id=n, ctx=ast.Load()),
+                )
+            )
+        fact_body.append(ast.Return(value=ast.Name(id=gtmp, ctx=ast.Load())))
+    else:
+        fact_body = [ast.Return(value=ctor)]
     new_fn = ast.FunctionDef(
         name=fn.name,
         args=fn.args,
-        body=[
-            ast.Return(
-                value=ast.Call(
-                    func=ast.Name(id=cname, ctx=ast.Load()),
-                    args=factory_args,
-                    keywords=[],
-                )
-            )
-        ],
+        body=fact_body,
         decorator_list=list(fn.decorator_list),
         returns=fn.returns,
     )
@@ -3808,8 +3874,11 @@ def _clos_params(node: ast.AST) -> set[str]:
     return names
 
 
-def _clos_global_names(node: ast.AST) -> set[str]:
-    """Names declared global in this function, not in nested def/class bodies."""
+def _clos_decl_names(node: ast.AST, stmt_type: type) -> set[str]:
+    """global/nonlocal names in this function, not in nested def/class bodies.
+
+    Lambda.body is an expr: skip unless body is a stmt list.
+    """
     names: set[str] = set()
     body = getattr(node, "body", None)
     if not isinstance(body, list):
@@ -3817,13 +3886,23 @@ def _clos_global_names(node: ast.AST) -> set[str]:
     for stmt in body:
         if isinstance(stmt, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
             continue
-        if isinstance(stmt, ast.Global):
+        if isinstance(stmt, stmt_type):
             names.update(stmt.names)
             continue
         for n in ast.walk(stmt):
-            if isinstance(n, ast.Global):
+            if isinstance(n, stmt_type):
                 names.update(n.names)
     return names
+
+
+def _clos_global_names(node: ast.AST) -> set[str]:
+    """Names declared global in this function, not in nested def/class bodies."""
+    return _clos_decl_names(node, ast.Global)
+
+
+def _clos_nonlocal_names(node: ast.AST) -> set[str]:
+    """Names declared nonlocal in this function, not in nested def/class bodies."""
+    return _clos_decl_names(node, ast.Nonlocal)
 
 
 def _clos_direct_assigned(node: ast.AST) -> set[str]:
@@ -3834,13 +3913,14 @@ def _clos_direct_assigned(node: ast.AST) -> set[str]:
     test_coroutines bound every `bar` to the last flattened factory and
     `await bar()` on an int 42 SEGVd in strlen.
     Global names are module cells, not per-call _aim_c keys (make_adder6).
+    Nonlocal names are enclosing cells (testNonLocalGenerator).
     """
-    globs = _clos_global_names(node)
+    skip = _clos_global_names(node) | _clos_nonlocal_names(node)
     assigned = _clos_params(node)
     body = getattr(node, "body", None) or []
     for stmt in body:
         if isinstance(stmt, (ast.FunctionDef, ast.AsyncFunctionDef)):
-            if stmt.name not in globs:
+            if stmt.name not in skip:
                 assigned.add(stmt.name)
             continue
         if isinstance(stmt, ast.ClassDef):
@@ -3850,27 +3930,30 @@ def _clos_direct_assigned(node: ast.AST) -> set[str]:
             if not stmt.name.startswith(
                 ("_aim_coro_", "_aim_gen_", "__aim_clos_", "_aim_gx_")
             ):
-                if stmt.name not in globs:
+                if stmt.name not in skip:
                     assigned.add(stmt.name)
             continue
         for n in ast.walk(stmt):
             if isinstance(n, ast.Name) and isinstance(n.ctx, ast.Store):
-                if n.id not in globs:
+                if n.id not in skip:
                     assigned.add(n.id)
     return assigned
 
 
 def _clos_inner_locals(node: ast.AST) -> set[str]:
     locs = _clos_params(node)
+    skip = _clos_global_names(node) | _clos_nonlocal_names(node)
     for n in ast.walk(node):
         if isinstance(n, ast.Name) and isinstance(n.ctx, ast.Store):
-            locs.add(n.id)
+            if n.id not in skip:
+                locs.add(n.id)
     return locs
 
 
 def _clos_freevars(inner: ast.AST, enclosing: set[str]) -> list[str]:
     iloc = _clos_inner_locals(inner)
     iglob = _clos_global_names(inner)
+    inon = _clos_nonlocal_names(inner)
     for n in ast.walk(inner):
         if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef)):
             iloc.add(n.name)
@@ -3886,6 +3969,14 @@ def _clos_freevars(inner: ast.AST, enclosing: set[str]) -> list[str]:
             and n.id not in seen
         ):
             seen.append(n.id)
+    for n in inon:
+        if (
+            n in enclosing
+            and n not in iglob
+            and n not in _CLOS_SKIP
+            and n not in seen
+        ):
+            seen.append(n)
     return seen
 
 
@@ -4011,6 +4102,24 @@ class _ClosRewrite(ast.NodeTransformer):
         if node.id in self.mapping:
             return self._sub(node.id, node.ctx)
         return node
+
+    def visit_AugAssign(self, node: ast.AugAssign):
+        node.value = self.visit(node.value)
+        if isinstance(node.target, ast.Name) and node.target.id in self.mapping:
+            assign = ast.Assign(
+                targets=[ast.Name(id=node.target.id, ctx=ast.Store())],
+                value=ast.BinOp(
+                    left=ast.Name(id=node.target.id, ctx=ast.Load()),
+                    op=node.op,
+                    right=node.value,
+                ),
+            )
+            return self.visit(assign)
+        node.target = self.visit(node.target)
+        return node
+
+    def visit_Nonlocal(self, node: ast.Nonlocal):
+        return ast.Pass()
 
     def visit_FunctionDef(self, node: ast.FunctionDef):
         # Already-converted __aim_clos_ methods: rewrite freevar Names
