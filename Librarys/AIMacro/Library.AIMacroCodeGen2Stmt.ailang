@@ -80,7 +80,10 @@ Function.Gen_Node {
                     cbi = 0
                     cbn = Array.Size(cbody)
                     saved_ca = OOPGen.in_classattrs
+                    saved_cc = OOPGen.current_class
                     OOPGen.in_classattrs = 1
+                    OOPGen.current_class = uname
+                    OOPGen_ClassattrAssignedClear()
                     WhileLoop LessThan(cbi, cbn) {
                         citem = Array.Get(cbody, cbi)
                         IfCondition EqualTo(AST_Type(citem), Node.ASSIGNMENT) ThenBlock: {
@@ -98,11 +101,13 @@ Function.Gen_Node {
                                 Gen_Emit("\", ")
                                 Gen_Expr(fval)
                                 Gen_Emit(")\n")
+                                OOPGen_MarkClassattrAssigned(fname)
                             }
                         }
                         cbi = Add(cbi, 1)
                     }
                     OOPGen.in_classattrs = saved_ca
+                    OOPGen.current_class = saved_cc
                 }
                 Gen_MarkCallableVar(orig)
                 ReturnValue(0)

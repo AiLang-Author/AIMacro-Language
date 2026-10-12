@@ -33,6 +33,7 @@ FixedPool.OOPGen {
     "class_renames_to": Initialize=0
     "in_classattrs": Initialize=0
     "classattrs_fns": Initialize=0
+    "classattr_assigned": Initialize=0
 }
 
 
@@ -75,6 +76,7 @@ Function.OOPGen_Init {
         OOPGen.class_renames_from = Array.Create(32)
         OOPGen.class_renames_to = Array.Create(32)
         OOPGen.classattrs_fns = Array.Create(32)
+        OOPGen.classattr_assigned = Array.Create(16)
         OOPGen.temp_counter = 0
         OOPGen.has_classes = 0
         OOPGen.in_classattrs = 0
@@ -125,6 +127,9 @@ Function.OOPGen_Reset {
             IfCondition NotEqual(OOPGen.classattrs_fns, 0) ThenBlock: {
                 Array.Clear(OOPGen.classattrs_fns)
             }
+            IfCondition NotEqual(OOPGen.classattr_assigned, 0) ThenBlock: {
+                Array.Clear(OOPGen.classattr_assigned)
+            }
         }
     }
 }
@@ -151,7 +156,36 @@ Function.OOPGen_Free {
             Array.Destroy(OOPGen.emitted_methods)
             OOPGen.emitted_methods = 0
         }
+        IfCondition NotEqual(OOPGen.classattr_assigned, 0) ThenBlock: {
+            Array.Destroy(OOPGen.classattr_assigned)
+            OOPGen.classattr_assigned = 0
+        }
         OOPGen.initialized = 0
+    }
+}
+
+Function.OOPGen_ClassattrAssignedClear {
+    Body: {
+        IfCondition EqualTo(OOPGen.classattr_assigned, 0) ThenBlock: {
+            OOPGen.classattr_assigned = Array.Create(16)
+        }
+        Array.Clear(OOPGen.classattr_assigned)
+    }
+}
+
+Function.OOPGen_MarkClassattrAssigned {
+    Input: name: Address
+    Body: {
+        IfCondition EqualTo(name, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(OOPGen.classattr_assigned, 0) ThenBlock: {
+            OOPGen.classattr_assigned = Array.Create(16)
+        }
+        dup = Gen_NameInArray(name, OOPGen.classattr_assigned)
+        IfCondition EqualTo(dup, 0) ThenBlock: {
+            Array.Push(OOPGen.classattr_assigned, name)
+        }
     }
 }
 
@@ -763,6 +797,7 @@ Function.OOPGen_ClassDef {
             saved_tc = Gen.temp_counter
             Gen.temp_counter = 0
             OOPGen.in_classattrs = 1
+            OOPGen_ClassattrAssignedClear()
             ni = 0
             nsz = Array.Size(nest_from)
             WhileLoop LessThan(ni, nsz) {
@@ -801,6 +836,7 @@ Function.OOPGen_ClassDef {
                     fval = AST_GetField(item, "value")
                     IfCondition NotEqual(fname, 0) ThenBlock: {
                         OOPGen_EmitClassattrsAssign(class_name, fname, fval)
+                        OOPGen_MarkClassattrAssigned(fname)
                     }
                 }
                 i = Add(i, 1)

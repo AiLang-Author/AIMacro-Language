@@ -1756,6 +1756,25 @@ Function.Gen_EmitIdentLhs {
 Function.Gen_EmitIdent {
     Input: name: Address
     Body: {
+        // Class-body LOAD_NAME: class namespace wins over enclosing/PyMod.
+        // Skip flatten temps (_aim_t*) so they stay AILANG locals.
+        IfCondition And(EqualTo(OOPGen.in_classattrs, 1), NotEqual(OOPGen.current_class, 0)) ThenBlock: {
+            IfCondition EqualTo(Gen_NameStartsWith(name, "_aim_t"), 0) ThenBlock: {
+                hit_ca = Gen_NameInArray(name, OOPGen.classattr_assigned)
+                IfCondition EqualTo(hit_ca, 1) ThenBlock: {
+                    run_ca = OOPGen_RunClassName(OOPGen.current_class)
+                    IfCondition EqualTo(run_ca, 0) ThenBlock: {
+                        run_ca = OOPGen.current_class
+                    }
+                    Gen_Emit("AIMacro.ClassAttrGet(\"")
+                    Gen_Emit(run_ca)
+                    Gen_Emit("\", \"")
+                    Gen_Emit(name)
+                    Gen_Emit("\")")
+                    ReturnValue(0)
+                }
+            }
+        }
         is_param = Gen_IsParam(name)
         IfCondition EqualTo(is_param, 1) ThenBlock: {
             Gen_Emit("p_")

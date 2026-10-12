@@ -3627,6 +3627,49 @@ def desugar_generators(src: str) -> str:
         return src
 
 
+def _is_locals_call(node: ast.AST) -> bool:
+    return (
+        isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Name)
+        and node.func.id == "locals"
+        and not node.args
+        and not node.keywords
+    )
+
+
+def _desugar_class_ns_locals_tree(tree: ast.AST) -> tuple[ast.AST, bool]:
+    """Class-body locals()[k] = v is STORE_NAME into the class namespace."""
+    changed = [False]
+
+    class _X(ast.NodeTransformer):
+        def visit_ClassDef(self, node: ast.ClassDef):
+            node = self.generic_visit(node)
+            new_body: list[ast.stmt] = []
+            for stmt in node.body:
+                if isinstance(stmt, ast.Assign) and len(stmt.targets) == 1:
+                    t = stmt.targets[0]
+                    sl = getattr(t, "slice", None)
+                    if (
+                        isinstance(t, ast.Subscript)
+                        and _is_locals_call(t.value)
+                        and isinstance(sl, ast.Constant)
+                        and isinstance(sl.value, str)
+                    ):
+                        changed[0] = True
+                        new_body.append(
+                            ast.Assign(
+                                targets=[ast.Name(id=sl.value, ctx=ast.Store())],
+                                value=stmt.value,
+                            )
+                        )
+                        continue
+                new_body.append(stmt)
+            node.body = new_body
+            return node
+
+    return _X().visit(tree), changed[0]
+
+
 def _desugar_nested_class_cells_tree(tree: ast.AST) -> tuple[ast.AST, bool]:
     """Leave nested class methods with enclosing freevars for func closures.
 
@@ -4686,6 +4729,7 @@ def convert(src: str) -> str:
         _late = None
     if _late is not None:
         _late, _ = _desugar_generators_tree(_late)
+        _late, _ = _desugar_class_ns_locals_tree(_late)
         _late, _ = _desugar_nested_class_cells_tree(_late)
         _late, _ = _desugar_kwonly_dict_tree(_late)
         _late, _ = _desugar_nested_func_closures_tree(_late)
