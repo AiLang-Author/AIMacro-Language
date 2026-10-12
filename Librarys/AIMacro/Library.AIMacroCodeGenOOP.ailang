@@ -1597,6 +1597,16 @@ Function.OOPGen_Assign {
                 Gen_MarkModuleVar(tname)
                 Gen_Emit("PyMod.")
             }
+            // nest-bind `x` is AddressOf on load; that is not an lvalue.
+            // Sibling `def x` then `x = 42` stored a local and loaded
+            // PyMod.x (module var wins). Store PyMod when the name is one.
+            IfCondition EqualTo(is_nest, 1) ThenBlock: {
+                IfCondition EqualTo(is_kw, 0) ThenBlock: {
+                    IfCondition EqualTo(Gen_IsModuleVar(tname), 1) ThenBlock: {
+                        Gen_Emit("PyMod.")
+                    }
+                }
+            }
             Gen_Emit(tname)
         } ElseBlock: {
             Gen_EmitIdent(target)
