@@ -1630,6 +1630,11 @@ Function.Gen_MapBuiltin {
         cmp = StringCompare(name, "eval")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.Eval") }
 
+        // Unique: generator throw() clears the caller's pending so send
+        // is not skipped. Isolation golds lack this ident.
+        cmp = StringCompare(name, "__aim_exc_clear__")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.PyExcClear") }
+
         cmp = StringCompare(name, "pow")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.NumPow") }
         

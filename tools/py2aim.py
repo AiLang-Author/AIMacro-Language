@@ -1784,6 +1784,60 @@ def _tkind_raise_stmts() -> list[ast.stmt]:
     return stmts
 
 
+def _throw_norm_stmts() -> list[ast.stmt]:
+    """Store throw(typ) as an ExcKind integer in _tkind.
+
+    leftover type names are integers (ValueError is 2). leftover
+    exception instances are hashes; isinstance(typ, ValueError)
+    is True and assigns the name ValueError so __aim_raise's
+    integer table hits. Type-name __class__ is integer 0, so the
+    isinstance chain is skipped and _tkind stays the type.
+    """
+    stmts: list[ast.stmt] = [
+        ast.Assign(
+            targets=[_gen_self_attr("_texc", ast.Store())],
+            value=ast.Name(id="typ", ctx=ast.Load()),
+        ),
+        ast.Assign(
+            targets=[_gen_self_attr("_tkind", ast.Store())],
+            value=ast.Name(id="typ", ctx=ast.Load()),
+        ),
+    ]
+    isa_body: list[ast.stmt] = []
+    for _kind, name in _GEN_EXC_KINDS:
+        isa_body = [
+            ast.If(
+                test=ast.Call(
+                    func=ast.Name(id="isinstance", ctx=ast.Load()),
+                    args=[
+                        ast.Name(id="typ", ctx=ast.Load()),
+                        ast.Name(id=name, ctx=ast.Load()),
+                    ],
+                    keywords=[],
+                ),
+                body=[
+                    ast.Assign(
+                        targets=[_gen_self_attr("_tkind", ast.Store())],
+                        value=ast.Name(id=name, ctx=ast.Load()),
+                    )
+                ],
+                orelse=isa_body,
+            )
+        ]
+    stmts.append(
+        ast.If(
+            test=ast.Attribute(
+                value=ast.Name(id="typ", ctx=ast.Load()),
+                attr="__class__",
+                ctx=ast.Load(),
+            ),
+            body=isa_body,
+            orelse=[],
+        )
+    )
+    return stmts
+
+
 def _throw_if_stmt() -> ast.stmt:
     """Call __aim_raise so the kind table lives once per class.
 
@@ -2819,6 +2873,10 @@ def _gen_convert(
             value=ast.Constant(value=0),
         ),
         ast.Assign(
+            targets=[_gen_self_attr("_texc", ast.Store())],
+            value=ast.Constant(value=None),
+        ),
+        ast.Assign(
             targets=[_gen_self_attr("_tf", ast.Store())],
             value=ast.Constant(value=0),
         ),
@@ -2904,6 +2962,7 @@ def _gen_convert(
                 "_sent",
                 "_tkind",
                 "_tkind_save",
+                "_texc",
                 "_tf",
                 "gi_running",
                 "_closing",
@@ -3103,11 +3162,15 @@ def _gen_convert(
             defaults=[ast.Constant(value=None), ast.Constant(value=None)],
         ),
         body=[
-            ast.Assign(
-                targets=[_gen_self_attr("_tkind", ast.Store())],
-                value=ast.Name(id="typ", ctx=ast.Load()),
+            ast.Expr(
+                value=ast.Call(
+                    func=ast.Name(id="__aim_exc_clear__", ctx=ast.Load()),
+                    args=[],
+                    keywords=[],
+                )
             )
         ]
+        + _throw_norm_stmts()
         + throw_closed
         + [
             ast.Return(

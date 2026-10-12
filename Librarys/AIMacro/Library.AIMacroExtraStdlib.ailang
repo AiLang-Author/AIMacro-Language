@@ -76,6 +76,14 @@ Function.AIMacro.AssertPythonOk {
     }
 }
 
+Function.AIMacro.PyExcClear {
+    Output: Integer
+    Body: {
+        AIMacro.ExcClear()
+        ReturnValue(0)
+    }
+}
+
 Function.AIMacro.WrapGenStop {
     Output: Integer
     Body: {
