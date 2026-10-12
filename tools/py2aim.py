@@ -4399,11 +4399,19 @@ def _desugar_nested_func_closures_tree(tree: ast.AST) -> tuple[ast.AST, bool]:
                         value=ast.Dict(keys=[], values=[]),
                     )
                 ]
+                va = node.args.vararg.arg if node.args.vararg else None
                 for v, key in cell_maps:
                     # Params exist at entry. Nested def/class names are
                     # assigned later; storing them here is GetNone and
                     # leftover await bar() then strlen(42) SEGVd.
                     if v in params:
+                        val: ast.expr = ast.Name(id=v, ctx=ast.Load())
+                        if va is not None and v == va:
+                            val = ast.Call(
+                                func=ast.Name(id="tuple", ctx=ast.Load()),
+                                args=[val],
+                                keywords=[],
+                            )
                         inits.append(
                             ast.Assign(
                                 targets=[
@@ -4415,7 +4423,7 @@ def _desugar_nested_func_closures_tree(tree: ast.AST) -> tuple[ast.AST, bool]:
                                         ctx=ast.Store(),
                                     )
                                 ],
-                                value=ast.Name(id=v, ctx=ast.Load()),
+                                value=val,
                             )
                         )
                 mapping = {v: k for v, k in cell_maps}
@@ -4547,6 +4555,90 @@ def desugar_dict_call(src: str) -> str:
         return src
 
 
+def _is_kwonly_fn(fn: ast.FunctionDef) -> str | None:
+    a = fn.args
+    if (
+        a.kwarg
+        and not a.posonlyargs
+        and not a.args
+        and not a.kwonlyargs
+        and not a.vararg
+    ):
+        return a.kwarg.arg
+    return None
+
+
+def _kwcall_to_dict(call: ast.Call) -> ast.Call:
+    """f(a=11) → f({'a': 11}); f() → f({}); f(**d) → f(d)."""
+    if call.args:
+        return call
+    keys: list[ast.expr | None] = []
+    vals: list[ast.expr] = []
+    rest = None
+    for kw in call.keywords:
+        if kw.arg is None:
+            rest = kw.value
+        else:
+            keys.append(ast.Constant(value=kw.arg))
+            vals.append(kw.value)
+    if rest is not None and not keys:
+        d: ast.expr = rest
+    elif rest is not None:
+        d = ast.Dict(keys=[None] + keys, values=[rest] + vals)
+    else:
+        d = ast.Dict(keys=keys, values=vals)
+    return ast.Call(func=call.func, args=[d], keywords=[])
+
+
+def _rewrite_body_kwonly(body: list[ast.stmt]) -> list[ast.stmt]:
+    kwonly: dict[str, str] = {}
+
+    class _Calls(ast.NodeTransformer):
+        def visit_FunctionDef(self, n: ast.FunctionDef):
+            return n
+
+        def visit_AsyncFunctionDef(self, n: ast.AsyncFunctionDef):
+            return n
+
+        def visit_ClassDef(self, n: ast.ClassDef):
+            return n
+
+        def visit_Call(self, n: ast.Call):
+            n = self.generic_visit(n)
+            if isinstance(n.func, ast.Name) and n.func.id in kwonly:
+                return _kwcall_to_dict(n)
+            return n
+
+    out: list[ast.stmt] = []
+    for stmt in body:
+        if isinstance(stmt, ast.FunctionDef):
+            stmt.body = _rewrite_body_kwonly(list(stmt.body))
+            kn = _is_kwonly_fn(stmt)
+            if kn:
+                stmt.args.kwarg = None
+                stmt.args.args = [ast.arg(arg=kn)]
+                kwonly[stmt.name] = kn
+            out.append(stmt)
+        elif isinstance(stmt, ast.AsyncFunctionDef):
+            stmt.body = _rewrite_body_kwonly(list(stmt.body))
+            out.append(stmt)
+        elif isinstance(stmt, ast.ClassDef):
+            stmt.body = _rewrite_body_kwonly(list(stmt.body))
+            out.append(stmt)
+        else:
+            out.append(_Calls().visit(stmt))
+    return out
+
+
+def _desugar_kwonly_dict_tree(tree: ast.AST) -> tuple[ast.AST, bool]:
+    """def f(**kwargs) plus f(a=11) → f({'a': 11}) so the dict is a param."""
+    if not isinstance(tree, ast.Module):
+        return tree, False
+    new_body = _rewrite_body_kwonly(list(tree.body))
+    tree.body = new_body
+    return tree, True
+
+
 def convert(src: str) -> str:
     # Empty / whitespace-only modules (e.g. empty __init__.py): aimacro.x
     # rejects zero-byte input. Emit a bare `pass` so transpile succeeds.
@@ -4570,6 +4662,7 @@ def convert(src: str) -> str:
     if _late is not None:
         _late, _ = _desugar_generators_tree(_late)
         _late, _ = _desugar_nested_class_cells_tree(_late)
+        _late, _ = _desugar_kwonly_dict_tree(_late)
         _late, _ = _desugar_nested_func_closures_tree(_late)
         _late, _ = _desugar_dict_call_tree(_late)
         ast.fix_missing_locations(_late)
