@@ -3628,10 +3628,10 @@ def desugar_generators(src: str) -> str:
 
 
 def _desugar_nested_class_cells_tree(tree: ast.AST) -> tuple[ast.AST, bool]:
-    """Capture enclosing locals used by nested class methods into a module dict.
+    """Leave nested class methods with enclosing freevars for func closures.
 
-    Codegen flattens nested class methods to top-level Functions without closures.
-    Mutating module-level `_aim_ncells` needs no `global` (aimacro has no global).
+    Per-call `_aim_c` lives in desugar_nested_func_closures (Class(_aim_c)
+    or a bound-hash __call__). Shared module `_aim_ncells` is unused.
     """
     cell_counter = [0]
     need_dict = [False]
@@ -3676,67 +3676,12 @@ def _desugar_nested_class_cells_tree(tree: ast.AST) -> tuple[ast.AST, bool]:
                                 ):
                                     used.add(n.id)
                     if used:
-                        has_call = any(
-                            isinstance(item, (ast.FunctionDef, ast.AsyncFunctionDef))
-                            and item.name == "__call__"
-                            for item in stmt.body
-                        )
-                        # __call__ + enclosing freevars: per-call cell in
-                        # desugar_nested_func_closures (SmartCall1 on the
-                        # instance SEGVs; bound hash + self._c is the fix).
-                        if has_call:
-                            new_body.append(stmt)
-                            continue
-                        cell_counter[0] += 1
-                        cid = cell_counter[0]
-                        need_dict[0] = True
-                        mapping = {v: f"{cid}_{v}" for v in sorted(used)}
-                        for v, key in mapping.items():
-                            cell_maps.append((v, key))
-                            new_body.append(
-                                ast.Assign(
-                                    targets=[
-                                        ast.Subscript(
-                                            value=ast.Name(id="_aim_ncells", ctx=ast.Load()),
-                                            slice=ast.Constant(value=key),
-                                            ctx=ast.Store(),
-                                        )
-                                    ],
-                                    value=ast.Name(id=v, ctx=ast.Load()),
-                                )
-                            )
-
-                        class _Rew(ast.NodeTransformer):
-                            def __init__(self, ml: set[str]):
-                                self.ml = ml
-
-                            def visit_Name(self, n: ast.Name):
-                                if (
-                                    isinstance(n.ctx, ast.Load)
-                                    and n.id in mapping
-                                    and n.id not in self.ml
-                                ):
-                                    return ast.Subscript(
-                                        value=ast.Name(id="_aim_ncells", ctx=ast.Load()),
-                                        slice=ast.Constant(value=mapping[n.id]),
-                                        ctx=ast.Load(),
-                                    )
-                                return n
-
-                        new_cls_body = []
-                        for i, item in enumerate(stmt.body):
-                            if isinstance(item, (ast.FunctionDef, ast.AsyncFunctionDef)):
-                                new_cls_body.append(_Rew(method_locals[i]).visit(item))
-                            else:
-                                new_cls_body.append(item)
-                        stmt = ast.ClassDef(
-                            name=stmt.name,
-                            bases=stmt.bases,
-                            keywords=stmt.keywords,
-                            body=new_cls_body,
-                            decorator_list=stmt.decorator_list,
-                            type_params=getattr(stmt, "type_params", []),
-                        )
+                        # Per-call cell in desugar_nested_func_closures:
+                        # __call__ gets a bound hash; other methods get
+                        # Class(_aim_c) so two factory calls do not share
+                        # one module _aim_ncells key.
+                        new_body.append(stmt)
+                        continue
                 new_body.append(stmt)
             if cell_maps:
                 patched: list[ast.stmt] = []
@@ -4357,14 +4302,17 @@ def _clos_replace_nested(
                 continue
         if isinstance(stmt, ast.ClassDef):
             frees = _clos_class_method_freevars(stmt, enclosing)
-            if frees and _class_has_call(stmt):
+            if frees:
                 changed[0] = True
                 mapping = {v: v for v in frees}
                 for v in frees:
                     if (v, v) not in cell_maps:
                         cell_maps.append((v, v))
                 new_body.append(_clos_patch_nested_class(stmt, mapping))
-                ctor_kind[stmt.name] = "bound"
+                if _class_has_call(stmt):
+                    ctor_kind[stmt.name] = "bound"
+                else:
+                    ctor_kind[stmt.name] = "cell"
                 continue
         new_body.append(stmt)
     if ctor_kind:
