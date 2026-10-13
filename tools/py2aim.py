@@ -1787,10 +1787,10 @@ def _tkind_raise_stmts() -> list[ast.stmt]:
 def _throw_norm_stmts() -> list[ast.stmt]:
     """Store throw(typ) as an ExcKind integer in _tkind.
 
-    leftover type names are integers (ValueError is 2); type-name
-    __class__ is 0 so _tkind stays the type. leftover instances are
-    hashes whose __class__ is the kind integer. Do not isinstance()
-    the hash: IsSubclass of two ExcKind ints SEGVs in larger ELFs.
+    leftover type names are integers (ValueError is 2). leftover
+    instances are hashes whose __class__ is the kind integer. _tkind
+    is an OOP Integer field: ExcKindOf returns 1..40 and never stores
+    the hash. Do not isinstance() the hash.
     """
     return [
         ast.Assign(
@@ -1799,25 +1799,11 @@ def _throw_norm_stmts() -> list[ast.stmt]:
         ),
         ast.Assign(
             targets=[_gen_self_attr("_tkind", ast.Store())],
-            value=ast.Name(id="typ", ctx=ast.Load()),
-        ),
-        ast.If(
-            test=ast.Attribute(
-                value=ast.Name(id="typ", ctx=ast.Load()),
-                attr="__class__",
-                ctx=ast.Load(),
+            value=ast.Call(
+                func=ast.Name(id="__aim_exc_kind__", ctx=ast.Load()),
+                args=[ast.Name(id="typ", ctx=ast.Load())],
+                keywords=[],
             ),
-            body=[
-                ast.Assign(
-                    targets=[_gen_self_attr("_tkind", ast.Store())],
-                    value=ast.Attribute(
-                        value=ast.Name(id="typ", ctx=ast.Load()),
-                        attr="__class__",
-                        ctx=ast.Load(),
-                    ),
-                )
-            ],
-            orelse=[],
         ),
     ]
 
@@ -2459,6 +2445,13 @@ class _GenSM:
                 hs = []
                 for i, h in enumerate(s.handlers):
                     ename = h.name if h.name else "_aim_e"
+                    # except as <param> rewrites to the cell/field and leftover
+                    # except-binding of that name SEGVs (gencyc_4 as exc vs as e).
+                    if (
+                        ename in self.rew.mapping
+                        or ename in self.rew.cell_names
+                    ):
+                        ename = f"_aim_e{i}"
                     hs.append(
                         ast.ExceptHandler(
                             type=self.rw(h.type) if h.type is not None else None,
@@ -2686,6 +2679,79 @@ def _close_stop_body() -> list[ast.stmt]:
         ),
         ast.Return(value=ast.Constant(value=1)),
     ]
+
+
+def _throw_body() -> list[ast.stmt]:
+    """Shared throw() body. _tkind is Integer; ExcKindOf never stores a hash."""
+    throw_closed: list[ast.stmt] = [
+        ast.If(
+            test=ast.Compare(
+                left=_gen_self_attr("_s", ast.Load()),
+                ops=[ast.Eq()],
+                comparators=[ast.Constant(value=-1)],
+            ),
+            body=[
+                ast.Expr(value=_self_method_call("__aim_raise")),
+                ast.Return(value=ast.Constant(value=None)),
+            ],
+            orelse=[],
+        )
+    ]
+    return [
+        ast.Expr(
+            value=ast.Call(
+                func=ast.Name(id="__aim_exc_clear__", ctx=ast.Load()),
+                args=[],
+                keywords=[],
+            )
+        ),
+        ast.If(
+            test=_gen_self_attr("_tctx", ast.Load()),
+            body=[
+                ast.Expr(
+                    value=ast.Call(
+                        func=ast.Name(id="__aim_exc_handled__", ctx=ast.Load()),
+                        args=[_gen_self_attr("_tctx", ast.Load())],
+                        keywords=[],
+                    )
+                )
+            ],
+            orelse=[],
+        ),
+    ] + _throw_norm_stmts() + throw_closed + [
+        ast.Return(
+            value=ast.Call(
+                func=ast.Attribute(
+                    value=ast.Name(id="self", ctx=ast.Load()),
+                    attr="send",
+                    ctx=ast.Load(),
+                ),
+                args=[ast.Constant(value=None)],
+                keywords=[],
+            )
+        )
+    ]
+
+
+def _aim_gen_throw_fn() -> ast.FunctionDef:
+    """One module-level throw() so 4 gen classes do not intern 4 copies."""
+    return ast.FunctionDef(
+        name="__aim_gen_throw",
+        args=ast.arguments(
+            posonlyargs=[],
+            args=[
+                ast.arg(arg="self"),
+                ast.arg(arg="typ"),
+                ast.arg(arg="val"),
+                ast.arg(arg="tb"),
+            ],
+            kwonlyargs=[],
+            kw_defaults=[],
+            defaults=[ast.Constant(value=None), ast.Constant(value=None)],
+        ),
+        body=_throw_body(),
+        decorator_list=[],
+    )
 
 
 def _aim_catch_throw_fn() -> ast.FunctionDef:
@@ -3128,30 +3194,6 @@ def _gen_convert(
         body=_tkind_raise_stmts(),
         decorator_list=[],
     )
-    throw_closed: list[ast.stmt] = [
-        ast.If(
-            test=ast.Compare(
-                left=_gen_self_attr("_s", ast.Load()),
-                ops=[ast.Eq()],
-                comparators=[ast.Constant(value=-1)],
-            ),
-            body=[
-                ast.Expr(
-                    value=ast.Call(
-                        func=ast.Attribute(
-                            value=ast.Name(id="self", ctx=ast.Load()),
-                            attr="__aim_raise",
-                            ctx=ast.Load(),
-                        ),
-                        args=[],
-                        keywords=[],
-                    )
-                ),
-                ast.Return(value=ast.Constant(value=None)),
-            ],
-            orelse=[],
-        )
-    ]
     throw = ast.FunctionDef(
         name="throw",
         args=ast.arguments(
@@ -3167,40 +3209,15 @@ def _gen_convert(
             defaults=[ast.Constant(value=None), ast.Constant(value=None)],
         ),
         body=[
-            ast.Expr(
-                value=ast.Call(
-                    func=ast.Name(id="__aim_exc_clear__", ctx=ast.Load()),
-                    args=[],
-                    keywords=[],
-                )
-            ),
-            ast.If(
-                test=_gen_self_attr("_tctx", ast.Load()),
-                body=[
-                    ast.Expr(
-                        value=ast.Call(
-                            func=ast.Name(
-                                id="__aim_exc_handled__", ctx=ast.Load()
-                            ),
-                            args=[_gen_self_attr("_tctx", ast.Load())],
-                            keywords=[],
-                        )
-                    )
-                ],
-                orelse=[],
-            ),
-        ]
-        + _throw_norm_stmts()
-        + throw_closed
-        + [
             ast.Return(
                 value=ast.Call(
-                    func=ast.Attribute(
-                        value=ast.Name(id="self", ctx=ast.Load()),
-                        attr="send",
-                        ctx=ast.Load(),
-                    ),
-                    args=[ast.Constant(value=None)],
+                    func=ast.Name(id="__aim_gen_throw", ctx=ast.Load()),
+                    args=[
+                        ast.Name(id="self", ctx=ast.Load()),
+                        ast.Name(id="typ", ctx=ast.Load()),
+                        ast.Name(id="val", ctx=ast.Load()),
+                        ast.Name(id="tb", ctx=ast.Load()),
+                    ],
                     keywords=[],
                 )
             )
@@ -3852,6 +3869,7 @@ def _desugar_generators_tree(tree: ast.AST) -> tuple[ast.AST, bool]:
             prefix: list[ast.stmt] = []
             if changed[0]:
                 prefix.append(_aim_catch_throw_fn())
+                prefix.append(_aim_gen_throw_fn())
             if need_cm[0]:
                 prefix.append(_aim_gen_cm_class())
             if prefix:
@@ -5388,6 +5406,46 @@ def _desugar_kwonly_dict_tree(tree: ast.AST) -> tuple[ast.AST, bool]:
     return tree, True
 
 
+def _desugar_keyerror_ctor_tree(tree: ast.AST) -> tuple[ast.AST, bool]:
+    """exc = KeyError('a') → raise/except so leftover gets a RaiseKind hash.
+
+    leftover CALL of KeyError was SmartCall1(0) skip. MakeExc of that
+    CALL in a 4-method ELF SEGVd on throw(instance). RaiseKind hashes
+    already throw in that ELF. Isolation golds have no KeyError() ctor.
+    """
+
+    class T(ast.NodeTransformer):
+        def visit_Assign(self, node: ast.Assign):
+            node = self.generic_visit(node)
+            if (
+                isinstance(node.value, ast.Call)
+                and isinstance(node.value.func, ast.Name)
+                and node.value.func.id == "KeyError"
+            ):
+                return ast.Try(
+                    body=[ast.Raise(exc=node.value, cause=None)],
+                    handlers=[
+                        ast.ExceptHandler(
+                            type=ast.Name(id="Exception", ctx=ast.Load()),
+                            name="_aim_ke",
+                            body=[
+                                ast.Assign(
+                                    targets=node.targets,
+                                    value=ast.Name(id="_aim_ke", ctx=ast.Load()),
+                                )
+                            ],
+                        )
+                    ],
+                    orelse=[],
+                    finalbody=[],
+                )
+            return node
+
+    if not isinstance(tree, ast.Module):
+        return tree, False
+    return T().visit(tree), True
+
+
 def convert(src: str) -> str:
     # Empty / whitespace-only modules (e.g. empty __init__.py): aimacro.x
     # rejects zero-byte input. Emit a bare `pass` so transpile succeeds.
@@ -5410,6 +5468,7 @@ def convert(src: str) -> str:
         _late = None
     if _late is not None:
         _late, _ = _desugar_exec_const_tree(_late)
+        _late, _ = _desugar_keyerror_ctor_tree(_late)
         _late, _ = _desugar_generators_tree(_late)
         _late, _ = _desugar_class_ns_locals_tree(_late)
         _late, _ = _desugar_nested_class_cells_tree(_late)

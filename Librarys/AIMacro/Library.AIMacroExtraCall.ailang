@@ -1266,8 +1266,10 @@ Function.AIMacro.MethodShim {
         IfCondition EqualTo(StringCompare(method_name, "isdisjoint"), 0) ThenBlock: {
             ReturnValue(AIMacro.SetIsdisjoint(obj, a0))
         }
-        IfCondition EqualTo(OOP.MethodExists(obj, method_name), 1) ThenBlock: {
-            ReturnValue(OOP.MethodCall(obj, method_name, args))
+        IfCondition EqualTo(AIMacro.LooksLikeString(cls), 1) ThenBlock: {
+            IfCondition EqualTo(OOP.MethodExists(obj, method_name), 1) ThenBlock: {
+                ReturnValue(OOP.MethodCall(obj, method_name, args))
+            }
         }
         IfCondition EqualTo(StringCompare(method_name, "escape"), 0) ThenBlock: {
             qarg = 1
@@ -1823,8 +1825,13 @@ Function.AIMacro.MethodCall {
             ReturnValue(1)
         }
         func_addr = 0
-        IfCondition EqualTo(Hash.IsHash(obj), 1) ThenBlock: {
-            func_addr = OOP.MethodLookup(obj, method_name)
+        // RaiseKind hashes store integer ExcKind in __class__. MethodLookup
+        // Hash.Gets ClassRegistry with that integer: strlen(15).
+        IfCondition And(GreaterEqual(obj, 4000000000), EqualTo(Hash.IsHash(obj), 1)) ThenBlock: {
+            cls_ml = Hash.Get(obj, "__class__")
+            IfCondition EqualTo(AIMacro.LooksLikeString(cls_ml), 1) ThenBlock: {
+                func_addr = OOP.MethodLookup(obj, method_name)
+            }
         }
         IfCondition EqualTo(StringCompare(method_name, "substitute"), 0) ThenBlock: {
             a0s = 0
@@ -1966,6 +1973,26 @@ Function.AIMacro.ExcUnpackArg {
         out = AIMacro.EmptyList()
         Array.Push(out, arg)
         ReturnValue(out)
+    }
+}
+
+Function.AIMacro.ExcKindOf {
+    Input: typ: Address
+    Output: Integer
+    Body: {
+        IfCondition And(NotEqual(typ, 0), EqualTo(Types.CanDeref(typ), 1)) ThenBlock: {
+            IfCondition EqualTo(Hash.IsHash(typ), 1) ThenBlock: {
+                cls = Hash.Get(typ, "__class__")
+                IfCondition And(GreaterEqual(cls, 1), LessThan(cls, 41)) ThenBlock: {
+                    ReturnValue(cls)
+                }
+                ReturnValue(6)
+            }
+        }
+        IfCondition And(GreaterEqual(typ, 1), LessThan(typ, 41)) ThenBlock: {
+            ReturnValue(typ)
+        }
+        ReturnValue(6)
     }
 }
 
@@ -2130,7 +2157,14 @@ Function.AIMacro.SmartCall {
             }
             ReturnValue(Types.GetNone())
         }
-        IfCondition EqualTo(Hash.IsHash(fn), 1) ThenBlock: {
+        // ExcKind 1..40 before Hash.IsHash: leftover KeyError is 15.
+        // Hash.IsHash(15) is strlen(15). ELF code (~0x400000) is below
+        // heap hashes (4e9); Hash.IsHash(AddressOf) reads the prologue.
+        IfCondition And(GreaterEqual(fn, 1), LessThan(fn, 41)) ThenBlock: {
+            empty = AIMacro.EmptyList()
+            ReturnValue(AIMacro.MakeExc(fn, empty))
+        }
+        IfCondition And(GreaterEqual(fn, 4000000000), EqualTo(Hash.IsHash(fn), 1)) ThenBlock: {
             empty = AIMacro.EmptyList()
             ReturnValue(AIMacro.SmartCallN(fn, empty))
         }
@@ -2142,10 +2176,6 @@ Function.AIMacro.SmartCall {
             OOP.ClassDefine(fn, 0)
             empty = Array.Create(0)
             ReturnValue(OOP.ObjectNewInit(fn, empty))
-        }
-        IfCondition And(GreaterEqual(fn, 1), LessThan(fn, 41)) ThenBlock: {
-            empty = AIMacro.EmptyList()
-            ReturnValue(AIMacro.MakeExc(fn, empty))
         }
         // ELF function pointers start at 0x400000. Match captures dumped
         // to PyMod.f leave an integer; ClassExists/CallIndirect is strlen.
@@ -2178,7 +2208,10 @@ Function.AIMacro.SmartCall1 {
             }
             ReturnValue(Types.GetNone())
         }
-        IfCondition EqualTo(Hash.IsHash(fn), 1) ThenBlock: {
+        IfCondition And(GreaterEqual(fn, 1), LessThan(fn, 41)) ThenBlock: {
+            ReturnValue(AIMacro.MakeExc(fn, arg))
+        }
+        IfCondition And(GreaterEqual(fn, 4000000000), EqualTo(Hash.IsHash(fn), 1)) ThenBlock: {
             a = AIMacro.EmptyList()
             Array.Push(a, arg)
             ReturnValue(AIMacro.SmartCallN(fn, a))
@@ -2193,9 +2226,6 @@ Function.AIMacro.SmartCall1 {
             a = Array.Create(1)
             Array.Push(a, arg)
             ReturnValue(OOP.ObjectNewInit(fn, a))
-        }
-        IfCondition And(GreaterEqual(fn, 1), LessThan(fn, 41)) ThenBlock: {
-            ReturnValue(AIMacro.MakeExc(fn, arg))
         }
         IfCondition EqualTo(Array.IsArray(fn), 1) ThenBlock: {
             ReturnValue(Types.GetNone())
@@ -2260,7 +2290,10 @@ Function.AIMacro.SmartCallN {
         IfCondition EqualTo(args, 0) ThenBlock: {
             args = AIMacro.EmptyList()
         }
-        IfCondition EqualTo(Hash.IsHash(fn), 1) ThenBlock: {
+        IfCondition And(GreaterEqual(fn, 1), LessThan(fn, 41)) ThenBlock: {
+            ReturnValue(AIMacro.MakeExc(fn, args))
+        }
+        IfCondition And(GreaterEqual(fn, 4000000000), EqualTo(Hash.IsHash(fn), 1)) ThenBlock: {
             knd = Hash.Get(fn, "__kind__")
             IfCondition NotEqual(knd, 0) ThenBlock: {
                 IfCondition EqualTo(StringCompare(knd, "unpack_last"), 0) ThenBlock: {
@@ -2363,8 +2396,12 @@ Function.AIMacro.SmartCallN {
             }
             // OOP instance / plain dict: CallIndirect(hash) is execute-heap SEGV.
             // leftover TestTracing._trace PackedGet(0) is self; func(*args) SmartCall1.
-            IfCondition EqualTo(OOP.MethodExists(fn, "__call__"), 1) ThenBlock: {
-                ReturnValue(AIMacro.MethodCall(fn, "__call__", args))
+            // Exception hashes have integer __class__; MethodExists is strlen(kind).
+            cls_sc = Hash.Get(fn, "__class__")
+            IfCondition EqualTo(AIMacro.LooksLikeString(cls_sc), 1) ThenBlock: {
+                IfCondition EqualTo(OOP.MethodExists(fn, "__call__"), 1) ThenBlock: {
+                    ReturnValue(AIMacro.MethodCall(fn, "__call__", args))
+                }
             }
             ReturnValue(Types.GetNone())
         }
@@ -2447,9 +2484,6 @@ Function.AIMacro.SmartCallN {
         }
         IfCondition EqualTo(Array.IsArray(fn), 1) ThenBlock: {
             ReturnValue(Types.GetNone())
-        }
-        IfCondition And(GreaterEqual(fn, 1), LessThan(fn, 41)) ThenBlock: {
-            ReturnValue(AIMacro.MakeExc(fn, args))
         }
         IfCondition LessThan(fn, 4194304) ThenBlock: {
             ReturnValue(Types.GetNone())

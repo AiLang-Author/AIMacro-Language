@@ -2252,7 +2252,7 @@ Function.AIMacro.RaiseKind {
             Hash.Set(h, "__cause__", Types.GetNone())
             ctx = Types.GetNone()
             held = AIMacroExc.handled
-            IfCondition EqualTo(Hash.IsHash(held), 1) ThenBlock: {
+            IfCondition EqualTo(AIMacro.SafeIsHash(held), 1) ThenBlock: {
                 IfCondition NotEqual(held, h) ThenBlock: {
                     ctx = held
                 }
@@ -2260,7 +2260,7 @@ Function.AIMacro.RaiseKind {
             }
             ElseBlock: {
                 oldv = AIMacroExc.value
-                IfCondition And(EqualTo(AIMacroExc.pending, 1), EqualTo(Hash.IsHash(oldv), 1)) ThenBlock: {
+                IfCondition And(EqualTo(AIMacroExc.pending, 1), EqualTo(AIMacro.SafeIsHash(oldv), 1)) ThenBlock: {
                     IfCondition NotEqual(oldv, h) ThenBlock: {
                         ctx = oldv
                     }
@@ -2268,11 +2268,11 @@ Function.AIMacro.RaiseKind {
             }
             // catch_throw swallows then RaiseKind again; copy __context__
             // off the instance that already chained.
-            IfCondition EqualTo(Hash.IsHash(ctx), 0) ThenBlock: {
+            IfCondition EqualTo(AIMacro.SafeIsHash(ctx), 0) ThenBlock: {
                 prev = AIMacroExc.value
-                IfCondition And(EqualTo(Hash.IsHash(prev), 1), NotEqual(prev, h)) ThenBlock: {
+                IfCondition And(EqualTo(AIMacro.SafeIsHash(prev), 1), NotEqual(prev, h)) ThenBlock: {
                     prevctx = Hash.Get(prev, "__context__")
-                    IfCondition EqualTo(Hash.IsHash(prevctx), 1) ThenBlock: {
+                    IfCondition EqualTo(AIMacro.SafeIsHash(prevctx), 1) ThenBlock: {
                         IfCondition NotEqual(prevctx, h) ThenBlock: {
                             ctx = prevctx
                         }
@@ -2307,7 +2307,7 @@ Function.AIMacro.RaiseSyntax {
     Body: {
         AIMacro.RaiseKind(24, msg)
         ev = AIMacro.ExcValue()
-        IfCondition EqualTo(Hash.IsHash(ev), 1) ThenBlock: {
+        IfCondition EqualTo(AIMacro.SafeIsHash(ev), 1) ThenBlock: {
             Hash.Set(ev, "filename", filename)
             Hash.Set(ev, "lineno", lineno)
             Hash.Set(ev, "offset", offset)

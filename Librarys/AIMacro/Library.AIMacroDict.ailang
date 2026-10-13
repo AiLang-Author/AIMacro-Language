@@ -280,13 +280,13 @@ Function.DictGen_SmartGet {
                 ReturnValue(Array.Get(wlst, idx))
             }
             OOP.EnsureInit()
-            IfCondition EqualTo(OOP.MethodExists(container, "__getitem__"), 1) ThenBlock: {
-                gargs = Array.Create(1)
-                Array.Push(gargs, key)
-                ReturnValue(OOP.MethodCall(container, "__getitem__", gargs))
-            }
             ca0 = Hash.Get(container, "__class__")
-            IfCondition NotEqual(ca0, 0) ThenBlock: {
+            IfCondition EqualTo(AIMacro.LooksLikeString(ca0), 1) ThenBlock: {
+                IfCondition EqualTo(OOP.MethodExists(container, "__getitem__"), 1) ThenBlock: {
+                    gargs = Array.Create(1)
+                    Array.Push(gargs, key)
+                    ReturnValue(OOP.MethodCall(container, "__getitem__", gargs))
+                }
                 IfCondition EqualTo(StringCompare(ca0, "range"), 0) ThenBlock: {
                     rg0 = AIMacro.RangeGet(container, key)
                     ReturnValue(rg0)

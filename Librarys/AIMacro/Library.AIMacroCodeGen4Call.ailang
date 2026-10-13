@@ -1336,7 +1336,14 @@ Function.Gen_CallExpr {
             }
         }
         IfCondition And(EqualTo(mcmp_ci, 0), EqualTo(is_leftover_c, 1)) ThenBlock: {
-            IfCondition Or(EqualTo(Gen_IsParam(name), 1), Or(EqualTo(Gen_IsCallableVar(name), 1), EqualTo(Gen_IsModuleVar(name), 1))) ThenBlock: {
+            // leftover KeyError("a") was SmartCall1(0) skip. Isolation
+            // golds have no KeyError() ctor; SmartCall1(15, arg) MakeExc.
+            is_ke_ctor = 0
+            cmp_ke = StringCompare(name, "KeyError")
+            IfCondition EqualTo(cmp_ke, 0) ThenBlock: {
+                is_ke_ctor = 1
+            }
+            IfCondition Or(EqualTo(Gen_IsParam(name), 1), Or(EqualTo(Gen_IsCallableVar(name), 1), Or(EqualTo(Gen_IsModuleVar(name), 1), EqualTo(is_ke_ctor, 1)))) ThenBlock: {
                 IfCondition EqualTo(n, 0) ThenBlock: {
                     Gen_Emit("AIMacro.SmartCall(")
                     Gen_EmitIdent(name)
@@ -1634,6 +1641,9 @@ Function.Gen_MapBuiltin {
         // is not skipped. Isolation golds lack this ident.
         cmp = StringCompare(name, "__aim_exc_clear__")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.PyExcClear") }
+
+        cmp = StringCompare(name, "__aim_exc_kind__")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.ExcKindOf") }
 
         cmp = StringCompare(name, "__aim_exc_handled__")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.PyExcSetHandled") }

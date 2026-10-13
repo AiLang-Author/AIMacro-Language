@@ -1294,27 +1294,65 @@ Function.AIMacro.Iter {
             AIMacro.RaiseKind(5, "iter() arg is not iterable")
             ReturnValue(AIMacro.EmptyList())
         }
-        IfCondition EqualTo(Hash.IsHash(iterable), 1) ThenBlock: {
+        IfCondition EqualTo(AIMacro.SafeIsHash(iterable), 1) ThenBlock: {
             empty = AIMacro.EmptyList()
-            IfCondition EqualTo(OOP.MethodExists(iterable, "__iter__"), 1) ThenBlock: {
-                r = OOP.MethodCall(iterable, "__iter__", empty)
-                IfCondition EqualTo(AIMacro.ExcPending(), 1) ThenBlock: {
+            cls0 = Hash.Get(iterable, "__class__")
+            // RaiseKind hashes store integer ExcKind in __class__.
+            // MethodExists / StringCompare then strlen(kind).
+            IfCondition EqualTo(AIMacro.LooksLikeString(cls0), 1) ThenBlock: {
+                IfCondition EqualTo(OOP.MethodExists(iterable, "__iter__"), 1) ThenBlock: {
+                    r = OOP.MethodCall(iterable, "__iter__", empty)
+                    IfCondition EqualTo(AIMacro.ExcPending(), 1) ThenBlock: {
+                        ReturnValue(AIMacro.EmptyList())
+                    }
+                    IfCondition EqualTo(Array.IsArray(r), 1) ThenBlock: {
+                        ReturnValue(AIMacro.CopyArray(r))
+                    }
+                    IfCondition EqualTo(AIMacro.SafeIsHash(r), 1) ThenBlock: {
+                        IfCondition EqualTo(OOP.MethodExists(r, "__next__"), 1) ThenBlock: {
+                            ReturnValue(r)
+                        }
+                        ritems = Hash.Get(r, "__items__")
+                        IfCondition EqualTo(Array.IsArray(ritems), 1) ThenBlock: {
+                            ReturnValue(r)
+                        }
+                    }
+                    AIMacro.RaiseKind(5, "iter() returned non-iterator")
                     ReturnValue(AIMacro.EmptyList())
                 }
-                IfCondition EqualTo(Array.IsArray(r), 1) ThenBlock: {
-                    ReturnValue(AIMacro.CopyArray(r))
+                IfCondition EqualTo(OOP.MethodExists(iterable, "__getitem__"), 1) ThenBlock: {
+                    h = Hash.Create(8)
+                    Hash.Set(h, "__class__", "getitemiter")
+                    Hash.Set(h, "__src__", iterable)
+                    Hash.Set(h, "__pos__", 0)
+                    ReturnValue(h)
                 }
-                IfCondition EqualTo(Hash.IsHash(r), 1) ThenBlock: {
-                    IfCondition EqualTo(OOP.MethodExists(r, "__next__"), 1) ThenBlock: {
-                        ReturnValue(r)
+                is_enum = 0
+                walk = cls0
+                eh = 0
+                WhileLoop LessThan(eh, 16) {
+                    IfCondition EqualTo(walk, 0) ThenBlock: {
+                        BreakLoop
                     }
-                    ritems = Hash.Get(r, "__items__")
-                    IfCondition EqualTo(Array.IsArray(ritems), 1) ThenBlock: {
-                        ReturnValue(r)
+                    IfCondition EqualTo(StringCompare(walk, "enumerate"), 0) ThenBlock: {
+                        is_enum = 1
+                        BreakLoop
                     }
+                    walk = OOP.ClassGetParent(walk)
+                    eh = Add(eh, 1)
                 }
-                AIMacro.RaiseKind(5, "iter() returned non-iterator")
-                ReturnValue(AIMacro.EmptyList())
+                IfCondition EqualTo(is_enum, 1) ThenBlock: {
+                    src_e = AIMacro.ObjectGet(iterable, "iterable")
+                    st_e = AIMacro.ObjectGet(iterable, "start")
+                    ReturnValue(AIMacro.Iter(AIMacro.EnumerateFrom(src_e, AIMacro.UnboxIntZero(st_e))))
+                }
+                IfCondition NotEqual(cls0, 0) ThenBlock: {
+                    IfCondition EqualTo(StringCompare(cls0, "range"), 0) ThenBlock: {
+                        ReturnValue(AIMacro.RangeItems(iterable))
+                    }
+                    AIMacro.RaiseKind(5, "object is not iterable")
+                    ReturnValue(AIMacro.EmptyList())
+                }
             }
             items = Hash.Get(iterable, "__items__")
             IfCondition EqualTo(Array.IsArray(items), 1) ThenBlock: {
@@ -1323,40 +1361,6 @@ Function.AIMacro.Iter {
             wrapped_l = Hash.Get(iterable, "__list__")
             IfCondition EqualTo(Array.IsArray(wrapped_l), 1) ThenBlock: {
                 ReturnValue(AIMacro.CopyArray(wrapped_l))
-            }
-            IfCondition EqualTo(OOP.MethodExists(iterable, "__getitem__"), 1) ThenBlock: {
-                h = Hash.Create(8)
-                Hash.Set(h, "__class__", "getitemiter")
-                Hash.Set(h, "__src__", iterable)
-                Hash.Set(h, "__pos__", 0)
-                ReturnValue(h)
-            }
-            cls0 = Hash.Get(iterable, "__class__")
-            is_enum = 0
-            walk = cls0
-            eh = 0
-            WhileLoop LessThan(eh, 16) {
-                IfCondition EqualTo(walk, 0) ThenBlock: {
-                    BreakLoop
-                }
-                IfCondition EqualTo(StringCompare(walk, "enumerate"), 0) ThenBlock: {
-                    is_enum = 1
-                    BreakLoop
-                }
-                walk = OOP.ClassGetParent(walk)
-                eh = Add(eh, 1)
-            }
-            IfCondition EqualTo(is_enum, 1) ThenBlock: {
-                src_e = AIMacro.ObjectGet(iterable, "iterable")
-                st_e = AIMacro.ObjectGet(iterable, "start")
-                ReturnValue(AIMacro.Iter(AIMacro.EnumerateFrom(src_e, AIMacro.UnboxIntZero(st_e))))
-            }
-            IfCondition NotEqual(cls0, 0) ThenBlock: {
-                IfCondition EqualTo(StringCompare(cls0, "range"), 0) ThenBlock: {
-                    ReturnValue(AIMacro.RangeItems(iterable))
-                }
-                AIMacro.RaiseKind(5, "object is not iterable")
-                ReturnValue(AIMacro.EmptyList())
             }
             ReturnValue(AIMacro.CopyArray(Hash.Keys(iterable)))
         }
@@ -1399,41 +1403,43 @@ Function.AIMacro.Next {
             AIMacro.RaiseKind(9, "StopIteration")
             ReturnValue(Types.GetNone())
         }
-        IfCondition EqualTo(Hash.IsHash(iterator), 1) ThenBlock: {
+        IfCondition EqualTo(AIMacro.SafeIsHash(iterator), 1) ThenBlock: {
             cls = Hash.Get(iterator, "__class__")
-            IfCondition EqualTo(StringCompare(cls, "getitemiter"), 0) ThenBlock: {
-                src = Hash.Get(iterator, "__src__")
-                pos = Hash.Get(iterator, "__pos__")
-                IfCondition EqualTo(OOP.MethodExists(src, "__len__"), 1) ThenBlock: {
-                    empty = AIMacro.EmptyList()
-                    ln = OOP.MethodCall(src, "__len__", empty)
-                    ln = AIMacro.UnboxIntZero(ln)
-                    IfCondition GreaterEqual(pos, ln) ThenBlock: {
+            IfCondition EqualTo(AIMacro.LooksLikeString(cls), 1) ThenBlock: {
+                IfCondition EqualTo(StringCompare(cls, "getitemiter"), 0) ThenBlock: {
+                    src = Hash.Get(iterator, "__src__")
+                    pos = Hash.Get(iterator, "__pos__")
+                    IfCondition EqualTo(OOP.MethodExists(src, "__len__"), 1) ThenBlock: {
+                        empty = AIMacro.EmptyList()
+                        ln = OOP.MethodCall(src, "__len__", empty)
+                        ln = AIMacro.UnboxIntZero(ln)
+                        IfCondition GreaterEqual(pos, ln) ThenBlock: {
+                            AIMacro.RaiseKind(9, "StopIteration")
+                            ReturnValue(Types.GetNone())
+                        }
+                    }
+                    gargs = Array.Create(1)
+                    gidx = pos
+                    IfCondition EqualTo(gidx, 0) ThenBlock: {
+                        gidx = AIMacro.IntZero()
+                    }
+                    Array.Push(gargs, gidx)
+                    AIMacro.ExcEnter()
+                    item = OOP.MethodCall(src, "__getitem__", gargs)
+                    IfCondition EqualTo(AIMacro.ExcPending(), 1) ThenBlock: {
+                        AIMacro.ExcClear()
+                        AIMacro.ExcLeave()
                         AIMacro.RaiseKind(9, "StopIteration")
                         ReturnValue(Types.GetNone())
                     }
-                }
-                gargs = Array.Create(1)
-                gidx = pos
-                IfCondition EqualTo(gidx, 0) ThenBlock: {
-                    gidx = AIMacro.IntZero()
-                }
-                Array.Push(gargs, gidx)
-                AIMacro.ExcEnter()
-                item = OOP.MethodCall(src, "__getitem__", gargs)
-                IfCondition EqualTo(AIMacro.ExcPending(), 1) ThenBlock: {
-                    AIMacro.ExcClear()
                     AIMacro.ExcLeave()
-                    AIMacro.RaiseKind(9, "StopIteration")
-                    ReturnValue(Types.GetNone())
+                    Hash.Set(iterator, "__pos__", Add(pos, 1))
+                    ReturnValue(item)
                 }
-                AIMacro.ExcLeave()
-                Hash.Set(iterator, "__pos__", Add(pos, 1))
-                ReturnValue(item)
-            }
-            IfCondition EqualTo(OOP.MethodExists(iterator, "__next__"), 1) ThenBlock: {
-                empty = AIMacro.EmptyList()
-                ReturnValue(OOP.MethodCall(iterator, "__next__", empty))
+                IfCondition EqualTo(OOP.MethodExists(iterator, "__next__"), 1) ThenBlock: {
+                    empty = AIMacro.EmptyList()
+                    ReturnValue(OOP.MethodCall(iterator, "__next__", empty))
+                }
             }
             items = Hash.Get(iterator, "__items__")
             IfCondition EqualTo(Array.IsArray(items), 1) ThenBlock: {

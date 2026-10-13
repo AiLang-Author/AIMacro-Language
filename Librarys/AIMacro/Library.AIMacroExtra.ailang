@@ -650,13 +650,21 @@ Function.AIMacro.ObjectGet {
         }
         data = Hash.Get(obj, "__data__")
         v = 0
-        IfCondition Or(EqualTo(data, 0), EqualTo(Hash.IsHash(data), 0)) ThenBlock: {
-            v = Hash.Get(obj, field)
-        } ElseBlock: {
+        data_h = 0
+        IfCondition And(NotEqual(data, 0), EqualTo(Types.CanDeref(data), 1)) ThenBlock: {
+            data_h = Hash.IsHash(data)
+        }
+        IfCondition EqualTo(data_h, 1) ThenBlock: {
             v = Hash.Get(data, field)
+        } ElseBlock: {
+            v = Hash.Get(obj, field)
         }
         IfCondition NotEqual(v, 0) ThenBlock: {
-            IfCondition EqualTo(Hash.IsHash(v), 1) ThenBlock: {
+            v_h = 0
+            IfCondition EqualTo(Types.CanDeref(v), 1) ThenBlock: {
+                v_h = Hash.IsHash(v)
+            }
+            IfCondition EqualTo(v_h, 1) ThenBlock: {
                 IfCondition NotEqual(Hash.Get(v, "__property__"), 0) ThenBlock: {
                     fget = Hash.Get(v, "fget")
                     IfCondition NotEqual(fget, 0) ThenBlock: {

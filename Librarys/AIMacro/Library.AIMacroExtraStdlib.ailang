@@ -22,7 +22,7 @@ Function.AIMacro.PyType {
     Input: obj: Address
     Output: Address
     Body: {
-        IfCondition EqualTo(Hash.IsHash(obj), 1) ThenBlock: {
+        IfCondition EqualTo(AIMacro.SafeIsHash(obj), 1) ThenBlock: {
             cls = Hash.Get(obj, "__class__")
             IfCondition NotEqual(cls, 0) ThenBlock: {
                 ReturnValue(cls)
@@ -93,7 +93,7 @@ Function.AIMacro.PyExcSetHandled {
     Input: obj: Address
     Output: Integer
     Body: {
-        IfCondition EqualTo(Hash.IsHash(obj), 1) ThenBlock: {
+        IfCondition EqualTo(AIMacro.SafeIsHash(obj), 1) ThenBlock: {
             AIMacroExc.handled = obj
         }
         ReturnValue(0)
@@ -109,7 +109,7 @@ Function.AIMacro.WrapGenStop {
                 AIMacro.ExcClear()
                 AIMacro.RaiseKind(6, "generator raised StopIteration")
                 val = AIMacro.ExcValue()
-                IfCondition EqualTo(Hash.IsHash(val), 1) ThenBlock: {
+                IfCondition EqualTo(AIMacro.SafeIsHash(val), 1) ThenBlock: {
                     Hash.Set(val, "__cause__", old)
                     Hash.Set(val, "__context__", old)
                     Hash.Set(val, "__suppress_context__", AIMacro.TrueVal())
