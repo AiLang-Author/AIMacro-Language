@@ -1401,6 +1401,10 @@ Function.Gen_Try {
                         Gen_EmitIdentLhs(as_name)
                         Gen_Emit(" = AIMacro.ExcValue()\n")
                     }
+                    // Clear before the body. break/return otherwise skips
+                    // the trailing ExcClear and UnittestRun prints ERROR.
+                    Gen_EmitIndent()
+                    Gen_Emit("AIMacro.ExcClear()\n")
                     // Handler is not remaining try-body. Nested try leaves
                     // try_depth>0, and pending==0 guards would skip the body.
                     saved_td = Gen.try_depth
@@ -1441,6 +1445,8 @@ Function.Gen_Try {
                             Gen_EmitIdentLhs(as_name)
                             Gen_Emit(" = AIMacro.ExcValue()\n")
                         }
+                        Gen_EmitIndent()
+                        Gen_Emit("AIMacro.ExcClear()\n")
                         saved_td = Gen.try_depth
                         Gen.try_depth = 0
                         Gen_Body(ArrayGet(clause, 4))
@@ -1481,6 +1487,8 @@ Function.Gen_Try {
                                 Gen_EmitIdentLhs(as_name)
                                 Gen_Emit(" = AIMacro.ExcValue()\n")
                             }
+                            Gen_EmitIndent()
+                            Gen_Emit("AIMacro.ExcClear()\n")
                             saved_td = Gen.try_depth
                             Gen.try_depth = 0
                             Gen_Body(ArrayGet(clause, 4))
@@ -1538,6 +1546,63 @@ Function.Gen_Try {
     }
 }
 
+// with ... as self._g_cm: leftover ObjectGet reads __data__, native
+// self._g_cm = stores the ClassField. ObjectSet matches later loads.
+Function.Gen_EmitWithAsAssignOpen {
+    Input: name: Address
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(name, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(AST_Type(name), Node.IDENT) ThenBlock: {
+            name = ArrayGet(name, 3)
+        }
+        nlen = StringLength(name)
+        last = 0
+        found = 0
+        i = 0
+        WhileLoop LessThan(i, nlen) {
+            IfCondition EqualTo(GetByte(name, i), 46) ThenBlock: {
+                last = i
+                found = 1
+            }
+            i = Add(i, 1)
+        }
+        IfCondition EqualTo(found, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition LessThan(last, 1) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(Add(last, 1), nlen) ThenBlock: {
+            ReturnValue(0)
+        }
+        olen = last
+        obj = Allocate(Add(olen, 1))
+        i = 0
+        WhileLoop LessThan(i, olen) {
+            SetByte(obj, i, GetByte(name, i))
+            i = Add(i, 1)
+        }
+        SetByte(obj, olen, 0)
+        alen = Subtract(Subtract(nlen, last), 1)
+        attr = Allocate(Add(alen, 1))
+        i = 0
+        WhileLoop LessThan(i, alen) {
+            SetByte(attr, i, GetByte(name, Add(last, Add(i, 1))))
+            i = Add(i, 1)
+        }
+        SetByte(attr, alen, 0)
+        Gen_Emit("AIMacro.ObjectSet(")
+        Gen_Emit(obj)
+        Gen_Emit(", \"")
+        Gen_Emit(attr)
+        Gen_Emit("\", ")
+        ReturnValue(1)
+    }
+}
+
 Function.Gen_With {
     Input: node: Address
     Body: {
@@ -1563,11 +1628,18 @@ Function.Gen_With {
             IfCondition EqualTo(nn, 1) ThenBlock: {
                 nm = Array.Get(as_name, 0)
                 Gen_EmitIndent()
-                Gen_EmitIdentLhs(nm)
-                Gen_Emit(" = AIMacro.WithEnter(")
-                Gen_Emit(ctx)
-                Gen_Emit(")\n")
-                Gen_MarkEnclosingLocal(nm)
+                dotted = Gen_EmitWithAsAssignOpen(nm)
+                IfCondition EqualTo(dotted, 1) ThenBlock: {
+                    Gen_Emit("AIMacro.WithEnter(")
+                    Gen_Emit(ctx)
+                    Gen_Emit("))\n")
+                } ElseBlock: {
+                    Gen_EmitIdentLhs(nm)
+                    Gen_Emit(" = AIMacro.WithEnter(")
+                    Gen_Emit(ctx)
+                    Gen_Emit(")\n")
+                    Gen_MarkEnclosingLocal(nm)
+                }
             } ElseBlock: {
                 ent = StringConcat("_aim_we", wid)
                 Gen_EmitIndent()
@@ -1579,13 +1651,22 @@ Function.Gen_With {
                 WhileLoop LessThan(wi, nn) {
                     nm = Array.Get(as_name, wi)
                     Gen_EmitIndent()
-                    Gen_EmitIdentLhs(nm)
-                    Gen_Emit(" = AIMacro.IterGet(")
-                    Gen_Emit(ent)
-                    Gen_Emit(", ")
-                    Gen_EmitNumber(wi)
-                    Gen_Emit(")\n")
-                    Gen_MarkEnclosingLocal(nm)
+                    dotted = Gen_EmitWithAsAssignOpen(nm)
+                    IfCondition EqualTo(dotted, 1) ThenBlock: {
+                        Gen_Emit("AIMacro.IterGet(")
+                        Gen_Emit(ent)
+                        Gen_Emit(", ")
+                        Gen_EmitNumber(wi)
+                        Gen_Emit("))\n")
+                    } ElseBlock: {
+                        Gen_EmitIdentLhs(nm)
+                        Gen_Emit(" = AIMacro.IterGet(")
+                        Gen_Emit(ent)
+                        Gen_Emit(", ")
+                        Gen_EmitNumber(wi)
+                        Gen_Emit(")\n")
+                        Gen_MarkEnclosingLocal(nm)
+                    }
                     wi = Add(wi, 1)
                 }
             }
