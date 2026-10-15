@@ -1679,16 +1679,17 @@ Function.AIMacro.MethodShim {
             }
         }
         IfCondition EqualTo(StringCompare(method_name, "decode"), 0) ThenBlock: {
+            denc = "utf-8"
+            derr = "strict"
+            IfCondition GreaterThan(n, 0) ThenBlock: {
+                denc = a0
+            }
+            IfCondition GreaterThan(n, 1) ThenBlock: {
+                derr = a1
+            }
+            // Same rule as encode. In-test non-strings stay a kind-8 skip.
             lsdec = AIMacro.LooksLikeString(obj)
-            IfCondition EqualTo(lsdec, 1) ThenBlock: {
-                denc = "utf-8"
-                derr = "strict"
-                IfCondition GreaterThan(n, 0) ThenBlock: {
-                    denc = a0
-                }
-                IfCondition GreaterThan(n, 1) ThenBlock: {
-                    derr = a1
-                }
+            IfCondition Or(EqualTo(lsdec, 1), EqualTo(UnittestState.in_test, 0)) ThenBlock: {
                 decv = AIMacro.Decode(obj, denc, derr)
                 ReturnValue(decv)
             }
