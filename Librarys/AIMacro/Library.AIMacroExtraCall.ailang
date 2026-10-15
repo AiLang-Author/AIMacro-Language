@@ -13,6 +13,7 @@ LibraryImport.AIMacro.AIMacroString
 LibraryImport.AIMacro.AIMacroOperator
 LibraryImport.AIMacro.AIMacroUnittest
 LibraryImport.AIMacro.AIMacroFormat
+LibraryImport.AIMacro.AIMacroDict
 LibraryImport.AIMacro.AIMacroExtra
 
 
@@ -1661,16 +1662,18 @@ Function.AIMacro.MethodShim {
             ReturnValue(Types.GetNone())
         }
         IfCondition EqualTo(StringCompare(method_name, "encode"), 0) ThenBlock: {
+            enc = "utf-8"
+            err = "strict"
+            IfCondition GreaterThan(n, 0) ThenBlock: {
+                enc = a0
+            }
+            IfCondition GreaterThan(n, 1) ThenBlock: {
+                err = a1
+            }
+            // Strings always. Other receivers only at import time: an
+            // in-test miss must stay a kind-8 skip (JSONEncoder.encode).
             lsenc = AIMacro.LooksLikeString(obj)
-            IfCondition EqualTo(lsenc, 1) ThenBlock: {
-                enc = "utf-8"
-                err = "strict"
-                IfCondition GreaterThan(n, 0) ThenBlock: {
-                    enc = a0
-                }
-                IfCondition GreaterThan(n, 1) ThenBlock: {
-                    err = a1
-                }
+            IfCondition Or(EqualTo(lsenc, 1), EqualTo(UnittestState.in_test, 0)) ThenBlock: {
                 encv = AIMacro.Encode(obj, enc, err)
                 ReturnValue(encv)
             }
@@ -1691,30 +1694,45 @@ Function.AIMacro.MethodShim {
             }
         }
         IfCondition EqualTo(StringCompare(method_name, "setdefault"), 0) ThenBlock: {
-            IfCondition EqualTo(Hash.IsHash(obj), 1) ThenBlock: {
-                cls_sd = Hash.Get(obj, "__class__")
-                plain = 0
-                IfCondition EqualTo(cls_sd, 0) ThenBlock: {
-                    plain = 1
-                }
-                IfCondition EqualTo(AIMacro.LooksLikeString(cls_sd), 1) ThenBlock: {
-                    IfCondition EqualTo(StringCompare(cls_sd, "dict"), 0) ThenBlock: {
+            defv = Types.GetNone()
+            IfCondition GreaterThan(n, 1) ThenBlock: {
+                defv = a1
+            }
+            // Heap hashes only. Hash.IsHash on ExcKind 1..40 is strlen.
+            IfCondition GreaterEqual(obj, 4000000000) ThenBlock: {
+                IfCondition EqualTo(Hash.IsHash(obj), 1) ThenBlock: {
+                    cls_sd = Hash.Get(obj, "__class__")
+                    plain = 0
+                    IfCondition EqualTo(cls_sd, 0) ThenBlock: {
                         plain = 1
                     }
-                }
-                IfCondition EqualTo(plain, 1) ThenBlock: {
-                    hask = Hash.Contains(obj, a0)
-                    IfCondition EqualTo(hask, 1) ThenBlock: {
-                        got = Hash.Get(obj, a0)
-                        ReturnValue(got)
+                    IfCondition EqualTo(AIMacro.LooksLikeString(cls_sd), 1) ThenBlock: {
+                        IfCondition EqualTo(StringCompare(cls_sd, "dict"), 0) ThenBlock: {
+                            plain = 1
+                        }
                     }
-                    defv = Types.GetNone()
-                    IfCondition GreaterThan(n, 1) ThenBlock: {
-                        defv = a1
+                    // Plain dicts keep the raw key. DictKey would miss gdbm.
+                    IfCondition EqualTo(plain, 1) ThenBlock: {
+                        hask = Hash.Contains(obj, a0)
+                        IfCondition EqualTo(hask, 1) ThenBlock: {
+                            got = Hash.Get(obj, a0)
+                            ReturnValue(got)
+                        }
+                        Hash.Set(obj, a0, defv)
+                        ReturnValue(defv)
                     }
-                    Hash.Set(obj, a0, defv)
-                    ReturnValue(defv)
+                    // Other hashes: import-time only. In-test stays a skip.
+                    IfCondition EqualTo(UnittestState.in_test, 0) ThenBlock: {
+                        IfCondition Or(LessThan(cls_sd, 1), GreaterEqual(cls_sd, 41)) ThenBlock: {
+                            sdv = DictGen_SetDefault(obj, a0, defv)
+                            ReturnValue(sdv)
+                        }
+                        ReturnValue(defv)
+                    }
                 }
+            }
+            IfCondition EqualTo(UnittestState.in_test, 0) ThenBlock: {
+                ReturnValue(defv)
             }
         }
         IfCondition EqualTo(StringCompare(method_name, "Lock"), 0) ThenBlock: {
