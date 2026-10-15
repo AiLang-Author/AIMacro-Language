@@ -1760,6 +1760,16 @@ Function.Gen_EmitIdent {
         // Skip flatten temps (_aim_t*) so they stay AILANG locals.
         IfCondition And(EqualTo(OOPGen.in_classattrs, 1), NotEqual(OOPGen.current_class, 0)) ThenBlock: {
             IfCondition EqualTo(Gen_NameStartsWith(name, "_aim_t"), 0) ThenBlock: {
+                // __lt__ = __eq__ loads the method, not a local.
+                hit_cm = Gen_NameInArray(name, OOPGen.class_method_names)
+                IfCondition EqualTo(hit_cm, 1) ThenBlock: {
+                    Gen_Emit("AddressOf(")
+                    Gen_Emit(OOPGen.current_class)
+                    Gen_Emit("_")
+                    Gen_Emit(name)
+                    Gen_Emit(")")
+                    ReturnValue(0)
+                }
                 hit_ca = Gen_NameInArray(name, OOPGen.classattr_assigned)
                 IfCondition EqualTo(hit_ca, 1) ThenBlock: {
                     run_ca = OOPGen_RunClassName(OOPGen.current_class)

@@ -34,6 +34,7 @@ FixedPool.OOPGen {
     "in_classattrs": Initialize=0
     "classattrs_fns": Initialize=0
     "classattr_assigned": Initialize=0
+    "class_method_names": Initialize=0
 }
 
 
@@ -77,6 +78,7 @@ Function.OOPGen_Init {
         OOPGen.class_renames_to = Array.Create(32)
         OOPGen.classattrs_fns = Array.Create(32)
         OOPGen.classattr_assigned = Array.Create(16)
+        OOPGen.class_method_names = Array.Create(16)
         OOPGen.temp_counter = 0
         OOPGen.has_classes = 0
         OOPGen.in_classattrs = 0
@@ -160,6 +162,10 @@ Function.OOPGen_Free {
             Array.Destroy(OOPGen.classattr_assigned)
             OOPGen.classattr_assigned = 0
         }
+        IfCondition NotEqual(OOPGen.class_method_names, 0) ThenBlock: {
+            Array.Destroy(OOPGen.class_method_names)
+            OOPGen.class_method_names = 0
+        }
         OOPGen.initialized = 0
     }
 }
@@ -170,6 +176,44 @@ Function.OOPGen_ClassattrAssignedClear {
             OOPGen.classattr_assigned = Array.Create(16)
         }
         Array.Clear(OOPGen.classattr_assigned)
+        IfCondition EqualTo(OOPGen.class_method_names, 0) ThenBlock: {
+            OOPGen.class_method_names = Array.Create(16)
+        }
+        Array.Clear(OOPGen.class_method_names)
+    }
+}
+
+Function.OOPGen_MarkClassMethod {
+    Input: name: Address
+    Body: {
+        IfCondition EqualTo(name, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(OOPGen.class_method_names, 0) ThenBlock: {
+            OOPGen.class_method_names = Array.Create(16)
+        }
+        dup = Gen_NameInArray(name, OOPGen.class_method_names)
+        IfCondition EqualTo(dup, 0) ThenBlock: {
+            Array.Push(OOPGen.class_method_names, name)
+        }
+    }
+}
+
+Function.OOPGen_MarkClassMethods {
+    Input: body: Address
+    Body: {
+        IfCondition EqualTo(body, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        mi = 0
+        mn = Array.Size(body)
+        WhileLoop LessThan(mi, mn) {
+            mitem = Array.Get(body, mi)
+            IfCondition EqualTo(AST_Type(mitem), Node.METHOD_DEF) ThenBlock: {
+                OOPGen_MarkClassMethod(AST_GetField(mitem, "name"))
+            }
+            mi = Add(mi, 1)
+        }
     }
 }
 
@@ -798,6 +842,7 @@ Function.OOPGen_ClassDef {
             Gen.temp_counter = 0
             OOPGen.in_classattrs = 1
             OOPGen_ClassattrAssignedClear()
+            OOPGen_MarkClassMethods(body)
             ni = 0
             nsz = Array.Size(nest_from)
             WhileLoop LessThan(ni, nsz) {

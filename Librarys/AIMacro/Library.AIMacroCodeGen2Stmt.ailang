@@ -84,6 +84,7 @@ Function.Gen_Node {
                     OOPGen.in_classattrs = 1
                     OOPGen.current_class = uname
                     OOPGen_ClassattrAssignedClear()
+                    OOPGen_MarkClassMethods(cbody)
                     WhileLoop LessThan(cbi, cbn) {
                         citem = Array.Get(cbody, cbi)
                         IfCondition EqualTo(AST_Type(citem), Node.ASSIGNMENT) ThenBlock: {
