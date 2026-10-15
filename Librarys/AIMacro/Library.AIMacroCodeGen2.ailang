@@ -563,12 +563,12 @@ Function.Gen_MarkImportModuleVars {
             n = Array.Size(modules)
             i = 0
             WhileLoop LessThan(i, n) {
-                Gen_MarkModuleVar(Array.Get(modules, i))
+                Gen_MarkModuleVar(Gen_ImportBoundName(Array.Get(modules, i)))
                 i = Add(i, 1)
             }
             ReturnValue(0)
         }
-        Gen_MarkModuleVar(ArrayGet(node, 3))
+        Gen_MarkModuleVar(Gen_ImportBoundName(ArrayGet(node, 3)))
     }
 }
 
@@ -999,6 +999,7 @@ Function.Gen_MarkTryAssignVars {
 // =============================================================================
 Function.Gen_BindShimModule {
     Input: module_name: Address
+    Input: logical_name: Address
     Body: {
         OOPGen_Init()
         line = StringConcat("    PyMod.", module_name)
@@ -1009,20 +1010,20 @@ Function.Gen_BindShimModule {
         Array.Push(OOPGen.class_init_code, line)
         line = StringConcat("    Hash.Set(PyMod.", module_name)
         line = StringConcat(line, ", \"__name__\", \"")
-        line = StringConcat(line, module_name)
+        line = StringConcat(line, logical_name)
         line = StringConcat(line, "\")\n")
         Array.Push(OOPGen.class_init_code, line)
-        IfCondition EqualTo(StringCompare(module_name, "operator"), 0) ThenBlock: {
+        IfCondition EqualTo(StringCompare(logical_name, "operator"), 0) ThenBlock: {
             line = StringConcat("    AIMacro.FillOperatorModule(PyMod.", module_name)
             line = StringConcat(line, ")\n")
             Array.Push(OOPGen.class_init_code, line)
         }
-        IfCondition EqualTo(StringCompare(module_name, "copyreg"), 0) ThenBlock: {
+        IfCondition EqualTo(StringCompare(logical_name, "copyreg"), 0) ThenBlock: {
             line = StringConcat("    AIMacro.FillCopyRegModule(PyMod.", module_name)
             line = StringConcat(line, ")\n")
             Array.Push(OOPGen.class_init_code, line)
         }
-        IfCondition EqualTo(StringCompare(module_name, "collections"), 0) ThenBlock: {
+        IfCondition EqualTo(StringCompare(logical_name, "collections"), 0) ThenBlock: {
             line = StringConcat("    AIMacro.FillCollectionsModule(PyMod.", module_name)
             line = StringConcat(line, ")\n")
             Array.Push(OOPGen.class_init_code, line)
@@ -1031,77 +1032,222 @@ Function.Gen_BindShimModule {
     }
 }
 
+Function.Gen_CopyBytes {
+    Input: src: Address
+    Input: start: Integer
+    Input: n: Integer
+    Output: Address
+    Body: {
+        out = Allocate(Add(n, 1))
+        i = 0
+        WhileLoop LessThan(i, n) {
+            SetByte(out, i, GetByte(src, Add(start, i)))
+            i = Add(i, 1)
+        }
+        SetByte(out, n, 0)
+        ReturnValue(out)
+    }
+}
+
+Function.Gen_SpecAt {
+    Input: spec: Address
+    Output: Integer
+    Body: {
+        nlen = StringLength(spec)
+        i = 0
+        WhileLoop LessThan(i, nlen) {
+            IfCondition EqualTo(GetByte(spec, i), 64) ThenBlock: {
+                ReturnValue(i)
+            }
+            i = Add(i, 1)
+        }
+        ReturnValue(Subtract(0, 1))
+    }
+}
+
+Function.Gen_ImportBoundName {
+    Input: spec: Address
+    Output: Address
+    Body: {
+        IfCondition EqualTo(spec, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        at = Gen_SpecAt(spec)
+        IfCondition GreaterEqual(at, 0) ThenBlock: {
+            ReturnValue(Gen_CopyBytes(spec, 0, at))
+        }
+        nlen = StringLength(spec)
+        i = 0
+        WhileLoop LessThan(i, nlen) {
+            IfCondition EqualTo(GetByte(spec, i), 46) ThenBlock: {
+                ReturnValue(Gen_CopyBytes(spec, 0, i))
+            }
+            i = Add(i, 1)
+        }
+        ReturnValue(spec)
+    }
+}
+
+Function.Gen_ImportPath {
+    Input: spec: Address
+    Output: Address
+    Body: {
+        IfCondition EqualTo(spec, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        at = Gen_SpecAt(spec)
+        IfCondition GreaterEqual(at, 0) ThenBlock: {
+            nlen = StringLength(spec)
+            ReturnValue(Gen_CopyBytes(spec, Add(at, 1), Subtract(nlen, Add(at, 1))))
+        }
+        ReturnValue(spec)
+    }
+}
+
+Function.Gen_ImportRoot {
+    Input: path: Address
+    Output: Address
+    Body: {
+        IfCondition EqualTo(path, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        nlen = StringLength(path)
+        i = 0
+        WhileLoop LessThan(i, nlen) {
+            IfCondition EqualTo(GetByte(path, i), 46) ThenBlock: {
+                ReturnValue(Gen_CopyBytes(path, 0, i))
+            }
+            i = Add(i, 1)
+        }
+        ReturnValue(path)
+    }
+}
+
+Function.Gen_EmitModStmt {
+    Input: stmt: Address
+    Input: nested: Integer
+    Body: {
+        IfCondition EqualTo(nested, 1) ThenBlock: {
+            Gen_EmitIndent()
+            Gen_Emit(stmt)
+            Gen_Emit("\n")
+            ReturnValue(0)
+        }
+        OOPGen_Init()
+        line = StringConcat("    ", stmt)
+        line = StringConcat(line, "\n")
+        Array.Push(OOPGen.class_init_code, line)
+        OOPGen.has_classes = 1
+        ReturnValue(0)
+    }
+}
+
+// spec is "mod", "pkg.sub", or "alias@pkg.sub".
+// Known single shim stays Gen_BindShimModule. Anything else is a stub hash.
+Function.Gen_EmitOneImport {
+    Input: spec: Address
+    Body: {
+        IfCondition EqualTo(spec, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(GetByte(spec, 0), 46) ThenBlock: {
+            ReturnValue(0)
+        }
+        bound = Gen_ImportBoundName(spec)
+        path = Gen_ImportPath(spec)
+        alias = 0
+        IfCondition GreaterEqual(Gen_SpecAt(spec), 0) ThenBlock: {
+            alias = 1
+        }
+        Gen_MarkModuleVar(bound)
+        nested = 0
+        IfCondition GreaterThan(Gen.indent, 0) ThenBlock: {
+            nested = 1
+        }
+        root = Gen_ImportRoot(path)
+        shim = Gen_IsShimModule(root)
+        IfCondition And(EqualTo(alias, 0), And(EqualTo(shim, 1), EqualTo(StringCompare(path, root), 0))) ThenBlock: {
+            IfCondition EqualTo(nested, 1) ThenBlock: {
+                stmt = StringConcat("PyMod.", bound)
+                stmt = StringConcat(stmt, " = Types.GetNone()")
+                Gen_EmitModStmt(stmt, 1)
+            } ElseBlock: {
+                Gen_BindShimModule(bound, path)
+            }
+        } ElseBlock: {
+            IfCondition EqualTo(alias, 1) ThenBlock: {
+                stmt = StringConcat("PyMod.", bound)
+                stmt = StringConcat(stmt, " = AIMacro.StubModule(\"")
+                stmt = StringConcat(stmt, path)
+                stmt = StringConcat(stmt, "\")")
+                Gen_EmitModStmt(stmt, nested)
+            } ElseBlock: {
+                IfCondition And(EqualTo(shim, 1), EqualTo(nested, 0)) ThenBlock: {
+                    Gen_BindShimModule(root, root)
+                } ElseBlock: {
+                    stmt = StringConcat("PyMod.", bound)
+                    stmt = StringConcat(stmt, " = AIMacro.StubModule(\"")
+                    stmt = StringConcat(stmt, root)
+                    stmt = StringConcat(stmt, "\")")
+                    Gen_EmitModStmt(stmt, nested)
+                }
+                nlen = StringLength(path)
+                rlen = StringLength(root)
+                pos = Add(rlen, 1)
+                parent = StringConcat("PyMod.", bound)
+                acc = root
+                WhileLoop LessThan(pos, nlen) {
+                    end = pos
+                    WhileLoop LessThan(end, nlen) {
+                        IfCondition EqualTo(GetByte(path, end), 46) ThenBlock: {
+                            BreakLoop
+                        }
+                        end = Add(end, 1)
+                    }
+                    comp = Gen_CopyBytes(path, pos, Subtract(end, pos))
+                    acc = StringConcat(acc, ".")
+                    acc = StringConcat(acc, comp)
+                    stmt = StringConcat("_aim_mod = AIMacro.StubSet(", parent)
+                    stmt = StringConcat(stmt, ", \"")
+                    stmt = StringConcat(stmt, comp)
+                    stmt = StringConcat(stmt, "\", \"")
+                    stmt = StringConcat(stmt, acc)
+                    stmt = StringConcat(stmt, "\")")
+                    Gen_EmitModStmt(stmt, nested)
+                    parent = "_aim_mod"
+                    IfCondition LessThan(end, nlen) ThenBlock: {
+                        pos = Add(end, 1)
+                    } ElseBlock: {
+                        pos = nlen
+                    }
+                }
+            }
+        }
+        IfCondition And(EqualTo(nested, 1), EqualTo(GetByte(bound, 0), 95)) ThenBlock: {
+            Gen_EmitIndent()
+            Gen_Emit("AIMacro.RaiseKind(20, \"No module named ")
+            Gen_Emit(bound)
+            Gen_Emit("\")\n")
+        }
+        ReturnValue(0)
+    }
+}
+
 Function.Gen_Import {
     Input: node: Address
     Body: {
-        // node structure: [Node.IMPORT, line, col, module_name, modules?]
         modules = ArrayGet(node, 4)
         IfCondition NotEqual(modules, 0) ThenBlock: {
             n = Array.Size(modules)
             i = 0
             WhileLoop LessThan(i, n) {
-                module_name = Array.Get(modules, i)
-                IfCondition And(NotEqual(module_name, 0), EqualTo(GetByte(module_name, 0), 46)) ThenBlock: {
-                    i = Add(i, 1)
-                    ContinueLoop
-                }
-                // Nested import: stub PyMod.mod (no Import.X mid-body)
-                IfCondition GreaterThan(Gen.indent, 0) ThenBlock: {
-                    Gen_MarkModuleVar(module_name)
-                    Gen_EmitIndent()
-                    Gen_Emit("PyMod.")
-                    Gen_Emit(module_name)
-                    Gen_Emit(" = Types.GetNone()\n")
-                    IfCondition EqualTo(GetByte(module_name, 0), 95) ThenBlock: {
-                        Gen_EmitIndent()
-                        Gen_Emit("AIMacro.RaiseKind(20, \"No module named ")
-                        Gen_Emit(module_name)
-                        Gen_Emit("\")\n")
-                    }
-                    i = Add(i, 1)
-                    ContinueLoop
-                }
-                IfCondition EqualTo(Gen_IsShimModule(module_name), 1) ThenBlock: {
-                    Gen_MarkModuleVar(module_name)
-                    Gen_BindShimModule(module_name)
-                    i = Add(i, 1)
-                    ContinueLoop
-                }
-                Gen_MarkModuleVar(module_name)
-                Gen_Emit("Import.")
-                Gen_Emit(module_name)
-                Gen_Emit("\n")
+                Gen_EmitOneImport(Array.Get(modules, i))
                 i = Add(i, 1)
             }
             ReturnValue(0)
         }
-        module_name = ArrayGet(node, 3)
-        IfCondition And(NotEqual(module_name, 0), EqualTo(GetByte(module_name, 0), 46)) ThenBlock: {
-            ReturnValue(0)
-        }
-        IfCondition GreaterThan(Gen.indent, 0) ThenBlock: {
-            Gen_MarkModuleVar(module_name)
-            Gen_EmitIndent()
-            Gen_Emit("PyMod.")
-            Gen_Emit(module_name)
-            Gen_Emit(" = Types.GetNone()\n")
-            IfCondition EqualTo(GetByte(module_name, 0), 95) ThenBlock: {
-                Gen_EmitIndent()
-                Gen_Emit("AIMacro.RaiseKind(20, \"No module named ")
-                Gen_Emit(module_name)
-                Gen_Emit("\")\n")
-            }
-            ReturnValue(0)
-        }
-        IfCondition EqualTo(Gen_IsShimModule(module_name), 1) ThenBlock: {
-            Gen_MarkModuleVar(module_name)
-            Gen_BindShimModule(module_name)
-            ReturnValue(0)
-        }
-        Gen_MarkModuleVar(module_name)
-        Gen_Emit("Import.")
-        Gen_Emit(module_name)
-        Gen_Emit("\n")
+        Gen_EmitOneImport(ArrayGet(node, 3))
+        ReturnValue(0)
     }
 }
 
@@ -1265,8 +1411,8 @@ Function.Gen_FromImport {
         IfCondition And(NotEqual(module_name, 0), EqualTo(GetByte(module_name, 0), 46)) ThenBlock: {
             ReturnValue(0)
         }
-        Gen_Emit("Import.")
-        Gen_Emit(module_name)
-        Gen_Emit("\n")
+        // Unknown from-import. Symbols are already PyMod slots.
+        // Import.mod would be an AILANG library load.
+        ReturnValue(0)
     }
 }

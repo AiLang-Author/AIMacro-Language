@@ -1131,6 +1131,32 @@ Function.AIMacro.WithExit {
     }
 }
 
+// Unknown Python import. A hash with __class__ "module", not Import.name.
+Function.AIMacro.StubModule {
+    Input: name: Address
+    Output: Address
+    Body: {
+        h = Hash.Create(8)
+        Hash.Set(h, "__class__", "module")
+        Hash.Set(h, "__name__", name)
+        ReturnValue(h)
+    }
+}
+
+Function.AIMacro.StubSet {
+    Input: parent: Address
+    Input: attr: Address
+    Input: name: Address
+    Output: Address
+    Body: {
+        h = AIMacro.StubModule(name)
+        IfCondition EqualTo(Hash.IsHash(parent), 1) ThenBlock: {
+            Hash.Set(parent, attr, h)
+        }
+        ReturnValue(h)
+    }
+}
+
 Function.AIMacro.KwArgError {
     Output: Address
     Body: {

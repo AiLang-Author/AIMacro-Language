@@ -169,6 +169,40 @@ Function.AST_Type {
 // =============================================================================
 // IMPORT STATEMENT PARSING
 // =============================================================================
+// import a.b as c → "c@a.b". import a.b → "a.b". import a → "a".
+Function.Parse_ImportSpec {
+    Output: Address
+    Body: {
+        IfCondition NotEqual(Parse_Type(), Token.IDENTIFIER) ThenBlock: {
+            ReturnValue(0)
+        }
+        base = Parse_CopyStr(Parse_Val())
+        Parse_Advance()
+        full = base
+        WhileLoop EqualTo(Parse_Match(Token.DOT), 1) {
+            Parse_Advance()
+            IfCondition EqualTo(Parse_Match(Token.IDENTIFIER), 1) ThenBlock: {
+                full = StringConcat(full, ".")
+                full = StringConcat(full, Parse_CopyStr(Parse_Val()))
+                Parse_Advance()
+            } ElseBlock: {
+                BreakLoop
+            }
+        }
+        IfCondition EqualTo(Parse_Match(Token.AS), 1) ThenBlock: {
+            Parse_Advance()
+            IfCondition EqualTo(Parse_Match(Token.IDENTIFIER), 1) ThenBlock: {
+                alias = Parse_CopyStr(Parse_Val())
+                Parse_Advance()
+                spec = StringConcat(alias, "@")
+                spec = StringConcat(spec, full)
+                ReturnValue(spec)
+            }
+        }
+        ReturnValue(full)
+    }
+}
+
 Function.Parse_Import {
     Output: Address
     Body: {
@@ -193,24 +227,7 @@ Function.Parse_Import {
             ReturnValue(0)
         }
         
-        module_ptr = Parse_Val()
-        module_name = Parse_CopyStr(module_ptr)
-        Parse_Advance()
-        WhileLoop EqualTo(Parse_Match(Token.DOT), 1) {
-            Parse_Advance()
-            IfCondition EqualTo(Parse_Match(Token.IDENTIFIER), 1) ThenBlock: {
-                Parse_Advance()
-            }
-        }
-        IfCondition EqualTo(Parse_Match(Token.AS), 1) ThenBlock: {
-            Parse_Advance()
-            IfCondition EqualTo(Parse_Match(Token.IDENTIFIER), 1) ThenBlock: {
-                // Bind the alias name (import builtins as bltns → bltns)
-                alias_ptr = Parse_Val()
-                module_name = Parse_CopyStr(alias_ptr)
-                Parse_Advance()
-            }
-        }
+        module_name = Parse_ImportSpec()
 
         // Multi-import: import a, b  /  import a as x, b as y
         modules = Array.Create(4)
@@ -230,23 +247,7 @@ Function.Parse_Import {
                 Array.Destroy(modules)
                 ReturnValue(0)
             }
-            module_ptr = Parse_Val()
-            next_name = Parse_CopyStr(module_ptr)
-            Parse_Advance()
-            WhileLoop EqualTo(Parse_Match(Token.DOT), 1) {
-                Parse_Advance()
-                IfCondition EqualTo(Parse_Match(Token.IDENTIFIER), 1) ThenBlock: {
-                    Parse_Advance()
-                }
-            }
-            IfCondition EqualTo(Parse_Match(Token.AS), 1) ThenBlock: {
-                Parse_Advance()
-                IfCondition EqualTo(Parse_Match(Token.IDENTIFIER), 1) ThenBlock: {
-                    alias_ptr = Parse_Val()
-                    next_name = Parse_CopyStr(alias_ptr)
-                    Parse_Advance()
-                }
-            }
+            next_name = Parse_ImportSpec()
             Array.Push(modules, next_name)
             Parse_SkipNoise()
         }
