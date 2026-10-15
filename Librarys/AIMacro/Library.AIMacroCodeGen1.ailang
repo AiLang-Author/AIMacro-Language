@@ -2561,10 +2561,15 @@ Function.Gen_EmitIdent {
         }
         // classattrs is a file-scope Function with no Inputs. Unknown IDENT
         // there (enclosing param, import sentinel) leftover GetNone. FlattenExpr
-        // temps (_aim_t*) are locals in this Body — emit them. Do not leftover
-        // ordinary locals in method/function bodies.
+        // temps (_aim_t*) and instance temps (__oop_inst_N from A().foo) are
+        // locals in this Body — emit them. Do not leftover ordinary locals
+        // in method/function bodies.
         IfCondition EqualTo(OOPGen.in_classattrs, 1) ThenBlock: {
-            IfCondition EqualTo(Gen_NameStartsWith(name, "_aim_t"), 0) ThenBlock: {
+            keep_ca = Gen_NameStartsWith(name, "_aim_t")
+            IfCondition EqualTo(keep_ca, 0) ThenBlock: {
+                keep_ca = Gen_NameStartsWith(name, "__oop_")
+            }
+            IfCondition EqualTo(keep_ca, 0) ThenBlock: {
                 Gen_Emit("Types.GetNone()")
                 ReturnValue(0)
             }
