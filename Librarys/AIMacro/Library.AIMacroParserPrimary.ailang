@@ -676,7 +676,7 @@ Function.Parse_CompForBody {
             Parse_Advance()
             cond = Parse_Or()
         }
-        node = AST_Create(Node.LIST_COMP, 7)
+        node = AST_Create(Node.LIST_COMP, 8)
         ArraySet(node, 1, line)
         ArraySet(node, 2, col)
         ArraySet(node, 3, first)
@@ -687,12 +687,14 @@ Function.Parse_CompForBody {
         extras = Array.Create(4)
         ArraySet(node, 8, extras)
         ArraySet(node, 9, rest)
+        // 0 = list/set/genexp. Dictcomp stores the value expr here.
+        ArraySet(node, 10, 0)
         ReturnValue(node)
     }
 }
 
-// Extra for/if after the first for-body. Keep extra for-vars on slot 8 so
-// codegen can declare them (AST still emits only the first for loop).
+// Extra for/if after the first for. Slot 8 holds each inner LIST_COMP
+// so codegen can emit that loop. An if between fors is still dropped.
 Function.Parse_CompIterExtra {
     Input: node: Address
     Output: Integer
@@ -712,14 +714,7 @@ Function.Parse_CompIterExtra {
                 Parse_Advance()
                 Parse_SkipNoise()
                 extra_node = Parse_CompForBody(elt, line, col)
-                v1 = ArrayGet(extra_node, 4)
-                IfCondition NotEqual(v1, 0) ThenBlock: {
-                    Array.Push(extras, v1)
-                }
-                v2 = ArrayGet(extra_node, 7)
-                IfCondition NotEqual(v2, 0) ThenBlock: {
-                    Array.Push(extras, v2)
-                }
+                Array.Push(extras, extra_node)
             } ElseBlock: {
                 Parse_Advance()
                 Parse_SkipNoise()
@@ -980,6 +975,7 @@ Function.Parse_Dict {
                 Parse_SkipCompAsync()
                 IfCondition EqualTo(Parse_Match(Token.FOR), 1) ThenBlock: {
                     node = Parse_CompAfter(first, Token.RBRACE, line, col)
+                    ArraySet(node, 10, val)
                     ReturnValue(node)
                 }
                 Array.Push(pairs, first)

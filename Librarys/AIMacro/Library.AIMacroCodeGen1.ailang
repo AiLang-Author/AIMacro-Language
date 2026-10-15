@@ -4555,6 +4555,20 @@ Function.Gen_WalkUnbound {
             Gen_WalkUnbound(ArrayGet(node, 3), assigned, unbound, extra_skip)
             Gen_WalkUnbound(ArrayGet(node, 5), assigned, unbound, extra_skip)
             Gen_WalkUnbound(ArrayGet(node, 6), assigned, unbound, extra_skip)
+            Gen_WalkUnbound(ArrayGet(node, 10), assigned, unbound, extra_skip)
+            comp_ex = ArrayGet(node, 8)
+            IfCondition NotEqual(comp_ex, 0) ThenBlock: {
+                comp_en = Array.Size(comp_ex)
+                comp_ei = 0
+                WhileLoop LessThan(comp_ei, comp_en) {
+                    comp_nd = Array.Get(comp_ex, comp_ei)
+                    IfCondition NotEqual(comp_nd, 0) ThenBlock: {
+                        Gen_WalkUnbound(ArrayGet(comp_nd, 5), assigned, unbound, extra_skip)
+                        Gen_WalkUnbound(ArrayGet(comp_nd, 6), assigned, unbound, extra_skip)
+                    }
+                    comp_ei = Add(comp_ei, 1)
+                }
+            }
             ReturnValue(0)
         }
         IfCondition EqualTo(t, Node.IDENT) ThenBlock: {

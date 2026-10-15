@@ -716,6 +716,63 @@ Function.Gen_ExtractAllCalls {
 // This walks the expression tree depth-first, extracts calls to temps,
 // and returns an identifier node (or literal) that can be used inline
 // =============================================================================
+// Bind one comp for-target from iter{suf}[iteri{suf}].
+Function.Gen_EmitCompBind {
+    Input: node: Address
+    Input: suf: Address
+    Body: {
+        var_name = ArrayGet(node, 4)
+        var2 = ArrayGet(node, 7)
+        IfCondition NotEqual(var2, 0) ThenBlock: {
+            Gen_EmitIndent()
+            Gen_Emit("__pair")
+            Gen_Emit(suf)
+            Gen_Emit(" = AIMacro.IterGet(iter")
+            Gen_Emit(suf)
+            Gen_Emit(", iteri")
+            Gen_Emit(suf)
+            Gen_Emit(")\n")
+            Gen_EmitIndent()
+            Gen_EmitIdentLhs(var_name)
+            Gen_Emit(" = DictGen_SmartGet(__pair")
+            Gen_Emit(suf)
+            Gen_Emit(", 0)\n")
+            Gen_EmitIndent()
+            Gen_EmitIdentLhs(var2)
+            Gen_Emit(" = DictGen_SmartGet(__pair")
+            Gen_Emit(suf)
+            Gen_Emit(", 1)\n")
+            rest = ArrayGet(node, 9)
+            IfCondition NotEqual(rest, 0) ThenBlock: {
+                ri = 0
+                rn = Array.Size(rest)
+                WhileLoop LessThan(ri, rn) {
+                    rname = Array.Get(rest, ri)
+                    IfCondition NotEqual(rname, 0) ThenBlock: {
+                        ridx = Add(ri, 2)
+                        Gen_EmitIndent()
+                        Gen_EmitIdentLhs(rname)
+                        Gen_Emit(" = DictGen_SmartGet(__pair")
+                        Gen_Emit(suf)
+                        Gen_Emit(", ")
+                        Gen_EmitNumber(ridx)
+                        Gen_Emit(")\n")
+                    }
+                    ri = Add(ri, 1)
+                }
+            }
+        } ElseBlock: {
+            Gen_EmitIndent()
+            Gen_EmitIdentLhs(var_name)
+            Gen_Emit(" = AIMacro.IterGet(iter")
+            Gen_Emit(suf)
+            Gen_Emit(", iteri")
+            Gen_Emit(suf)
+            Gen_Emit(")\n")
+        }
+    }
+}
+
 Function.Gen_FlattenExpr {
     Input: node: Address
     Output: Address
@@ -1399,27 +1456,19 @@ Function.Gen_FlattenExpr {
         
         IfCondition EqualTo(t, Node.LIST_COMP) ThenBlock: {
             expr = ArrayGet(node, 3)
-            var_name = ArrayGet(node, 4)
             iterable = ArrayGet(node, 5)
             cond = ArrayGet(node, 6)
-            var2 = ArrayGet(node, 7)
             extras = ArrayGet(node, 8)
+            comp_dval = ArrayGet(node, 10)
             temp = Gen_TempName()
             Gen_EmitIndent()
             Gen_Emit(temp)
-            Gen_Emit(" = Array.Create(8)\n")
-            IfCondition NotEqual(extras, 0) ThenBlock: {
-                en = Array.Size(extras)
-                ei = 0
-                WhileLoop LessThan(ei, en) {
-                    ev = Array.Get(extras, ei)
-                    IfCondition NotEqual(ev, 0) ThenBlock: {
-                        Gen_EmitIndent()
-                        Gen_EmitIdentLhs(ev)
-                        Gen_Emit(" = Types.GetNone()\n")
-                    }
-                    ei = Add(ei, 1)
-                }
+            Gen_Emit(" = ")
+            IfCondition NotEqual(comp_dval, 0) ThenBlock: {
+                Gen_Emit("Hash.Create(8)\n")
+                DictGen_MarkDictVar(temp)
+            } ElseBlock: {
+                Gen_Emit("Array.Create(8)\n")
             }
             loop_suffix = Gen_LoopEnter()
             iter_has_call = Gen_HasCall(iterable)
@@ -1449,53 +1498,7 @@ Function.Gen_FlattenExpr {
             Gen_Emit(loop_suffix)
             Gen_Emit(") {\n")
             Gen.indent = Add(Gen.indent, 1)
-            IfCondition NotEqual(var2, 0) ThenBlock: {
-                Gen_EmitIndent()
-                Gen_Emit("__pair")
-                Gen_Emit(loop_suffix)
-                Gen_Emit(" = AIMacro.IterGet(iter")
-                Gen_Emit(loop_suffix)
-                Gen_Emit(", iteri")
-                Gen_Emit(loop_suffix)
-                Gen_Emit(")\n")
-                Gen_EmitIndent()
-                Gen_EmitIdentLhs(var_name)
-                Gen_Emit(" = DictGen_SmartGet(__pair")
-                Gen_Emit(loop_suffix)
-                Gen_Emit(", 0)\n")
-                Gen_EmitIndent()
-                Gen_EmitIdentLhs(var2)
-                Gen_Emit(" = DictGen_SmartGet(__pair")
-                Gen_Emit(loop_suffix)
-                Gen_Emit(", 1)\n")
-                rest = ArrayGet(node, 9)
-                IfCondition NotEqual(rest, 0) ThenBlock: {
-                    ri = 0
-                    rn = Array.Size(rest)
-                    WhileLoop LessThan(ri, rn) {
-                        rname = Array.Get(rest, ri)
-                        IfCondition NotEqual(rname, 0) ThenBlock: {
-                            ridx = Add(ri, 2)
-                            Gen_EmitIndent()
-                            Gen_EmitIdentLhs(rname)
-                            Gen_Emit(" = DictGen_SmartGet(__pair")
-                            Gen_Emit(loop_suffix)
-                            Gen_Emit(", ")
-                            Gen_EmitNumber(ridx)
-                            Gen_Emit(")\n")
-                        }
-                        ri = Add(ri, 1)
-                    }
-                }
-            } ElseBlock: {
-                Gen_EmitIndent()
-                Gen_EmitIdentLhs(var_name)
-                Gen_Emit(" = AIMacro.IterGet(iter")
-                Gen_Emit(loop_suffix)
-                Gen_Emit(", iteri")
-                Gen_Emit(loop_suffix)
-                Gen_Emit(")\n")
-            }
+            Gen_EmitCompBind(node, loop_suffix)
             IfCondition NotEqual(cond, 0) ThenBlock: {
                 IfCondition EqualTo(Gen_HasCall(cond), 1) ThenBlock: {
                     cond = Gen_FlattenExpr(cond)
@@ -1506,17 +1509,112 @@ Function.Gen_FlattenExpr {
                 Gen_Emit(") ThenBlock: {\n")
                 Gen.indent = Add(Gen.indent, 1)
             }
-            elem = expr
-            eh = Gen_HasCall(elem)
-            IfCondition EqualTo(eh, 1) ThenBlock: {
-                elem = Gen_FlattenExpr(elem)
+            comp_sufs = Array.Create(4)
+            comp_cflags = Array.Create(4)
+            comp_en = 0
+            IfCondition NotEqual(extras, 0) ThenBlock: {
+                comp_en = Array.Size(extras)
             }
-            Gen_EmitIndent()
-            Gen_Emit("Array.Push(")
-            Gen_Emit(temp)
-            Gen_Emit(", ")
-            Gen_Expr(elem)
-            Gen_Emit(")\n")
+            comp_ei = 0
+            WhileLoop LessThan(comp_ei, comp_en) {
+                comp_node = Array.Get(extras, comp_ei)
+                comp_suf = Gen_LoopEnter()
+                Array.Push(comp_sufs, comp_suf)
+                comp_iter = ArrayGet(comp_node, 5)
+                IfCondition EqualTo(Gen_HasCall(comp_iter), 1) ThenBlock: {
+                    comp_iter = Gen_FlattenExpr(comp_iter)
+                }
+                Gen_EmitIndent()
+                Gen_Emit("iter")
+                Gen_Emit(comp_suf)
+                Gen_Emit(" = ")
+                Gen_Expr(comp_iter)
+                Gen_Emit("\n")
+                Gen_EmitIndent()
+                Gen_Emit("iterlen")
+                Gen_Emit(comp_suf)
+                Gen_Emit(" = AIMacro.IterLen(iter")
+                Gen_Emit(comp_suf)
+                Gen_Emit(")\n")
+                Gen_EmitIndent()
+                Gen_Emit("iteri")
+                Gen_Emit(comp_suf)
+                Gen_Emit(" = 0\n")
+                Gen_EmitIndent()
+                Gen_Emit("WhileLoop LessThan(iteri")
+                Gen_Emit(comp_suf)
+                Gen_Emit(", iterlen")
+                Gen_Emit(comp_suf)
+                Gen_Emit(") {\n")
+                Gen.indent = Add(Gen.indent, 1)
+                Gen_EmitCompBind(comp_node, comp_suf)
+                comp_cond = ArrayGet(comp_node, 6)
+                comp_flag = 0
+                IfCondition NotEqual(comp_cond, 0) ThenBlock: {
+                    IfCondition EqualTo(Gen_HasCall(comp_cond), 1) ThenBlock: {
+                        comp_cond = Gen_FlattenExpr(comp_cond)
+                    }
+                    Gen_EmitIndent()
+                    Gen_Emit("IfCondition AIMacro.SmartBool(")
+                    Gen_Expr(comp_cond)
+                    Gen_Emit(") ThenBlock: {\n")
+                    Gen.indent = Add(Gen.indent, 1)
+                    comp_flag = 1
+                }
+                Array.Push(comp_cflags, comp_flag)
+                comp_ei = Add(comp_ei, 1)
+            }
+            IfCondition NotEqual(comp_dval, 0) ThenBlock: {
+                comp_key = expr
+                IfCondition EqualTo(Gen_HasCall(comp_key), 1) ThenBlock: {
+                    comp_key = Gen_FlattenExpr(comp_key)
+                }
+                comp_vv = comp_dval
+                IfCondition EqualTo(Gen_HasCall(comp_vv), 1) ThenBlock: {
+                    comp_vv = Gen_FlattenExpr(comp_vv)
+                }
+                Gen_EmitIndent()
+                Gen_Emit("Hash.Set(")
+                Gen_Emit(temp)
+                Gen_Emit(", ")
+                DictGen_EmitKey(comp_key)
+                Gen_Emit(", ")
+                Gen_Expr(comp_vv)
+                Gen_Emit(")\n")
+            } ElseBlock: {
+                elem = expr
+                eh = Gen_HasCall(elem)
+                IfCondition EqualTo(eh, 1) ThenBlock: {
+                    elem = Gen_FlattenExpr(elem)
+                }
+                Gen_EmitIndent()
+                Gen_Emit("Array.Push(")
+                Gen_Emit(temp)
+                Gen_Emit(", ")
+                Gen_Expr(elem)
+                Gen_Emit(")\n")
+            }
+            comp_ei = Subtract(comp_en, 1)
+            WhileLoop GreaterEqual(comp_ei, 0) {
+                comp_flag = Array.Get(comp_cflags, comp_ei)
+                IfCondition EqualTo(comp_flag, 1) ThenBlock: {
+                    Gen.indent = Subtract(Gen.indent, 1)
+                    Gen_EmitIndent()
+                    Gen_Emit("}\n")
+                }
+                comp_suf = Array.Get(comp_sufs, comp_ei)
+                Gen_EmitIndent()
+                Gen_Emit("iteri")
+                Gen_Emit(comp_suf)
+                Gen_Emit(" = Add(iteri")
+                Gen_Emit(comp_suf)
+                Gen_Emit(", 1)\n")
+                Gen.indent = Subtract(Gen.indent, 1)
+                Gen_EmitIndent()
+                Gen_Emit("}\n")
+                Gen_LoopLeave()
+                comp_ei = Subtract(comp_ei, 1)
+            }
             IfCondition NotEqual(cond, 0) ThenBlock: {
                 Gen.indent = Subtract(Gen.indent, 1)
                 Gen_EmitIndent()
