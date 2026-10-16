@@ -23,6 +23,7 @@ import argparse
 import ast
 import re
 import sys
+from pathlib import Path
 
 CONTINUE_SUITE = ("else", "elif", "except", "finally")
 import re
@@ -722,6 +723,932 @@ def desugar_tuple_unpack(src: str) -> str:
     except Exception:
         return src
 
+
+
+# Same names Gen_IsShimModule keeps on the stub/shim path. A file sitting
+# next to the script with one of these names is still the shim, not user code.
+_SHIM_MODULES = frozenset({
+    "sys", "os", "json", "math", "time", "getopt", "binascii", "io",
+    "platform", "unittest", "__future__", "test", "tempfile", "pickle",
+    "gc", "string", "operator", "abc", "fractions", "decimal", "colorsys",
+    "collections", "copy", "copyreg",
+})
+
+
+def _simple_user_module(name: str) -> bool:
+    """A single identifier that is not a linked shim."""
+    if not name or not name.isidentifier():
+        return False
+    if "." in name or name in _SHIM_MODULES or name.startswith("unittest"):
+        return False
+    return True
+
+
+def _load_name(name: str) -> ast.Name:
+    return ast.Name(id=name, ctx=ast.Load())
+
+
+def _store_name(name: str) -> ast.Name:
+    return ast.Name(id=name, ctx=ast.Store())
+
+
+def _attr_load(holder: str, name: str) -> ast.Attribute:
+    return ast.Attribute(value=_load_name(holder), attr=name, ctx=ast.Load())
+
+
+def _attr_store(holder: str, name: str) -> ast.Attribute:
+    return ast.Attribute(value=_load_name(holder), attr=name, ctx=ast.Store())
+
+
+def _assign_attr(holder: str, name: str, value: ast.expr) -> ast.Assign:
+    return ast.Assign(targets=[_attr_store(holder, name)], value=value)
+
+
+def _target_names(node: ast.AST) -> list[str]:
+    if isinstance(node, ast.Name):
+        return [node.id]
+    if isinstance(node, ast.Starred):
+        return _target_names(node.value)
+    if isinstance(node, (ast.Tuple, ast.List)):
+        out: list[str] = []
+        for elt in node.elts:
+            out.extend(_target_names(elt))
+        return out
+    return []
+
+
+def _namedexpr_names(node: ast.AST | None, into: set[str]) -> None:
+    if node is None:
+        return
+    for n in ast.walk(node):
+        if isinstance(n, ast.NamedExpr) and isinstance(n.target, ast.Name):
+            into.add(n.target.id)
+
+
+def _import_bound_names(stmt: ast.AST) -> list[str]:
+    if isinstance(stmt, ast.Import):
+        out = []
+        for alias in stmt.names:
+            out.append(alias.asname or alias.name.split(".", 1)[0])
+        return out
+    if isinstance(stmt, ast.ImportFrom):
+        out = []
+        for alias in stmt.names:
+            if alias.name == "*":
+                continue
+            out.append(alias.asname or alias.name)
+        return out
+    return []
+
+
+def _collect_locals(stmts: list[ast.stmt], names: set[str], globs: set[str], skip_imports: bool = False) -> None:
+    """Names bound in this suite. Nested def/class bodies are their own scopes."""
+    for stmt in stmts:
+        if isinstance(stmt, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+            names.add(stmt.name)
+            continue
+        if isinstance(stmt, ast.Global):
+            globs.update(stmt.names)
+            continue
+        if isinstance(stmt, ast.Nonlocal):
+            continue
+        if isinstance(stmt, (ast.Import, ast.ImportFrom)):
+            if not skip_imports:
+                names.update(_import_bound_names(stmt))
+            continue
+        if isinstance(stmt, ast.Assign):
+            for t in stmt.targets:
+                names.update(_target_names(t))
+            _namedexpr_names(stmt.value, names)
+            continue
+        if isinstance(stmt, ast.AnnAssign):
+            names.update(_target_names(stmt.target))
+            _namedexpr_names(stmt.value, names)
+            continue
+        if isinstance(stmt, ast.AugAssign):
+            names.update(_target_names(stmt.target))
+            _namedexpr_names(stmt.value, names)
+            continue
+        if isinstance(stmt, ast.NamedExpr):
+            names.update(_target_names(stmt.target))
+            continue
+        if isinstance(stmt, (ast.For, ast.AsyncFor)):
+            names.update(_target_names(stmt.target))
+            _namedexpr_names(stmt.iter, names)
+            _collect_locals(stmt.body, names, globs)
+            _collect_locals(stmt.orelse, names, globs)
+            continue
+        if isinstance(stmt, ast.While):
+            _namedexpr_names(stmt.test, names)
+            _collect_locals(stmt.body, names, globs)
+            _collect_locals(stmt.orelse, names, globs)
+            continue
+        if isinstance(stmt, ast.If):
+            _namedexpr_names(stmt.test, names)
+            _collect_locals(stmt.body, names, globs)
+            _collect_locals(stmt.orelse, names, globs)
+            continue
+        if isinstance(stmt, (ast.Try, ast.TryStar) if hasattr(ast, "TryStar") else (ast.Try,)):
+            _collect_locals(stmt.body, names, globs)
+            for h in stmt.handlers:
+                if h.name:
+                    names.add(h.name)
+                _collect_locals(h.body, names, globs)
+            _collect_locals(stmt.orelse, names, globs)
+            _collect_locals(stmt.finalbody, names, globs)
+            continue
+        if isinstance(stmt, (ast.With, ast.AsyncWith)):
+            for item in stmt.items:
+                if item.optional_vars is not None:
+                    names.update(_target_names(item.optional_vars))
+                _namedexpr_names(item.context_expr, names)
+            _collect_locals(stmt.body, names, globs)
+            continue
+        if isinstance(stmt, ast.Match):
+            _namedexpr_names(stmt.subject, names)
+            for case in stmt.cases:
+                _namedexpr_names(case.guard, names)
+                _collect_locals(case.body, names, globs)
+            continue
+        _namedexpr_names(stmt, names)
+
+
+def _function_scope(fn: ast.AST) -> tuple[set[str], set[str]]:
+    names: set[str] = set()
+    globs: set[str] = set()
+    args = fn.args
+    for a in list(args.posonlyargs) + list(args.args) + list(args.kwonlyargs):
+        names.add(a.arg)
+    if args.vararg:
+        names.add(args.vararg.arg)
+    if args.kwarg:
+        names.add(args.kwarg.arg)
+    _collect_locals(fn.body, names, globs)
+    return names - globs, globs
+
+
+def _iter_module_stmts(stmts: list[ast.stmt]):
+    """Module-level statements, including ones nested in if/for/try/with."""
+    for stmt in stmts:
+        yield stmt
+        if isinstance(stmt, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+            continue
+        if isinstance(stmt, (ast.For, ast.AsyncFor, ast.While, ast.If)):
+            yield from _iter_module_stmts(stmt.body)
+            yield from _iter_module_stmts(stmt.orelse)
+            continue
+        if isinstance(stmt, (ast.With, ast.AsyncWith)):
+            yield from _iter_module_stmts(stmt.body)
+            continue
+        if isinstance(stmt, (ast.Try, ast.TryStar) if hasattr(ast, "TryStar") else (ast.Try,)):
+            yield from _iter_module_stmts(stmt.body)
+            for handler in stmt.handlers:
+                yield from _iter_module_stmts(handler.body)
+            yield from _iter_module_stmts(stmt.orelse)
+            yield from _iter_module_stmts(stmt.finalbody)
+            continue
+        if isinstance(stmt, ast.Match):
+            for case in stmt.cases:
+                yield from _iter_module_stmts(case.body)
+
+
+def _from_will_splice(stmt: ast.ImportFrom, directory: Path) -> bool:
+    if stmt.level or not stmt.module or "." in stmt.module:
+        return False
+    if not _simple_user_module(stmt.module):
+        return False
+    return (directory / f"{stmt.module}.py").is_file()
+
+
+def _module_bindings(body: list[ast.stmt], directory: Path) -> set[str]:
+    names: set[str] = set()
+    _collect_locals(body, names, set())
+    # A from-import we do not inline never assigns the name. Leave those
+    # reads as bare names so the old stub path still applies.
+    assigned: set[str] = set()
+    _collect_locals(body, assigned, set(), skip_imports=True)
+    for stmt in _iter_module_stmts(body):
+        if isinstance(stmt, ast.ImportFrom) and not _from_will_splice(stmt, directory):
+            for bound in _import_bound_names(stmt):
+                if bound not in assigned:
+                    names.discard(bound)
+    names.add("__name__")
+    return names
+
+
+def _apply_visits(rw: ast.NodeTransformer, stmts: list[ast.stmt]) -> list[ast.stmt]:
+    out: list[ast.stmt] = []
+    for stmt in stmts:
+        got = rw.visit(stmt)
+        if got is None:
+            continue
+        if isinstance(got, list):
+            out.extend(got)
+        else:
+            out.append(got)
+    return out
+
+
+def _tuple_module_names(node: ast.AST, kind) -> bool:
+    if isinstance(node, ast.Name):
+        return kind(node.id) == "module"
+    if isinstance(node, ast.Starred):
+        return _tuple_module_names(node.value, kind)
+    if isinstance(node, (ast.Tuple, ast.List)):
+        return any(_tuple_module_names(elt, kind) for elt in node.elts)
+    return False
+
+
+def _clone_temp_target(node: ast.AST, fresh, mapping: list[tuple[str, str]]) -> ast.AST | None:
+    """Copy a tuple target, replacing names with temps. mapping is (temp, old)."""
+    if isinstance(node, ast.Name):
+        tmp = fresh()
+        mapping.append((tmp, node.id))
+        return _store_name(tmp)
+    if isinstance(node, ast.Starred):
+        inner = _clone_temp_target(node.value, fresh, mapping)
+        if inner is None:
+            return None
+        return ast.Starred(value=inner, ctx=ast.Store())
+    if isinstance(node, (ast.Tuple, ast.List)):
+        # Star must be last, same limit as the later unpack desugar.
+        for i, elt in enumerate(node.elts):
+            if isinstance(elt, ast.Starred) and i != len(node.elts) - 1:
+                return None
+        elts = []
+        for elt in node.elts:
+            cloned = _clone_temp_target(elt, fresh, mapping)
+            if cloned is None:
+                return None
+            elts.append(cloned)
+        return type(node)(elts=elts, ctx=ast.Store())
+    return None
+
+
+class _ModRewriter(ast.NodeTransformer):
+    """Rewrite loads/stores of one module's globals onto its holder object.
+
+    Function locals and enclosing-function names stay as names so the
+    existing closure pass can see them. The holder is a plain instance;
+    a later call of a stored function pointer uses the normal call path.
+    """
+
+    def __init__(self, ctx: "_SameDir", chain: list[set[str]], module_names: set[str], holder: str, mask: set[str]):
+        self.ctx = ctx
+        self.chain = chain
+        self.module_names = module_names
+        self.holder = holder
+        self.mask = mask
+
+    def _kind(self, name: str) -> str:
+        if self.chain and name in self.chain[0]:
+            return "local"
+        for outer in self.chain[1:]:
+            if name in outer:
+                return "free"
+        if name in self.mask:
+            return "local"
+        if name in self.module_names:
+            return "module"
+        return "other"
+
+    def _store_target(self, node: ast.AST) -> ast.AST:
+        if isinstance(node, ast.Name):
+            if self._kind(node.id) == "module":
+                return _attr_store(self.holder, node.id)
+            return node
+        if isinstance(node, ast.Starred):
+            inner = self._store_target(node.value)
+            return ast.Starred(value=inner, ctx=ast.Store())
+        if isinstance(node, (ast.Tuple, ast.List)):
+            return type(node)(elts=[self._store_target(e) for e in node.elts], ctx=ast.Store())
+        if isinstance(node, ast.Attribute):
+            return ast.Attribute(value=self.visit(node.value), attr=node.attr, ctx=ast.Store())
+        if isinstance(node, ast.Subscript):
+            return ast.Subscript(value=self.visit(node.value), slice=self.visit(node.slice), ctx=ast.Store())
+        visited = self.visit(node)
+        return visited
+
+    def visit_Name(self, node: ast.Name):
+        if isinstance(node.ctx, ast.Load) and self._kind(node.id) == "module":
+            return _attr_load(self.holder, node.id)
+        return node
+
+    def visit_Global(self, node: ast.Global):
+        return None
+
+    def visit_Assign(self, node: ast.Assign):
+        value = self.visit(node.value)
+        if (
+            len(node.targets) == 1
+            and isinstance(node.targets[0], (ast.Tuple, ast.List))
+            and _tuple_module_names(node.targets[0], self._kind)
+        ):
+            return self._expand_tuple(node.targets[0], value)
+        targets = [self._store_target(t) for t in node.targets]
+        if len(targets) > 1:
+            tmp = self.ctx.fresh("ch")
+            stmts: list[ast.stmt] = [ast.Assign(targets=[_store_name(tmp)], value=value)]
+            for t in targets:
+                stmts.append(ast.Assign(targets=[t], value=_load_name(tmp)))
+            return stmts
+        return ast.Assign(targets=targets, value=value)
+
+    def _expand_tuple(self, target: ast.AST, value: ast.expr) -> list[ast.stmt]:
+        mapping: list[tuple[str, str]] = []
+        cloned = _clone_temp_target(target, lambda: self.ctx.fresh("ub"), mapping)
+        if cloned is None:
+            return [ast.Assign(targets=[self._store_target(target)], value=value)]
+        stmts: list[ast.stmt] = [ast.Assign(targets=[cloned], value=value)]
+        for tmp, old in mapping:
+            if self._kind(old) == "module":
+                stmts.append(_assign_attr(self.holder, old, _load_name(tmp)))
+            else:
+                stmts.append(ast.Assign(targets=[_store_name(old)], value=_load_name(tmp)))
+        return stmts
+
+    def visit_AugAssign(self, node: ast.AugAssign):
+        value = self.visit(node.value)
+        if isinstance(node.target, ast.Name) and self._kind(node.target.id) == "module":
+            load = _attr_load(self.holder, node.target.id)
+            binop = ast.BinOp(left=load, op=node.op, right=value)
+            return _assign_attr(self.holder, node.target.id, binop)
+        return ast.AugAssign(target=self._store_target(node.target), op=node.op, value=value)
+
+    def visit_AnnAssign(self, node: ast.AnnAssign):
+        value = self.visit(node.value) if node.value is not None else None
+        if isinstance(node.target, ast.Name) and self._kind(node.target.id) == "module":
+            if value is None:
+                return None
+            return _assign_attr(self.holder, node.target.id, value)
+        return ast.AnnAssign(
+            target=self._store_target(node.target),
+            annotation=self.visit(node.annotation),
+            value=value,
+            simple=node.simple,
+        )
+
+    def visit_For(self, node: ast.For):
+        return self._visit_for(node, ast.For)
+
+    def visit_AsyncFor(self, node: ast.AsyncFor):
+        return self._visit_for(node, ast.AsyncFor)
+
+    def _visit_for(self, node: ast.AST, cls: type):
+        names = _target_names(node.target)
+        iter_ = self.visit(node.iter)
+        body = _apply_visits(self, node.body)
+        orelse = _apply_visits(self, node.orelse)
+        copies = [
+            _assign_attr(self.holder, n, _load_name(n))
+            for n in names
+            if self._kind(n) == "module"
+        ]
+        return cls(
+            target=node.target,
+            iter=iter_,
+            body=copies + body,
+            orelse=orelse,
+            type_comment=getattr(node, "type_comment", None),
+        )
+
+    def visit_FunctionDef(self, node: ast.FunctionDef):
+        return self._rebuild_func(node)
+
+    def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef):
+        return self._rebuild_func(node)
+
+    def _rebuild_func(self, node: ast.AST):
+        locs, globs = _function_scope(node)
+        inner = _ModRewriter(
+            self.ctx,
+            [locs] + self.chain,
+            self.module_names | globs,
+            self.holder,
+            set(),
+        )
+        args = self._rewrite_args(node.args)
+        decos = [self.visit(d) for d in node.decorator_list]
+        body = _apply_visits(inner, node.body) or [ast.Pass()]
+        returns = self.visit(node.returns) if node.returns is not None else None
+        return type(node)(
+            name=node.name,
+            args=args,
+            body=body,
+            decorator_list=decos,
+            returns=returns,
+            type_comment=getattr(node, "type_comment", None),
+        )
+
+    def _rewrite_args(self, args: ast.arguments) -> ast.arguments:
+        return ast.arguments(
+            posonlyargs=args.posonlyargs,
+            args=args.args,
+            vararg=args.vararg,
+            kwonlyargs=args.kwonlyargs,
+            kw_defaults=[None if d is None else self.visit(d) for d in args.kw_defaults],
+            kwarg=args.kwarg,
+            defaults=[self.visit(d) for d in args.defaults],
+        )
+
+    def visit_Lambda(self, node: ast.Lambda):
+        locs: set[str] = set()
+        args = node.args
+        for a in list(args.posonlyargs) + list(args.args) + list(args.kwonlyargs):
+            locs.add(a.arg)
+        if args.vararg:
+            locs.add(args.vararg.arg)
+        if args.kwarg:
+            locs.add(args.kwarg.arg)
+        inner = _ModRewriter(self.ctx, [locs] + self.chain, self.module_names, self.holder, set())
+        return ast.Lambda(args=self._rewrite_args(node.args), body=inner.visit(node.body))
+
+    def visit_ClassDef(self, node: ast.ClassDef):
+        mask: set[str] = set()
+        _collect_locals(node.body, mask, set())
+        inner = _ModRewriter(self.ctx, self.chain, self.module_names, self.holder, mask)
+        body = _apply_visits(inner, node.body) or [ast.Pass()]
+        return ast.ClassDef(
+            name=node.name,
+            bases=[self.visit(b) for b in node.bases],
+            keywords=[
+                ast.keyword(arg=kw.arg, value=self.visit(kw.value)) for kw in node.keywords
+            ],
+            body=body,
+            decorator_list=[self.visit(d) for d in node.decorator_list],
+        )
+
+    def _rewrite_comp(self, node: ast.AST, fields: list[str]) -> ast.AST:
+        saved = self.chain
+        comp_locals: set[str] = set()
+        gens = []
+        for g in node.generators:
+            iter_chain = [set(comp_locals)] + saved if comp_locals else saved
+            iter_rw = _ModRewriter(self.ctx, iter_chain, self.module_names, self.holder, self.mask)
+            ifs_locals = set(comp_locals)
+            ifs_locals.update(_target_names(g.target))
+            if_rw = _ModRewriter(self.ctx, [ifs_locals] + saved, self.module_names, self.holder, set())
+            gens.append(
+                ast.comprehension(
+                    target=g.target,
+                    iter=iter_rw.visit(g.iter),
+                    ifs=[if_rw.visit(i) for i in g.ifs],
+                    is_async=g.is_async,
+                )
+            )
+            comp_locals.update(_target_names(g.target))
+        elt_rw = _ModRewriter(self.ctx, [comp_locals] + saved, self.module_names, self.holder, set())
+        node.generators = gens
+        for field in fields:
+            setattr(node, field, elt_rw.visit(getattr(node, field)))
+        return node
+
+    def visit_ListComp(self, node: ast.ListComp):
+        return self._rewrite_comp(node, ["elt"])
+
+    def visit_SetComp(self, node: ast.SetComp):
+        return self._rewrite_comp(node, ["elt"])
+
+    def visit_GeneratorExp(self, node: ast.GeneratorExp):
+        return self._rewrite_comp(node, ["elt"])
+
+    def visit_DictComp(self, node: ast.DictComp):
+        return self._rewrite_comp(node, ["key", "value"])
+
+
+class _Loaded:
+    def __init__(self, stmts: list[ast.stmt], bindings: set[str], holder: str, cycle: bool, already: bool):
+        self.stmts = stmts
+        self.bindings = bindings
+        self.holder = holder
+        self.cycle = cycle
+        self.already = already
+
+
+class _SameDir:
+    def __init__(self, directory: Path, origin: str):
+        self.directory = directory
+        self.origin = origin
+        self.stack: set[str] = set()
+        self.known: dict[str, tuple[str, set[str]]] = {}
+        self.done: dict[str, _Loaded] = {}
+        self._n = 0
+        self._counts: dict[str, int] = {}
+
+    def fresh(self, kind: str) -> str:
+        self._n += 1
+        return f"_aim_{kind}_{self._n}"
+
+    def unique(self, base: str) -> str:
+        n = self._counts.get(base, 0)
+        self._counts[base] = n + 1
+        if n == 0:
+            return base
+        return f"{base}_{n}"
+
+    def _rw(self, module_names: set[str], holder: str, chain: list[set[str]] | None = None, mask: set[str] | None = None) -> _ModRewriter:
+        return _ModRewriter(self, chain or [], module_names, holder, mask or set())
+
+    def load(self, modname: str) -> _Loaded | None:
+        if not _simple_user_module(modname):
+            return None
+        path = self.directory / f"{modname}.py"
+        if not path.is_file():
+            return None
+        try:
+            key = str(path.resolve())
+        except OSError:
+            return None
+        if key == self.origin:
+            return None
+        holder = f"_aim_mod_{modname}"
+        if key in self.stack:
+            known_holder, bindings = self.known[key]
+            return _Loaded([], bindings, known_holder, True, False)
+        if key in self.done:
+            prev = self.done[key]
+            return _Loaded([], prev.bindings, prev.holder, False, True)
+        try:
+            text = path.read_text(encoding="utf-8")
+        except OSError:
+            return None
+        text = desugar_match(text)
+        try:
+            tree = ast.parse(text)
+        except SyntaxError:
+            return None
+        bindings = _module_bindings(tree.body, self.directory)
+        self.known[key] = (holder, bindings)
+        self.stack.add(key)
+        try:
+            body = self._lower_body(tree.body, holder, bindings, modname, {})
+        finally:
+            self.stack.remove(key)
+        cls = self.unique(f"_AimMod_{modname}")
+        preamble = [
+            ast.ClassDef(
+                name=cls,
+                bases=[],
+                keywords=[],
+                body=[ast.Pass()],
+                decorator_list=[],
+            ),
+            _m_assign(holder, ast.Call(func=_load_name(cls), args=[], keywords=[])),
+            _assign_attr(holder, "__name__", ast.Constant(value=modname)),
+        ]
+        loaded = _Loaded(preamble + body, bindings, holder, False, False)
+        self.done[key] = loaded
+        return loaded
+
+    def _lower_body(self, body: list[ast.stmt], holder: str, bindings: set[str], modname: str, renames: dict[str, str]) -> list[ast.stmt]:
+        out: list[ast.stmt] = []
+        for stmt in body:
+            out.extend(self._lower_stmt(stmt, holder, bindings, modname, renames))
+        return out
+
+    def _lower_stmt(self, stmt: ast.stmt, holder: str, bindings: set[str], modname: str, renames: dict[str, str]) -> list[ast.stmt]:
+        if isinstance(stmt, ast.ImportFrom) and stmt.module == "__future__":
+            return []
+        if isinstance(stmt, (ast.Import, ast.ImportFrom)):
+            return self._expand_import(stmt, holder, bindings)
+        if isinstance(stmt, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            return self._lower_func(stmt, holder, bindings, modname)
+        if isinstance(stmt, ast.ClassDef):
+            return self._lower_class(stmt, holder, bindings, modname, renames)
+        if isinstance(stmt, ast.If):
+            return [ast.If(
+                test=self._rx(stmt.test, bindings, holder),
+                body=self._lower_body(stmt.body, holder, bindings, modname, renames) or [ast.Pass()],
+                orelse=self._lower_body(stmt.orelse, holder, bindings, modname, renames),
+            )]
+        if isinstance(stmt, (ast.For, ast.AsyncFor)):
+            return [self._lower_for(stmt, holder, bindings, modname, renames)]
+        if isinstance(stmt, ast.While):
+            return [ast.While(
+                test=self._rx(stmt.test, bindings, holder),
+                body=self._lower_body(stmt.body, holder, bindings, modname, renames) or [ast.Pass()],
+                orelse=self._lower_body(stmt.orelse, holder, bindings, modname, renames),
+            )]
+        if isinstance(stmt, (ast.With, ast.AsyncWith)):
+            return [self._lower_with(stmt, holder, bindings, modname, renames)]
+        if isinstance(stmt, (ast.Try, ast.TryStar) if hasattr(ast, "TryStar") else (ast.Try,)):
+            return [self._lower_try(stmt, holder, bindings, modname, renames)]
+        if isinstance(stmt, ast.Match):
+            cases = []
+            for case in stmt.cases:
+                cases.append(ast.match_case(
+                    pattern=case.pattern,
+                    guard=self._rx(case.guard, bindings, holder) if case.guard is not None else None,
+                    body=self._lower_body(case.body, holder, bindings, modname, renames) or [ast.Pass()],
+                ))
+            return [ast.Match(subject=self._rx(stmt.subject, bindings, holder), cases=cases)]
+        if isinstance(stmt, (ast.Pass, ast.Break, ast.Continue)):
+            return [stmt]
+        got = self._rw(bindings, holder).visit(stmt)
+        if got is None:
+            return []
+        if isinstance(got, list):
+            return got
+        return [got]
+
+    def _rx(self, node: ast.AST, bindings: set[str], holder: str) -> ast.AST:
+        return self._rw(bindings, holder).visit(node)
+
+    def _lower_func(self, fn: ast.AST, holder: str, bindings: set[str], modname: str) -> list[ast.stmt]:
+        new_name = self.unique(f"_aim_fn_{modname}_{fn.name}")
+        locs, globs = _function_scope(fn)
+        module_names = set(bindings) | globs
+        inner = _ModRewriter(self, [locs], module_names, holder, set())
+        outer = self._rw(module_names, holder)
+        decos = []
+        for deco in fn.decorator_list:
+            # A module function is already a plain function. staticmethod()
+            # would call it with one packed argument array.
+            if isinstance(deco, ast.Name) and deco.id == "staticmethod":
+                continue
+            decos.append(outer.visit(deco))
+        args = outer._rewrite_args(fn.args)
+        body = _apply_visits(inner, fn.body) or [ast.Pass()]
+        returns = outer.visit(fn.returns) if fn.returns is not None else None
+        rebuilt = type(fn)(
+            name=new_name,
+            args=args,
+            body=body,
+            decorator_list=decos,
+            returns=returns,
+            type_comment=getattr(fn, "type_comment", None),
+        )
+        return [rebuilt, _assign_attr(holder, fn.name, _load_name(new_name))]
+
+    def _lower_class(self, stmt: ast.ClassDef, holder: str, bindings: set[str], modname: str, renames: dict[str, str]) -> list[ast.stmt]:
+        cls_name = self.unique(f"_aim_cls_{modname}_{stmt.name}")
+        renames[stmt.name] = cls_name
+        mask: set[str] = set()
+        _collect_locals(stmt.body, mask, set())
+        inner = _ModRewriter(self, [], set(bindings), holder, mask)
+        body = _apply_visits(inner, stmt.body) or [ast.Pass()]
+        bases = []
+        for base in stmt.bases:
+            if isinstance(base, ast.Name) and base.id in renames:
+                bases.append(_load_name(renames[base.id]))
+            else:
+                bases.append(self._rx(base, bindings, holder))
+        keywords = [
+            ast.keyword(arg=kw.arg, value=self._rx(kw.value, bindings, holder))
+            for kw in stmt.keywords
+        ]
+        decos = [self._rx(d, bindings, holder) for d in stmt.decorator_list]
+        rebuilt = ast.ClassDef(
+            name=cls_name,
+            bases=bases,
+            keywords=keywords,
+            body=body,
+            decorator_list=decos,
+        )
+        return [rebuilt, _assign_attr(holder, stmt.name, _load_name(cls_name))]
+
+    def _lower_for(self, stmt: ast.AST, holder: str, bindings: set[str], modname: str, renames: dict[str, str]) -> ast.AST:
+        names = _target_names(stmt.target)
+        body = self._lower_body(stmt.body, holder, bindings, modname, renames)
+        copies = [
+            _assign_attr(holder, n, _load_name(n))
+            for n in names
+            if n in bindings
+        ]
+        orelse = self._lower_body(stmt.orelse, holder, bindings, modname, renames)
+        return type(stmt)(
+            target=stmt.target,
+            iter=self._rx(stmt.iter, bindings, holder),
+            body=copies + body or [ast.Pass()],
+            orelse=orelse,
+            type_comment=getattr(stmt, "type_comment", None),
+        )
+
+    def _lower_with(self, stmt: ast.AST, holder: str, bindings: set[str], modname: str, renames: dict[str, str]) -> ast.AST:
+        items = []
+        copies: list[ast.stmt] = []
+        rw = self._rw(bindings, holder)
+        for item in stmt.items:
+            items.append(ast.withitem(context_expr=rw.visit(item.context_expr), optional_vars=item.optional_vars))
+            if item.optional_vars is not None:
+                for n in _target_names(item.optional_vars):
+                    if n in bindings:
+                        copies.append(_assign_attr(holder, n, _load_name(n)))
+        body = copies + self._lower_body(stmt.body, holder, bindings, modname, renames)
+        return type(stmt)(items=items, body=body or [ast.Pass()], type_comment=getattr(stmt, "type_comment", None))
+
+    def _lower_try(self, stmt: ast.AST, holder: str, bindings: set[str], modname: str, renames: dict[str, str]) -> ast.AST:
+        handlers = []
+        for h in stmt.handlers:
+            body = self._lower_body(h.body, holder, bindings, modname, renames)
+            if h.name and h.name in bindings:
+                body = [_assign_attr(holder, h.name, _load_name(h.name))] + body
+            handlers.append(ast.ExceptHandler(
+                type=self._rx(h.type, bindings, holder) if h.type is not None else None,
+                name=h.name,
+                body=body or [ast.Pass()],
+            ))
+        rebuilt = type(stmt)(
+            body=self._lower_body(stmt.body, holder, bindings, modname, renames) or [ast.Pass()],
+            handlers=handlers,
+            orelse=self._lower_body(stmt.orelse, holder, bindings, modname, renames),
+            finalbody=self._lower_body(stmt.finalbody, holder, bindings, modname, renames),
+        )
+        return rebuilt
+
+    def _expand_import(self, stmt: ast.AST, into: str | None, bindings: set[str] | None) -> list[ast.stmt]:
+        """Replace a spliceable import. into=None means the entry script.
+
+        Returns [] when the entry import should stay as it was (caller checks
+        the companion flag). Inside a loaded module, every import is copied
+        onto the holder, splice or not.
+        """
+        # The entry uses _expand_entry. This path always has a holder.
+        assert into is not None and bindings is not None
+        if isinstance(stmt, ast.Import):
+            out: list[ast.stmt] = []
+            for alias in stmt.names:
+                bound = alias.asname or alias.name.split(".", 1)[0]
+                piece, spliced = self._one_module(alias.name, alias.asname)
+                if spliced:
+                    out.extend(piece)
+                else:
+                    out.append(ast.Import(names=[alias]))
+                out.append(_assign_attr(into, bound, _load_name(bound)))
+            return out
+        # ImportFrom
+        assert isinstance(stmt, ast.ImportFrom)
+        if stmt.level or not stmt.module or not _simple_user_module(stmt.module):
+            # Not inlined. Keep the import. Do not copy names codegen never assigns.
+            return [stmt]
+        loaded = self.load(stmt.module)
+        if loaded is None:
+            return [stmt]
+        out = [] if (loaded.cycle or loaded.already) else list(loaded.stmts)
+        if any(a.name == "*" for a in stmt.names):
+            for name in sorted(loaded.bindings):
+                if name.startswith("_"):
+                    continue
+                out.append(_m_assign(name, _attr_load(loaded.holder, name)))
+                out.append(_assign_attr(into, name, _load_name(name)))
+            return out
+        for alias in stmt.names:
+            pub = alias.asname or alias.name
+            out.append(_m_assign(pub, _attr_load(loaded.holder, alias.name)))
+            out.append(_assign_attr(into, pub, _load_name(pub)))
+        return out
+
+    def _one_module(self, modname: str, asname: str | None) -> tuple[list[ast.stmt], bool]:
+        """Stmts that define modname, and whether a sibling file was inlined."""
+        if "." in modname or not _simple_user_module(modname):
+            return [], False
+        loaded = self.load(modname)
+        if loaded is None:
+            return [], False
+        bound = asname or modname
+        if loaded.cycle or loaded.already:
+            stmts: list[ast.stmt] = []
+        else:
+            stmts = list(loaded.stmts)
+        stmts.append(_m_assign(bound, _load_name(loaded.holder)))
+        return stmts, True
+
+    def splice_entry(self, body: list[ast.stmt]) -> tuple[list[ast.stmt], bool]:
+        changed = False
+        out: list[ast.stmt] = []
+        for stmt in body:
+            rep, did = self._splice_entry_stmt(stmt)
+            if did:
+                changed = True
+                out.extend(rep)
+            else:
+                out.append(stmt)
+        return out, changed
+
+    def _splice_entry_stmt(self, stmt: ast.stmt) -> tuple[list[ast.stmt], bool]:
+        if isinstance(stmt, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+            return [stmt], False
+        if isinstance(stmt, ast.Import):
+            return self._splice_entry_import(stmt)
+        if isinstance(stmt, ast.ImportFrom):
+            return self._splice_entry_from(stmt)
+        if isinstance(stmt, ast.If):
+            b1, c1 = self.splice_entry(stmt.body)
+            b2, c2 = self.splice_entry(stmt.orelse)
+            if c1 or c2:
+                return [ast.If(test=stmt.test, body=b1 or [ast.Pass()], orelse=b2)], True
+            return [stmt], False
+        if isinstance(stmt, (ast.For, ast.AsyncFor)):
+            b1, c1 = self.splice_entry(stmt.body)
+            b2, c2 = self.splice_entry(stmt.orelse)
+            if c1 or c2:
+                return [type(stmt)(
+                    target=stmt.target,
+                    iter=stmt.iter,
+                    body=b1 or [ast.Pass()],
+                    orelse=b2,
+                    type_comment=getattr(stmt, "type_comment", None),
+                )], True
+            return [stmt], False
+        if isinstance(stmt, ast.While):
+            b1, c1 = self.splice_entry(stmt.body)
+            b2, c2 = self.splice_entry(stmt.orelse)
+            if c1 or c2:
+                return [ast.While(test=stmt.test, body=b1 or [ast.Pass()], orelse=b2)], True
+            return [stmt], False
+        if isinstance(stmt, (ast.With, ast.AsyncWith)):
+            b1, c1 = self.splice_entry(stmt.body)
+            if c1:
+                return [type(stmt)(items=stmt.items, body=b1 or [ast.Pass()], type_comment=getattr(stmt, "type_comment", None))], True
+            return [stmt], False
+        if isinstance(stmt, (ast.Try, ast.TryStar) if hasattr(ast, "TryStar") else (ast.Try,)):
+            b1, c1 = self.splice_entry(stmt.body)
+            handlers = []
+            ch = False
+            for h in stmt.handlers:
+                hb, hc = self.splice_entry(h.body)
+                ch = ch or hc
+                handlers.append(ast.ExceptHandler(type=h.type, name=h.name, body=hb or [ast.Pass()]))
+            b2, c2 = self.splice_entry(stmt.orelse)
+            b3, c3 = self.splice_entry(stmt.finalbody)
+            if c1 or ch or c2 or c3:
+                return [type(stmt)(body=b1 or [ast.Pass()], handlers=handlers, orelse=b2, finalbody=b3)], True
+            return [stmt], False
+        if isinstance(stmt, ast.Match):
+            cases = []
+            did = False
+            for case in stmt.cases:
+                cb, cc = self.splice_entry(case.body)
+                did = did or cc
+                cases.append(ast.match_case(pattern=case.pattern, guard=case.guard, body=cb or [ast.Pass()]))
+            if did:
+                return [ast.Match(subject=stmt.subject, cases=cases)], True
+            return [stmt], False
+        return [stmt], False
+
+    def _splice_entry_import(self, stmt: ast.Import) -> tuple[list[ast.stmt], bool]:
+        out: list[ast.stmt] = []
+        kept: list[ast.alias] = []
+        did = False
+        for alias in stmt.names:
+            piece, spliced = self._one_module(alias.name, alias.asname)
+            if spliced:
+                did = True
+                out.extend(piece)
+            else:
+                kept.append(alias)
+        if not did:
+            return [stmt], False
+        if kept:
+            out.append(ast.Import(names=kept))
+        return out, True
+
+    def _splice_entry_from(self, stmt: ast.ImportFrom) -> tuple[list[ast.stmt], bool]:
+        if stmt.level or not stmt.module or "." in stmt.module or not _simple_user_module(stmt.module):
+            return [stmt], False
+        loaded = self.load(stmt.module)
+        if loaded is None:
+            return [stmt], False
+        out: list[ast.stmt] = [] if (loaded.cycle or loaded.already) else list(loaded.stmts)
+        if any(a.name == "*" for a in stmt.names):
+            for name in sorted(loaded.bindings):
+                if name.startswith("_"):
+                    continue
+                out.append(_m_assign(name, _attr_load(loaded.holder, name)))
+            return out, True
+        for alias in stmt.names:
+            pub = alias.asname or alias.name
+            out.append(_m_assign(pub, _attr_load(loaded.holder, alias.name)))
+        return out, True
+
+
+def _desugar_same_dir_imports(src: str, src_path: str | None) -> str:
+    """Inline `import name` when `<samedir>/name.py` exists.
+
+    Known shims, dotted names, and relative imports stay on the old path.
+    A missing file stays on the old path. The importer's other lines are
+    left untouched when nothing was inlined.
+    """
+    if not src_path:
+        return src
+    try:
+        origin = str(Path(src_path).resolve())
+    except OSError:
+        return src
+    try:
+        tree = ast.parse(src)
+    except SyntaxError:
+        return src
+    ctx = _SameDir(Path(origin).parent, origin)
+    new_body, changed = ctx.splice_entry(tree.body)
+    if not changed:
+        return src
+    tree.body = new_body
+    ast.fix_missing_locations(tree)
+    try:
+        return ast.unparse(tree) + "\n"
+    except Exception:
+        return src
 
 
 def desugar_from_import_as(src: str) -> str:
@@ -6434,10 +7361,14 @@ def main() -> int:
 
     if args.stdin or not args.input:
         src = sys.stdin.read()
+        src_path = None
     else:
         with open(args.input, encoding="utf-8") as f:
             src = f.read()
+        src_path = args.input
 
+    if src_path:
+        src = _desugar_same_dir_imports(src, src_path)
     aim = convert(desugar_for_unpack(desugar_tuple_unpack(desugar_from_import_as(desugar_yield(desugar_nameerror_probe(desugar_starargs_annotations(desugar_pep695_type_params(desugar_match(src)))))))))
     if args.output:
         with open(args.output, "w", encoding="utf-8") as f:
