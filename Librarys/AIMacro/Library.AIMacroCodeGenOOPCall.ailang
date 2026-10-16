@@ -923,6 +923,60 @@ Function.OOPGen_EmitDummyTestBasic {
     }
 }
 
+// @staticmethod / @classmethod sit on method slot 7. IDENT, CALL, or ATTRIBUTE.
+Function.OOPGen_DecoIsName {
+    Input: deco: Address
+    Input: want: Address
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(deco, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        nm = 0
+        dt = AST_Type(deco)
+        IfCondition EqualTo(dt, Node.IDENT) ThenBlock: {
+            nm = ArrayGet(deco, 3)
+        }
+        IfCondition EqualTo(dt, Node.ATTRIBUTE) ThenBlock: {
+            nm = ArrayGet(deco, 4)
+        }
+        IfCondition EqualTo(dt, Node.CALL) ThenBlock: {
+            dfn = ArrayGet(deco, 3)
+            IfCondition EqualTo(AST_Type(dfn), Node.IDENT) ThenBlock: {
+                nm = ArrayGet(dfn, 3)
+            }
+        }
+        IfCondition EqualTo(nm, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(nm, want), 0) ThenBlock: {
+            ReturnValue(1)
+        }
+        ReturnValue(0)
+    }
+}
+
+Function.OOPGen_MethodHasDeco {
+    Input: method_node: Address
+    Input: want: Address
+    Output: Integer
+    Body: {
+        decos = ArrayGet(method_node, 7)
+        IfCondition EqualTo(decos, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        n = Array.Size(decos)
+        i = 0
+        WhileLoop LessThan(i, n) {
+            IfCondition EqualTo(OOPGen_DecoIsName(Array.Get(decos, i), want), 1) ThenBlock: {
+                ReturnValue(1)
+            }
+            i = Add(i, 1)
+        }
+        ReturnValue(0)
+    }
+}
+
 Function.OOPGen_EmitClassRegistration {
     Input: class_name: Address
     Input: parent: Address
@@ -1162,6 +1216,16 @@ Function.OOPGen_EmitClassRegistration {
                     keep_m = 0
                 }
                 IfCondition EqualTo(keep_m, 1) ThenBlock: {
+                    is_st = OOPGen_MethodHasDeco(item, "staticmethod")
+                    IfCondition EqualTo(is_st, 1) ThenBlock: {
+                        st_code = StringConcat("    AIMacro.ClassAttrSet(\"", run_name)
+                        st_code = StringConcat(st_code, "\", \"")
+                        st_code = StringConcat(st_code, method_name)
+                        st_code = StringConcat(st_code, "\", AIMacro.StaticWrap(AddressOf(")
+                        st_code = StringConcat(st_code, func_name)
+                        st_code = StringConcat(st_code, ")))\n")
+                        Array.Push(OOPGen.class_init_code, st_code)
+                    } ElseBlock: {
                     emit_m = OOPGen_EmitTestName(class_name, method_name)
                     method_code = StringConcat("    OOP.ClassMethod(\"", run_name)
                     method_code = StringConcat(method_code, "\", \"")
@@ -1175,6 +1239,7 @@ Function.OOPGen_EmitClassRegistration {
                     packed_code = StringConcat(packed_code, emit_m)
                     packed_code = StringConcat(packed_code, "\")\n")
                     Array.Push(OOPGen.class_init_code, packed_code)
+                    }
                 }
             }
             IfCondition EqualTo(item_type, Node.ASSIGNMENT) ThenBlock: {

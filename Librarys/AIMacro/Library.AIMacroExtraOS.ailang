@@ -428,6 +428,18 @@ Function.AIMacro.StaticMethod {
     }
 }
 
+// @staticmethod def: call the packed Function with the user arg array, no self.
+Function.AIMacro.StaticWrap {
+    Input: f: Integer
+    Output: Integer
+    Body: {
+        h = Hash.Create(4)
+        Hash.Set(h, "__static__", 1)
+        Hash.Set(h, "fn", f)
+        ReturnValue(h)
+    }
+}
+
 Function.AIMacro.Super {
     Output: Integer
     Body: {
