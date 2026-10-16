@@ -744,6 +744,58 @@ def _simple_user_module(name: str) -> bool:
     return True
 
 
+def _user_parts(modname: str) -> list[str] | None:
+    """Dotted module name under the script directory, or None to keep the stub."""
+    if not modname:
+        return None
+    parts = modname.split(".")
+    for part in parts:
+        if not part.isidentifier():
+            return None
+    if parts[0] in _SHIM_MODULES or parts[0].startswith("unittest"):
+        return None
+    return parts
+
+
+def _mod_ident(modname: str) -> str:
+    """AILANG identifier for a dotted module name."""
+    return modname.replace(".", "__")
+
+
+def _locate_user_module(root: Path, modname: str) -> tuple[str, Path | None, Path] | None:
+    """Find modname under root.
+
+    Returns (kind, file, folder). kind is 'module', 'package', or 'namespace'.
+    file is None only for a namespace directory. A .py file wins over a
+    directory that has no __init__.py. An __init__.py wins over a sibling .py.
+    """
+    parts = _user_parts(modname)
+    if not parts:
+        return None
+    base = root
+    for i, part in enumerate(parts):
+        last = i == len(parts) - 1
+        py = base / f"{part}.py"
+        pkg = base / part
+        init = pkg / "__init__.py"
+        has_py = py.is_file()
+        has_init = init.is_file()
+        is_dir = pkg.is_dir()
+        if not last:
+            if has_init or (is_dir and not has_py):
+                base = pkg
+                continue
+            return None
+        if has_init:
+            return ("package", init, pkg)
+        if has_py:
+            return ("module", py, base)
+        if is_dir:
+            return ("namespace", None, pkg)
+        return None
+    return None
+
+
 def _load_name(name: str) -> ast.Name:
     return ast.Name(id=name, ctx=ast.Load())
 
@@ -913,11 +965,22 @@ def _iter_module_stmts(stmts: list[ast.stmt]):
 
 
 def _from_will_splice(stmt: ast.ImportFrom, directory: Path) -> bool:
-    if stmt.level or not stmt.module or "." in stmt.module:
+    if stmt.level or not stmt.module:
         return False
-    if not _simple_user_module(stmt.module):
+    located = _locate_user_module(directory, stmt.module)
+    if located is None:
         return False
-    return (directory / f"{stmt.module}.py").is_file()
+    kind, _file, _folder = located
+    if kind != "namespace":
+        return True
+    # A directory with no __init__.py is only inlined when every name is a file.
+    if any(alias.name == "*" for alias in stmt.names):
+        return False
+    for alias in stmt.names:
+        sub = _locate_user_module(directory, f"{stmt.module}.{alias.name}")
+        if sub is None or sub[0] == "namespace":
+            return False
+    return True
 
 
 def _module_bindings(body: list[ast.stmt], directory: Path) -> set[str]:
@@ -1249,27 +1312,57 @@ class _SameDir:
     def _rw(self, module_names: set[str], holder: str, chain: list[set[str]] | None = None, mask: set[str] | None = None) -> _ModRewriter:
         return _ModRewriter(self, chain or [], module_names, holder, mask or set())
 
-    def load(self, modname: str) -> _Loaded | None:
-        if not _simple_user_module(modname):
+    def _preamble(self, holder: str, ident: str, modname: str) -> list[ast.stmt]:
+        cls = self.unique(f"_AimMod_{ident}")
+        return [
+            ast.ClassDef(
+                name=cls,
+                bases=[],
+                keywords=[],
+                body=[ast.Pass()],
+                decorator_list=[],
+            ),
+            _m_assign(holder, ast.Call(func=_load_name(cls), args=[], keywords=[])),
+            _assign_attr(holder, "__name__", ast.Constant(value=modname)),
+        ]
+
+    def load(self, modname: str, allow_namespace: bool = False) -> _Loaded | None:
+        located = _locate_user_module(self.directory, modname)
+        if located is None:
             return None
-        path = self.directory / f"{modname}.py"
-        if not path.is_file():
+        kind, file, folder = located
+        if kind == "namespace" and not allow_namespace:
             return None
-        try:
-            key = str(path.resolve())
-        except OSError:
-            return None
-        if key == self.origin:
-            return None
-        holder = f"_aim_mod_{modname}"
+        if file is not None:
+            try:
+                key = str(file.resolve())
+            except OSError:
+                return None
+            if key == self.origin:
+                return None
+        else:
+            try:
+                key = str(folder.resolve()) + "/__ns__"
+            except OSError:
+                return None
+        ident = _mod_ident(modname)
+        holder = f"_aim_mod_{ident}"
         if key in self.stack:
             known_holder, bindings = self.known[key]
             return _Loaded([], bindings, known_holder, True, False)
         if key in self.done:
             prev = self.done[key]
             return _Loaded([], prev.bindings, prev.holder, False, True)
+        if kind == "namespace":
+            bindings = {"__name__"}
+            self.known[key] = (holder, bindings)
+            loaded = _Loaded(self._preamble(holder, ident, modname), bindings, holder, False, False)
+            self.done[key] = loaded
+            return loaded
+        if file is None:
+            return None
         try:
-            text = path.read_text(encoding="utf-8")
+            text = file.read_text(encoding="utf-8")
         except OSError:
             return None
         text = desugar_match(text)
@@ -1281,24 +1374,86 @@ class _SameDir:
         self.known[key] = (holder, bindings)
         self.stack.add(key)
         try:
-            body = self._lower_body(tree.body, holder, bindings, modname, {})
+            body = self._lower_body(tree.body, holder, bindings, ident, {})
         finally:
             self.stack.remove(key)
-        cls = self.unique(f"_AimMod_{modname}")
-        preamble = [
-            ast.ClassDef(
-                name=cls,
-                bases=[],
-                keywords=[],
-                body=[ast.Pass()],
-                decorator_list=[],
-            ),
-            _m_assign(holder, ast.Call(func=_load_name(cls), args=[], keywords=[])),
-            _assign_attr(holder, "__name__", ast.Constant(value=modname)),
-        ]
-        loaded = _Loaded(preamble + body, bindings, holder, False, False)
+        loaded = _Loaded(self._preamble(holder, ident, modname) + body, bindings, holder, False, False)
         self.done[key] = loaded
         return loaded
+
+    def _materialize(self, modname: str) -> tuple[list[ast.stmt], _Loaded] | None:
+        """Load modname and its parents. Statements run parent before child."""
+        parts = _user_parts(modname)
+        if not parts:
+            return None
+        stmts: list[ast.stmt] = []
+        prev: _Loaded | None = None
+        last: _Loaded | None = None
+        for i, part in enumerate(parts):
+            name = ".".join(parts[: i + 1])
+            loaded = self.load(name, allow_namespace=i < len(parts) - 1)
+            if loaded is None:
+                return None
+            if not loaded.cycle and not loaded.already:
+                stmts.extend(loaded.stmts)
+            if prev is not None:
+                stmts.append(_assign_attr(prev.holder, part, _load_name(loaded.holder)))
+            prev = loaded
+            last = loaded
+        if last is None:
+            return None
+        return stmts, last
+
+    def _from_names(self, module: str, aliases: list[ast.alias]) -> list[ast.stmt] | None:
+        """Bind a from-import. None means leave the statement on the old path."""
+        if _user_parts(module) is None:
+            return None
+        located = _locate_user_module(self.directory, module)
+        if located is None:
+            return None
+        kind = located[0]
+        if kind == "namespace":
+            if any(alias.name == "*" for alias in aliases):
+                return None
+            for alias in aliases:
+                sub = _locate_user_module(self.directory, f"{module}.{alias.name}")
+                if sub is None or sub[0] == "namespace":
+                    return None
+            out = []
+            for alias in aliases:
+                got = self._materialize(f"{module}.{alias.name}")
+                if got is None:
+                    return None
+                sub_stmts, sub_loaded = got
+                out.extend(sub_stmts)
+                pub = alias.asname or alias.name
+                out.append(_m_assign(pub, _load_name(sub_loaded.holder)))
+            return out
+        got = self._materialize(module)
+        if got is None:
+            return None
+        out, loaded = got
+        out = list(out)
+        if any(alias.name == "*" for alias in aliases):
+            for name in sorted(loaded.bindings):
+                if name.startswith("_"):
+                    continue
+                out.append(_m_assign(name, _attr_load(loaded.holder, name)))
+            return out
+        for alias in aliases:
+            pub = alias.asname or alias.name
+            sub_name = f"{module}.{alias.name}"
+            if alias.name not in loaded.bindings:
+                sub = _locate_user_module(self.directory, sub_name)
+                if sub is not None and sub[0] != "namespace":
+                    got_sub = self._materialize(sub_name)
+                    if got_sub is not None:
+                        sub_stmts, sub_loaded = got_sub
+                        out.extend(sub_stmts)
+                        out.append(_m_assign(pub, _load_name(sub_loaded.holder)))
+                        continue
+            out.append(_m_assign(pub, _attr_load(loaded.holder, alias.name)))
+        return out
 
     def _lower_body(self, body: list[ast.stmt], holder: str, bindings: set[str], modname: str, renames: dict[str, str]) -> list[ast.stmt]:
         out: list[ast.stmt] = []
@@ -1478,39 +1633,44 @@ class _SameDir:
             return out
         # ImportFrom
         assert isinstance(stmt, ast.ImportFrom)
-        if stmt.level or not stmt.module or not _simple_user_module(stmt.module):
-            # Not inlined. Keep the import. Do not copy names codegen never assigns.
+        if stmt.level or not stmt.module:
             return [stmt]
-        loaded = self.load(stmt.module)
-        if loaded is None:
+        bound = self._from_names(stmt.module, stmt.names)
+        if bound is None:
             return [stmt]
-        out = [] if (loaded.cycle or loaded.already) else list(loaded.stmts)
-        if any(a.name == "*" for a in stmt.names):
-            for name in sorted(loaded.bindings):
-                if name.startswith("_"):
-                    continue
-                out.append(_m_assign(name, _attr_load(loaded.holder, name)))
-                out.append(_assign_attr(into, name, _load_name(name)))
+        out = list(bound)
+        if any(alias.name == "*" for alias in stmt.names):
+            loaded = self.load(stmt.module)
+            if loaded is not None:
+                for name in sorted(loaded.bindings):
+                    if name.startswith("_"):
+                        continue
+                    out.append(_assign_attr(into, name, _load_name(name)))
             return out
         for alias in stmt.names:
             pub = alias.asname or alias.name
-            out.append(_m_assign(pub, _attr_load(loaded.holder, alias.name)))
             out.append(_assign_attr(into, pub, _load_name(pub)))
         return out
 
     def _one_module(self, modname: str, asname: str | None) -> tuple[list[ast.stmt], bool]:
-        """Stmts that define modname, and whether a sibling file was inlined."""
-        if "." in modname or not _simple_user_module(modname):
+        """Stmts that define modname, and whether a user file was inlined."""
+        got = self._materialize(modname)
+        if got is None:
             return [], False
-        loaded = self.load(modname)
-        if loaded is None:
+        stmts, loaded = got
+        parts = _user_parts(modname)
+        if parts is None:
             return [], False
-        bound = asname or modname
-        if loaded.cycle or loaded.already:
-            stmts: list[ast.stmt] = []
+        if asname:
+            target = loaded.holder
+            bound = asname
         else:
-            stmts = list(loaded.stmts)
-        stmts.append(_m_assign(bound, _load_name(loaded.holder)))
+            top = self.load(parts[0], allow_namespace=len(parts) > 1)
+            if top is None:
+                return [], False
+            target = top.holder
+            bound = parts[0]
+        stmts.append(_m_assign(bound, _load_name(target)))
         return stmts, True
 
     def splice_entry(self, body: list[ast.stmt]) -> tuple[list[ast.stmt], bool]:
@@ -1604,30 +1764,22 @@ class _SameDir:
         return out, True
 
     def _splice_entry_from(self, stmt: ast.ImportFrom) -> tuple[list[ast.stmt], bool]:
-        if stmt.level or not stmt.module or "." in stmt.module or not _simple_user_module(stmt.module):
+        if stmt.level or not stmt.module:
             return [stmt], False
-        loaded = self.load(stmt.module)
-        if loaded is None:
+        bound = self._from_names(stmt.module, stmt.names)
+        if bound is None:
             return [stmt], False
-        out: list[ast.stmt] = [] if (loaded.cycle or loaded.already) else list(loaded.stmts)
-        if any(a.name == "*" for a in stmt.names):
-            for name in sorted(loaded.bindings):
-                if name.startswith("_"):
-                    continue
-                out.append(_m_assign(name, _attr_load(loaded.holder, name)))
-            return out, True
-        for alias in stmt.names:
-            pub = alias.asname or alias.name
-            out.append(_m_assign(pub, _attr_load(loaded.holder, alias.name)))
-        return out, True
+        return bound, True
 
 
 def _desugar_same_dir_imports(src: str, src_path: str | None) -> str:
-    """Inline `import name` when `<samedir>/name.py` exists.
+    """Inline a user module that lives under the script directory.
 
-    Known shims, dotted names, and relative imports stay on the old path.
-    A missing file stays on the old path. The importer's other lines are
-    left untouched when nothing was inlined.
+    `import name` loads `<dir>/name.py`. `import pkg.mod` loads
+    `<dir>/pkg/mod.py` or `<dir>/pkg/mod/__init__.py`, after the package
+    `__init__.py` when that file exists. A folder with no `__init__.py`
+    can still hold a submodule. Known shims, relative imports, and missing
+    files stay on the old path.
     """
     if not src_path:
         return src
