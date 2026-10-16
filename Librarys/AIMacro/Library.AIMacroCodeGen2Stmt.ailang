@@ -43,6 +43,12 @@ Function.Gen_Node {
                 ArraySet(node, 3, uname)
                 Array.Push(Gen.deferred_classes, node)
                 OOPGen_Init()
+                // Function body emits the real ClassAttrSet. Do not let the
+                // file-scope classattrs function write those assigns again.
+                IfCondition EqualTo(OOPGen.fn_hoisted_classes, 0) ThenBlock: {
+                    OOPGen.fn_hoisted_classes = Array.Create(32)
+                }
+                Array.Push(OOPGen.fn_hoisted_classes, uname)
                 IfCondition EqualTo(OOPGen.class_renames_from, 0) ThenBlock: {
                     OOPGen.class_renames_from = Array.Create(32)
                     OOPGen.class_renames_to = Array.Create(32)

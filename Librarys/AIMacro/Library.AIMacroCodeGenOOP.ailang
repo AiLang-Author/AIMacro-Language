@@ -35,6 +35,7 @@ FixedPool.OOPGen {
     "classattrs_fns": Initialize=0
     "classattr_assigned": Initialize=0
     "class_method_names": Initialize=0
+    "fn_hoisted_classes": Initialize=0
 }
 
 
@@ -79,6 +80,7 @@ Function.OOPGen_Init {
         OOPGen.classattrs_fns = Array.Create(32)
         OOPGen.classattr_assigned = Array.Create(16)
         OOPGen.class_method_names = Array.Create(16)
+        OOPGen.fn_hoisted_classes = Array.Create(32)
         OOPGen.temp_counter = 0
         OOPGen.has_classes = 0
         OOPGen.in_classattrs = 0
@@ -132,6 +134,9 @@ Function.OOPGen_Reset {
             IfCondition NotEqual(OOPGen.classattr_assigned, 0) ThenBlock: {
                 Array.Clear(OOPGen.classattr_assigned)
             }
+            IfCondition NotEqual(OOPGen.fn_hoisted_classes, 0) ThenBlock: {
+                Array.Clear(OOPGen.fn_hoisted_classes)
+            }
         }
     }
 }
@@ -165,6 +170,10 @@ Function.OOPGen_Free {
         IfCondition NotEqual(OOPGen.class_method_names, 0) ThenBlock: {
             Array.Destroy(OOPGen.class_method_names)
             OOPGen.class_method_names = 0
+        }
+        IfCondition NotEqual(OOPGen.fn_hoisted_classes, 0) ThenBlock: {
+            Array.Destroy(OOPGen.fn_hoisted_classes)
+            OOPGen.fn_hoisted_classes = 0
         }
         OOPGen.initialized = 0
     }
@@ -818,17 +827,27 @@ Function.OOPGen_ClassDef {
                 taken = Gen_NameInArray(attr_fn, OOPGen.classattrs_fns)
             }
         }
+        // A class hoisted out of a function already ClassAttrSet its
+        // assigns there (real params and locals). Repeating them here
+        // runs again at the end of Main and stores None over that value.
+        // Nested-class name binds stay: the function resets those keys.
+        fn_hoisted = 0
+        IfCondition NotEqual(OOPGen.fn_hoisted_classes, 0) ThenBlock: {
+            fn_hoisted = Gen_NameInArray(class_name, OOPGen.fn_hoisted_classes)
+        }
         has_attr = 0
         IfCondition GreaterThan(Array.Size(nest_from), 0) ThenBlock: {
             has_attr = 1
         }
-        i = 0
-        WhileLoop LessThan(i, num_items) {
-            item = Array.Get(body, i)
-            IfCondition EqualTo(AST_Type(item), Node.ASSIGNMENT) ThenBlock: {
-                has_attr = 1
+        IfCondition EqualTo(fn_hoisted, 0) ThenBlock: {
+            i = 0
+            WhileLoop LessThan(i, num_items) {
+                item = Array.Get(body, i)
+                IfCondition EqualTo(AST_Type(item), Node.ASSIGNMENT) ThenBlock: {
+                    has_attr = 1
+                }
+                i = Add(i, 1)
             }
-            i = Add(i, 1)
         }
         IfCondition EqualTo(has_attr, 1) ThenBlock: {
             Gen_Emit("Function.")
@@ -873,18 +892,20 @@ Function.OOPGen_ClassDef {
                 Gen_Emit(")\n")
                 ni = Add(ni, 1)
             }
-            i = 0
-            WhileLoop LessThan(i, num_items) {
-                item = Array.Get(body, i)
-                IfCondition EqualTo(AST_Type(item), Node.ASSIGNMENT) ThenBlock: {
-                    fname = AST_GetField(item, "name")
-                    fval = AST_GetField(item, "value")
-                    IfCondition NotEqual(fname, 0) ThenBlock: {
-                        OOPGen_EmitClassattrsAssign(class_name, fname, fval)
-                        OOPGen_MarkClassattrAssigned(fname)
+            IfCondition EqualTo(fn_hoisted, 0) ThenBlock: {
+                i = 0
+                WhileLoop LessThan(i, num_items) {
+                    item = Array.Get(body, i)
+                    IfCondition EqualTo(AST_Type(item), Node.ASSIGNMENT) ThenBlock: {
+                        fname = AST_GetField(item, "name")
+                        fval = AST_GetField(item, "value")
+                        IfCondition NotEqual(fname, 0) ThenBlock: {
+                            OOPGen_EmitClassattrsAssign(class_name, fname, fval)
+                            OOPGen_MarkClassattrAssigned(fname)
+                        }
                     }
+                    i = Add(i, 1)
                 }
-                i = Add(i, 1)
             }
             OOPGen.in_classattrs = 0
             Gen_EmitIndent()
