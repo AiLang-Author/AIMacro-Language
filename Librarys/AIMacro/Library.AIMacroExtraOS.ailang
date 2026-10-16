@@ -440,6 +440,21 @@ Function.AIMacro.StaticWrap {
     }
 }
 
+// @classmethod def: packed call with the class name in front of the user args.
+// AIMacro.ClassMethod stays identity so classmethod(A().foo) keeps the bound method.
+Function.AIMacro.ClassWrap {
+    Input: f: Integer
+    Input: cls: Address
+    Output: Integer
+    Body: {
+        h = Hash.Create(4)
+        Hash.Set(h, "__classmethod__", 1)
+        Hash.Set(h, "fn", f)
+        Hash.Set(h, "cls", cls)
+        ReturnValue(h)
+    }
+}
+
 Function.AIMacro.Super {
     Output: Integer
     Body: {

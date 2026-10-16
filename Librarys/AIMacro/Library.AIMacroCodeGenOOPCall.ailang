@@ -1226,6 +1226,18 @@ Function.OOPGen_EmitClassRegistration {
                         st_code = StringConcat(st_code, ")))\n")
                         Array.Push(OOPGen.class_init_code, st_code)
                     } ElseBlock: {
+                    is_cm = OOPGen_MethodHasDeco(item, "classmethod")
+                    IfCondition EqualTo(is_cm, 1) ThenBlock: {
+                        cm_code = StringConcat("    AIMacro.ClassAttrSet(\"", run_name)
+                        cm_code = StringConcat(cm_code, "\", \"")
+                        cm_code = StringConcat(cm_code, method_name)
+                        cm_code = StringConcat(cm_code, "\", AIMacro.ClassWrap(AddressOf(")
+                        cm_code = StringConcat(cm_code, func_name)
+                        cm_code = StringConcat(cm_code, "), \"")
+                        cm_code = StringConcat(cm_code, run_name)
+                        cm_code = StringConcat(cm_code, "\"))\n")
+                        Array.Push(OOPGen.class_init_code, cm_code)
+                    } ElseBlock: {
                     emit_m = OOPGen_EmitTestName(class_name, method_name)
                     method_code = StringConcat("    OOP.ClassMethod(\"", run_name)
                     method_code = StringConcat(method_code, "\", \"")
@@ -1239,6 +1251,7 @@ Function.OOPGen_EmitClassRegistration {
                     packed_code = StringConcat(packed_code, emit_m)
                     packed_code = StringConcat(packed_code, "\")\n")
                     Array.Push(OOPGen.class_init_code, packed_code)
+                    }
                     }
                 }
             }

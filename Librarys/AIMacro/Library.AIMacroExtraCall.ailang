@@ -2423,6 +2423,24 @@ Function.AIMacro.SmartCallN {
                 }
                 ReturnValue(CallIndirect(realfn, args))
             }
+            IfCondition NotEqual(Hash.Get(fn, "__classmethod__"), 0) ThenBlock: {
+                cm_fn = Hash.Get(fn, "fn")
+                IfCondition EqualTo(cm_fn, 0) ThenBlock: {
+                    ReturnValue(Types.GetNone())
+                }
+                cm_cls = Hash.Get(fn, "cls")
+                cm_pack = Array.Create(8)
+                Array.Push(cm_pack, cm_cls)
+                IfCondition NotEqual(args, 0) ThenBlock: {
+                    cm_n = Array.Size(args)
+                    cm_i = 0
+                    WhileLoop LessThan(cm_i, cm_n) {
+                        Array.Push(cm_pack, Array.Get(args, cm_i))
+                        cm_i = Add(cm_i, 1)
+                    }
+                }
+                ReturnValue(CallIndirect(cm_fn, cm_pack))
+            }
             // OOP instance / plain dict: CallIndirect(hash) is execute-heap SEGV.
             // leftover TestTracing._trace PackedGet(0) is self; func(*args) SmartCall1.
             // Exception hashes have integer __class__; MethodExists is strlen(kind).
