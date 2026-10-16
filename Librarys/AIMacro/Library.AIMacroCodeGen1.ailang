@@ -57,6 +57,7 @@ FixedPool.Gen {
     "all_nest_from": Initialize=0, CanChange=True
     "all_nest_to": Initialize=0, CanChange=True
     "known_nested_funcs": Initialize=0, CanChange=True
+    "deco_bound_names": Initialize=0, CanChange=True
     "pending_freevars": Initialize=0, CanChange=True
     "method_py_names": Initialize=0, CanChange=True
     "module_funcs": Initialize=0, CanChange=True
@@ -111,6 +112,7 @@ Function.Gen_Init {
         Gen.all_nest_from = Array.Create(64)
         Gen.all_nest_to = Array.Create(64)
         Gen.known_nested_funcs = Array.Create(64)
+        Gen.deco_bound_names = Array.Create(16)
         Gen.pending_freevars = 0
         Gen.method_py_names = Array.Create(64)
         Gen.module_funcs = Array.Create(32)
@@ -2444,6 +2446,15 @@ Function.Gen_EmitIdent {
             Gen_Emit("PyMod.")
             Gen_Emit(name)
             ReturnValue(0)
+        }
+        // Decorated nested def: the local holds the wrapper. Do not
+        // rewrite later reads back to AddressOf(__nest) or GetNone.
+        IfCondition NotEqual(Gen.deco_bound_names, 0) ThenBlock: {
+            is_deco_b = Gen_NameInArray(name, Gen.deco_bound_names)
+            IfCondition EqualTo(is_deco_b, 1) ThenBlock: {
+                Gen_Emit(name)
+                ReturnValue(0)
+            }
         }
         // Nested-def hoist: use AddressOf(__nest_N_name) across functions
         IfCondition NotEqual(Gen.nest_bind_names, 0) ThenBlock: {

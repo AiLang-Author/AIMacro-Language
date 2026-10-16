@@ -153,6 +153,14 @@ Function.Gen_Node {
                 Gen_Emit(" = AddressOf(")
                 Gen_Emit(uname)
                 Gen_Emit(")\n")
+                // Later reads of orig are the wrapper local, not AddressOf.
+                IfCondition EqualTo(Gen_HasDecos(node), 1) ThenBlock: {
+                    IfCondition EqualTo(Gen.deco_bound_names, 0) ThenBlock: {
+                        Gen.deco_bound_names = Array.Create(16)
+                    }
+                    Array.Push(Gen.deco_bound_names, orig)
+                }
+                Gen_ApplyDecos(orig, ArrayGet(node, 9))
                 ReturnValue(0)
             }
             Gen_Function(node)
@@ -379,6 +387,87 @@ Function.Gen_Node {
 // =============================================================================
 // FUNCTION GENERATION
 // =============================================================================
+// @a @b def f is f = a(b(f)). decos are stored outer-first.
+Function.Gen_HasDecos {
+    Input: node: Address
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(node, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        decos = ArrayGet(node, 9)
+        IfCondition EqualTo(decos, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition GreaterThan(Array.Size(decos), 0) ThenBlock: {
+            ReturnValue(1)
+        }
+        ReturnValue(0)
+    }
+}
+
+Function.Gen_ApplyOneDeco {
+    Input: py_name: Address
+    Input: deco: Address
+    Body: {
+        IfCondition EqualTo(deco, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        callee = deco
+        dt = AST_Type(deco)
+        IfCondition NotEqual(dt, Node.IDENT) ThenBlock: {
+            callee = Gen_FlattenExpr(deco)
+        }
+        arg = Gen_MakeIdent(py_name)
+        temp = Gen_TempName()
+        Gen_EmitIndent()
+        Gen_Emit(temp)
+        Gen_Emit(" = AIMacro.SmartCall1(")
+        Gen_Expr(callee)
+        Gen_Emit(", ")
+        Gen_Expr(arg)
+        Gen_Emit(")\n")
+        Gen_EmitIndent()
+        Gen_EmitIdentLhs(py_name)
+        Gen_Emit(" = ")
+        Gen_Emit(temp)
+        Gen_Emit("\n")
+    }
+}
+
+Function.Gen_ApplyDecos {
+    Input: py_name: Address
+    Input: decos: Address
+    Body: {
+        IfCondition EqualTo(decos, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        n = Array.Size(decos)
+        IfCondition EqualTo(n, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        i = Subtract(n, 1)
+        WhileLoop GreaterEqual(i, 0) {
+            Gen_ApplyOneDeco(py_name, Array.Get(decos, i))
+            i = Subtract(i, 1)
+        }
+    }
+}
+
+// Module-level def: bind the function, then wrap it. Nested defs bind first.
+Function.Gen_EmitFuncDecoBind {
+    Input: node: Address
+    Body: {
+        name = ArrayGet(node, 3)
+        Gen_EmitIndent()
+        Gen_EmitIdentLhs(name)
+        Gen_Emit(" = AddressOf(")
+        Gen_Emit(name)
+        Gen_Emit(")\n")
+        Gen_ApplyDecos(name, ArrayGet(node, 9))
+    }
+}
+
 Function.Gen_Function {
     Input: node: Address
     Body: {
@@ -413,6 +502,10 @@ Function.Gen_Function {
         Gen.temp_counter = 0
         OOPGen.temp_counter = 0
         Gen.loop_depth = 0
+        // Nested decorated names are locals of the function being emitted.
+        IfCondition NotEqual(Gen.deco_bound_names, 0) ThenBlock: {
+            Array.Clear(Gen.deco_bound_names)
+        }
         IfCondition EqualTo(Gen.pending_freevars, 0) ThenBlock: {
             IfCondition NotEqual(Gen.nest_bind_names, 0) ThenBlock: {
                 Array.Clear(Gen.nest_bind_names)

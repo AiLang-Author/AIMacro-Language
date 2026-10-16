@@ -121,12 +121,15 @@ Function.Gen_Expr {
                 Gen_Emit(")")
                 ReturnValue(0)
             }
-            // Function used as a value: emit AddressOf(fn) so AILang sees a pointer
+            // Function used as a value: emit AddressOf(fn) so AILang sees a pointer.
+            // A decorated def is a module var; the read is the wrapper in PyMod.
             IfCondition EqualTo(Gen_IsKnownFunc(name), 1) ThenBlock: {
-                Gen_Emit("AddressOf(")
-                Gen_Emit(name)
-                Gen_Emit(")")
-                ReturnValue(0)
+                IfCondition EqualTo(Gen_IsModuleVar(name), 0) ThenBlock: {
+                    Gen_Emit("AddressOf(")
+                    Gen_Emit(name)
+                    Gen_Emit(")")
+                    ReturnValue(0)
+                }
             }
             // Class-body method alias: __rmul__ = __mul__ / property(_get_num)
             maddr = OOPGen_ClassMethodAddr(name)

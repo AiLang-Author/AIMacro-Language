@@ -149,6 +149,10 @@ Function.Gen_Program {
             }
             IfCondition EqualTo(t, Node.FUNCTION) ThenBlock: {
                 Gen_MarkBodyAssignVars(ArrayGet(decl, 5))
+                // @deco def name reads back the wrapped value, not AddressOf.
+                IfCondition EqualTo(Gen_HasDecos(decl), 1) ThenBlock: {
+                    Gen_MarkModuleVar(ArrayGet(decl, 3))
+                }
             }
             IfCondition EqualTo(t, Node.CLASS_DEF) ThenBlock: {
                 Gen_MarkGlobalEnumVars(decl)
@@ -249,6 +253,10 @@ Function.Gen_Program {
                 cmp = StringCompare(name, "main")
                 IfCondition EqualTo(cmp, 0) ThenBlock: {
                     has_main = 1
+                }
+                // Replay the def in Main so the decorator runs in source order.
+                IfCondition EqualTo(Gen_HasDecos(decl), 1) ThenBlock: {
+                    Array.Push(toplevel, decl)
                 }
             } ElseBlock: {
                 IfCondition EqualTo(t, Node.CLASS_DEF) ThenBlock: {
@@ -365,7 +373,12 @@ Function.Gen_Program {
             WhileLoop LessThan(i, n_top) {
                 Gen.temp_counter = 0
                 OOPGen.temp_counter = 0
-                Gen_Node(Array.Get(toplevel, i))
+                top_item = Array.Get(toplevel, i)
+                IfCondition EqualTo(AST_Type(top_item), Node.FUNCTION) ThenBlock: {
+                    Gen_EmitFuncDecoBind(top_item)
+                } ElseBlock: {
+                    Gen_Node(top_item)
+                }
                 i = Add(i, 1)
             }
             Gen.indent = saved_indent

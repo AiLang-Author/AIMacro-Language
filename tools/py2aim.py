@@ -5116,6 +5116,20 @@ def _clos_inner_locals(node: ast.AST) -> set[str]:
     return locs
 
 
+def _clos_own_deco_ids(inner: ast.AST) -> set[int]:
+    """Nodes in this function's own decorators.
+
+    Decorators run in the enclosing frame. A name there is not a free
+    var of the function being defined, so `@deco2 def inner` stays a
+    nested def instead of a closure over deco2.
+    """
+    ids: set[int] = set()
+    for d in getattr(inner, "decorator_list", None) or []:
+        for n in ast.walk(d):
+            ids.add(id(n))
+    return ids
+
+
 def _clos_freevars(inner: ast.AST, enclosing: set[str]) -> list[str]:
     iloc = _clos_inner_locals(inner)
     iglob = _clos_global_names(inner)
@@ -5123,8 +5137,11 @@ def _clos_freevars(inner: ast.AST, enclosing: set[str]) -> list[str]:
     for n in ast.walk(inner):
         if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef)):
             iloc.add(n.name)
+    deco_ids = _clos_own_deco_ids(inner)
     seen: list[str] = []
     for n in ast.walk(inner):
+        if id(n) in deco_ids:
+            continue
         if (
             isinstance(n, ast.Name)
             and isinstance(n.ctx, ast.Load)
