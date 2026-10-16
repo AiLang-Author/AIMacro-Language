@@ -749,6 +749,25 @@ Function.AIMacro.ObjectSet {
         IfCondition EqualTo(Hash.IsHash(data), 0) ThenBlock: {
             ReturnValue(0)
         }
+        // @property setter. Leave the property object in place so the
+        // next read still calls fget. ExcKind __class__ must not be hashed.
+        cls_set = Hash.Get(obj, "__class__")
+        IfCondition EqualTo(AIMacro.LooksLikeString(cls_set), 1) ThenBlock: {
+            cv_set = AIMacro.ClassAttrGet(cls_set, field)
+            IfCondition NotEqual(cv_set, 0) ThenBlock: {
+            IfCondition EqualTo(Hash.IsHash(cv_set), 1) ThenBlock: {
+                IfCondition NotEqual(Hash.Get(cv_set, "__property__"), 0) ThenBlock: {
+                    fset = Hash.Get(cv_set, "fset")
+                    IfCondition NotEqual(fset, 0) ThenBlock: {
+                        one = Array.Create(1)
+                        Array.Push(one, value)
+                        CallIndirect(fset, AIMacro.PackCallArgs(obj, one))
+                        ReturnValue(1)
+                    }
+                }
+            }
+            }
+        }
         Hash.Set(data, field, value)
         ReturnValue(1)
     }
