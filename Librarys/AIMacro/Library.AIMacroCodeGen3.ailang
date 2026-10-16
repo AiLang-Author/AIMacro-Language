@@ -863,13 +863,24 @@ Function.Gen_FlattenExpr {
         }
         IfCondition EqualTo(t, Node.SUPER_CALL) ThenBlock: {
             method = AST_GetField(node, "method")
-            // Leftover super(), super().attr, super(cls, obj): method is 0.
-            // Gen_Emit(0) transpile-SEGVs (test_super bare super()).
-            IfCondition Or(EqualTo(method, 0), EqualTo(OOPGen.current_class, 0)) ThenBlock: {
+            // super() outside a method has no class cell. Gen_Emit(0) SEGV'd.
+            IfCondition EqualTo(OOPGen.current_class, 0) ThenBlock: {
                 temp = Gen_TempName()
                 Gen_EmitIndent()
                 Gen_Emit(temp)
                 Gen_Emit(" = Types.GetNone()\n")
+                ReturnValue(Gen_MakeIdent(temp))
+            }
+            recv = OOPGen_ReceiverIdent()
+            IfCondition EqualTo(method, 0) ThenBlock: {
+                temp = Gen_TempName()
+                Gen_EmitIndent()
+                Gen_Emit(temp)
+                Gen_Emit(" = AIMacro.SuperProxy(")
+                Gen_Emit(recv)
+                Gen_Emit(", \"")
+                Gen_Emit(OOPGen.current_class)
+                Gen_Emit("\")\n")
                 ReturnValue(Gen_MakeIdent(temp))
             }
             args = AST_GetField(node, "args")
@@ -898,10 +909,9 @@ Function.Gen_FlattenExpr {
                 i = Add(i, 1)
             }
             temp = Gen_TempName()
-            recv = OOPGen_ReceiverIdent()
             Gen_EmitIndent()
             Gen_Emit(temp)
-            Gen_Emit(" = OOP.SuperCall(")
+            Gen_Emit(" = AIMacro.SuperInvoke(")
             Gen_Emit(recv)
             Gen_Emit(", \"")
             Gen_Emit(OOPGen.current_class)

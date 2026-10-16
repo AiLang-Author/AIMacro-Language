@@ -533,6 +533,99 @@ Function.AIMacro.SetIsdisjoint {
     }
 }
 
+// Zero-arg super() inside a method. The class is the one being compiled,
+// not the instance's runtime class, so a B method on a C instance still
+// starts the search after B.
+Function.AIMacro.SuperProxy {
+    Input: obj: Address
+    Input: cls: Address
+    Output: Address
+    Body: {
+        h = Hash.Create(4)
+        Hash.Set(h, "__super__", 1)
+        Hash.Set(h, "__self__", obj)
+        Hash.Set(h, "__thisclass__", cls)
+        ReturnValue(h)
+    }
+}
+
+Function.AIMacro.SuperInvoke {
+    Input: obj: Address
+    Input: cls: Address
+    Input: name: Address
+    Input: args: Address
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(AIMacro.LooksLikeString(cls), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(AIMacro.LooksLikeString(name), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        parent = OOP.ClassGetParent(cls)
+        IfCondition EqualTo(parent, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        fn = OOP._MethodLookupWithInheritance(parent, name)
+        IfCondition EqualTo(fn, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        // User methods take packed p__args. OOP.SuperCall calls them unpacked.
+        IfCondition EqualTo(OOP.IsPackedMethod(obj, name), 1) ThenBlock: {
+            pargs = AIMacro.PackCallArgs(obj, args)
+            ReturnValue(CallIndirect(fn, pargs))
+        }
+        ReturnValue(OOP.SuperCall(obj, cls, name, args))
+    }
+}
+
+Function.AIMacro.SuperGet {
+    Input: proxy: Address
+    Input: field: Address
+    Output: Address
+    Body: {
+        IfCondition EqualTo(AIMacro.LooksLikeString(field), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        inst = Hash.Get(proxy, "__self__")
+        cls = Hash.Get(proxy, "__thisclass__")
+        IfCondition EqualTo(AIMacro.LooksLikeString(cls), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        parent = OOP.ClassGetParent(cls)
+        IfCondition EqualTo(parent, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        cv = AIMacro.ClassAttrGet(parent, field)
+        IfCondition NotEqual(cv, 0) ThenBlock: {
+            cv_h = 0
+            IfCondition EqualTo(Types.CanDeref(cv), 1) ThenBlock: {
+                cv_h = Hash.IsHash(cv)
+            }
+            IfCondition EqualTo(cv_h, 1) ThenBlock: {
+                IfCondition NotEqual(Hash.Get(cv, "__property__"), 0) ThenBlock: {
+                    fget = Hash.Get(cv, "fget")
+                    IfCondition NotEqual(fget, 0) ThenBlock: {
+                        pargs = AIMacro.PackCallArgs(inst, 0)
+                        ReturnValue(CallIndirect(fget, pargs))
+                    }
+                    ReturnValue(0)
+                }
+            }
+            ReturnValue(cv)
+        }
+        fn = OOP._MethodLookupWithInheritance(parent, field)
+        IfCondition EqualTo(fn, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        h = Hash.Create(4)
+        Hash.Set(h, "__superbound__", 1)
+        Hash.Set(h, "obj", inst)
+        Hash.Set(h, "fn", fn)
+        ReturnValue(h)
+    }
+}
+
 Function.AIMacro.ObjectGet {
     Input: obj: Address
     Input: field: Address
@@ -657,6 +750,10 @@ Function.AIMacro.ObjectGet {
                 }
             }
             ReturnValue(0)
+        }
+        supm = Hash.Get(obj, "__super__")
+        IfCondition NotEqual(supm, 0) ThenBlock: {
+            ReturnValue(AIMacro.SuperGet(obj, field))
         }
         data = Hash.Get(obj, "__data__")
         v = 0

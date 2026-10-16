@@ -386,8 +386,17 @@ Function.OOPGen_SuperCall {
     Body: {
         method = AST_GetField(expr, "method")
         args = AST_GetField(expr, "args")
-        IfCondition Or(EqualTo(method, 0), EqualTo(OOPGen.current_class, 0)) ThenBlock: {
+        IfCondition EqualTo(OOPGen.current_class, 0) ThenBlock: {
             Gen_Emit("Types.GetNone()")
+            ReturnValue(0)
+        }
+        recv = OOPGen_ReceiverIdent()
+        IfCondition EqualTo(method, 0) ThenBlock: {
+            Gen_Emit("AIMacro.SuperProxy(")
+            Gen_Emit(recv)
+            Gen_Emit(", \"")
+            Gen_Emit(OOPGen.current_class)
+            Gen_Emit("\")")
             ReturnValue(0)
         }
         
@@ -398,7 +407,6 @@ Function.OOPGen_SuperCall {
         
         // Generate args array
         args_var = OOPGen_TempVar("super_args")
-        recv = OOPGen_ReceiverIdent()
         
         Gen_EmitIndent()
         Gen_Emit(args_var)
@@ -421,9 +429,9 @@ Function.OOPGen_SuperCall {
             i = Add(i, 1)
         }
         
-        // Emit super call
+        // Emit super call. Packed parent methods go through SuperInvoke.
         Gen_EmitIndent()
-        Gen_Emit("OOP.SuperCall(")
+        Gen_Emit("AIMacro.SuperInvoke(")
         Gen_Emit(recv)
         Gen_Emit(", \"")
         Gen_Emit(OOPGen.current_class)

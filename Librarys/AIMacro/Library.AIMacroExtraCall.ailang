@@ -1847,6 +1847,11 @@ Function.AIMacro.MethodCall {
         // RaiseKind hashes store integer ExcKind in __class__. MethodLookup
         // Hash.Gets ClassRegistry with that integer: strlen(15).
         IfCondition And(GreaterEqual(obj, 4000000000), EqualTo(Hash.IsHash(obj), 1)) ThenBlock: {
+            IfCondition NotEqual(Hash.Get(obj, "__super__"), 0) ThenBlock: {
+                sinst = Hash.Get(obj, "__self__")
+                scls = Hash.Get(obj, "__thisclass__")
+                ReturnValue(AIMacro.SuperInvoke(sinst, scls, method_name, args))
+            }
             cls_ml = Hash.Get(obj, "__class__")
             IfCondition EqualTo(AIMacro.LooksLikeString(cls_ml), 1) ThenBlock: {
                 // staticmethod(fn) / classmethod(fn) live on the class attr.
@@ -2354,6 +2359,15 @@ Function.AIMacro.SmartCallN {
                     }
                 }
                 ReturnValue(AIMacro.CallOpShim(fn, args))
+            }
+            IfCondition NotEqual(Hash.Get(fn, "__superbound__"), 0) ThenBlock: {
+                sinst = Hash.Get(fn, "obj")
+                sfn = Hash.Get(fn, "fn")
+                IfCondition EqualTo(sfn, 0) ThenBlock: {
+                    ReturnValue(0)
+                }
+                spack = AIMacro.PackCallArgs(sinst, args)
+                ReturnValue(CallIndirect(sfn, spack))
             }
             IfCondition NotEqual(Hash.Get(fn, "__bound__"), 0) ThenBlock: {
                 boundv = Hash.Get(fn, "__bound__")
