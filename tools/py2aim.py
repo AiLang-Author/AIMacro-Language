@@ -796,6 +796,35 @@ def _locate_user_module(root: Path, modname: str) -> tuple[str, Path | None, Pat
     return None
 
 
+def _relative_abs(importer: str, is_package: bool, level: int, module: str | None) -> str | None:
+    """Absolute name for `from .mod import` inside importer.
+
+    level 1 is the package that contains importer. A package __init__ is
+    its own package. Each extra dot moves to the parent. None means the
+    import walks off the top, so the old path stays.
+    """
+    if level <= 0:
+        return module
+    parts = importer.split(".") if importer else []
+    if not is_package:
+        if not parts:
+            return None
+        parts = parts[:-1]
+    up = level - 1
+    if up > len(parts):
+        return None
+    if up:
+        parts = parts[:-up]
+    if module:
+        extra = module.split(".")
+        if any(not part.isidentifier() for part in extra):
+            return None
+        parts.extend(extra)
+    if not parts:
+        return None
+    return ".".join(parts)
+
+
 def _load_name(name: str) -> ast.Name:
     return ast.Name(id=name, ctx=ast.Load())
 
@@ -964,10 +993,20 @@ def _iter_module_stmts(stmts: list[ast.stmt]):
                 yield from _iter_module_stmts(case.body)
 
 
-def _from_will_splice(stmt: ast.ImportFrom, directory: Path) -> bool:
-    if stmt.level or not stmt.module:
+def _from_module_name(stmt: ast.ImportFrom, importer: str | None, is_package: bool) -> str | None:
+    """Module a from-import loads, with relative dots made absolute."""
+    if stmt.level:
+        if not importer:
+            return None
+        return _relative_abs(importer, is_package, stmt.level, stmt.module)
+    return stmt.module
+
+
+def _from_will_splice(stmt: ast.ImportFrom, directory: Path, importer: str | None = None, is_package: bool = False) -> bool:
+    module = _from_module_name(stmt, importer, is_package)
+    if not module:
         return False
-    located = _locate_user_module(directory, stmt.module)
+    located = _locate_user_module(directory, module)
     if located is None:
         return False
     kind, _file, _folder = located
@@ -977,13 +1016,13 @@ def _from_will_splice(stmt: ast.ImportFrom, directory: Path) -> bool:
     if any(alias.name == "*" for alias in stmt.names):
         return False
     for alias in stmt.names:
-        sub = _locate_user_module(directory, f"{stmt.module}.{alias.name}")
+        sub = _locate_user_module(directory, f"{module}.{alias.name}")
         if sub is None or sub[0] == "namespace":
             return False
     return True
 
 
-def _module_bindings(body: list[ast.stmt], directory: Path) -> set[str]:
+def _module_bindings(body: list[ast.stmt], directory: Path, importer: str | None = None, is_package: bool = False) -> set[str]:
     names: set[str] = set()
     _collect_locals(body, names, set())
     # A from-import we do not inline never assigns the name. Leave those
@@ -991,7 +1030,7 @@ def _module_bindings(body: list[ast.stmt], directory: Path) -> set[str]:
     assigned: set[str] = set()
     _collect_locals(body, assigned, set(), skip_imports=True)
     for stmt in _iter_module_stmts(body):
-        if isinstance(stmt, ast.ImportFrom) and not _from_will_splice(stmt, directory):
+        if isinstance(stmt, ast.ImportFrom) and not _from_will_splice(stmt, directory, importer, is_package):
             for bound in _import_bound_names(stmt):
                 if bound not in assigned:
                     names.discard(bound)
@@ -1280,12 +1319,15 @@ class _ModRewriter(ast.NodeTransformer):
 
 
 class _Loaded:
-    def __init__(self, stmts: list[ast.stmt], bindings: set[str], holder: str, cycle: bool, already: bool):
+    def __init__(self, stmts: list[ast.stmt], bindings: set[str], holder: str, cycle: bool, already: bool, defined: set[str] | None = None):
         self.stmts = stmts
         self.bindings = bindings
         self.holder = holder
         self.cycle = cycle
         self.already = already
+        # Names assigned in the body, not names that only arrive through import.
+        # `from pkg import sub` loads sub.py when sub is not one of these.
+        self.defined = set() if defined is None else defined
 
 
 class _SameDir:
@@ -1295,6 +1337,8 @@ class _SameDir:
         self.stack: set[str] = set()
         self.known: dict[str, tuple[str, set[str]]] = {}
         self.done: dict[str, _Loaded] = {}
+        self.defined: dict[str, set[str]] = {}
+        self._rel: list[tuple[str, bool]] = []
         self._n = 0
         self._counts: dict[str, int] = {}
 
@@ -1349,10 +1393,10 @@ class _SameDir:
         holder = f"_aim_mod_{ident}"
         if key in self.stack:
             known_holder, bindings = self.known[key]
-            return _Loaded([], bindings, known_holder, True, False)
+            return _Loaded([], bindings, known_holder, True, False, self.defined.get(key))
         if key in self.done:
             prev = self.done[key]
-            return _Loaded([], prev.bindings, prev.holder, False, True)
+            return _Loaded([], prev.bindings, prev.holder, False, True, prev.defined)
         if kind == "namespace":
             bindings = {"__name__"}
             self.known[key] = (holder, bindings)
@@ -1370,14 +1414,20 @@ class _SameDir:
             tree = ast.parse(text)
         except SyntaxError:
             return None
-        bindings = _module_bindings(tree.body, self.directory)
+        is_package = kind == "package"
+        assigned: set[str] = set()
+        _collect_locals(tree.body, assigned, set(), skip_imports=True)
+        bindings = _module_bindings(tree.body, self.directory, modname, is_package)
         self.known[key] = (holder, bindings)
+        self.defined[key] = assigned
         self.stack.add(key)
+        self._rel.append((modname, is_package))
         try:
             body = self._lower_body(tree.body, holder, bindings, ident, {})
         finally:
+            self._rel.pop()
             self.stack.remove(key)
-        loaded = _Loaded(self._preamble(holder, ident, modname) + body, bindings, holder, False, False)
+        loaded = _Loaded(self._preamble(holder, ident, modname) + body, bindings, holder, False, False, assigned)
         self.done[key] = loaded
         return loaded
 
@@ -1443,7 +1493,7 @@ class _SameDir:
         for alias in aliases:
             pub = alias.asname or alias.name
             sub_name = f"{module}.{alias.name}"
-            if alias.name not in loaded.bindings:
+            if alias.name not in loaded.defined:
                 sub = _locate_user_module(self.directory, sub_name)
                 if sub is not None and sub[0] != "namespace":
                     got_sub = self._materialize(sub_name)
@@ -1631,16 +1681,22 @@ class _SameDir:
                     out.append(ast.Import(names=[alias]))
                 out.append(_assign_attr(into, bound, _load_name(bound)))
             return out
-        # ImportFrom
+        # ImportFrom. Relative dots are resolved against the module being lowered.
         assert isinstance(stmt, ast.ImportFrom)
-        if stmt.level or not stmt.module:
+        module = stmt.module
+        if stmt.level:
+            if not self._rel:
+                return [stmt]
+            importer, is_package = self._rel[-1]
+            module = _relative_abs(importer, is_package, stmt.level, stmt.module)
+        if not module:
             return [stmt]
-        bound = self._from_names(stmt.module, stmt.names)
+        bound = self._from_names(module, stmt.names)
         if bound is None:
             return [stmt]
         out = list(bound)
         if any(alias.name == "*" for alias in stmt.names):
-            loaded = self.load(stmt.module)
+            loaded = self.load(module)
             if loaded is not None:
                 for name in sorted(loaded.bindings):
                     if name.startswith("_"):
@@ -1778,8 +1834,10 @@ def _desugar_same_dir_imports(src: str, src_path: str | None) -> str:
     `import name` loads `<dir>/name.py`. `import pkg.mod` loads
     `<dir>/pkg/mod.py` or `<dir>/pkg/mod/__init__.py`, after the package
     `__init__.py` when that file exists. A folder with no `__init__.py`
-    can still hold a submodule. Known shims, relative imports, and missing
-    files stay on the old path.
+    can still hold a submodule. Inside a loaded package, `from . import`
+    and `from .name import` load the sibling. The script itself has no
+    package, so a relative import there stays on the old path. Known shims
+    and missing files stay on the old path.
     """
     if not src_path:
         return src
