@@ -1218,7 +1218,9 @@ Function.OOPGen_EmitClassRegistration {
                 IfCondition EqualTo(keep_m, 1) ThenBlock: {
                     // @property reads through fget. @name.setter is the
                     // later Function Class_name_set, not a second method.
+                    // @name.deleter is the 1-arg Function Class_name_dup.
                     is_set = OOPGen_MethodHasDeco(item, "setter")
+                    is_del = OOPGen_MethodHasDeco(item, "deleter")
                     is_prop = OOPGen_MethodHasDeco(item, "property")
                     IfCondition EqualTo(is_set, 1) ThenBlock: {
                         set_fn = StringConcat(func_name, "_set")
@@ -1246,6 +1248,27 @@ Function.OOPGen_EmitClassRegistration {
                         set_code = StringConcat(set_code, set_fn)
                         set_code = StringConcat(set_code, ")))\n")
                         Array.Push(OOPGen.class_init_code, set_code)
+                    } ElseBlock: {
+                    IfCondition EqualTo(is_del, 1) ThenBlock: {
+                        del_fn = StringConcat(func_name, "_dup")
+                        hit_del = 0
+                        IfCondition NotEqual(OOPGen.emitted_methods, 0) ThenBlock: {
+                            hit_del = Gen_NameInArray(del_fn, OOPGen.emitted_methods)
+                        }
+                        IfCondition EqualTo(hit_del, 0) ThenBlock: {
+                            del_fn = func_name
+                        }
+                        del_code = StringConcat("    AIMacro.ClassAttrSet(\"", run_name)
+                        del_code = StringConcat(del_code, "\", \"")
+                        del_code = StringConcat(del_code, method_name)
+                        del_code = StringConcat(del_code, "\", AIMacro.PropertyBindDel(AIMacro.ClassAttrGet(\"")
+                        del_code = StringConcat(del_code, run_name)
+                        del_code = StringConcat(del_code, "\", \"")
+                        del_code = StringConcat(del_code, method_name)
+                        del_code = StringConcat(del_code, "\"), AddressOf(")
+                        del_code = StringConcat(del_code, del_fn)
+                        del_code = StringConcat(del_code, ")))\n")
+                        Array.Push(OOPGen.class_init_code, del_code)
                     } ElseBlock: {
                     IfCondition EqualTo(is_prop, 1) ThenBlock: {
                         prop_code = StringConcat("    AIMacro.ClassAttrSet(\"", run_name)
@@ -1291,6 +1314,7 @@ Function.OOPGen_EmitClassRegistration {
                     packed_code = StringConcat(packed_code, emit_m)
                     packed_code = StringConcat(packed_code, "\")\n")
                     Array.Push(OOPGen.class_init_code, packed_code)
+                    }
                     }
                     }
                     }

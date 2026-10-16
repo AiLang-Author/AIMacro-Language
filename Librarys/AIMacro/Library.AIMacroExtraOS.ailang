@@ -437,6 +437,31 @@ Function.AIMacro.PropertyBindSet {
     }
 }
 
+// @name.deleter attaches fdel to the property already stored on the class.
+Function.AIMacro.PropertyBindDel {
+    Input: prop: Address
+    Input: fdel: Integer
+    Output: Address
+    Body: {
+        ok = 0
+        IfCondition NotEqual(prop, 0) ThenBlock: {
+            IfCondition EqualTo(Hash.IsHash(prop), 1) ThenBlock: {
+                IfCondition NotEqual(Hash.Get(prop, "__property__"), 0) ThenBlock: {
+                    ok = 1
+                }
+            }
+        }
+        IfCondition EqualTo(ok, 1) ThenBlock: {
+            Hash.Set(prop, "fdel", fdel)
+            ReturnValue(prop)
+        }
+        h = Hash.Create(4)
+        Hash.Set(h, "__property__", 1)
+        Hash.Set(h, "fdel", fdel)
+        ReturnValue(h)
+    }
+}
+
 // B.c() must pass B, not the parent class stored on the wrapper.
 Function.AIMacro.ClassMethodAt {
     Input: wrap: Address

@@ -1265,7 +1265,22 @@ Function.Gen_Del {
                 }
                 Gen_Emit("))\n")
             }
-            // del name / del obj.attr: no-op in static AILang locals
+            IfCondition EqualTo(tt, Node.ATTRIBUTE) ThenBlock: {
+                obj = ArrayGet(tgt, 3)
+                attr = ArrayGet(tgt, 4)
+                IfCondition NotEqual(attr, 0) ThenBlock: {
+                    IfCondition EqualTo(Gen_HasCall(obj), 1) ThenBlock: {
+                        obj = Gen_FlattenExpr(obj)
+                    }
+                    Gen_EmitIndent()
+                    Gen_Emit("AIMacro.ObjectDel(")
+                    OOPGen_Expr(obj)
+                    Gen_Emit(", \"")
+                    Gen_Emit(attr)
+                    Gen_Emit("\")\n")
+                }
+            }
+            // del name: no-op in static AILang locals
             i = Add(i, 1)
         }
     }

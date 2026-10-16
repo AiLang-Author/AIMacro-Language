@@ -1184,6 +1184,7 @@ Function.delattr {
     Input: b: Address
     Output: Address
     Body: {
+        AIMacro.ObjectDel(a, b)
         ReturnValue(0)
     }
 }

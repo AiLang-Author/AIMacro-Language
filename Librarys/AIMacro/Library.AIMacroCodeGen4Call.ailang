@@ -277,6 +277,43 @@ Function.Gen_CallExpr {
         name = ArrayGet(node, 3)
         args = ArrayGet(node, 4)
 
+        // delattr(obj, name) is the same delete as `del obj.name`.
+        cmp_da = StringCompare(name, "delattr")
+        IfCondition EqualTo(cmp_da, 0) ThenBlock: {
+            n_da = 0
+            IfCondition NotEqual(args, 0) ThenBlock: {
+                n_da = Array.Size(args)
+            }
+            da0 = 0
+            da1 = 0
+            IfCondition GreaterThan(n_da, 0) ThenBlock: {
+                da0 = Array.Get(args, 0)
+            }
+            IfCondition GreaterThan(n_da, 1) ThenBlock: {
+                da1 = Array.Get(args, 1)
+            }
+            IfCondition EqualTo(Gen_HasCall(da0), 1) ThenBlock: {
+                da0 = Gen_FlattenExpr(da0)
+            }
+            IfCondition EqualTo(Gen_HasCall(da1), 1) ThenBlock: {
+                da1 = Gen_FlattenExpr(da1)
+            }
+            Gen_Emit("delattr(")
+            IfCondition EqualTo(da0, 0) ThenBlock: {
+                Gen_Emit("0")
+            } ElseBlock: {
+                Gen_Expr(da0)
+            }
+            Gen_Emit(", ")
+            IfCondition EqualTo(da1, 0) ThenBlock: {
+                Gen_Emit("0")
+            } ElseBlock: {
+                Gen_Expr(da1)
+            }
+            Gen_Emit(")")
+            ReturnValue(0)
+        }
+
         // hasattr(os, "O_NOFOLLOW") on Linux — fold known stdlib attrs
         cmp_ha = StringCompare(name, "hasattr")
         IfCondition EqualTo(cmp_ha, 0) ThenBlock: {

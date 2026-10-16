@@ -787,6 +787,53 @@ Function.AIMacro.ObjectSet {
     }
 }
 
+// del obj.attr. A property calls fdel and stays on the class. A plain
+// instance field is removed. No deleter raises AttributeError (kind 14).
+Function.AIMacro.ObjectDel {
+    Input: obj: Address
+    Input: field: Address
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(obj, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(Hash.IsHash(obj), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        cls_del = Hash.Get(obj, "__class__")
+        IfCondition EqualTo(AIMacro.LooksLikeString(cls_del), 1) ThenBlock: {
+            cv_del = AIMacro.ClassAttrGet(cls_del, field)
+            IfCondition NotEqual(cv_del, 0) ThenBlock: {
+                IfCondition EqualTo(Hash.IsHash(cv_del), 1) ThenBlock: {
+                    IfCondition NotEqual(Hash.Get(cv_del, "__property__"), 0) ThenBlock: {
+                        fdel = Hash.Get(cv_del, "fdel")
+                        IfCondition NotEqual(fdel, 0) ThenBlock: {
+                            CallIndirect(fdel, AIMacro.PackCallArgs(obj, 0))
+                            ReturnValue(1)
+                        }
+                        AIMacro.RaiseKind(14, "can't delete attribute")
+                        ReturnValue(0)
+                    }
+                }
+            }
+        }
+        data_del = Hash.Get(obj, "__data__")
+        IfCondition NotEqual(data_del, 0) ThenBlock: {
+            IfCondition EqualTo(Hash.IsHash(data_del), 1) ThenBlock: {
+                IfCondition EqualTo(Types.IsString(field), 1) ThenBlock: {
+                    IfCondition EqualTo(Hash.Contains(data_del, field), 1) ThenBlock: {
+                        Hash.Delete(data_del, field)
+                        ReturnValue(1)
+                    }
+                }
+            }
+        }
+        // Missing names stay a no-op. Module shims (del os.uname) are not
+        // instance fields, and raising there fails test_sysconfig.
+        ReturnValue(0)
+    }
+}
+
 // Packed __init__ (UUID has 8 params) expects one p__args array including self.
 // OOP.ObjectNewInit CallIndirects unpacked (self, arg0, ...) and SIGSEGV's Hash.Get on int keys.
 Function.AIMacro.ObjectNewInitPacked {
