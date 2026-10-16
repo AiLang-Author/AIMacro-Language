@@ -694,7 +694,8 @@ Function.Parse_CompForBody {
 }
 
 // Extra for/if after the first for. Slot 8 holds each inner LIST_COMP
-// so codegen can emit that loop. An if between fors is still dropped.
+// so codegen can emit that loop. A second if on the current for is
+// folded into that for's condition with AND.
 Function.Parse_CompIterExtra {
     Input: node: Address
     Output: Integer
@@ -707,6 +708,7 @@ Function.Parse_CompIterExtra {
         elt = ArrayGet(node, 3)
         line = ArrayGet(node, 1)
         col = ArrayGet(node, 2)
+        cur = node
         Parse_SkipNoise()
         Parse_SkipCompAsync()
         WhileLoop Or(EqualTo(Parse_Match(Token.FOR), 1), EqualTo(Parse_Match(Token.IF), 1)) {
@@ -715,10 +717,23 @@ Function.Parse_CompIterExtra {
                 Parse_SkipNoise()
                 extra_node = Parse_CompForBody(elt, line, col)
                 Array.Push(extras, extra_node)
+                cur = extra_node
             } ElseBlock: {
                 Parse_Advance()
                 Parse_SkipNoise()
-                discard_cond = Parse_Or()
+                extra_cond = Parse_Or()
+                prev = ArrayGet(cur, 6)
+                IfCondition EqualTo(prev, 0) ThenBlock: {
+                    ArraySet(cur, 6, extra_cond)
+                } ElseBlock: {
+                    both = AST_Create(Node.BINARY_OP, 3)
+                    ArraySet(both, 1, ArrayGet(cur, 1))
+                    ArraySet(both, 2, ArrayGet(cur, 2))
+                    ArraySet(both, 3, prev)
+                    ArraySet(both, 4, Token.AND)
+                    ArraySet(both, 5, extra_cond)
+                    ArraySet(cur, 6, both)
+                }
             }
             Parse_SkipNoise()
             Parse_SkipCompAsync()
