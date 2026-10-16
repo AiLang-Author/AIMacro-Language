@@ -1849,6 +1849,23 @@ Function.AIMacro.MethodCall {
         IfCondition And(GreaterEqual(obj, 4000000000), EqualTo(Hash.IsHash(obj), 1)) ThenBlock: {
             cls_ml = Hash.Get(obj, "__class__")
             IfCondition EqualTo(AIMacro.LooksLikeString(cls_ml), 1) ThenBlock: {
+                // staticmethod(fn) / classmethod(fn) live on the class attr.
+                // The original def is still an OOP method; the wrapper wins.
+                wrap_ml = AIMacro.ClassAttrGet(cls_ml, method_name)
+                IfCondition GreaterEqual(wrap_ml, 4000000000) ThenBlock: {
+                    IfCondition EqualTo(Hash.IsHash(wrap_ml), 1) ThenBlock: {
+                        is_wrap = 0
+                        IfCondition NotEqual(Hash.Get(wrap_ml, "__static__"), 0) ThenBlock: {
+                            is_wrap = 1
+                        }
+                        IfCondition NotEqual(Hash.Get(wrap_ml, "__classmethod__"), 0) ThenBlock: {
+                            is_wrap = 1
+                        }
+                        IfCondition EqualTo(is_wrap, 1) ThenBlock: {
+                            ReturnValue(AIMacro.SmartCallN(wrap_ml, args))
+                        }
+                    }
+                }
                 func_addr = OOP.MethodLookup(obj, method_name)
             }
         }

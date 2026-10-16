@@ -429,6 +429,16 @@ Function.AIMacro.ClassAttrSet {
         IfCondition EqualTo(ClassAttrs.table, 0) ThenBlock: {
             ClassAttrs.table = Hash.Create(32)
         }
+        // classmethod(fn) stores cls=0 until the name is put on a class.
+        IfCondition GreaterEqual(value, 4000000000) ThenBlock: {
+            IfCondition EqualTo(Hash.IsHash(value), 1) ThenBlock: {
+                IfCondition NotEqual(Hash.Get(value, "__classmethod__"), 0) ThenBlock: {
+                    IfCondition EqualTo(Hash.Get(value, "cls"), 0) ThenBlock: {
+                        Hash.Set(value, "cls", cls)
+                    }
+                }
+            }
+        }
         key = StringConcat(cls, ".")
         key = StringConcat(key, field)
         Hash.Set(ClassAttrs.table, key, value)

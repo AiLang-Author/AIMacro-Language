@@ -441,7 +441,16 @@ Function.AIMacro.ClassMethod {
     Input: f: Integer
     Output: Integer
     Body: {
-        ReturnValue(f)
+        // Bound methods stay bound (classmethod(A().foo)).
+        // A plain function becomes a classmethod whose class is filled
+        // in when it is stored on the class.
+        IfCondition Or(EqualTo(f, 0), LessThan(f, 4194304)) ThenBlock: {
+            ReturnValue(f)
+        }
+        IfCondition GreaterEqual(f, TypeMagic.PTR_MIN) ThenBlock: {
+            ReturnValue(f)
+        }
+        ReturnValue(AIMacro.ClassWrap(f, 0))
     }
 }
 
@@ -449,7 +458,14 @@ Function.AIMacro.StaticMethod {
     Input: f: Integer
     Output: Integer
     Body: {
-        ReturnValue(f)
+        // staticmethod(fn) wraps a function. Hashes (bound methods) stay put.
+        IfCondition Or(EqualTo(f, 0), LessThan(f, 4194304)) ThenBlock: {
+            ReturnValue(f)
+        }
+        IfCondition GreaterEqual(f, TypeMagic.PTR_MIN) ThenBlock: {
+            ReturnValue(f)
+        }
+        ReturnValue(AIMacro.StaticWrap(f))
     }
 }
 
