@@ -863,6 +863,96 @@ Function.Gen_FlattenExpr {
         }
         IfCondition EqualTo(t, Node.SUPER_CALL) ThenBlock: {
             method = AST_GetField(node, "method")
+            super_args = AST_GetField(node, "super_args")
+            nsuper = 0
+            IfCondition NotEqual(super_args, 0) ThenBlock: {
+                nsuper = Array.Size(super_args)
+            }
+            IfCondition GreaterThan(nsuper, 2) ThenBlock: {
+                temp = Gen_TempName()
+                Gen_EmitIndent()
+                Gen_Emit(temp)
+                Gen_Emit(" = AIMacro.SuperReject()\n")
+                ReturnValue(Gen_MakeIdent(temp))
+            }
+            IfCondition EqualTo(nsuper, 2) ThenBlock: {
+                cls_e = Array.Get(super_args, 0)
+                obj_e = Array.Get(super_args, 1)
+                IfCondition EqualTo(Gen_HasCall(cls_e), 1) ThenBlock: {
+                    cls_e = Gen_FlattenExpr(cls_e)
+                }
+                IfCondition EqualTo(Gen_HasCall(obj_e), 1) ThenBlock: {
+                    obj_e = Gen_FlattenExpr(obj_e)
+                }
+                IfCondition EqualTo(method, 0) ThenBlock: {
+                    temp = Gen_TempName()
+                    Gen_EmitIndent()
+                    Gen_Emit(temp)
+                    Gen_Emit(" = AIMacro.SuperProxy(")
+                    OOPGen_Expr(obj_e)
+                    Gen_Emit(", ")
+                    OOPGen_Expr(cls_e)
+                    Gen_Emit(")\n")
+                    ReturnValue(Gen_MakeIdent(temp))
+                }
+                args = AST_GetField(node, "args")
+                num_args = 0
+                IfCondition NotEqual(args, 0) ThenBlock: {
+                    num_args = Array.Size(args)
+                }
+                args_var = OOPGen_TempVar("super_args")
+                temp = Gen_TempName()
+                okv = Gen_TempName()
+                Gen_EmitIndent()
+                Gen_Emit(okv)
+                Gen_Emit(" = AIMacro.SuperAccept(")
+                OOPGen_Expr(obj_e)
+                Gen_Emit(", ")
+                OOPGen_Expr(cls_e)
+                Gen_Emit(")\n")
+                Gen_EmitIndent()
+                Gen_Emit("IfCondition EqualTo(")
+                Gen_Emit(okv)
+                Gen_Emit(", 0) ThenBlock: {\n")
+                Gen_EmitIndent()
+                Gen_Emit(temp)
+                Gen_Emit(" = AIMacro.SuperReject()\n")
+                Gen_EmitIndent()
+                Gen_Emit("} ElseBlock: {\n")
+                Gen_EmitIndent()
+                Gen_Emit(args_var)
+                Gen_Emit(" = Array.Create(")
+                Gen_EmitNumber(num_args)
+                Gen_Emit(")\n")
+                i = 0
+                WhileLoop LessThan(i, num_args) {
+                    arg = Array.Get(args, i)
+                    IfCondition EqualTo(Gen_HasCall(arg), 1) ThenBlock: {
+                        arg = Gen_FlattenExpr(arg)
+                    }
+                    Gen_EmitIndent()
+                    Gen_Emit("Array.Push(")
+                    Gen_Emit(args_var)
+                    Gen_Emit(", ")
+                    OOPGen_Expr(arg)
+                    Gen_Emit(")\n")
+                    i = Add(i, 1)
+                }
+                Gen_EmitIndent()
+                Gen_Emit(temp)
+                Gen_Emit(" = AIMacro.SuperInvoke(")
+                OOPGen_Expr(obj_e)
+                Gen_Emit(", ")
+                OOPGen_Expr(cls_e)
+                Gen_Emit(", \"")
+                Gen_Emit(method)
+                Gen_Emit("\", ")
+                Gen_Emit(args_var)
+                Gen_Emit(")\n")
+                Gen_EmitIndent()
+                Gen_Emit("}\n")
+                ReturnValue(Gen_MakeIdent(temp))
+            }
             // super() outside a method has no class cell. Gen_Emit(0) SEGV'd.
             IfCondition EqualTo(OOPGen.current_class, 0) ThenBlock: {
                 temp = Gen_TempName()

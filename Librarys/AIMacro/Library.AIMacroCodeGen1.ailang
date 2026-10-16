@@ -4794,6 +4794,7 @@ Function.Gen_WalkUnbound {
         }
         IfCondition EqualTo(t, Node.SUPER_CALL) ThenBlock: {
             Gen_WalkUnbound(ArrayGet(node, 4), assigned, unbound, extra_skip)
+            Gen_WalkUnbound(ArrayGet(node, 5), assigned, unbound, extra_skip)
             ReturnValue(0)
         }
         IfCondition EqualTo(t, Node.TUPLE_UNPACK) ThenBlock: {

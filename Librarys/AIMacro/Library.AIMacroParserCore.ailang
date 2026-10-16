@@ -557,7 +557,7 @@ Function.AST_GetField {
             }
         }
         
-        // SUPER_CALL: [type, line, col, method, args]
+        // SUPER_CALL: [type, line, col, method, args, super_args]
         IfCondition EqualTo(node_type, Node.SUPER_CALL) ThenBlock: {
             cmp = StringCompare(field, "method")
             IfCondition EqualTo(cmp, 0) ThenBlock: {
@@ -566,6 +566,10 @@ Function.AST_GetField {
             cmp = StringCompare(field, "args")
             IfCondition EqualTo(cmp, 0) ThenBlock: {
                 ReturnValue(ArrayGet(node, 4))
+            }
+            cmp = StringCompare(field, "super_args")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                ReturnValue(ArrayGet(node, 5))
             }
         }
         

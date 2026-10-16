@@ -717,8 +717,8 @@ Function.Parse_AttributeOrMethodCall {
 // =============================================================================
 // SUPER CALL PARSER
 // =============================================================================
-// Gold path: super().method(args) with positional args.
-// Leftover: super(cls, self), super(), super().attr, *args / **kwargs.
+// super().method(args), super(cls, obj), super(cls, obj).method(args).
+// One argument still follows the zero-arg path. *args / **kwargs are skipped.
 
 Function.Parse_SkipSuperArgs {
     Body: {
@@ -795,7 +795,15 @@ Function.Parse_SuperCall {
             ReturnValue(0)
         }
         Parse_Advance()
-        Parse_SkipSuperArgs()
+        Parse_SkipNoise()
+        super_args = Parse_ArgList()
+        Parse_SkipNoise()
+        is_rparen = Parse_Check(Token.RPAREN)
+        IfCondition EqualTo(is_rparen, 1) ThenBlock: {
+            Parse_Advance()
+        } ElseBlock: {
+            Parse_SkipSuperArgs()
+        }
         Parse_SkipNoise()
         
         method_name = 0
@@ -827,12 +835,13 @@ Function.Parse_SuperCall {
             }
         }
         
-        node = ArrayCreate(5)
+        node = ArrayCreate(6)
         ArraySet(node, 0, Node.SUPER_CALL)
         ArraySet(node, 1, Parse_Line())
         ArraySet(node, 2, 0)
         ArraySet(node, 3, method_name)
         ArraySet(node, 4, args)
+        ArraySet(node, 5, super_args)
         
         ReturnValue(node)
     }
@@ -1086,7 +1095,7 @@ Function.AST_GetField_OOP {
             }
         }
         
-        // SUPER_CALL: [type, line, col, method, args]
+        // SUPER_CALL: [type, line, col, method, args, super_args]
         IfCondition EqualTo(node_type, Node.SUPER_CALL) ThenBlock: {
             cmp = StringCompare(field, "method")
             IfCondition EqualTo(cmp, 0) ThenBlock: {
@@ -1095,6 +1104,10 @@ Function.AST_GetField_OOP {
             cmp = StringCompare(field, "args")
             IfCondition EqualTo(cmp, 0) ThenBlock: {
                 ReturnValue(ArrayGet(node, 4))
+            }
+            cmp = StringCompare(field, "super_args")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                ReturnValue(ArrayGet(node, 5))
             }
         }
         

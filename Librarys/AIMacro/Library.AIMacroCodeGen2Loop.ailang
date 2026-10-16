@@ -838,9 +838,25 @@ Function.Gen_Return {
         }
         
         Gen_EmitWithExits()
-        Gen_EmitIndent()
-        Gen_Emit("ReturnValue(")
-        Gen_Expr(value)
-        Gen_Emit(")\n")
+        // super(...) can raise TypeError. The try already opened this
+        // statement while pending was 0, so a bare ReturnValue would
+        // leave before the Fork. Check again after the call.
+        IfCondition And(GreaterThan(Gen.try_depth, 0), EqualTo(value_type, Node.SUPER_CALL)) ThenBlock: {
+            Gen_EmitIndent()
+            Gen_Emit("IfCondition EqualTo(AIMacro.ExcPending(), 0) ThenBlock: {\n")
+            Gen.indent = Add(Gen.indent, 1)
+            Gen_EmitIndent()
+            Gen_Emit("ReturnValue(")
+            Gen_Expr(value)
+            Gen_Emit(")\n")
+            Gen.indent = Subtract(Gen.indent, 1)
+            Gen_EmitIndent()
+            Gen_Emit("}\n")
+        } ElseBlock: {
+            Gen_EmitIndent()
+            Gen_Emit("ReturnValue(")
+            Gen_Expr(value)
+            Gen_Emit(")\n")
+        }
     }
 }

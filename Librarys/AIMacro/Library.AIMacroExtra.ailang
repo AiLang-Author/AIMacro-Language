@@ -533,9 +533,49 @@ Function.AIMacro.SetIsdisjoint {
     }
 }
 
-// Zero-arg super() inside a method. The class is the one being compiled,
-// not the instance's runtime class, so a B method on a C instance still
-// starts the search after B.
+// The object must be an instance of the class, or a subclass of it.
+// A class name in the object slot is the classmethod form.
+Function.AIMacro.SuperAccept {
+    Input: obj: Address
+    Input: cls: Address
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(AIMacro.LooksLikeString(cls), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(OOP.ClassExists(cls), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(AIMacro.SafeIsHash(obj), 1) ThenBlock: {
+            ocls = Hash.Get(obj, "__class__")
+            IfCondition EqualTo(AIMacro.LooksLikeString(ocls), 0) ThenBlock: {
+                ReturnValue(0)
+            }
+            ReturnValue(OOP.ObjectIsInstance(obj, cls))
+        }
+        IfCondition EqualTo(AIMacro.LooksLikeString(obj), 1) ThenBlock: {
+            IfCondition EqualTo(OOP.ClassExists(obj), 0) ThenBlock: {
+                ReturnValue(0)
+            }
+            IfCondition EqualTo(StringCompare(obj, cls), 0) ThenBlock: {
+                ReturnValue(1)
+            }
+            ReturnValue(OOP.ClassIsSubclass(obj, cls))
+        }
+        ReturnValue(0)
+    }
+}
+
+Function.AIMacro.SuperReject {
+    Output: Integer
+    Body: {
+        AIMacro.RaiseKind(5, "super")
+        ReturnValue(0)
+    }
+}
+
+// Zero-arg super() inside a method stores the class being compiled.
+// Two-arg super(cls, obj) stores that class and that object.
 Function.AIMacro.SuperProxy {
     Input: obj: Address
     Input: cls: Address
@@ -556,11 +596,11 @@ Function.AIMacro.SuperInvoke {
     Input: args: Address
     Output: Integer
     Body: {
-        IfCondition EqualTo(AIMacro.LooksLikeString(cls), 0) ThenBlock: {
-            ReturnValue(0)
-        }
         IfCondition EqualTo(AIMacro.LooksLikeString(name), 0) ThenBlock: {
             ReturnValue(0)
+        }
+        IfCondition EqualTo(AIMacro.SuperAccept(obj, cls), 0) ThenBlock: {
+            ReturnValue(AIMacro.SuperReject())
         }
         parent = OOP.ClassGetParent(cls)
         IfCondition EqualTo(parent, 0) ThenBlock: {
@@ -568,10 +608,47 @@ Function.AIMacro.SuperInvoke {
         }
         fn = OOP._MethodLookupWithInheritance(parent, name)
         IfCondition EqualTo(fn, 0) ThenBlock: {
+            cv = AIMacro.ClassAttrGet(parent, name)
+            IfCondition EqualTo(AIMacro.SafeIsHash(cv), 1) ThenBlock: {
+                IfCondition NotEqual(Hash.Get(cv, "__classmethod__"), 0) ThenBlock: {
+                    cfn = Hash.Get(cv, "fn")
+                    IfCondition NotEqual(cfn, 0) ThenBlock: {
+                        bound = obj
+                        IfCondition EqualTo(AIMacro.SafeIsHash(obj), 1) ThenBlock: {
+                            ocls = Hash.Get(obj, "__class__")
+                            IfCondition EqualTo(AIMacro.LooksLikeString(ocls), 1) ThenBlock: {
+                                bound = ocls
+                            }
+                        }
+                        cpack = AIMacro.PackCallArgs(bound, args)
+                        ReturnValue(CallIndirect(cfn, cpack))
+                    }
+                }
+                IfCondition NotEqual(Hash.Get(cv, "__static__"), 0) ThenBlock: {
+                    sfn = Hash.Get(cv, "fn")
+                    IfCondition NotEqual(sfn, 0) ThenBlock: {
+                        IfCondition EqualTo(args, 0) ThenBlock: {
+                            args = AIMacro.EmptyList()
+                        }
+                        ReturnValue(CallIndirect(sfn, args))
+                    }
+                }
+            }
             ReturnValue(0)
         }
         // User methods take packed p__args. OOP.SuperCall calls them unpacked.
-        IfCondition EqualTo(OOP.IsPackedMethod(obj, name), 1) ThenBlock: {
+        // A class name in obj is the classmethod form; probe that class.
+        packed = 0
+        IfCondition EqualTo(AIMacro.SafeIsHash(obj), 1) ThenBlock: {
+            packed = OOP.IsPackedMethod(obj, name)
+        } ElseBlock: {
+            IfCondition EqualTo(AIMacro.LooksLikeString(obj), 1) ThenBlock: {
+                probe = Hash.Create(4)
+                Hash.Set(probe, "__class__", obj)
+                packed = OOP.IsPackedMethod(probe, name)
+            }
+        }
+        IfCondition EqualTo(packed, 1) ThenBlock: {
             pargs = AIMacro.PackCallArgs(obj, args)
             ReturnValue(CallIndirect(fn, pargs))
         }
@@ -589,8 +666,8 @@ Function.AIMacro.SuperGet {
         }
         inst = Hash.Get(proxy, "__self__")
         cls = Hash.Get(proxy, "__thisclass__")
-        IfCondition EqualTo(AIMacro.LooksLikeString(cls), 0) ThenBlock: {
-            ReturnValue(0)
+        IfCondition EqualTo(AIMacro.SuperAccept(inst, cls), 0) ThenBlock: {
+            ReturnValue(AIMacro.SuperReject())
         }
         parent = OOP.ClassGetParent(cls)
         IfCondition EqualTo(parent, 0) ThenBlock: {
