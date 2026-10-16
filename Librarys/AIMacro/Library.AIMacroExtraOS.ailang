@@ -437,6 +437,35 @@ Function.AIMacro.PropertyBindSet {
     }
 }
 
+// B.c() must pass B, not the parent class stored on the wrapper.
+Function.AIMacro.ClassMethodAt {
+    Input: wrap: Address
+    Input: access: Address
+    Output: Address
+    Body: {
+        IfCondition EqualTo(wrap, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition LessThan(wrap, 4000000000) ThenBlock: {
+            ReturnValue(wrap)
+        }
+        IfCondition EqualTo(Hash.IsHash(wrap), 0) ThenBlock: {
+            ReturnValue(wrap)
+        }
+        IfCondition EqualTo(Hash.Get(wrap, "__classmethod__"), 0) ThenBlock: {
+            ReturnValue(wrap)
+        }
+        IfCondition EqualTo(AIMacro.LooksLikeString(access), 0) ThenBlock: {
+            ReturnValue(wrap)
+        }
+        h = Hash.Create(4)
+        Hash.Set(h, "__classmethod__", 1)
+        Hash.Set(h, "fn", Hash.Get(wrap, "fn"))
+        Hash.Set(h, "cls", access)
+        ReturnValue(h)
+    }
+}
+
 Function.AIMacro.ClassMethod {
     Input: f: Integer
     Output: Integer

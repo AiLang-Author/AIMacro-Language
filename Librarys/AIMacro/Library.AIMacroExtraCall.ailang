@@ -1253,7 +1253,7 @@ Function.AIMacro.MethodShim {
         }
         attr = AIMacro.ClassAttrGet(cls, method_name)
         IfCondition NotEqual(attr, 0) ThenBlock: {
-            ReturnValue(AIMacro.SmartCallN(attr, args))
+            ReturnValue(AIMacro.SmartCallN(AIMacro.ClassMethodAt(attr, cls), args))
         }
         IfCondition EqualTo(StringCompare(method_name, "enum"), 0) ThenBlock: {
             ReturnValue(AIMacro.SmartCallN(AddressOf(AIMacro.Enumerate), args))
@@ -1862,7 +1862,7 @@ Function.AIMacro.MethodCall {
                             is_wrap = 1
                         }
                         IfCondition EqualTo(is_wrap, 1) ThenBlock: {
-                            ReturnValue(AIMacro.SmartCallN(wrap_ml, args))
+                            ReturnValue(AIMacro.SmartCallN(AIMacro.ClassMethodAt(wrap_ml, cls_ml), args))
                         }
                     }
                 }

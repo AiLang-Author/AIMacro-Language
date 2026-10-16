@@ -632,7 +632,7 @@ Function.AIMacro.ObjectGet {
                 IfCondition EqualTo(OOP.ClassExists(obj), 1) ThenBlock: {
                     cv0 = AIMacro.ClassAttrGet(obj, field)
                     IfCondition NotEqual(cv0, 0) ThenBlock: {
-                        ReturnValue(cv0)
+                        ReturnValue(AIMacro.ClassMethodAt(cv0, obj))
                     }
                     IfCondition EqualTo(Types.IsString(field), 1) ThenBlock: {
                         IfCondition EqualTo(StringCompare(field, "__name__"), 0) ThenBlock: {
@@ -710,7 +710,7 @@ Function.AIMacro.ObjectGet {
                 }
             }
             IfCondition NotEqual(cv, 0) ThenBlock: {
-                ReturnValue(cv)
+                ReturnValue(AIMacro.ClassMethodAt(cv, cls))
             }
         }
         IfCondition EqualTo(OOP.MethodExists(obj, "__getattr__"), 1) ThenBlock: {
@@ -774,6 +774,10 @@ Function.AIMacro.ObjectSet {
                         CallIndirect(fset, AIMacro.PackCallArgs(obj, one))
                         ReturnValue(1)
                     }
+                    // No setter: do not store over the property. The next
+                    // read must still call fget.
+                    AIMacro.RaiseKind(14, "can't set attribute")
+                    ReturnValue(0)
                 }
             }
             }
