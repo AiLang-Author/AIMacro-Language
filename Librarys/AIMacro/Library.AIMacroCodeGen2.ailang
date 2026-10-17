@@ -1189,13 +1189,58 @@ Function.Gen_EmitOneImport {
             }
         } ElseBlock: {
             IfCondition EqualTo(alias, 1) ThenBlock: {
-                stmt = StringConcat("PyMod.", bound)
-                stmt = StringConcat(stmt, " = AIMacro.StubUse(PyMod.")
-                stmt = StringConcat(stmt, bound)
-                stmt = StringConcat(stmt, ", \"")
-                stmt = StringConcat(stmt, path)
-                stmt = StringConcat(stmt, "\")")
-                Gen_EmitModStmt(stmt, nested)
+                IfCondition EqualTo(StringCompare(path, root), 0) ThenBlock: {
+                    stmt = StringConcat("PyMod.", bound)
+                    stmt = StringConcat(stmt, " = AIMacro.StubUse(PyMod.")
+                    stmt = StringConcat(stmt, bound)
+                    stmt = StringConcat(stmt, ", \"")
+                    stmt = StringConcat(stmt, path)
+                    stmt = StringConcat(stmt, "\")")
+                    Gen_EmitModStmt(stmt, nested)
+                } ElseBlock: {
+                    // import pkg.sub as alias binds only the alias, but pkg
+                    // and pkg.sub still go in the module table.
+                    // Two statements: a nested ModuleGet call clobbers regs.
+                    stmt = StringConcat("_aim_mod = AIMacro.ModuleGet(\"", root)
+                    stmt = StringConcat(stmt, "\")")
+                    Gen_EmitModStmt(stmt, nested)
+                    stmt = StringConcat("_aim_mod = AIMacro.StubUse(_aim_mod, \"", root)
+                    stmt = StringConcat(stmt, "\")")
+                    Gen_EmitModStmt(stmt, nested)
+                    nlen = StringLength(path)
+                    rlen = StringLength(root)
+                    pos = Add(rlen, 1)
+                    parent = "_aim_mod"
+                    acc = root
+                    WhileLoop LessThan(pos, nlen) {
+                        end = pos
+                        WhileLoop LessThan(end, nlen) {
+                            IfCondition EqualTo(GetByte(path, end), 46) ThenBlock: {
+                                BreakLoop
+                            }
+                            end = Add(end, 1)
+                        }
+                        comp = Gen_CopyBytes(path, pos, Subtract(end, pos))
+                        acc = StringConcat(acc, ".")
+                        acc = StringConcat(acc, comp)
+                        stmt = StringConcat("_aim_mod = AIMacro.StubSet(", parent)
+                        stmt = StringConcat(stmt, ", \"")
+                        stmt = StringConcat(stmt, comp)
+                        stmt = StringConcat(stmt, "\", \"")
+                        stmt = StringConcat(stmt, acc)
+                        stmt = StringConcat(stmt, "\")")
+                        Gen_EmitModStmt(stmt, nested)
+                        parent = "_aim_mod"
+                        IfCondition LessThan(end, nlen) ThenBlock: {
+                            pos = Add(end, 1)
+                        } ElseBlock: {
+                            pos = nlen
+                        }
+                    }
+                    stmt = StringConcat("PyMod.", bound)
+                    stmt = StringConcat(stmt, " = _aim_mod")
+                    Gen_EmitModStmt(stmt, nested)
+                }
             } ElseBlock: {
                 IfCondition And(EqualTo(shim, 1), EqualTo(nested, 0)) ThenBlock: {
                     Gen_BindShimModule(root, root)

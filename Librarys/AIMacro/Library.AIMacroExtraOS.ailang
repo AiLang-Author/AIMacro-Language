@@ -1254,6 +1254,51 @@ Function.AIMacro.WithExit {
 }
 
 // Unknown Python import. A hash with __class__ "module", not Import.name.
+// The table is the stand-in for sys.modules: the same name is the same module.
+FixedPool.AIMacroMods {
+    "table": Initialize=0, CanChange=True
+}
+
+Function.AIMacro.ModuleGet {
+    Input: name: Address
+    Output: Address
+    Body: {
+        IfCondition EqualTo(AIMacroMods.table, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(AIMacro.LooksLikeString(name), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        cur = Hash.Get(AIMacroMods.table, name)
+        IfCondition EqualTo(AIMacro.SafeIsHash(cur), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        cls = Hash.Get(cur, "__class__")
+        IfCondition EqualTo(AIMacro.LooksLikeString(cls), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(cls, "module"), 0) ThenBlock: {
+            ReturnValue(cur)
+        }
+        ReturnValue(0)
+    }
+}
+
+Function.AIMacro.ModulePut {
+    Input: name: Address
+    Input: mod: Address
+    Body: {
+        IfCondition EqualTo(AIMacro.LooksLikeString(name), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(AIMacroMods.table, 0) ThenBlock: {
+            AIMacroMods.table = Hash.Create(8)
+        }
+        Hash.Set(AIMacroMods.table, name, mod)
+        ReturnValue(0)
+    }
+}
+
 Function.AIMacro.StubModule {
     Input: name: Address
     Output: Address
@@ -1261,6 +1306,7 @@ Function.AIMacro.StubModule {
         h = Hash.Create(8)
         Hash.Set(h, "__class__", "module")
         Hash.Set(h, "__name__", name)
+        AIMacro.ModulePut(name, h)
         ReturnValue(h)
     }
 }
@@ -1278,6 +1324,10 @@ Function.AIMacro.StubUse {
                     ReturnValue(existing)
                 }
             }
+        }
+        got = AIMacro.ModuleGet(name)
+        IfCondition NotEqual(got, 0) ThenBlock: {
+            ReturnValue(got)
         }
         ReturnValue(AIMacro.StubModule(name))
     }
@@ -1299,9 +1349,18 @@ Function.AIMacro.StubSet {
                     }
                 }
             }
+            got = AIMacro.ModuleGet(name)
+            IfCondition NotEqual(got, 0) ThenBlock: {
+                Hash.Set(parent, attr, got)
+                ReturnValue(got)
+            }
             h = AIMacro.StubModule(name)
             Hash.Set(parent, attr, h)
             ReturnValue(h)
+        }
+        got2 = AIMacro.ModuleGet(name)
+        IfCondition NotEqual(got2, 0) ThenBlock: {
+            ReturnValue(got2)
         }
         h2 = AIMacro.StubModule(name)
         ReturnValue(h2)
