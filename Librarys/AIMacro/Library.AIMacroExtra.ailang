@@ -928,6 +928,13 @@ Function.AIMacro.ObjectSet {
         }
         data = Hash.Get(obj, "__data__")
         IfCondition EqualTo(data, 0) ThenBlock: {
+            // Stand-in modules keep fields on the hash. os and sys are the
+            // same shape, and a store there stays a no-op so test_sysconfig
+            // can assign os.name without changing the shim.
+            IfCondition NotEqual(Hash.Get(obj, "__aim_stub__"), 0) ThenBlock: {
+                Hash.Set(obj, field, value)
+                ReturnValue(1)
+            }
             ReturnValue(0)
         }
         IfCondition EqualTo(Hash.IsHash(data), 0) ThenBlock: {

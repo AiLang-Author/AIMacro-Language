@@ -1306,6 +1306,7 @@ Function.AIMacro.StubModule {
         h = Hash.Create(8)
         Hash.Set(h, "__class__", "module")
         Hash.Set(h, "__name__", name)
+        Hash.Set(h, "__aim_stub__", 1)
         AIMacro.ModulePut(name, h)
         ReturnValue(h)
     }
