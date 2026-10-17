@@ -412,6 +412,35 @@ Function.AIMacro.Property {
     }
 }
 
+// property(fget, fset, fdel). A missing function is left unset so a later
+// read, write, or delete still takes the no-function path.
+Function.AIMacro.Property3 {
+    Input: fget: Integer
+    Input: fset: Integer
+    Input: fdel: Integer
+    Output: Integer
+    Body: {
+        h = Hash.Create(8)
+        Hash.Set(h, "__property__", 1)
+        IfCondition NotEqual(fget, 0) ThenBlock: {
+            IfCondition EqualTo(AIMacro.IsNone(fget), 0) ThenBlock: {
+                Hash.Set(h, "fget", fget)
+            }
+        }
+        IfCondition NotEqual(fset, 0) ThenBlock: {
+            IfCondition EqualTo(AIMacro.IsNone(fset), 0) ThenBlock: {
+                Hash.Set(h, "fset", fset)
+            }
+        }
+        IfCondition NotEqual(fdel, 0) ThenBlock: {
+            IfCondition EqualTo(AIMacro.IsNone(fdel), 0) ThenBlock: {
+                Hash.Set(h, "fdel", fdel)
+            }
+        }
+        ReturnValue(h)
+    }
+}
+
 // @name.setter attaches fset to the property already stored on the class.
 Function.AIMacro.PropertyBindSet {
     Input: prop: Address

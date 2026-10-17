@@ -1199,6 +1199,55 @@ Function.Gen_CallExpr {
         }
         // =========== END PACKED FUNCTION CALL ===========
         
+        // property(fget, fset, fdel) keeps the setter and deleter.
+        // One argument stays AIMacro.Property, which @property already emits.
+        cmp_prop = StringCompare(name, "property")
+        IfCondition EqualTo(cmp_prop, 0) ThenBlock: {
+            n_prop = 0
+            IfCondition NotEqual(args, 0) ThenBlock: {
+                n_prop = Array.Size(args)
+            }
+            IfCondition GreaterThan(n_prop, 1) ThenBlock: {
+                p0 = 0
+                p1 = 0
+                p2 = 0
+                p0 = Array.Get(args, 0)
+                p1 = Array.Get(args, 1)
+                IfCondition GreaterThan(n_prop, 2) ThenBlock: {
+                    p2 = Array.Get(args, 2)
+                }
+                IfCondition And(NotEqual(p0, 0), EqualTo(Gen_HasCall(p0), 1)) ThenBlock: {
+                    p0 = Gen_FlattenExpr(p0)
+                }
+                IfCondition And(NotEqual(p1, 0), EqualTo(Gen_HasCall(p1), 1)) ThenBlock: {
+                    p1 = Gen_FlattenExpr(p1)
+                }
+                IfCondition And(NotEqual(p2, 0), EqualTo(Gen_HasCall(p2), 1)) ThenBlock: {
+                    p2 = Gen_FlattenExpr(p2)
+                }
+                Gen_Emit("AIMacro.Property3(")
+                IfCondition EqualTo(p0, 0) ThenBlock: {
+                    Gen_Emit("0")
+                } ElseBlock: {
+                    Gen_Expr(p0)
+                }
+                Gen_Emit(", ")
+                IfCondition EqualTo(p1, 0) ThenBlock: {
+                    Gen_Emit("0")
+                } ElseBlock: {
+                    Gen_Expr(p1)
+                }
+                Gen_Emit(", ")
+                IfCondition EqualTo(p2, 0) ThenBlock: {
+                    Gen_Emit("0")
+                } ElseBlock: {
+                    Gen_Expr(p2)
+                }
+                Gen_Emit(")")
+                ReturnValue(0)
+            }
+        }
+
         func_name = Gen_MapBuiltin(name)
         
         n = Array.Size(args)
