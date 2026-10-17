@@ -441,6 +441,77 @@ Function.AIMacro.Property3 {
     }
 }
 
+// property(fget).setter(fset) returns a new property. The original stays
+// as it was, which is what a later read of the unbound property needs.
+Function.AIMacro.PropertyCopy {
+    Input: prop: Address
+    Output: Address
+    Body: {
+        h = Hash.Create(8)
+        Hash.Set(h, "__property__", 1)
+        fget = Hash.Get(prop, "fget")
+        IfCondition NotEqual(fget, 0) ThenBlock: {
+            Hash.Set(h, "fget", fget)
+        }
+        fset = Hash.Get(prop, "fset")
+        IfCondition NotEqual(fset, 0) ThenBlock: {
+            Hash.Set(h, "fset", fset)
+        }
+        fdel = Hash.Get(prop, "fdel")
+        IfCondition NotEqual(fdel, 0) ThenBlock: {
+            Hash.Set(h, "fdel", fdel)
+        }
+        ReturnValue(h)
+    }
+}
+
+Function.AIMacro.PropertyChain {
+    Input: prop: Address
+    Input: which: Address
+    Input: fn: Integer
+    Output: Address
+    Body: {
+        ok = 0
+        IfCondition NotEqual(prop, 0) ThenBlock: {
+            IfCondition EqualTo(Hash.IsHash(prop), 1) ThenBlock: {
+                IfCondition NotEqual(Hash.Get(prop, "__property__"), 0) ThenBlock: {
+                    ok = 1
+                }
+            }
+        }
+        IfCondition EqualTo(ok, 0) ThenBlock: {
+            args = Array.Create(1)
+            IfCondition NotEqual(fn, 0) ThenBlock: {
+                Array.Push(args, fn)
+            }
+            ReturnValue(AIMacro.MethodCall(prop, which, args))
+        }
+        h = AIMacro.PropertyCopy(prop)
+        use = 0
+        IfCondition NotEqual(fn, 0) ThenBlock: {
+            IfCondition EqualTo(AIMacro.IsNone(fn), 0) ThenBlock: {
+                use = 1
+            }
+        }
+        IfCondition EqualTo(StringCompare(which, "setter"), 0) ThenBlock: {
+            IfCondition EqualTo(use, 1) ThenBlock: {
+                Hash.Set(h, "fset", fn)
+            }
+        }
+        IfCondition EqualTo(StringCompare(which, "deleter"), 0) ThenBlock: {
+            IfCondition EqualTo(use, 1) ThenBlock: {
+                Hash.Set(h, "fdel", fn)
+            }
+        }
+        IfCondition EqualTo(StringCompare(which, "getter"), 0) ThenBlock: {
+            IfCondition EqualTo(use, 1) ThenBlock: {
+                Hash.Set(h, "fget", fn)
+            }
+        }
+        ReturnValue(h)
+    }
+}
+
 // @name.setter attaches fset to the property already stored on the class.
 Function.AIMacro.PropertyBindSet {
     Input: prop: Address

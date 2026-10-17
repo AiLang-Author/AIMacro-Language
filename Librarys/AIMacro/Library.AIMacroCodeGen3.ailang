@@ -2177,6 +2177,41 @@ Function.Gen_FlattenExpr {
                 Gen_Emit(", \"tuple\")\n")
                 ReturnValue(Gen_MakeIdent(temp))
             }
+            // property(fget).setter(fset) is flattened here, not in OOPGen_MethodCall.
+            is_chain = 0
+            IfCondition EqualTo(StringCompare(method, "setter"), 0) ThenBlock: {
+                is_chain = 1
+            }
+            IfCondition EqualTo(StringCompare(method, "deleter"), 0) ThenBlock: {
+                is_chain = 1
+            }
+            IfCondition EqualTo(StringCompare(method, "getter"), 0) ThenBlock: {
+                is_chain = 1
+            }
+            IfCondition EqualTo(is_chain, 1) ThenBlock: {
+                fn = 0
+                n_ch = 0
+                IfCondition NotEqual(args, 0) ThenBlock: {
+                    n_ch = Array.Size(args)
+                }
+                IfCondition GreaterThan(n_ch, 0) ThenBlock: {
+                    fn = Array.Get(args, 0)
+                }
+                Gen_EmitIndent()
+                Gen_Emit(temp)
+                Gen_Emit(" = AIMacro.PropertyChain(")
+                Gen_Expr(flat_obj)
+                Gen_Emit(", \"")
+                Gen_Emit(method)
+                Gen_Emit("\", ")
+                IfCondition EqualTo(fn, 0) ThenBlock: {
+                    Gen_Emit("0")
+                } ElseBlock: {
+                    Gen_Expr(fn)
+                }
+                Gen_Emit(")\n")
+                ReturnValue(Gen_MakeIdent(temp))
+            }
             // Always statement-safe MethodCall. Prefixing "temp = " before
             // OOPGen_MethodCall emits `temp = args_var = Array.Create` and
             // PARSE-SEGVs (json dumps kwargs, ~29k combined line).

@@ -43,6 +43,50 @@ Function.Gen_MethodCallExpr {
             Gen_Emit(")")
             ReturnValue(0)
         }
+        // property(fget).setter(fset) / .deleter / .getter. A non-property
+        // receiver still goes through MethodCall inside PropertyChain.
+        chain = 0
+        IfCondition EqualTo(StringCompare(method, "setter"), 0) ThenBlock: {
+            chain = 1
+        }
+        IfCondition EqualTo(StringCompare(method, "deleter"), 0) ThenBlock: {
+            chain = 1
+        }
+        IfCondition EqualTo(StringCompare(method, "getter"), 0) ThenBlock: {
+            chain = 1
+        }
+        IfCondition EqualTo(chain, 1) ThenBlock: {
+            IfCondition EqualTo(Gen_HasCall(obj), 1) ThenBlock: {
+                obj = Gen_FlattenExpr(obj)
+            }
+            fn = 0
+            n_ch = 0
+            IfCondition NotEqual(args, 0) ThenBlock: {
+                n_ch = Array.Size(args)
+            }
+            IfCondition GreaterThan(n_ch, 0) ThenBlock: {
+                fn = Array.Get(args, 0)
+            }
+            IfCondition And(NotEqual(fn, 0), EqualTo(Gen_HasCall(fn), 1)) ThenBlock: {
+                fn = Gen_FlattenExpr(fn)
+            }
+            Gen_Emit("AIMacro.PropertyChain(")
+            IfCondition EqualTo(obj, 0) ThenBlock: {
+                Gen_Emit("0")
+            } ElseBlock: {
+                Gen_Expr(obj)
+            }
+            Gen_Emit(", \"")
+            Gen_Emit(method)
+            Gen_Emit("\", ")
+            IfCondition EqualTo(fn, 0) ThenBlock: {
+                Gen_Emit("0")
+            } ElseBlock: {
+                Gen_Expr(fn)
+            }
+            Gen_Emit(")")
+            ReturnValue(0)
+        }
         IfCondition EqualTo(Gen_IsDropRecvMethod(method), 1) ThenBlock: {
             Gen_EmitDropRecvMethod(method, args)
             ReturnValue(0)
