@@ -1009,6 +1009,16 @@ Function.AIMacro.ObjectDel {
                 }
             }
         }
+        // Stand-in modules keep fields on the hash. Delete one that is
+        // there. os and sys stay a no-op so test_sysconfig can del os.uname.
+        IfCondition NotEqual(Hash.Get(obj, "__aim_stub__"), 0) ThenBlock: {
+            IfCondition EqualTo(Types.IsString(field), 1) ThenBlock: {
+                IfCondition EqualTo(Hash.Contains(obj, field), 1) ThenBlock: {
+                    Hash.Delete(obj, field)
+                    ReturnValue(1)
+                }
+            }
+        }
         // Missing names stay a no-op. Module shims (del os.uname) are not
         // instance fields, and raising there fails test_sysconfig.
         ReturnValue(0)
