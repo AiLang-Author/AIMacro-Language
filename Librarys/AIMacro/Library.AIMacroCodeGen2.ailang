@@ -1190,7 +1190,9 @@ Function.Gen_EmitOneImport {
         } ElseBlock: {
             IfCondition EqualTo(alias, 1) ThenBlock: {
                 stmt = StringConcat("PyMod.", bound)
-                stmt = StringConcat(stmt, " = AIMacro.StubModule(\"")
+                stmt = StringConcat(stmt, " = AIMacro.StubUse(PyMod.")
+                stmt = StringConcat(stmt, bound)
+                stmt = StringConcat(stmt, ", \"")
                 stmt = StringConcat(stmt, path)
                 stmt = StringConcat(stmt, "\")")
                 Gen_EmitModStmt(stmt, nested)
@@ -1199,7 +1201,9 @@ Function.Gen_EmitOneImport {
                     Gen_BindShimModule(root, root)
                 } ElseBlock: {
                     stmt = StringConcat("PyMod.", bound)
-                    stmt = StringConcat(stmt, " = AIMacro.StubModule(\"")
+                    stmt = StringConcat(stmt, " = AIMacro.StubUse(PyMod.")
+                    stmt = StringConcat(stmt, bound)
+                    stmt = StringConcat(stmt, ", \"")
                     stmt = StringConcat(stmt, root)
                     stmt = StringConcat(stmt, "\")")
                     Gen_EmitModStmt(stmt, nested)

@@ -1265,17 +1265,46 @@ Function.AIMacro.StubModule {
     }
 }
 
+// A second import of the same name keeps the module already bound.
+Function.AIMacro.StubUse {
+    Input: existing: Address
+    Input: name: Address
+    Output: Address
+    Body: {
+        IfCondition EqualTo(AIMacro.SafeIsHash(existing), 1) ThenBlock: {
+            cls = Hash.Get(existing, "__class__")
+            IfCondition EqualTo(AIMacro.LooksLikeString(cls), 1) ThenBlock: {
+                IfCondition EqualTo(StringCompare(cls, "module"), 0) ThenBlock: {
+                    ReturnValue(existing)
+                }
+            }
+        }
+        ReturnValue(AIMacro.StubModule(name))
+    }
+}
+
 Function.AIMacro.StubSet {
     Input: parent: Address
     Input: attr: Address
     Input: name: Address
     Output: Address
     Body: {
-        h = AIMacro.StubModule(name)
-        IfCondition EqualTo(Hash.IsHash(parent), 1) ThenBlock: {
+        IfCondition EqualTo(AIMacro.SafeIsHash(parent), 1) ThenBlock: {
+            cur = Hash.Get(parent, attr)
+            IfCondition EqualTo(AIMacro.SafeIsHash(cur), 1) ThenBlock: {
+                cls = Hash.Get(cur, "__class__")
+                IfCondition EqualTo(AIMacro.LooksLikeString(cls), 1) ThenBlock: {
+                    IfCondition EqualTo(StringCompare(cls, "module"), 0) ThenBlock: {
+                        ReturnValue(cur)
+                    }
+                }
+            }
+            h = AIMacro.StubModule(name)
             Hash.Set(parent, attr, h)
+            ReturnValue(h)
         }
-        ReturnValue(h)
+        h2 = AIMacro.StubModule(name)
+        ReturnValue(h2)
     }
 }
 
