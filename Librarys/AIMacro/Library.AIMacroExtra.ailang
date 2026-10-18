@@ -15,36 +15,108 @@ LibraryImport.AIMacro.AIMacroExtraOS
 LibraryImport.AIMacro.AIMacroExtraCall
 LibraryImport.AIMacro.AIMacroExtraStdlib
 
-// bytes(iterable) — compile stub: join list elems into a string (quopri HEX digits etc.)
-// isinstance(..., bytes) maps to TypeID.STR; runtime treats bytes-like as strings.
+// bytes() / bytearray() hold ints 0..255. b"..." stays a string.
+// A missing argument and None are empty. An integer is that many zeros.
+// A string contributes its bytes. A byte outside 0..255 is ValueError.
+// A non-int element, or an object that is not a sequence, is TypeError.
 Function.AIMacro.Bytes {
     Input: iterable: Address
     Output: Address
     Body: {
+        out = AIMacro.EmptyList()
         IfCondition EqualTo(iterable, 0) ThenBlock: {
-            ReturnValue("")
+            ReturnValue(AIMacro.WrapSeq(out, "bytes"))
         }
         IfCondition EqualTo(AIMacro.IsNone(iterable), 1) ThenBlock: {
-            ReturnValue("")
+            ReturnValue(AIMacro.WrapSeq(out, "bytes"))
+        }
+        use_count = 0
+        n = 0
+        IfCondition EqualTo(Types.IsFloat(iterable), 1) ThenBlock: {
+            AIMacro.RaiseKind(5, "TypeError")
+            ReturnValue(AIMacro.WrapSeq(out, "bytes"))
+        }
+        IfCondition EqualTo(Types.IsComplex(iterable), 1) ThenBlock: {
+            AIMacro.RaiseKind(5, "TypeError")
+            ReturnValue(AIMacro.WrapSeq(out, "bytes"))
+        }
+        IfCondition EqualTo(Types.IsBool(iterable), 1) ThenBlock: {
+            n = AIMacro.BoolVal(iterable)
+            use_count = 1
+        }
+        IfCondition EqualTo(use_count, 0) ThenBlock: {
+            IfCondition EqualTo(Types.IsBigInt(iterable), 1) ThenBlock: {
+                n = AIMacro.UnboxIntZero(iterable)
+                use_count = 1
+            }
+        }
+        IfCondition EqualTo(use_count, 0) ThenBlock: {
+        IfCondition EqualTo(AIMacro.SafeIsHash(iterable), 1) ThenBlock: {
+            cls = Hash.Get(iterable, "__class__")
+            isb = 0
+            IfCondition EqualTo(AIMacro.LooksLikeString(cls), 1) ThenBlock: {
+                IfCondition EqualTo(StringCompare(cls, "bytes"), 0) ThenBlock: {
+                    isb = 1
+                }
+                IfCondition EqualTo(StringCompare(cls, "bytearray"), 0) ThenBlock: {
+                    isb = 1
+                }
+            }
+            IfCondition EqualTo(isb, 1) ThenBlock: {
+                src = Hash.Get(iterable, "__list__")
+                IfCondition EqualTo(Array.IsArray(src), 1) ThenBlock: {
+                    n = Array.Size(src)
+                    i = 0
+                    WhileLoop LessThan(i, n) {
+                        el = Array.Get(src, i)
+                        Array.Push(out, el)
+                        i = Add(i, 1)
+                    }
+                }
+                ReturnValue(AIMacro.WrapSeq(out, "bytes"))
+            }
+            ReturnValue(iterable)
         }
         IfCondition EqualTo(Array.IsArray(iterable), 1) ThenBlock: {
             n = Array.Size(iterable)
-            out = ""
             i = 0
             WhileLoop LessThan(i, n) {
                 el = Array.Get(iterable, i)
-                // Small ints are codepoints; heap addresses are already strings
-                IfCondition And(GreaterEqual(el, 0), LessThan(el, 256)) ThenBlock: {
-                    out = String.Concat(out, AIMacro.Chr(el))
-                } ElseBlock: {
-                    out = String.Concat(out, el)
+                fit = AIMacro.ByteFit(el)
+                IfCondition LessThan(fit, 0) ThenBlock: {
+                    ReturnValue(AIMacro.WrapSeq(out, "bytes"))
                 }
+                Array.Push(out, fit)
                 i = Add(i, 1)
             }
-            ReturnValue(out)
+            ReturnValue(AIMacro.WrapSeq(out, "bytes"))
         }
-        // Already a string / bytes-like
-        ReturnValue(iterable)
+        IfCondition EqualTo(AIMacro.LooksLikeString(iterable), 1) ThenBlock: {
+            n = StringLength(iterable)
+            i = 0
+            WhileLoop LessThan(i, n) {
+                c = GetByte(iterable, i)
+                Array.Push(out, c)
+                i = Add(i, 1)
+            }
+            ReturnValue(AIMacro.WrapSeq(out, "bytes"))
+        }
+        n = iterable
+        }
+        IfCondition LessThan(n, 0) ThenBlock: {
+            AIMacro.RaiseKind(2, "ValueError")
+            ReturnValue(AIMacro.WrapSeq(out, "bytes"))
+        }
+        IfCondition GreaterEqual(n, 262144) ThenBlock: {
+            AIMacro.RaiseKind(2, "ValueError")
+            ReturnValue(AIMacro.WrapSeq(out, "bytes"))
+        }
+        i = 0
+        WhileLoop LessThan(i, n) {
+            Array.Push(out, 0)
+            i = Add(i, 1)
+        }
+        ReturnValue(AIMacro.WrapSeq(out, "bytes"))
     }
 }
 
@@ -52,28 +124,17 @@ Function.AIMacro.ByteArray {
     Input: iterable: Address
     Output: Address
     Body: {
-        IfCondition EqualTo(AIMacro.SafeIsHash(iterable), 1) ThenBlock: {
-            wba = Hash.Get(iterable, "__list__")
-            IfCondition EqualTo(Array.IsArray(wba), 1) ThenBlock: {
-                iterable = wba
-            }
-        }
         raw = AIMacro.Bytes(iterable)
         lst = AIMacro.EmptyList()
-        IfCondition EqualTo(Array.IsArray(raw), 1) ThenBlock: {
-            ni = Array.Size(raw)
-            ii = 0
-            WhileLoop LessThan(ii, ni) {
-                Array.Push(lst, Array.Get(raw, ii))
-                ii = Add(ii, 1)
-            }
-        } ElseBlock: {
-            IfCondition EqualTo(AIMacro.LooksLikeString(raw), 1) ThenBlock: {
-                ni = StringLength(raw)
-                ii = 0
-                WhileLoop LessThan(ii, ni) {
-                    Array.Push(lst, GetByte(raw, ii))
-                    ii = Add(ii, 1)
+        IfCondition EqualTo(AIMacro.SafeIsHash(raw), 1) ThenBlock: {
+            src = Hash.Get(raw, "__list__")
+            IfCondition EqualTo(Array.IsArray(src), 1) ThenBlock: {
+                n = Array.Size(src)
+                i = 0
+                WhileLoop LessThan(i, n) {
+                    el = Array.Get(src, i)
+                    Array.Push(lst, el)
+                    i = Add(i, 1)
                 }
             }
         }

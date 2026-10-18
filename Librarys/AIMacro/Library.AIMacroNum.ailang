@@ -1716,6 +1716,59 @@ Function.AIMacro.NumPos {
     }
 }
 
+// 1 bytes, 2 bytearray, 0 anything else. No parent walk.
+Function.AIMacro.BytesClass {
+    Input: v: Address
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(AIMacro.SafeIsHash(v), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        cls = Hash.Get(v, "__class__")
+        IfCondition EqualTo(AIMacro.LooksLikeString(cls), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(cls, "bytes"), 0) ThenBlock: {
+            ReturnValue(1)
+        }
+        IfCondition EqualTo(StringCompare(cls, "bytearray"), 0) ThenBlock: {
+            ReturnValue(2)
+        }
+        ReturnValue(0)
+    }
+}
+
+Function.AIMacro.BytesSame {
+    Input: a: Address
+    Input: b: Address
+    Output: Address
+    Body: {
+        la = Hash.Get(a, "__list__")
+        lb = Hash.Get(b, "__list__")
+        IfCondition EqualTo(Array.IsArray(la), 0) ThenBlock: {
+            ReturnValue(AIMacro.FalseVal())
+        }
+        IfCondition EqualTo(Array.IsArray(lb), 0) ThenBlock: {
+            ReturnValue(AIMacro.FalseVal())
+        }
+        na = Array.Size(la)
+        nb = Array.Size(lb)
+        IfCondition NotEqual(na, nb) ThenBlock: {
+            ReturnValue(AIMacro.FalseVal())
+        }
+        i = 0
+        WhileLoop LessThan(i, na) {
+            ea = Array.Get(la, i)
+            eb = Array.Get(lb, i)
+            IfCondition NotEqual(ea, eb) ThenBlock: {
+                ReturnValue(AIMacro.FalseVal())
+            }
+            i = Add(i, 1)
+        }
+        ReturnValue(AIMacro.TrueVal())
+    }
+}
+
 Function.AIMacro.NumEq {
     Input: a: Address
     Input: b: Address
@@ -1742,6 +1795,18 @@ Function.AIMacro.NumEq {
                     ReturnValue(AIMacro.FalseVal())
                 }
             }
+        }
+        bca = AIMacro.BytesClass(a)
+        IfCondition NotEqual(bca, 0) ThenBlock: {
+            bcb = AIMacro.BytesClass(b)
+            IfCondition NotEqual(bcb, 0) ThenBlock: {
+                ReturnValue(AIMacro.BytesSame(a, b))
+            }
+            ReturnValue(AIMacro.FalseVal())
+        }
+        bcb2 = AIMacro.BytesClass(b)
+        IfCondition NotEqual(bcb2, 0) ThenBlock: {
+            ReturnValue(AIMacro.FalseVal())
         }
         soeq = AIMacro.TrySeqOrd(a, b)
         IfCondition EqualTo(AIMacro.ExcPending(), 1) ThenBlock: {

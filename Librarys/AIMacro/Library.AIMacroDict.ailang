@@ -369,6 +369,31 @@ Function.DictGen_SmartSet {
         // Check if it's a THash (dict) or an object with __setitem__
         is_hash = Hash.IsHash(container)
         IfCondition EqualTo(is_hash, 1) ThenBlock: {
+            bcls = Hash.Get(container, "__class__")
+            IfCondition EqualTo(AIMacro.LooksLikeString(bcls), 1) ThenBlock: {
+                IfCondition EqualTo(StringCompare(bcls, "bytes"), 0) ThenBlock: {
+                    AIMacro.RaiseKind(5, "TypeError")
+                    ReturnValue(0)
+                }
+                IfCondition EqualTo(StringCompare(bcls, "bytearray"), 0) ThenBlock: {
+                    blst = Hash.Get(container, "__list__")
+                    IfCondition EqualTo(Array.IsArray(blst), 0) ThenBlock: {
+                        ReturnValue(0)
+                    }
+                    bn = Array.Size(blst)
+                    bidx = AIMacro.NormIndex(key, bn)
+                    IfCondition Or(LessThan(bidx, 0), GreaterEqual(bidx, bn)) ThenBlock: {
+                        AIMacro.RaiseKind(17, "index out of range")
+                        ReturnValue(0)
+                    }
+                    fit = AIMacro.ByteFit(value)
+                    IfCondition LessThan(fit, 0) ThenBlock: {
+                        ReturnValue(0)
+                    }
+                    Array.Set(blst, bidx, fit)
+                    ReturnValue(0)
+                }
+            }
             IfCondition EqualTo(OOP.MethodExists(container, "__setitem__"), 1) ThenBlock: {
                 sargs = Array.Create(2)
                 Array.Push(sargs, key)

@@ -1057,6 +1057,149 @@ Function.AIMacro.UnboxIntZero {
     }
 }
 
+// 0..255, or -1 after TypeError / ValueError. Does not look up methods.
+Function.AIMacro.ByteFit {
+    Input: el: Address
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(AIMacro.IsNone(el), 1) ThenBlock: {
+            AIMacro.RaiseKind(5, "TypeError")
+            ReturnValue(-1)
+        }
+        IfCondition EqualTo(Types.IsBool(el), 1) ThenBlock: {
+            ReturnValue(AIMacro.BoolVal(el))
+        }
+        IfCondition EqualTo(AIMacro.LooksLikeString(el), 1) ThenBlock: {
+            AIMacro.RaiseKind(5, "TypeError")
+            ReturnValue(-1)
+        }
+        IfCondition EqualTo(Types.IsFloat(el), 1) ThenBlock: {
+            AIMacro.RaiseKind(5, "TypeError")
+            ReturnValue(-1)
+        }
+        IfCondition EqualTo(Types.IsComplex(el), 1) ThenBlock: {
+            AIMacro.RaiseKind(5, "TypeError")
+            ReturnValue(-1)
+        }
+        n = el
+        IfCondition EqualTo(Types.IsBigInt(el), 1) ThenBlock: {
+            n = AIMacro.UnboxIntZero(el)
+        } ElseBlock: {
+            IfCondition EqualTo(AIMacro.SafeIsHash(el), 1) ThenBlock: {
+                AIMacro.RaiseKind(5, "TypeError")
+                ReturnValue(-1)
+            }
+            IfCondition EqualTo(AIMacro.SafeIsArray(el), 1) ThenBlock: {
+                AIMacro.RaiseKind(5, "TypeError")
+                ReturnValue(-1)
+            }
+        }
+        IfCondition LessThan(n, 0) ThenBlock: {
+            AIMacro.RaiseKind(2, "ValueError")
+            ReturnValue(-1)
+        }
+        IfCondition GreaterEqual(n, 256) ThenBlock: {
+            AIMacro.RaiseKind(2, "ValueError")
+            ReturnValue(-1)
+        }
+        ReturnValue(n)
+    }
+}
+
+// kind 1 is b'...'. kind 2 is bytearray(b'...').
+Function.AIMacro.BytesRepr {
+    Input: lst: Address
+    Input: kind: Integer
+    Output: Address
+    Body: {
+        n = 0
+        IfCondition EqualTo(Array.IsArray(lst), 1) ThenBlock: {
+            n = Array.Size(lst)
+        }
+        cap = Multiply(n, 4)
+        cap = Add(cap, 24)
+        out = Allocate(cap)
+        j = 0
+        IfCondition EqualTo(kind, 2) ThenBlock: {
+            pre = "bytearray(b'"
+            pn = StringLength(pre)
+            pi = 0
+            WhileLoop LessThan(pi, pn) {
+                pb = GetByte(pre, pi)
+                SetByte(out, j, pb)
+                j = Add(j, 1)
+                pi = Add(pi, 1)
+            }
+        } ElseBlock: {
+            SetByte(out, j, 98)
+            j = Add(j, 1)
+            SetByte(out, j, 39)
+            j = Add(j, 1)
+        }
+        digs = "0123456789abcdef"
+        i = 0
+        WhileLoop LessThan(i, n) {
+            c = Array.Get(lst, i)
+            plain = 0
+            IfCondition And(GreaterEqual(c, 32), LessEqual(c, 126)) ThenBlock: {
+                IfCondition NotEqual(c, 39) ThenBlock: {
+                    IfCondition NotEqual(c, 92) ThenBlock: {
+                        plain = 1
+                    }
+                }
+            }
+            IfCondition EqualTo(plain, 1) ThenBlock: {
+                SetByte(out, j, c)
+                j = Add(j, 1)
+            } ElseBlock: {
+                esc = 0
+                IfCondition EqualTo(c, 92) ThenBlock: {
+                    esc = 92
+                }
+                IfCondition EqualTo(c, 39) ThenBlock: {
+                    esc = 39
+                }
+                IfCondition EqualTo(c, 10) ThenBlock: {
+                    esc = 110
+                }
+                IfCondition EqualTo(c, 13) ThenBlock: {
+                    esc = 114
+                }
+                IfCondition EqualTo(c, 9) ThenBlock: {
+                    esc = 116
+                }
+                SetByte(out, j, 92)
+                j = Add(j, 1)
+                IfCondition NotEqual(esc, 0) ThenBlock: {
+                    SetByte(out, j, esc)
+                    j = Add(j, 1)
+                } ElseBlock: {
+                    SetByte(out, j, 120)
+                    j = Add(j, 1)
+                    hi = Divide(c, 16)
+                    prod = Multiply(hi, 16)
+                    lo = Subtract(c, prod)
+                    hb = GetByte(digs, hi)
+                    SetByte(out, j, hb)
+                    j = Add(j, 1)
+                    lb = GetByte(digs, lo)
+                    SetByte(out, j, lb)
+                    j = Add(j, 1)
+                }
+            }
+            i = Add(i, 1)
+        }
+        SetByte(out, j, 39)
+        j = Add(j, 1)
+        IfCondition EqualTo(kind, 2) ThenBlock: {
+            SetByte(out, j, 41)
+            j = Add(j, 1)
+        }
+        SetByte(out, j, 0)
+        ReturnValue(out)
+    }
+}
+
 Function.AIMacro.ReprQuote {
     Input: s: Address
     Output: Address
@@ -1142,6 +1285,14 @@ Function.AIMacro.Repr {
                 cls_r = Hash.Get(value, "__class__")
                 lst_r = Hash.Get(value, "__list__")
                 IfCondition EqualTo(Array.IsArray(lst_r), 1) ThenBlock: {
+                    IfCondition EqualTo(AIMacro.LooksLikeString(cls_r), 1) ThenBlock: {
+                        IfCondition EqualTo(StringCompare(cls_r, "bytes"), 0) ThenBlock: {
+                            ReturnValue(AIMacro.BytesRepr(lst_r, 1))
+                        }
+                        IfCondition EqualTo(StringCompare(cls_r, "bytearray"), 0) ThenBlock: {
+                            ReturnValue(AIMacro.BytesRepr(lst_r, 2))
+                        }
+                    }
                     is_tup = 0
                     is_lst = 0
                     IfCondition EqualTo(AIMacro.LooksLikeString(cls_r), 1) ThenBlock: {
