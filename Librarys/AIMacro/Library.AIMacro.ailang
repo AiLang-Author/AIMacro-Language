@@ -1781,6 +1781,41 @@ Function.AIMacro.SetAdd {
     }
 }
 
+// 1 when val was in the set array. 0 when it was not. Does not raise.
+Function.AIMacro.SetDrop {
+    Input: list: Address
+    Input: value: Address
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(Array.IsArray(list), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        size = Array.Size(list)
+        found = -1
+        i = 0
+        WhileLoop LessThan(i, size) {
+            item = Array.Get(list, i)
+            IfCondition EqualTo(AIMacro.SmartBool(AIMacro.NumEq(item, value)), 1) ThenBlock: {
+                found = i
+                BreakLoop
+            }
+            i = Add(i, 1)
+        }
+        IfCondition EqualTo(found, -1) ThenBlock: {
+            ReturnValue(0)
+        }
+        i = found
+        last = Subtract(size, 1)
+        WhileLoop LessThan(i, last) {
+            nxt = Array.Get(list, Add(i, 1))
+            Array.Set(list, i, nxt)
+            i = Add(i, 1)
+        }
+        Array.Pop(list)
+        ReturnValue(1)
+    }
+}
+
 Function.AIMacro.CreateListWithElements {
     Input: e0: Address
     Input: e1: Address

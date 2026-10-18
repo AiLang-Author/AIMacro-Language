@@ -1869,20 +1869,63 @@ Function.AIMacro.MethodCall {
             }
             cls_ml = Hash.Get(obj, "__class__")
             IfCondition EqualTo(AIMacro.LooksLikeString(cls_ml), 1) ThenBlock: {
-                // s.add(x) on a set display. MethodLookup("set", "add") is not
+                // s.add / remove / discard. MethodLookup("set", name) is not
                 // that operation.
-                IfCondition And(EqualTo(StringCompare(cls_ml, "set"), 0), EqualTo(StringCompare(method_name, "add"), 0)) ThenBlock: {
-                    a_add = 0
-                    IfCondition NotEqual(args, 0) ThenBlock: {
-                        IfCondition GreaterThan(Array.Size(args), 0) ThenBlock: {
-                            a_add = Array.Get(args, 0)
+                IfCondition EqualTo(StringCompare(cls_ml, "set"), 0) ThenBlock: {
+                    IfCondition EqualTo(StringCompare(method_name, "add"), 0) ThenBlock: {
+                        a_add = 0
+                        IfCondition NotEqual(args, 0) ThenBlock: {
+                            IfCondition GreaterThan(Array.Size(args), 0) ThenBlock: {
+                                a_add = Array.Get(args, 0)
+                            }
                         }
+                        lst_add = Hash.Get(obj, "__list__")
+                        IfCondition EqualTo(Array.IsArray(lst_add), 1) ThenBlock: {
+                            AIMacro.SetAdd(lst_add, a_add)
+                        }
+                        ReturnValue(Types.GetNone())
                     }
-                    lst_add = Hash.Get(obj, "__list__")
-                    IfCondition EqualTo(Array.IsArray(lst_add), 1) ThenBlock: {
-                        AIMacro.SetAdd(lst_add, a_add)
+                    is_rm = 0
+                    IfCondition EqualTo(StringCompare(method_name, "remove"), 0) ThenBlock: {
+                        is_rm = 1
                     }
-                    ReturnValue(Types.GetNone())
+                    IfCondition EqualTo(StringCompare(method_name, "discard"), 0) ThenBlock: {
+                        is_rm = 1
+                    }
+                    IfCondition EqualTo(is_rm, 1) ThenBlock: {
+                        a_rm = 0
+                        IfCondition NotEqual(args, 0) ThenBlock: {
+                            IfCondition GreaterThan(Array.Size(args), 0) ThenBlock: {
+                                a_rm = Array.Get(args, 0)
+                            }
+                        }
+                        lst_rm = Hash.Get(obj, "__list__")
+                        dropped = 0
+                        IfCondition EqualTo(Array.IsArray(lst_rm), 1) ThenBlock: {
+                            dropped = AIMacro.SetDrop(lst_rm, a_rm)
+                        }
+                        IfCondition EqualTo(StringCompare(method_name, "remove"), 0) ThenBlock: {
+                            IfCondition EqualTo(dropped, 0) ThenBlock: {
+                                AIMacro.RaiseKind(15, "KeyError")
+                                ReturnValue(0)
+                            }
+                        }
+                        ReturnValue(Types.GetNone())
+                    }
+                }
+                // frozenset has no remove or discard. add stays a no-op.
+                IfCondition EqualTo(StringCompare(cls_ml, "frozenset"), 0) ThenBlock: {
+                    fz_op = 0
+                    IfCondition EqualTo(StringCompare(method_name, "remove"), 0) ThenBlock: {
+                        fz_op = 1
+                    }
+                    IfCondition EqualTo(StringCompare(method_name, "discard"), 0) ThenBlock: {
+                        fz_op = 1
+                    }
+                    IfCondition EqualTo(fz_op, 1) ThenBlock: {
+                        AIMacro.RaiseKind(14, "AttributeError")
+                        ReturnValue(0)
+                    }
                 }
                 // staticmethod(fn) / classmethod(fn) live on the class attr.
                 // The original def is still an OOP method; the wrapper wins.
