@@ -1941,7 +1941,7 @@ Function.Gen_MapBuiltin {
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("delattr") }
 
         cmp = StringCompare(name, "hash")
-        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("hash") }
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.PyHash") }
 
         cmp = StringCompare(name, "print")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.Print") }

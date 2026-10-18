@@ -1246,6 +1246,63 @@ Function.AIMacro.ReprQuote {
     }
 }
 
+FixedPool.AIMacroUnary {
+    "hit": Initialize=0, CanChange=True
+}
+
+// Result of __repr__ / __str__ / __hash__. hit is 1 when the method ran.
+// A zero result is a real return, so the caller reads the flag.
+Function.AIMacro.CallUnary {
+    Input: obj: Address
+    Input: name: Address
+    Output: Address
+    Body: {
+        AIMacroUnary.hit = 0
+        IfCondition EqualTo(ClassRegistry.registry, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(AIMacro.SafeIsHash(obj), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        cls = Hash.Get(obj, "__class__")
+        IfCondition EqualTo(AIMacro.LooksLikeString(cls), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        skip = 0
+        IfCondition EqualTo(StringCompare(cls, "bytes"), 0) ThenBlock: { skip = 1 }
+        IfCondition EqualTo(StringCompare(cls, "bytearray"), 0) ThenBlock: { skip = 1 }
+        IfCondition EqualTo(StringCompare(cls, "list"), 0) ThenBlock: { skip = 1 }
+        IfCondition EqualTo(StringCompare(cls, "tuple"), 0) ThenBlock: { skip = 1 }
+        IfCondition EqualTo(StringCompare(cls, "set"), 0) ThenBlock: { skip = 1 }
+        IfCondition EqualTo(StringCompare(cls, "frozenset"), 0) ThenBlock: { skip = 1 }
+        IfCondition EqualTo(StringCompare(cls, "range"), 0) ThenBlock: { skip = 1 }
+        IfCondition EqualTo(StringCompare(cls, "dict"), 0) ThenBlock: { skip = 1 }
+        IfCondition EqualTo(StringCompare(cls, "module"), 0) ThenBlock: { skip = 1 }
+        IfCondition EqualTo(skip, 1) ThenBlock: {
+            ReturnValue(0)
+        }
+        has = OOP.MethodExists(obj, name)
+        IfCondition EqualTo(has, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        empty = AIMacro.EmptyList()
+        AIMacroUnary.hit = 1
+        ReturnValue(OOP.MethodCall(obj, name, empty))
+    }
+}
+
+Function.AIMacro.PyHash {
+    Input: a: Address
+    Output: Address
+    Body: {
+        hv = AIMacro.CallUnary(a, "__hash__")
+        IfCondition EqualTo(AIMacroUnary.hit, 1) ThenBlock: {
+            ReturnValue(hv)
+        }
+        ReturnValue(a)
+    }
+}
+
 Function.AIMacro.Repr {
     Input: value: Address
     Output: Address
@@ -1282,6 +1339,12 @@ Function.AIMacro.Repr {
                 ReturnValue(String.Concat("[", rb))
             }
             IfCondition EqualTo(Hash.IsHash(value), 1) ThenBlock: {
+                rp = AIMacro.CallUnary(value, "__repr__")
+                IfCondition EqualTo(AIMacroUnary.hit, 1) ThenBlock: {
+                    IfCondition EqualTo(AIMacro.LooksLikeString(rp), 1) ThenBlock: {
+                        ReturnValue(rp)
+                    }
+                }
                 cls_r = Hash.Get(value, "__class__")
                 lst_r = Hash.Get(value, "__list__")
                 IfCondition EqualTo(Array.IsArray(lst_r), 1) ThenBlock: {
@@ -1454,6 +1517,12 @@ Function.AIMacro.Str {
                 ReturnValue(AIMacro.Repr(value))
             }
             IfCondition EqualTo(Hash.IsHash(value), 1) ThenBlock: {
+                sp = AIMacro.CallUnary(value, "__str__")
+                IfCondition EqualTo(AIMacroUnary.hit, 1) ThenBlock: {
+                    IfCondition EqualTo(AIMacro.LooksLikeString(sp), 1) ThenBlock: {
+                        ReturnValue(sp)
+                    }
+                }
                 ea = Hash.Get(value, "args")
                 IfCondition EqualTo(AIMacro.LooksLikeString(ea), 1) ThenBlock: {
                     ReturnValue(ea)

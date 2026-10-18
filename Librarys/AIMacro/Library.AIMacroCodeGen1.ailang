@@ -2311,7 +2311,7 @@ Function.Gen_EmitIdent {
         }
         cmp = StringCompare(name, "hash")
         IfCondition EqualTo(cmp, 0) ThenBlock: {
-            Gen_Emit("AddressOf(hash)")
+            Gen_Emit("AddressOf(AIMacro.PyHash)")
             ReturnValue(0)
         }
         cmp = StringCompare(name, "nis")

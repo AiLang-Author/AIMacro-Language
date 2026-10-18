@@ -1193,7 +1193,7 @@ Function.hash {
     Input: a: Address
     Output: Address
     Body: {
-        ReturnValue(0)
+        ReturnValue(AIMacro.PyHash(a))
     }
 }
 
