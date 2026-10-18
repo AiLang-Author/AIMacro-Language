@@ -1730,6 +1730,15 @@ Function.Gen_FlattenExpr {
             Gen_EmitIndent()
             Gen_Emit("}\n")
             Gen_LoopLeave()
+            // {n for n in xs} keeps the first of each value. A list
+            // comprehension leaves slot 11 at 0.
+            IfCondition EqualTo(ArrayGet(node, 11), 1) ThenBlock: {
+                Gen_EmitIndent()
+                Gen_Emit(temp)
+                Gen_Emit(" = AIMacro.SetBuild(")
+                Gen_Emit(temp)
+                Gen_Emit(", \"set\")\n")
+            }
             ReturnValue(Gen_MakeIdent(temp))
         }
         

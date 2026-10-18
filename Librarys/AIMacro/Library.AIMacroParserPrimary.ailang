@@ -676,7 +676,7 @@ Function.Parse_CompForBody {
             Parse_Advance()
             cond = Parse_Or()
         }
-        node = AST_Create(Node.LIST_COMP, 8)
+        node = AST_Create(Node.LIST_COMP, 9)
         ArraySet(node, 1, line)
         ArraySet(node, 2, col)
         ArraySet(node, 3, first)
@@ -687,8 +687,10 @@ Function.Parse_CompForBody {
         extras = Array.Create(4)
         ArraySet(node, 8, extras)
         ArraySet(node, 9, rest)
-        // 0 = list/set/genexp. Dictcomp stores the value expr here.
+        // 0 = list/genexp. Dictcomp stores the value expr here.
         ArraySet(node, 10, 0)
+        // 1 = set comprehension. A list comprehension stays 0.
+        ArraySet(node, 11, 0)
         ReturnValue(node)
     }
 }
@@ -951,10 +953,10 @@ Function.Parse_Dict {
                 Parse_SkipCompAsync()
                 IfCondition EqualTo(Parse_Match(Token.FOR), 1) ThenBlock: {
                     node = Parse_CompAfter(first, Token.RBRACE, line, col)
+                    ArraySet(node, 11, 1)
                     ReturnValue(node)
                 }
-                // Set literal: {a, b} or {a}. Slot 4 is 2 so codegen wraps a set.
-                // A list stays LIST_LIT with no slot 4. {} and {k: v} stay dicts.
+                // Set literal: {a, b} or {a}. A list stays a list. {} and {k: v} stay dicts.
                 is_comma = Parse_Match(Token.COMMA)
                 is_rb2 = Parse_Match(Token.RBRACE)
                 IfCondition Or(EqualTo(is_comma, 1), EqualTo(is_rb2, 1)) ThenBlock: {
