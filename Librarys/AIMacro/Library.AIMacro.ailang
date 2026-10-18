@@ -1816,6 +1816,25 @@ Function.AIMacro.SetDrop {
     }
 }
 
+// Removes the oldest element. CPython pop follows hash order.
+// An empty list returns 0. The caller tells that apart from a stored 0.
+Function.AIMacro.SetPop {
+    Input: list: Address
+    Output: Address
+    Body: {
+        IfCondition EqualTo(Array.IsArray(list), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        size = Array.Size(list)
+        IfCondition LessThan(size, 1) ThenBlock: {
+            ReturnValue(0)
+        }
+        item = Array.Get(list, 0)
+        AIMacro.SetDrop(list, item)
+        ReturnValue(item)
+    }
+}
+
 Function.AIMacro.CreateListWithElements {
     Input: e0: Address
     Input: e1: Address

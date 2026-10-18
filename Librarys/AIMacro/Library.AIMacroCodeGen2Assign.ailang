@@ -622,6 +622,19 @@ Function.Gen_AugAssignment {
         IfCondition EqualTo(op, Token.STAR) ThenBlock: {
             op_name = "AIMacro.NumIMul"
         }
+        // set |= mutates that set. A number still uses the plain operator.
+        IfCondition EqualTo(op, Token.BIT_OR) ThenBlock: {
+            op_name = "AIMacro.NumIOr"
+        }
+        IfCondition EqualTo(op, Token.BIT_AND) ThenBlock: {
+            op_name = "AIMacro.NumIAnd"
+        }
+        IfCondition EqualTo(op, Token.BIT_XOR) ThenBlock: {
+            op_name = "AIMacro.NumIXor"
+        }
+        IfCondition EqualTo(op, Token.MINUS) ThenBlock: {
+            op_name = "AIMacro.NumISub"
+        }
         
         Gen_EmitIndent()
         Gen_EmitIdentLhs(name)

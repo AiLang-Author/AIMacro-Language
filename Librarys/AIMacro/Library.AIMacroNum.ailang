@@ -513,6 +513,300 @@ Function.AIMacro.SetUnion {
     }
 }
 
+// 1 set, 2 frozenset, 0 anything else. No parent walk and no method lookup.
+Function.AIMacro.SetClass {
+    Input: v: Address
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(AIMacro.SafeIsHash(v), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        cls = Hash.Get(v, "__class__")
+        IfCondition EqualTo(AIMacro.LooksLikeString(cls), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StringCompare(cls, "set"), 0) ThenBlock: {
+            ReturnValue(1)
+        }
+        IfCondition EqualTo(StringCompare(cls, "frozenset"), 0) ThenBlock: {
+            ReturnValue(2)
+        }
+        ReturnValue(0)
+    }
+}
+
+Function.AIMacro.BothSetClass {
+    Input: a: Address
+    Input: b: Address
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(AIMacro.SetClass(a), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(AIMacro.SetClass(b), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        ReturnValue(1)
+    }
+}
+
+// op 1 union, 2 intersection, 3 difference, 4 symmetric difference.
+// The result has the type of the left set. Order is first seen.
+Function.AIMacro.SetCombine {
+    Input: a: Address
+    Input: b: Address
+    Input: op: Integer
+    Output: Address
+    Body: {
+        kind = "set"
+        IfCondition EqualTo(AIMacro.SetClass(a), 2) ThenBlock: {
+            kind = "frozenset"
+        }
+        la = 0
+        lb = 0
+        IfCondition EqualTo(AIMacro.SafeIsHash(a), 1) ThenBlock: {
+            la = Hash.Get(a, "__list__")
+        }
+        IfCondition EqualTo(AIMacro.SafeIsHash(b), 1) ThenBlock: {
+            lb = Hash.Get(b, "__list__")
+        }
+        out = AIMacro.EmptyList()
+        IfCondition EqualTo(Array.IsArray(la), 1) ThenBlock: {
+            n = Array.Size(la)
+            i = 0
+            WhileLoop LessThan(i, n) {
+                el = Array.Get(la, i)
+                in_b = 0
+                IfCondition EqualTo(Array.IsArray(lb), 1) ThenBlock: {
+                    in_b = AIMacro.ListContains(lb, el)
+                }
+                keep = 0
+                IfCondition EqualTo(op, 1) ThenBlock: {
+                    keep = 1
+                }
+                IfCondition EqualTo(op, 2) ThenBlock: {
+                    IfCondition EqualTo(in_b, 1) ThenBlock: {
+                        keep = 1
+                    }
+                }
+                IfCondition EqualTo(op, 3) ThenBlock: {
+                    IfCondition EqualTo(in_b, 0) ThenBlock: {
+                        keep = 1
+                    }
+                }
+                IfCondition EqualTo(op, 4) ThenBlock: {
+                    IfCondition EqualTo(in_b, 0) ThenBlock: {
+                        keep = 1
+                    }
+                }
+                IfCondition EqualTo(keep, 1) ThenBlock: {
+                    Array.Push(out, el)
+                }
+                i = Add(i, 1)
+            }
+        }
+        scan_r = 0
+        IfCondition EqualTo(op, 1) ThenBlock: {
+            scan_r = 1
+        }
+        IfCondition EqualTo(op, 4) ThenBlock: {
+            scan_r = 1
+        }
+        IfCondition EqualTo(scan_r, 1) ThenBlock: {
+            IfCondition EqualTo(Array.IsArray(lb), 1) ThenBlock: {
+                n = Array.Size(lb)
+                i = 0
+                WhileLoop LessThan(i, n) {
+                    el = Array.Get(lb, i)
+                    IfCondition EqualTo(AIMacro.ListContains(out, el), 0) ThenBlock: {
+                        take = 1
+                        IfCondition EqualTo(op, 4) ThenBlock: {
+                            IfCondition EqualTo(Array.IsArray(la), 1) ThenBlock: {
+                                IfCondition EqualTo(AIMacro.ListContains(la, el), 1) ThenBlock: {
+                                    take = 0
+                                }
+                            }
+                        }
+                        IfCondition EqualTo(take, 1) ThenBlock: {
+                            Array.Push(out, el)
+                        }
+                    }
+                    i = Add(i, 1)
+                }
+            }
+        }
+        ReturnValue(AIMacro.WrapSeq(out, kind))
+    }
+}
+
+// Refill the left set's own list so another name sees the update.
+Function.AIMacro.SetICombine {
+    Input: a: Address
+    Input: b: Address
+    Input: op: Integer
+    Output: Address
+    Body: {
+        built = AIMacro.SetCombine(a, b, op)
+        src = 0
+        dst = 0
+        IfCondition EqualTo(AIMacro.SafeIsHash(built), 1) ThenBlock: {
+            src = Hash.Get(built, "__list__")
+        }
+        IfCondition EqualTo(AIMacro.SafeIsHash(a), 1) ThenBlock: {
+            dst = Hash.Get(a, "__list__")
+        }
+        IfCondition EqualTo(Array.IsArray(src), 1) ThenBlock: {
+            IfCondition EqualTo(Array.IsArray(dst), 1) ThenBlock: {
+                Array.Clear(dst)
+                n = Array.Size(src)
+                i = 0
+                WhileLoop LessThan(i, n) {
+                    el = Array.Get(src, i)
+                    Array.Push(dst, el)
+                    i = Add(i, 1)
+                }
+            }
+        }
+        ReturnValue(a)
+    }
+}
+
+Function.AIMacro.SetFromMethod {
+    Input: obj: Address
+    Input: arg: Address
+    Input: op: Integer
+    Output: Address
+    Body: {
+        other = arg
+        IfCondition EqualTo(AIMacro.SetClass(arg), 0) ThenBlock: {
+            other = AIMacro.SetBuild(arg, "set")
+        }
+        ReturnValue(AIMacro.SetCombine(obj, other, op))
+    }
+}
+
+Function.AIMacro.SetOpOf {
+    Input: name: Address
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(StringCompare(name, "union"), 0) ThenBlock: {
+            ReturnValue(1)
+        }
+        IfCondition EqualTo(StringCompare(name, "intersection"), 0) ThenBlock: {
+            ReturnValue(2)
+        }
+        IfCondition EqualTo(StringCompare(name, "difference"), 0) ThenBlock: {
+            ReturnValue(3)
+        }
+        IfCondition EqualTo(StringCompare(name, "symmetric_difference"), 0) ThenBlock: {
+            ReturnValue(4)
+        }
+        ReturnValue(0)
+    }
+}
+
+// kind is "set" or "frozenset". symmetric_difference needs one argument.
+Function.AIMacro.SetApplyMethod {
+    Input: obj: Address
+    Input: args: Address
+    Input: op: Integer
+    Input: kind: Address
+    Output: Address
+    Body: {
+        nargs = 0
+        IfCondition NotEqual(args, 0) ThenBlock: {
+            nargs = Array.Size(args)
+        }
+        IfCondition EqualTo(op, 4) ThenBlock: {
+            IfCondition NotEqual(nargs, 1) ThenBlock: {
+                AIMacro.RaiseKind(5, "TypeError")
+                ReturnValue(0)
+            }
+            one = Array.Get(args, 0)
+            ReturnValue(AIMacro.SetFromMethod(obj, one, op))
+        }
+        IfCondition EqualTo(nargs, 0) ThenBlock: {
+            ReturnValue(AIMacro.SetBuild(obj, kind))
+        }
+        acc = obj
+        i = 0
+        WhileLoop LessThan(i, nargs) {
+            one = Array.Get(args, i)
+            acc = AIMacro.SetFromMethod(acc, one, op)
+            i = Add(i, 1)
+        }
+        ReturnValue(acc)
+    }
+}
+
+// A set updates in place. A frozenset comes back as a new one.
+// Anything else is the plain operator.
+Function.AIMacro.NumIApply {
+    Input: a: Address
+    Input: b: Address
+    Input: op: Integer
+    Output: Address
+    Body: {
+        ka = AIMacro.SetClass(a)
+        IfCondition EqualTo(ka, 0) ThenBlock: {
+            IfCondition EqualTo(op, 1) ThenBlock: {
+                ReturnValue(AIMacro.NumBitOr(a, b))
+            }
+            IfCondition EqualTo(op, 2) ThenBlock: {
+                ReturnValue(AIMacro.NumBitAnd(a, b))
+            }
+            IfCondition EqualTo(op, 3) ThenBlock: {
+                ReturnValue(AIMacro.NumSub(a, b))
+            }
+            ReturnValue(AIMacro.NumBitXor(a, b))
+        }
+        IfCondition EqualTo(AIMacro.SetClass(b), 0) ThenBlock: {
+            AIMacro.RaiseKind(5, "TypeError")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(ka, 2) ThenBlock: {
+            ReturnValue(AIMacro.SetCombine(a, b, op))
+        }
+        ReturnValue(AIMacro.SetICombine(a, b, op))
+    }
+}
+
+Function.AIMacro.NumIOr {
+    Input: a: Address
+    Input: b: Address
+    Output: Address
+    Body: {
+        ReturnValue(AIMacro.NumIApply(a, b, 1))
+    }
+}
+
+Function.AIMacro.NumIAnd {
+    Input: a: Address
+    Input: b: Address
+    Output: Address
+    Body: {
+        ReturnValue(AIMacro.NumIApply(a, b, 2))
+    }
+}
+
+Function.AIMacro.NumISub {
+    Input: a: Address
+    Input: b: Address
+    Output: Address
+    Body: {
+        ReturnValue(AIMacro.NumIApply(a, b, 3))
+    }
+}
+
+Function.AIMacro.NumIXor {
+    Input: a: Address
+    Input: b: Address
+    Output: Address
+    Body: {
+        ReturnValue(AIMacro.NumIApply(a, b, 4))
+    }
+}
+
 Function.AIMacro.NumAdd {
     Input: a: Address
     Input: b: Address
@@ -656,6 +950,23 @@ Function.AIMacro.NumSub {
     Input: b: Address
     Output: Address
     Body: {
+        // Two sets differ before __sub__. That lookup faults on an empty class table.
+        IfCondition EqualTo(AIMacro.BothSetClass(a, b), 1) ThenBlock: {
+            ReturnValue(AIMacro.SetCombine(a, b, 3))
+        }
+        IfCondition EqualTo(AIMacro.SetClass(a), 0) ThenBlock: {
+            IfCondition EqualTo(AIMacro.SetClass(b), 1) ThenBlock: {
+                AIMacro.RaiseKind(5, "TypeError")
+                ReturnValue(0)
+            }
+            IfCondition EqualTo(AIMacro.SetClass(b), 2) ThenBlock: {
+                AIMacro.RaiseKind(5, "TypeError")
+                ReturnValue(0)
+            }
+        } ElseBlock: {
+            AIMacro.RaiseKind(5, "TypeError")
+            ReturnValue(0)
+        }
         IfCondition Or(EqualTo(AIMacro.SafeIsHash(a), 1), EqualTo(AIMacro.SafeIsHash(b), 1)) ThenBlock: {
             ra = AIMacro.CallBinMethod(a, "__sub__", b)
             IfCondition EqualTo(AIMacro.IsNotImpl(ra), 0) ThenBlock: {
@@ -814,6 +1125,22 @@ Function.AIMacro.NumBitOr {
     Input: b: Address
     Output: Address
     Body: {
+        IfCondition EqualTo(AIMacro.BothSetClass(a, b), 1) ThenBlock: {
+            ReturnValue(AIMacro.SetCombine(a, b, 1))
+        }
+        IfCondition EqualTo(AIMacro.SetClass(a), 0) ThenBlock: {
+            IfCondition EqualTo(AIMacro.SetClass(b), 1) ThenBlock: {
+                AIMacro.RaiseKind(5, "TypeError")
+                ReturnValue(0)
+            }
+            IfCondition EqualTo(AIMacro.SetClass(b), 2) ThenBlock: {
+                AIMacro.RaiseKind(5, "TypeError")
+                ReturnValue(0)
+            }
+        } ElseBlock: {
+            AIMacro.RaiseKind(5, "TypeError")
+            ReturnValue(0)
+        }
         IfCondition And(GreaterEqual(a, TypeMagic.HEAP_START), LessThan(a, 140737488355328)) ThenBlock: {
             IfCondition EqualTo(Dereference(a), TypeMagic.BOOL) ThenBlock: {
                 IfCondition And(GreaterEqual(b, TypeMagic.HEAP_START), LessThan(b, 140737488355328)) ThenBlock: {
@@ -841,6 +1168,22 @@ Function.AIMacro.NumBitXor {
     Input: b: Address
     Output: Address
     Body: {
+        IfCondition EqualTo(AIMacro.BothSetClass(a, b), 1) ThenBlock: {
+            ReturnValue(AIMacro.SetCombine(a, b, 4))
+        }
+        IfCondition EqualTo(AIMacro.SetClass(a), 0) ThenBlock: {
+            IfCondition EqualTo(AIMacro.SetClass(b), 1) ThenBlock: {
+                AIMacro.RaiseKind(5, "TypeError")
+                ReturnValue(0)
+            }
+            IfCondition EqualTo(AIMacro.SetClass(b), 2) ThenBlock: {
+                AIMacro.RaiseKind(5, "TypeError")
+                ReturnValue(0)
+            }
+        } ElseBlock: {
+            AIMacro.RaiseKind(5, "TypeError")
+            ReturnValue(0)
+        }
         IfCondition And(GreaterEqual(a, TypeMagic.HEAP_START), LessThan(a, 140737488355328)) ThenBlock: {
             IfCondition EqualTo(Dereference(a), TypeMagic.BOOL) ThenBlock: {
                 IfCondition And(GreaterEqual(b, TypeMagic.HEAP_START), LessThan(b, 140737488355328)) ThenBlock: {
@@ -868,6 +1211,22 @@ Function.AIMacro.NumBitAnd {
     Input: b: Address
     Output: Address
     Body: {
+        IfCondition EqualTo(AIMacro.BothSetClass(a, b), 1) ThenBlock: {
+            ReturnValue(AIMacro.SetCombine(a, b, 2))
+        }
+        IfCondition EqualTo(AIMacro.SetClass(a), 0) ThenBlock: {
+            IfCondition EqualTo(AIMacro.SetClass(b), 1) ThenBlock: {
+                AIMacro.RaiseKind(5, "TypeError")
+                ReturnValue(0)
+            }
+            IfCondition EqualTo(AIMacro.SetClass(b), 2) ThenBlock: {
+                AIMacro.RaiseKind(5, "TypeError")
+                ReturnValue(0)
+            }
+        } ElseBlock: {
+            AIMacro.RaiseKind(5, "TypeError")
+            ReturnValue(0)
+        }
         IfCondition And(GreaterEqual(a, TypeMagic.HEAP_START), LessThan(a, 140737488355328)) ThenBlock: {
             IfCondition EqualTo(Dereference(a), TypeMagic.BOOL) ThenBlock: {
                 IfCondition And(GreaterEqual(b, TypeMagic.HEAP_START), LessThan(b, 140737488355328)) ThenBlock: {

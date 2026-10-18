@@ -1869,7 +1869,7 @@ Function.AIMacro.MethodCall {
             }
             cls_ml = Hash.Get(obj, "__class__")
             IfCondition EqualTo(AIMacro.LooksLikeString(cls_ml), 1) ThenBlock: {
-                // s.add / remove / discard / copy / clear.
+                // s.add / remove / discard / copy / clear / pop / union.
                 // MethodLookup("set", name) is not that operation.
                 IfCondition EqualTo(StringCompare(cls_ml, "set"), 0) ThenBlock: {
                     IfCondition EqualTo(StringCompare(method_name, "add"), 0) ThenBlock: {
@@ -1922,12 +1922,39 @@ Function.AIMacro.MethodCall {
                         }
                         ReturnValue(Types.GetNone())
                     }
+                    IfCondition EqualTo(StringCompare(method_name, "pop"), 0) ThenBlock: {
+                        IfCondition NotEqual(args, 0) ThenBlock: {
+                            IfCondition GreaterThan(Array.Size(args), 0) ThenBlock: {
+                                AIMacro.RaiseKind(5, "TypeError")
+                                ReturnValue(0)
+                            }
+                        }
+                        lst_pop = Hash.Get(obj, "__list__")
+                        n_pop = 0
+                        IfCondition EqualTo(Array.IsArray(lst_pop), 1) ThenBlock: {
+                            n_pop = Array.Size(lst_pop)
+                        }
+                        IfCondition LessThan(n_pop, 1) ThenBlock: {
+                            AIMacro.RaiseKind(15, "KeyError")
+                            ReturnValue(0)
+                        }
+                        ReturnValue(AIMacro.SetPop(lst_pop))
+                    }
+                    opm = AIMacro.SetOpOf(method_name)
+                    IfCondition GreaterThan(opm, 0) ThenBlock: {
+                        ReturnValue(AIMacro.SetApplyMethod(obj, args, opm, "set"))
+                    }
                 }
-                // frozenset.copy is the same frozenset. clear, remove, and
-                // discard are not attributes. add stays a no-op.
+                // frozenset.copy is the same frozenset. clear, remove,
+                // discard, and pop are not attributes. add stays a no-op.
+                // union and the other three return a new frozenset.
                 IfCondition EqualTo(StringCompare(cls_ml, "frozenset"), 0) ThenBlock: {
                     IfCondition EqualTo(StringCompare(method_name, "copy"), 0) ThenBlock: {
                         ReturnValue(obj)
+                    }
+                    opm = AIMacro.SetOpOf(method_name)
+                    IfCondition GreaterThan(opm, 0) ThenBlock: {
+                        ReturnValue(AIMacro.SetApplyMethod(obj, args, opm, "frozenset"))
                     }
                     fz_op = 0
                     IfCondition EqualTo(StringCompare(method_name, "remove"), 0) ThenBlock: {
@@ -1937,6 +1964,9 @@ Function.AIMacro.MethodCall {
                         fz_op = 1
                     }
                     IfCondition EqualTo(StringCompare(method_name, "clear"), 0) ThenBlock: {
+                        fz_op = 1
+                    }
+                    IfCondition EqualTo(StringCompare(method_name, "pop"), 0) ThenBlock: {
                         fz_op = 1
                     }
                     IfCondition EqualTo(fz_op, 1) ThenBlock: {
