@@ -1587,6 +1587,14 @@ Function.AIMacro.NumNe {
                 }
             }
         }
+        // Two sets. Looking up __ne__ faults before the class table exists.
+        IfCondition EqualTo(AIMacro.BothSets(a, b), 1) ThenBlock: {
+            sone = AIMacro.SetOrd(a, b)
+            IfCondition EqualTo(sone, 0) ThenBlock: {
+                ReturnValue(AIMacro.FalseVal())
+            }
+            ReturnValue(AIMacro.TrueVal())
+        }
         r = 0
         tried_b = 0
         left_eq = 0
@@ -1769,8 +1777,63 @@ Function.AIMacro.SeqKind {
     }
 }
 
+// 0 equal, -1 proper subset, 1 proper superset, 3 incomparable.
+// 2 is reserved for "not a sequence" and must not come back for two sets.
+Function.AIMacro.SetOrd {
+    Input: a: Address
+    Input: b: Address
+    Output: Integer
+    Body: {
+        la = 0
+        lb = 0
+        IfCondition EqualTo(AIMacro.SafeIsHash(a), 1) ThenBlock: {
+            la = Hash.Get(a, "__list__")
+        }
+        IfCondition EqualTo(AIMacro.SafeIsHash(b), 1) ThenBlock: {
+            lb = Hash.Get(b, "__list__")
+        }
+        IfCondition EqualTo(Array.IsArray(la), 0) ThenBlock: {
+            ReturnValue(3)
+        }
+        IfCondition EqualTo(Array.IsArray(lb), 0) ThenBlock: {
+            ReturnValue(3)
+        }
+        na = Array.Size(la)
+        nb = Array.Size(lb)
+        // The smaller side has to sit inside the larger one.
+        src = la
+        dst = lb
+        nsrc = na
+        IfCondition GreaterThan(na, nb) ThenBlock: {
+            src = lb
+            dst = la
+            nsrc = nb
+        }
+        i = 0
+        miss = 0
+        WhileLoop And(LessThan(i, nsrc), EqualTo(miss, 0)) {
+            elem = Array.Get(src, i)
+            hit = AIMacro.ListContains(dst, elem)
+            IfCondition EqualTo(hit, 0) ThenBlock: {
+                miss = 1
+            }
+            i = Add(i, 1)
+        }
+        IfCondition EqualTo(miss, 1) ThenBlock: {
+            ReturnValue(3)
+        }
+        IfCondition EqualTo(na, nb) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition LessThan(na, nb) ThenBlock: {
+            ReturnValue(-1)
+        }
+        ReturnValue(1)
+    }
+}
+
 // -1 / 0 / 1 when a and b are orderable sequences (str, bytes, list, tuple,
-// set-as-list, bytearray). 2 when they are not sequences.
+// bytearray). Two sets use SetOrd: 0, -1, 1, or 3. 2 when they are not sequences.
 Function.AIMacro.TrySeqOrd {
     Input: a: Address
     Input: b: Address
@@ -1798,36 +1861,9 @@ Function.AIMacro.TrySeqOrd {
                 ReturnValue(2)
             }
         }
-        // Two sets compare equal when they hold the same elements.
-        // 1 means not equal. 2 would fall through into __eq__.
+        // Two sets. 0 equal, -1 proper subset, 1 proper superset, 3 incomparable.
         IfCondition And(EqualTo(ka, 5), EqualTo(kb, 5)) ThenBlock: {
-            la = 0
-            lb = 0
-            IfCondition EqualTo(AIMacro.SafeIsHash(a), 1) ThenBlock: {
-                la = Hash.Get(a, "__list__")
-            }
-            IfCondition EqualTo(AIMacro.SafeIsHash(b), 1) ThenBlock: {
-                lb = Hash.Get(b, "__list__")
-            }
-            IfCondition EqualTo(Array.IsArray(la), 0) ThenBlock: {
-                ReturnValue(1)
-            }
-            IfCondition EqualTo(Array.IsArray(lb), 0) ThenBlock: {
-                ReturnValue(1)
-            }
-            na = Array.Size(la)
-            nb = Array.Size(lb)
-            IfCondition NotEqual(na, nb) ThenBlock: {
-                ReturnValue(1)
-            }
-            i = 0
-            WhileLoop LessThan(i, na) {
-                IfCondition EqualTo(AIMacro.ListContains(lb, Array.Get(la, i)), 0) ThenBlock: {
-                    ReturnValue(1)
-                }
-                i = Add(i, 1)
-            }
-            ReturnValue(0)
+            ReturnValue(AIMacro.SetOrd(a, b))
         }
         ha = AIMacro.SafeIsHash(a)
         hb = AIMacro.SafeIsHash(b)
@@ -2000,11 +2036,48 @@ Function.AIMacro.IsPyNumber {
     }
 }
 
+Function.AIMacro.IsSet {
+    Input: v: Address
+    Output: Integer
+    Body: {
+        k = AIMacro.SeqKind(v)
+        IfCondition EqualTo(k, 5) ThenBlock: {
+            ReturnValue(1)
+        }
+        ReturnValue(0)
+    }
+}
+
+// Check one side, then the other. And() would keep the first result
+// live across the second call, and that register gets clobbered.
+Function.AIMacro.BothSets {
+    Input: a: Address
+    Input: b: Address
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(AIMacro.IsSet(a), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(AIMacro.IsSet(b), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        ReturnValue(1)
+    }
+}
+
 Function.AIMacro.NumLt {
     Input: a: Address
     Input: b: Address
     Output: Address
     Body: {
+        // Two sets compare as subsets. RichCall looks up __lt__ and faults.
+        IfCondition EqualTo(AIMacro.BothSets(a, b), 1) ThenBlock: {
+            so = AIMacro.SetOrd(a, b)
+            IfCondition LessThan(so, 0) ThenBlock: {
+                ReturnValue(AIMacro.TrueVal())
+            }
+            ReturnValue(AIMacro.FalseVal())
+        }
         rlt = AIMacro.RichCall(a, "__lt__", b, "__gt__")
         IfCondition EqualTo(AIMacro.ExcPending(), 1) ThenBlock: {
             ReturnValue(0)
@@ -2051,6 +2124,13 @@ Function.AIMacro.NumLe {
     Input: b: Address
     Output: Address
     Body: {
+        IfCondition EqualTo(AIMacro.BothSets(a, b), 1) ThenBlock: {
+            so = AIMacro.SetOrd(a, b)
+            IfCondition LessEqual(so, 0) ThenBlock: {
+                ReturnValue(AIMacro.TrueVal())
+            }
+            ReturnValue(AIMacro.FalseVal())
+        }
         rle = AIMacro.RichCall(a, "__le__", b, "__ge__")
         IfCondition EqualTo(AIMacro.ExcPending(), 1) ThenBlock: {
             ReturnValue(0)
@@ -2097,6 +2177,13 @@ Function.AIMacro.NumGt {
     Input: b: Address
     Output: Address
     Body: {
+        IfCondition EqualTo(AIMacro.BothSets(a, b), 1) ThenBlock: {
+            so = AIMacro.SetOrd(a, b)
+            IfCondition EqualTo(so, 1) ThenBlock: {
+                ReturnValue(AIMacro.TrueVal())
+            }
+            ReturnValue(AIMacro.FalseVal())
+        }
         rgt = AIMacro.RichCall(a, "__gt__", b, "__lt__")
         IfCondition EqualTo(AIMacro.ExcPending(), 1) ThenBlock: {
             ReturnValue(0)
@@ -2109,6 +2196,10 @@ Function.AIMacro.NumGt {
             ReturnValue(0)
         }
         IfCondition NotEqual(so, 2) ThenBlock: {
+            // 3 is two sets with no subset either way. Not greater.
+            IfCondition EqualTo(so, 3) ThenBlock: {
+                ReturnValue(AIMacro.FalseVal())
+            }
             IfCondition GreaterThan(so, 0) ThenBlock: {
                 ReturnValue(AIMacro.TrueVal())
             }
@@ -2143,6 +2234,13 @@ Function.AIMacro.NumGe {
     Input: b: Address
     Output: Address
     Body: {
+        IfCondition EqualTo(AIMacro.BothSets(a, b), 1) ThenBlock: {
+            so = AIMacro.SetOrd(a, b)
+            IfCondition Or(EqualTo(so, 0), EqualTo(so, 1)) ThenBlock: {
+                ReturnValue(AIMacro.TrueVal())
+            }
+            ReturnValue(AIMacro.FalseVal())
+        }
         rge = AIMacro.RichCall(a, "__ge__", b, "__le__")
         IfCondition EqualTo(AIMacro.ExcPending(), 1) ThenBlock: {
             ReturnValue(0)
@@ -2155,6 +2253,10 @@ Function.AIMacro.NumGe {
             ReturnValue(0)
         }
         IfCondition NotEqual(so, 2) ThenBlock: {
+            // 3 is two sets with no subset either way. Not greater-or-equal.
+            IfCondition EqualTo(so, 3) ThenBlock: {
+                ReturnValue(AIMacro.FalseVal())
+            }
             IfCondition GreaterEqual(so, 0) ThenBlock: {
                 ReturnValue(AIMacro.TrueVal())
             }
