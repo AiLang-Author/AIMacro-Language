@@ -1869,8 +1869,8 @@ Function.AIMacro.MethodCall {
             }
             cls_ml = Hash.Get(obj, "__class__")
             IfCondition EqualTo(AIMacro.LooksLikeString(cls_ml), 1) ThenBlock: {
-                // s.add / remove / discard. MethodLookup("set", name) is not
-                // that operation.
+                // s.add / remove / discard / copy / clear.
+                // MethodLookup("set", name) is not that operation.
                 IfCondition EqualTo(StringCompare(cls_ml, "set"), 0) ThenBlock: {
                     IfCondition EqualTo(StringCompare(method_name, "add"), 0) ThenBlock: {
                         a_add = 0
@@ -1912,14 +1912,31 @@ Function.AIMacro.MethodCall {
                         }
                         ReturnValue(Types.GetNone())
                     }
+                    IfCondition EqualTo(StringCompare(method_name, "copy"), 0) ThenBlock: {
+                        ReturnValue(AIMacro.SetBuild(obj, "set"))
+                    }
+                    IfCondition EqualTo(StringCompare(method_name, "clear"), 0) ThenBlock: {
+                        lst_cl = Hash.Get(obj, "__list__")
+                        IfCondition EqualTo(Array.IsArray(lst_cl), 1) ThenBlock: {
+                            Array.Clear(lst_cl)
+                        }
+                        ReturnValue(Types.GetNone())
+                    }
                 }
-                // frozenset has no remove or discard. add stays a no-op.
+                // frozenset.copy is the same frozenset. clear, remove, and
+                // discard are not attributes. add stays a no-op.
                 IfCondition EqualTo(StringCompare(cls_ml, "frozenset"), 0) ThenBlock: {
+                    IfCondition EqualTo(StringCompare(method_name, "copy"), 0) ThenBlock: {
+                        ReturnValue(obj)
+                    }
                     fz_op = 0
                     IfCondition EqualTo(StringCompare(method_name, "remove"), 0) ThenBlock: {
                         fz_op = 1
                     }
                     IfCondition EqualTo(StringCompare(method_name, "discard"), 0) ThenBlock: {
+                        fz_op = 1
+                    }
+                    IfCondition EqualTo(StringCompare(method_name, "clear"), 0) ThenBlock: {
                         fz_op = 1
                     }
                     IfCondition EqualTo(fz_op, 1) ThenBlock: {
