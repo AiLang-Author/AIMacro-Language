@@ -2596,7 +2596,7 @@ Function.Gen_LeftoverIdentMapped {
         cmp = StringCompare(name, "print")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AddressOf(AIMacro.Print)") }
         cmp = StringCompare(name, "hex")
-        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AddressOf(AIMacro.HexStr)") }
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AddressOf(AIMacro.PyHex)") }
         cmp = StringCompare(name, "ascii")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AddressOf(AIMacro.Repr)") }
         cmp = StringCompare(name, "open")
@@ -2606,9 +2606,9 @@ Function.Gen_LeftoverIdentMapped {
         cmp = StringCompare(name, "__import__")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AddressOf(AIMacro.NoOp)") }
         cmp = StringCompare(name, "oct")
-        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AddressOf(AIMacro.NoOp)") }
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AddressOf(AIMacro.PyOct)") }
         cmp = StringCompare(name, "bin")
-        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AddressOf(AIMacro.NoOp)") }
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AddressOf(AIMacro.PyBin)") }
         cmp = StringCompare(name, "vars")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AddressOf(AIMacro.NoOp)") }
         cmp = StringCompare(name, "dir")

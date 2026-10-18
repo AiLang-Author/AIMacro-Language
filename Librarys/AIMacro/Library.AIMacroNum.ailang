@@ -1538,6 +1538,169 @@ Function.AIMacro.FloorDiv {
     }
 }
 
+// Python hex/oct/bin. Percent %x stays on HexStr, which has no prefix.
+Function.AIMacro.BasePrefix {
+    Input: v: Address
+    Input: base: Integer
+    Output: Address
+    Body: {
+        IfCondition EqualTo(Types.IsFloat(v), 1) ThenBlock: {
+            AIMacro.RaiseKind(5, "TypeError")
+            ReturnValue("")
+        }
+        IfCondition EqualTo(Types.IsComplex(v), 1) ThenBlock: {
+            AIMacro.RaiseKind(5, "TypeError")
+            ReturnValue("")
+        }
+        IfCondition EqualTo(AIMacro.IsNone(v), 1) ThenBlock: {
+            AIMacro.RaiseKind(5, "TypeError")
+            ReturnValue("")
+        }
+        IfCondition EqualTo(AIMacro.LooksLikeString(v), 1) ThenBlock: {
+            AIMacro.RaiseKind(5, "TypeError")
+            ReturnValue("")
+        }
+        IfCondition EqualTo(AIMacro.SafeIsArray(v), 1) ThenBlock: {
+            AIMacro.RaiseKind(5, "TypeError")
+            ReturnValue("")
+        }
+        n = 0
+        got = 0
+        IfCondition EqualTo(Types.IsBool(v), 1) ThenBlock: {
+            n = AIMacro.BoolVal(v)
+            got = 1
+        }
+        IfCondition EqualTo(got, 0) ThenBlock: {
+            IfCondition EqualTo(Types.IsBigInt(v), 1) ThenBlock: {
+                n = AIMacro.UnboxIntZero(v)
+                got = 1
+            }
+        }
+        IfCondition EqualTo(got, 0) ThenBlock: {
+            IfCondition EqualTo(AIMacro.SafeIsHash(v), 1) ThenBlock: {
+                has = OOP.MethodExists(v, "__index__")
+                IfCondition EqualTo(has, 1) ThenBlock: {
+                    empty = AIMacro.EmptyList()
+                    r = OOP.MethodCall(v, "__index__", empty)
+                    IfCondition EqualTo(Types.IsBool(r), 1) ThenBlock: {
+                        n = AIMacro.BoolVal(r)
+                        got = 1
+                    }
+                    IfCondition EqualTo(got, 0) ThenBlock: {
+                        IfCondition EqualTo(Types.IsBigInt(r), 1) ThenBlock: {
+                            n = AIMacro.UnboxIntZero(r)
+                            got = 1
+                        }
+                    }
+                    IfCondition EqualTo(got, 0) ThenBlock: {
+                        IfCondition EqualTo(AIMacro.SafeIsHash(r), 1) ThenBlock: {
+                            AIMacro.RaiseKind(5, "TypeError")
+                            ReturnValue("")
+                        }
+                        IfCondition EqualTo(AIMacro.LooksLikeString(r), 1) ThenBlock: {
+                            AIMacro.RaiseKind(5, "TypeError")
+                            ReturnValue("")
+                        }
+                        n = r
+                        got = 1
+                    }
+                }
+                IfCondition EqualTo(got, 0) ThenBlock: {
+                    AIMacro.RaiseKind(5, "TypeError")
+                    ReturnValue("")
+                }
+            }
+        }
+        IfCondition EqualTo(got, 0) ThenBlock: {
+            n = v
+        }
+        IfCondition EqualTo(Types.IsBigInt(n), 1) ThenBlock: {
+            AIMacro.RaiseKind(5, "TypeError")
+            ReturnValue("")
+        }
+        neg = 0
+        IfCondition LessThan(n, 0) ThenBlock: {
+            neg = 1
+            n = Subtract(0, n)
+        }
+        buf = Allocate(96)
+        pos = 0
+        IfCondition EqualTo(neg, 1) ThenBlock: {
+            SetByte(buf, pos, 45)
+            pos = Add(pos, 1)
+        }
+        IfCondition EqualTo(base, 2) ThenBlock: {
+            SetByte(buf, pos, 48)
+            pos = Add(pos, 1)
+            SetByte(buf, pos, 98)
+            pos = Add(pos, 1)
+        }
+        IfCondition EqualTo(base, 8) ThenBlock: {
+            SetByte(buf, pos, 48)
+            pos = Add(pos, 1)
+            SetByte(buf, pos, 111)
+            pos = Add(pos, 1)
+        }
+        IfCondition EqualTo(base, 16) ThenBlock: {
+            SetByte(buf, pos, 48)
+            pos = Add(pos, 1)
+            SetByte(buf, pos, 120)
+            pos = Add(pos, 1)
+        }
+        IfCondition EqualTo(n, 0) ThenBlock: {
+            SetByte(buf, pos, 48)
+            pos = Add(pos, 1)
+            SetByte(buf, pos, 0)
+            ReturnValue(buf)
+        }
+        digs = Allocate(80)
+        dcount = 0
+        WhileLoop GreaterThan(n, 0) {
+            d = Modulo(n, base)
+            n = Divide(n, base)
+            ch = Add(48, d)
+            IfCondition GreaterThan(d, 9) ThenBlock: {
+                ch = Add(87, d)
+            }
+            SetByte(digs, dcount, ch)
+            dcount = Add(dcount, 1)
+        }
+        i = Subtract(dcount, 1)
+        WhileLoop GreaterEqual(i, 0) {
+            ch = GetByte(digs, i)
+            SetByte(buf, pos, ch)
+            pos = Add(pos, 1)
+            i = Subtract(i, 1)
+        }
+        SetByte(buf, pos, 0)
+        ReturnValue(buf)
+    }
+}
+
+Function.AIMacro.PyHex {
+    Input: n: Address
+    Output: Address
+    Body: {
+        ReturnValue(AIMacro.BasePrefix(n, 16))
+    }
+}
+
+Function.AIMacro.PyOct {
+    Input: n: Address
+    Output: Address
+    Body: {
+        ReturnValue(AIMacro.BasePrefix(n, 8))
+    }
+}
+
+Function.AIMacro.PyBin {
+    Input: n: Address
+    Output: Address
+    Body: {
+        ReturnValue(AIMacro.BasePrefix(n, 2))
+    }
+}
+
 Function.AIMacro.HexStr {
     Input: n: Integer
     Output: Address

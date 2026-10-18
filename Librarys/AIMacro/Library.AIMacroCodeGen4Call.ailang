@@ -1947,7 +1947,7 @@ Function.Gen_MapBuiltin {
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.Print") }
 
         cmp = StringCompare(name, "hex")
-        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.HexStr") }
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.PyHex") }
 
         cmp = StringCompare(name, "ascii")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.Repr") }
@@ -1962,10 +1962,10 @@ Function.Gen_MapBuiltin {
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.NoOp") }
 
         cmp = StringCompare(name, "oct")
-        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.NoOp") }
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.PyOct") }
 
         cmp = StringCompare(name, "bin")
-        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.NoOp") }
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.PyBin") }
 
         cmp = StringCompare(name, "vars")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.NoOp") }
