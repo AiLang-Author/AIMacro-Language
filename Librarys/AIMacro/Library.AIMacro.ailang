@@ -1151,6 +1151,32 @@ Function.AIMacro.Repr {
                         IfCondition EqualTo(StringCompare(cls_r, "list"), 0) ThenBlock: {
                             is_lst = 1
                         }
+                        IfCondition Or(EqualTo(StringCompare(cls_r, "set"), 0), EqualTo(StringCompare(cls_r, "frozenset"), 0)) ThenBlock: {
+                            nr = Array.Size(lst_r)
+                            IfCondition EqualTo(nr, 0) ThenBlock: {
+                                IfCondition EqualTo(StringCompare(cls_r, "frozenset"), 0) ThenBlock: {
+                                    ReturnValue("frozenset()")
+                                }
+                                ReturnValue("set()")
+                            }
+                            parts = Array.Create(nr)
+                            ir = 0
+                            WhileLoop LessThan(ir, nr) {
+                                el = Array.Get(lst_r, ir)
+                                er = AIMacro.Repr(el)
+                                Array.Push(parts, er)
+                                ir = Add(ir, 1)
+                            }
+                            inner = String.Join(", ", parts)
+                            IfCondition EqualTo(StringCompare(cls_r, "frozenset"), 0) ThenBlock: {
+                                body = String.Concat("{", inner)
+                                body = String.Concat(body, "}")
+                                pre = String.Concat("frozenset(", body)
+                                ReturnValue(String.Concat(pre, ")"))
+                            }
+                            op = String.Concat("{", inner)
+                            ReturnValue(String.Concat(op, "}"))
+                        }
                     }
                     IfCondition Or(EqualTo(is_tup, 1), EqualTo(is_lst, 1)) ThenBlock: {
                         nr = Array.Size(lst_r)
@@ -1671,29 +1697,60 @@ Function.AIMacro.ListContains {
 
 
 // =============================================================================
-// FROZENSET / SET - compile-time builtin maps (list-backed for contains)
+// SET / FROZENSET - unique elements, order kept as first seen
+// A list stays an array. {} stays a dict. 0 and None build an empty set.
+// An integer stored in __class__ is not looked up as a method.
 // =============================================================================
+Function.AIMacro.SetBuild {
+    Input: iterable: Address
+    Input: kind: Address
+    Output: Address
+    Body: {
+        src = 0
+        IfCondition Or(EqualTo(iterable, 0), EqualTo(AIMacro.IsNone(iterable), 1)) ThenBlock: {
+            ReturnValue(AIMacro.WrapSeq(AIMacro.EmptyList(), kind))
+        }
+        IfCondition EqualTo(AIMacro.SafeIsHash(iterable), 1) ThenBlock: {
+            cls = Hash.Get(iterable, "__class__")
+            IfCondition And(NotEqual(cls, 0), EqualTo(AIMacro.LooksLikeString(cls), 0)) ThenBlock: {
+                ReturnValue(AIMacro.WrapSeq(AIMacro.EmptyList(), kind))
+            }
+            lst = Hash.Get(iterable, "__list__")
+            IfCondition EqualTo(Array.IsArray(lst), 1) ThenBlock: {
+                src = lst
+            } ElseBlock: {
+                src = AIMacro.ListFrom(iterable)
+            }
+        } ElseBlock: {
+            IfCondition EqualTo(Array.IsArray(iterable), 1) ThenBlock: {
+                src = iterable
+            } ElseBlock: {
+                IfCondition EqualTo(AIMacro.LooksLikeString(iterable), 1) ThenBlock: {
+                    src = AIMacro.ListFrom(iterable)
+                }
+            }
+        }
+        out = AIMacro.EmptyList()
+        IfCondition EqualTo(Array.IsArray(src), 1) ThenBlock: {
+            n = Array.Size(src)
+            i = 0
+            WhileLoop LessThan(i, n) {
+                el = Array.Get(src, i)
+                IfCondition EqualTo(AIMacro.ListContains(out, el), 0) ThenBlock: {
+                    Array.Push(out, el)
+                }
+                i = Add(i, 1)
+            }
+        }
+        ReturnValue(AIMacro.WrapSeq(out, kind))
+    }
+}
+
 Function.AIMacro.FrozenSet {
     Input: iterable: Address
     Output: Address
     Body: {
-        IfCondition EqualTo(iterable, 0) ThenBlock: {
-            ReturnValue(AIMacro.EmptyList())
-        }
-        IfCondition EqualTo(AIMacro.IsNone(iterable), 1) ThenBlock: {
-            ReturnValue(AIMacro.EmptyList())
-        }
-        IfCondition EqualTo(Array.IsArray(iterable), 1) ThenBlock: {
-            n = Array.Size(iterable)
-            out = AIMacro.ArrayNew(n)
-            i = 0
-            WhileLoop LessThan(i, n) {
-                Array.Push(out, Array.Get(iterable, i))
-                i = Add(i, 1)
-            }
-            ReturnValue(out)
-        }
-        ReturnValue(AIMacro.EmptyList())
+        ReturnValue(AIMacro.SetBuild(iterable, "frozenset"))
     }
 }
 
@@ -1701,7 +1758,7 @@ Function.AIMacro.MakeSet {
     Input: iterable: Address
     Output: Address
     Body: {
-        ReturnValue(AIMacro.FrozenSet(iterable))
+        ReturnValue(AIMacro.SetBuild(iterable, "set"))
     }
 }
 

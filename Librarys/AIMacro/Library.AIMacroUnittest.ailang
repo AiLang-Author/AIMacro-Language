@@ -210,6 +210,79 @@ Function.AIMacro.UnittestFail {
     }
 }
 
+// Items of a list, or of a set/tuple wrapper. 0 when there is no list.
+Function.AIMacro.SeqItems {
+    Input: v: Address
+    Output: Address
+    Body: {
+        IfCondition EqualTo(Array.IsArray(v), 1) ThenBlock: {
+            ReturnValue(v)
+        }
+        IfCondition EqualTo(AIMacro.SafeIsHash(v), 1) ThenBlock: {
+            lst = Hash.Get(v, "__list__")
+            IfCondition EqualTo(Array.IsArray(lst), 1) ThenBlock: {
+                ReturnValue(lst)
+            }
+        }
+        ReturnValue(0)
+    }
+}
+
+Function.AIMacro.UnittestAssertCountEqual {
+    Input: self: Address
+    Input: a: Address
+    Input: b: Address
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(AIMacro.ExcPending(), 1) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(AIMacro.UnittestEq(a, b), 1) ThenBlock: {
+            ReturnValue(1)
+        }
+        neq = AIMacro.NumEq(a, b)
+        IfCondition EqualTo(AIMacro.SmartBool(neq), 1) ThenBlock: {
+            ReturnValue(1)
+        }
+        // set(values) and the list of values hold the same numbers.
+        // == is false across those two kinds. Counts still match.
+        la = AIMacro.SeqItems(a)
+        lb = AIMacro.SeqItems(b)
+        IfCondition EqualTo(Array.IsArray(la), 0) ThenBlock: {
+            ReturnValue(AIMacro.UnittestFail(self, "assertCountEqual"))
+        }
+        IfCondition EqualTo(Array.IsArray(lb), 0) ThenBlock: {
+            ReturnValue(AIMacro.UnittestFail(self, "assertCountEqual"))
+        }
+        na = Array.Size(la)
+        nb = Array.Size(lb)
+        IfCondition NotEqual(na, nb) ThenBlock: {
+            ReturnValue(AIMacro.UnittestFail(self, "assertCountEqual"))
+        }
+        i = 0
+        WhileLoop LessThan(i, na) {
+            el = Array.Get(la, i)
+            ca = 0
+            cb = 0
+            j = 0
+            WhileLoop LessThan(j, na) {
+                IfCondition EqualTo(AIMacro.SmartBool(AIMacro.NumEq(Array.Get(la, j), el)), 1) ThenBlock: {
+                    ca = Add(ca, 1)
+                }
+                IfCondition EqualTo(AIMacro.SmartBool(AIMacro.NumEq(Array.Get(lb, j), el)), 1) ThenBlock: {
+                    cb = Add(cb, 1)
+                }
+                j = Add(j, 1)
+            }
+            IfCondition NotEqual(ca, cb) ThenBlock: {
+                ReturnValue(AIMacro.UnittestFail(self, "assertCountEqual"))
+            }
+            i = Add(i, 1)
+        }
+        ReturnValue(1)
+    }
+}
+
 Function.AIMacro.UnittestAssertEqual {
     Input: self: Address
     Input: a: Address
@@ -778,7 +851,7 @@ Function.AIMacro.UnittestBoot {
         OOP.ClassMethod("TestCase", "assertTupleEqual", AddressOf(AIMacro.UnittestAssertEqual))
         OOP.ClassMethod("TestCase", "assertSetEqual", AddressOf(AIMacro.UnittestAssertEqual))
         OOP.ClassMethod("TestCase", "assertDictEqual", AddressOf(AIMacro.UnittestAssertEqual))
-        OOP.ClassMethod("TestCase", "assertCountEqual", AddressOf(AIMacro.UnittestAssertEqual))
+        OOP.ClassMethod("TestCase", "assertCountEqual", AddressOf(AIMacro.UnittestAssertCountEqual))
         OOP.ClassMethod("TestCase", "addCleanup", AddressOf(AIMacro.UnittestAddCleanup))
         OOP.ClassMethod("TestCase", "fail", AddressOf(AIMacro.UnittestFail))
         ContainsZero.box = AIMacro.FalseVal()

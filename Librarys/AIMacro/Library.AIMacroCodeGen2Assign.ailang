@@ -94,9 +94,19 @@ Function.Gen_Assignment {
             }
         }
         
-        // List literal - special handling
+        // List literal - special handling. A set display is not a list.
         IfCondition Or(EqualTo(value_type, Node.LIST_LIT), EqualTo(value_type, Node.TUPLE_LIT)) ThenBlock: {
-            Gen_MarkListVar(target_name)
+            is_set_as = 0
+            IfCondition EqualTo(value_type, Node.LIST_LIT) ThenBlock: {
+                IfCondition GreaterEqual(Array.Size(value), 5) ThenBlock: {
+                    IfCondition EqualTo(ArrayGet(value, 4), 2) ThenBlock: {
+                        is_set_as = 1
+                    }
+                }
+            }
+            IfCondition EqualTo(is_set_as, 0) ThenBlock: {
+                Gen_MarkListVar(target_name)
+            }
             Gen_ListAssignment(target, value)
             ReturnValue(0)
         }
@@ -690,6 +700,15 @@ Function.Gen_ListAssignment {
             Gen_Emit(" = AIMacro.WrapSeq(")
             Gen_EmitIdentLhs(target_name)
             Gen_Emit(", \"tuple\")\n")
+        }
+        IfCondition GreaterEqual(Array.Size(list_node), 5) ThenBlock: {
+            IfCondition EqualTo(ArrayGet(list_node, 4), 2) ThenBlock: {
+                Gen_EmitIndent()
+                Gen_EmitIdentLhs(target_name)
+                Gen_Emit(" = AIMacro.SetBuild(")
+                Gen_EmitIdentLhs(target_name)
+                Gen_Emit(", \"set\")\n")
+            }
         }
     }
 }

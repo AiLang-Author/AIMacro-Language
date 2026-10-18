@@ -2844,6 +2844,9 @@ Function.Gen_HasCall {
         IfCondition EqualTo(t, Node.LIST_LIT) ThenBlock: {
             ReturnValue(1)
         }
+        IfCondition EqualTo(t, Node.SET_LIT) ThenBlock: {
+            ReturnValue(1)
+        }
         IfCondition EqualTo(t, Node.TUPLE_LIT) ThenBlock: {
             ReturnValue(1)
         }
@@ -4766,6 +4769,10 @@ Function.Gen_WalkUnbound {
             ReturnValue(0)
         }
         IfCondition EqualTo(t, Node.LIST_LIT) ThenBlock: {
+            Gen_WalkUnbound(ArrayGet(node, 3), assigned, unbound, extra_skip)
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(t, Node.SET_LIT) ThenBlock: {
             Gen_WalkUnbound(ArrayGet(node, 3), assigned, unbound, extra_skip)
             ReturnValue(0)
         }

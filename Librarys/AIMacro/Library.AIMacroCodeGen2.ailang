@@ -120,7 +120,17 @@ Function.Gen_Program {
                         Gen_MarkDictVar(mname)
                     }
                     IfCondition EqualTo(mvt, Node.LIST_LIT) ThenBlock: {
-                        Gen_MarkListVar(mname)
+                        // A set display is not a list. s[0] = 1 must not
+                        // treat it as one.
+                        mark_list = 1
+                        IfCondition GreaterEqual(Array.Size(mval), 5) ThenBlock: {
+                            IfCondition EqualTo(ArrayGet(mval, 4), 2) ThenBlock: {
+                                mark_list = 0
+                            }
+                        }
+                        IfCondition EqualTo(mark_list, 1) ThenBlock: {
+                            Gen_MarkListVar(mname)
+                        }
                     }
                 }
             }

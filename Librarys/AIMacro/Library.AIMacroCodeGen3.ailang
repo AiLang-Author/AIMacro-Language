@@ -2660,8 +2660,8 @@ Function.Gen_FlattenExpr {
             ReturnValue(Gen_MakeIdent(temp))
         }
         
-        // LIST_LIT - create as temp
-        IfCondition EqualTo(t, Node.LIST_LIT) ThenBlock: {
+        // LIST_LIT - create as temp. A set display is the same shape.
+        IfCondition Or(EqualTo(t, Node.LIST_LIT), EqualTo(t, Node.SET_LIT)) ThenBlock: {
             ReturnValue(Gen_CreateListLiteral(node))
         }
         IfCondition EqualTo(t, Node.TUPLE_LIT) ThenBlock: {
@@ -2852,6 +2852,17 @@ Function.Gen_CreateListLiteral {
             Gen_Emit(temp)
             Gen_Emit(", \"tuple\")\n")
             ReturnValue(Gen_MakeIdent(wrap))
+        }
+
+        // {1, 2, 1} is a set display. A list stays an array.
+        IfCondition EqualTo(AST_Type(list_node), Node.SET_LIT) ThenBlock: {
+            set_name = Gen_TempName()
+            Gen_EmitIndent()
+            Gen_Emit(set_name)
+            Gen_Emit(" = AIMacro.SetBuild(")
+            Gen_Emit(temp)
+            Gen_Emit(", \"set\")\n")
+            ReturnValue(Gen_MakeIdent(set_name))
         }
         
         // Return identifier node for the temp

@@ -393,6 +393,21 @@ Function.AIMacro.MethodShim {
             ReturnValue(AIMacro.NumSub(a0, a1))
         }
         IfCondition EqualTo(StringCompare(method_name, "add"), 0) ThenBlock: {
+            IfCondition EqualTo(AIMacro.SafeIsHash(obj), 1) ThenBlock: {
+                cadd = Hash.Get(obj, "__class__")
+                IfCondition EqualTo(AIMacro.LooksLikeString(cadd), 1) ThenBlock: {
+                    IfCondition EqualTo(StringCompare(cadd, "set"), 0) ThenBlock: {
+                        lst = Hash.Get(obj, "__list__")
+                        IfCondition EqualTo(Array.IsArray(lst), 1) ThenBlock: {
+                            AIMacro.SetAdd(lst, a0)
+                        }
+                        ReturnValue(Types.GetNone())
+                    }
+                    IfCondition EqualTo(StringCompare(cadd, "frozenset"), 0) ThenBlock: {
+                        ReturnValue(Types.GetNone())
+                    }
+                }
+            }
             IfCondition EqualTo(Array.IsArray(obj), 1) ThenBlock: {
                 AIMacro.SetAdd(obj, a0)
                 ReturnValue(Types.GetNone())
@@ -1854,6 +1869,21 @@ Function.AIMacro.MethodCall {
             }
             cls_ml = Hash.Get(obj, "__class__")
             IfCondition EqualTo(AIMacro.LooksLikeString(cls_ml), 1) ThenBlock: {
+                // s.add(x) on a set display. MethodLookup("set", "add") is not
+                // that operation.
+                IfCondition And(EqualTo(StringCompare(cls_ml, "set"), 0), EqualTo(StringCompare(method_name, "add"), 0)) ThenBlock: {
+                    a_add = 0
+                    IfCondition NotEqual(args, 0) ThenBlock: {
+                        IfCondition GreaterThan(Array.Size(args), 0) ThenBlock: {
+                            a_add = Array.Get(args, 0)
+                        }
+                    }
+                    lst_add = Hash.Get(obj, "__list__")
+                    IfCondition EqualTo(Array.IsArray(lst_add), 1) ThenBlock: {
+                        AIMacro.SetAdd(lst_add, a_add)
+                    }
+                    ReturnValue(Types.GetNone())
+                }
                 // staticmethod(fn) / classmethod(fn) live on the class attr.
                 // The original def is still an OOP method; the wrapper wins.
                 wrap_ml = AIMacro.ClassAttrGet(cls_ml, method_name)

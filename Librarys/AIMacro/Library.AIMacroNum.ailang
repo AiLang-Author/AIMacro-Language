@@ -1790,8 +1790,44 @@ Function.AIMacro.TrySeqOrd {
                 mix = 1
             }
             IfCondition EqualTo(mix, 0) ThenBlock: {
+                // A set is not equal to a list or a dict. Returning 2
+                // makes NumEq call __eq__ and that lookup faults.
+                IfCondition Or(EqualTo(ka, 5), EqualTo(kb, 5)) ThenBlock: {
+                    ReturnValue(1)
+                }
                 ReturnValue(2)
             }
+        }
+        // Two sets compare equal when they hold the same elements.
+        // 1 means not equal. 2 would fall through into __eq__.
+        IfCondition And(EqualTo(ka, 5), EqualTo(kb, 5)) ThenBlock: {
+            la = 0
+            lb = 0
+            IfCondition EqualTo(AIMacro.SafeIsHash(a), 1) ThenBlock: {
+                la = Hash.Get(a, "__list__")
+            }
+            IfCondition EqualTo(AIMacro.SafeIsHash(b), 1) ThenBlock: {
+                lb = Hash.Get(b, "__list__")
+            }
+            IfCondition EqualTo(Array.IsArray(la), 0) ThenBlock: {
+                ReturnValue(1)
+            }
+            IfCondition EqualTo(Array.IsArray(lb), 0) ThenBlock: {
+                ReturnValue(1)
+            }
+            na = Array.Size(la)
+            nb = Array.Size(lb)
+            IfCondition NotEqual(na, nb) ThenBlock: {
+                ReturnValue(1)
+            }
+            i = 0
+            WhileLoop LessThan(i, na) {
+                IfCondition EqualTo(AIMacro.ListContains(lb, Array.Get(la, i)), 0) ThenBlock: {
+                    ReturnValue(1)
+                }
+                i = Add(i, 1)
+            }
+            ReturnValue(0)
         }
         ha = AIMacro.SafeIsHash(a)
         hb = AIMacro.SafeIsHash(b)
