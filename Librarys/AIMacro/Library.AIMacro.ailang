@@ -1352,6 +1352,10 @@ Function.AIMacro.Repr {
                         ReturnValue(rp)
                     }
                 }
+                IfCondition EqualTo(AIMacro.IsIntSubclass(value), 1) ThenBlock: {
+                    ip = AIMacro.IntPayload(value)
+                    ReturnValue(AIMacro.Repr(ip))
+                }
                 cls_r = Hash.Get(value, "__class__")
                 lst_r = Hash.Get(value, "__list__")
                 IfCondition EqualTo(Array.IsArray(lst_r), 1) ThenBlock: {

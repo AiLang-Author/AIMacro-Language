@@ -650,6 +650,77 @@ Function.AIMacro.SuperProxy {
     }
 }
 
+// Unwrap DummyIntegral(6) and DummyIntegral(that object) down to 6.
+Function.AIMacro.IntPayload {
+    Input: v: Address
+    Output: Integer
+    Body: {
+        hops = 0
+        WhileLoop And(EqualTo(AIMacro.SafeIsHash(v), 1), LessThan(hops, 8)) {
+            data = Hash.Get(v, "__data__")
+            iv = 0
+            IfCondition EqualTo(Hash.IsHash(data), 1) ThenBlock: {
+                iv = Hash.Get(data, "__int__")
+            }
+            IfCondition EqualTo(iv, 0) ThenBlock: {
+                iv = Hash.Get(v, "__int__")
+            }
+            IfCondition EqualTo(iv, 0) ThenBlock: {
+                ReturnValue(0)
+            }
+            v = iv
+            hops = Add(hops, 1)
+        }
+        ReturnValue(AIMacro.UnboxIntZero(v))
+    }
+}
+
+Function.AIMacro.IsIntSubclass {
+    Input: v: Address
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(AIMacro.SafeIsHash(v), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        walk = Hash.Get(v, "__class__")
+        hops = 0
+        WhileLoop And(NotEqual(walk, 0), LessThan(hops, 16)) {
+            IfCondition EqualTo(AIMacro.LooksLikeString(walk), 0) ThenBlock: {
+                ReturnValue(0)
+            }
+            IfCondition EqualTo(StringCompare(walk, "int"), 0) ThenBlock: {
+                ReturnValue(1)
+            }
+            walk = OOP.ClassGetParent(walk)
+            hops = Add(hops, 1)
+        }
+        ReturnValue(0)
+    }
+}
+
+Function.AIMacro.IntSuper {
+    Input: obj: Address
+    Input: name: Address
+    Input: args: Address
+    Output: Integer
+    Body: {
+        base = AIMacro.IntPayload(obj)
+        other = 0
+        IfCondition NotEqual(args, 0) ThenBlock: {
+            IfCondition GreaterThan(Array.Size(args), 0) ThenBlock: {
+                other = AIMacro.IntPayload(Array.Get(args, 0))
+            }
+        }
+        IfCondition EqualTo(StringCompare(name, "__mul__"), 0) ThenBlock: {
+            ReturnValue(AIMacro.IntOrBox(Multiply(base, other)))
+        }
+        IfCondition EqualTo(StringCompare(name, "__rmul__"), 0) ThenBlock: {
+            ReturnValue(AIMacro.IntOrBox(Multiply(base, other)))
+        }
+        ReturnValue(0)
+    }
+}
+
 Function.AIMacro.SuperInvoke {
     Input: obj: Address
     Input: cls: Address
@@ -693,6 +764,11 @@ Function.AIMacro.SuperInvoke {
                         }
                         ReturnValue(CallIndirect(sfn, args))
                     }
+                }
+            }
+            IfCondition EqualTo(AIMacro.LooksLikeString(parent), 1) ThenBlock: {
+                IfCondition EqualTo(StringCompare(parent, "int"), 0) ThenBlock: {
+                    ReturnValue(AIMacro.IntSuper(obj, name, args))
                 }
             }
             ReturnValue(0)
