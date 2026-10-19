@@ -698,6 +698,57 @@ Function.AIMacro.IsIntSubclass {
     }
 }
 
+// A raw integer, not a float, string, list, or other object.
+Function.AIMacro.IsPlainNumber {
+    Input: v: Address
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(AIMacro.IsIntSubclass(v), 1) ThenBlock: {
+            ReturnValue(1)
+        }
+        IfCondition EqualTo(Types.IsBigInt(v), 1) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(Types.IsFloat(v), 1) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(Types.IsBool(v), 1) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(AIMacro.SafeIsHash(v), 1) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(AIMacro.LooksLikeString(v), 1) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(AIMacro.IsNone(v), 1) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(Array.IsArray(v), 1) ThenBlock: {
+            ReturnValue(0)
+        }
+        ReturnValue(1)
+    }
+}
+
+// 1 when an int subclass is combined with a plain integer.
+Function.AIMacro.IntPair {
+    Input: a: Address
+    Input: b: Address
+    Output: Integer
+    Body: {
+        left = AIMacro.IsIntSubclass(a)
+        IfCondition EqualTo(left, 1) ThenBlock: {
+            ReturnValue(AIMacro.IsPlainNumber(b))
+        }
+        right = AIMacro.IsIntSubclass(b)
+        IfCondition EqualTo(right, 1) ThenBlock: {
+            ReturnValue(AIMacro.IsPlainNumber(a))
+        }
+        ReturnValue(0)
+    }
+}
+
 Function.AIMacro.IntSuper {
     Input: obj: Address
     Input: name: Address

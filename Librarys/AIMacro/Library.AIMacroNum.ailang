@@ -822,6 +822,11 @@ Function.AIMacro.NumAdd {
                 ReturnValue(rb)
             }
         }
+        IfCondition EqualTo(AIMacro.IntPair(a, b), 1) ThenBlock: {
+            ipa = AIMacro.IntPayload(a)
+            ipb = AIMacro.IntPayload(b)
+            ReturnValue(AIMacro.IntOrBox(Add(ipa, ipb)))
+        }
         IfCondition Or(EqualTo(Types.IsBigInt(a), 1), EqualTo(Types.IsBigInt(b), 1)) ThenBlock: {
             da = a
             db = b
@@ -1989,6 +1994,14 @@ Function.AIMacro.NumEq {
             IfCondition EqualTo(AIMacro.IsNotImpl(ra), 0) ThenBlock: {
                 ReturnValue(AIMacro.NormBool(ra))
             }
+        }
+        IfCondition EqualTo(AIMacro.IntPair(a, b), 1) ThenBlock: {
+            ipa = AIMacro.IntPayload(a)
+            ipb = AIMacro.IntPayload(b)
+            IfCondition EqualTo(ipa, ipb) ThenBlock: {
+                ReturnValue(AIMacro.TrueVal())
+            }
+            ReturnValue(AIMacro.FalseVal())
         }
         IfCondition And(EqualTo(AIMacro.SafeIsArray(a), 1), EqualTo(AIMacro.SafeIsArray(b), 1)) ThenBlock: {
             na = Array.Size(a)
