@@ -809,12 +809,14 @@ Function.Gen_MarkFromImportVars {
         i = 0
         WhileLoop LessThan(i, n) {
             sym = Array.Get(symbols, i)
-            cmp = StringCompare(sym, "*")
+            bloc = Gen_ImportBoundName(sym)
+            breal = Gen_ImportPath(sym)
+            cmp = StringCompare(breal, "*")
             IfCondition EqualTo(cmp, 0) ThenBlock: {
                 Gen_MarkStarImport(ArrayGet(node, 3))
             } ElseBlock: {
-                Gen_MarkModuleVar(sym)
-                Gen_MarkImportStub(sym)
+                Gen_MarkModuleVar(bloc)
+                Gen_MarkImportStub(bloc)
             }
             i = Add(i, 1)
         }
@@ -1336,13 +1338,15 @@ Function.Gen_FromImport {
                 i = 0
                 WhileLoop LessThan(i, n) {
                     sym = Array.Get(symbols, i)
-                    cmp = StringCompare(sym, "*")
+                    bloc = Gen_ImportBoundName(sym)
+                    breal = Gen_ImportPath(sym)
+                    cmp = StringCompare(breal, "*")
                     IfCondition NotEqual(cmp, 0) ThenBlock: {
-                        Gen_MarkModuleVar(sym)
-                        Gen_MarkImportStub(sym)
+                        Gen_MarkModuleVar(bloc)
+                        Gen_MarkImportStub(bloc)
                         Gen_EmitIndent()
                         Gen_Emit("PyMod.")
-                        Gen_Emit(sym)
+                        Gen_Emit(bloc)
                         Gen_Emit(" = Types.GetNone()\n")
                     }
                     i = Add(i, 1)
@@ -1362,15 +1366,20 @@ Function.Gen_FromImport {
                 i = 0
                 WhileLoop LessThan(i, n) {
                     sym = Array.Get(symbols, i)
-                    cmp = StringCompare(sym, "*")
+                    bloc = Gen_ImportBoundName(sym)
+                    breal = Gen_ImportPath(sym)
+                    cmp = StringCompare(breal, "*")
                     IfCondition NotEqual(cmp, 0) ThenBlock: {
-                        Gen_MarkModuleVar(sym)
-                        cmp_t = StringCompare(sym, "Template")
+                        Gen_MarkModuleVar(bloc)
+                        cmp_t = StringCompare(breal, "Template")
                         IfCondition EqualTo(cmp_t, 0) ThenBlock: {
-                            bind = "    PyMod.Template = AddressOf(AIMacro.TemplateNew)\n"
+                            bind = StringConcat("    PyMod.", bloc)
+                            bind = StringConcat(bind, " = AddressOf(AIMacro.TemplateNew)\n")
                             IfCondition GreaterThan(Gen.indent, 0) ThenBlock: {
                                 Gen_EmitIndent()
-                                Gen_Emit("PyMod.Template = AddressOf(AIMacro.TemplateNew)\n")
+                                Gen_Emit("PyMod.")
+                                Gen_Emit(bloc)
+                                Gen_Emit(" = AddressOf(AIMacro.TemplateNew)\n")
                             } ElseBlock: {
                                 OOPGen_Init()
                                 Array.Push(OOPGen.class_init_code, bind)
@@ -1378,26 +1387,26 @@ Function.Gen_FromImport {
                             }
                         }
                         is_op = 0
-                        IfCondition Or(EqualTo(StringCompare(sym, "eq"), 0), EqualTo(StringCompare(sym, "ne"), 0)) ThenBlock: {
+                        IfCondition Or(EqualTo(StringCompare(breal, "eq"), 0), EqualTo(StringCompare(breal, "ne"), 0)) ThenBlock: {
                             is_op = 1
                         }
-                        IfCondition Or(EqualTo(StringCompare(sym, "le"), 0), EqualTo(StringCompare(sym, "ge"), 0)) ThenBlock: {
+                        IfCondition Or(EqualTo(StringCompare(breal, "le"), 0), EqualTo(StringCompare(breal, "ge"), 0)) ThenBlock: {
                             is_op = 1
                         }
-                        IfCondition Or(EqualTo(StringCompare(sym, "lt"), 0), EqualTo(StringCompare(sym, "gt"), 0)) ThenBlock: {
+                        IfCondition Or(EqualTo(StringCompare(breal, "lt"), 0), EqualTo(StringCompare(breal, "gt"), 0)) ThenBlock: {
                             is_op = 1
                         }
                         IfCondition EqualTo(is_op, 1) ThenBlock: {
-                            bind = StringConcat("    PyMod.", sym)
+                            bind = StringConcat("    PyMod.", bloc)
                             bind = StringConcat(bind, " = AIMacro.OpBound(0, \"")
-                            bind = StringConcat(bind, sym)
+                            bind = StringConcat(bind, breal)
                             bind = StringConcat(bind, "\")\n")
                             IfCondition GreaterThan(Gen.indent, 0) ThenBlock: {
                                 Gen_EmitIndent()
                                 Gen_Emit("PyMod.")
-                                Gen_Emit(sym)
+                                Gen_Emit(bloc)
                                 Gen_Emit(" = AIMacro.OpBound(0, \"")
-                                Gen_Emit(sym)
+                                Gen_Emit(breal)
                                 Gen_Emit("\")\n")
                             } ElseBlock: {
                                 OOPGen_Init()
@@ -1405,69 +1414,87 @@ Function.Gen_FromImport {
                                 OOPGen.has_classes = 1
                             }
                         }
-                        IfCondition EqualTo(StringCompare(sym, "ABCMeta"), 0) ThenBlock: {
-                            bind = "    PyMod.ABCMeta = Hash.Create(4)\n"
+                        IfCondition EqualTo(StringCompare(breal, "ABCMeta"), 0) ThenBlock: {
+                            bind = StringConcat("    PyMod.", bloc)
+                            bind = StringConcat(bind, " = Hash.Create(4)\n")
                             IfCondition GreaterThan(Gen.indent, 0) ThenBlock: {
                                 Gen_EmitIndent()
-                                Gen_Emit("PyMod.ABCMeta = Hash.Create(4)\n")
+                                Gen_Emit("PyMod.")
+                                Gen_Emit(bloc)
+                                Gen_Emit(" = Hash.Create(4)\n")
                             } ElseBlock: {
                                 OOPGen_Init()
                                 Array.Push(OOPGen.class_init_code, bind)
                                 OOPGen.has_classes = 1
                             }
                         }
-                        IfCondition EqualTo(StringCompare(sym, "ALWAYS_EQ"), 0) ThenBlock: {
-                            bind = "    PyMod.ALWAYS_EQ = AIMacro.AlwaysEq()\n"
+                        IfCondition EqualTo(StringCompare(breal, "ALWAYS_EQ"), 0) ThenBlock: {
+                            bind = StringConcat("    PyMod.", bloc)
+                            bind = StringConcat(bind, " = AIMacro.AlwaysEq()\n")
                             IfCondition GreaterThan(Gen.indent, 0) ThenBlock: {
                                 Gen_EmitIndent()
-                                Gen_Emit("PyMod.ALWAYS_EQ = AIMacro.AlwaysEq()\n")
+                                Gen_Emit("PyMod.")
+                                Gen_Emit(bloc)
+                                Gen_Emit(" = AIMacro.AlwaysEq()\n")
                             } ElseBlock: {
                                 OOPGen_Init()
                                 Array.Push(OOPGen.class_init_code, bind)
                                 OOPGen.has_classes = 1
                             }
                         }
-                        IfCondition EqualTo(StringCompare(sym, "NEVER_EQ"), 0) ThenBlock: {
-                            bind = "    PyMod.NEVER_EQ = AIMacro.NeverEq()\n"
+                        IfCondition EqualTo(StringCompare(breal, "NEVER_EQ"), 0) ThenBlock: {
+                            bind = StringConcat("    PyMod.", bloc)
+                            bind = StringConcat(bind, " = AIMacro.NeverEq()\n")
                             IfCondition GreaterThan(Gen.indent, 0) ThenBlock: {
                                 Gen_EmitIndent()
-                                Gen_Emit("PyMod.NEVER_EQ = AIMacro.NeverEq()\n")
+                                Gen_Emit("PyMod.")
+                                Gen_Emit(bloc)
+                                Gen_Emit(" = AIMacro.NeverEq()\n")
                             } ElseBlock: {
                                 OOPGen_Init()
                                 Array.Push(OOPGen.class_init_code, bind)
                                 OOPGen.has_classes = 1
                             }
                         }
-                        IfCondition EqualTo(StringCompare(sym, "Fraction"), 0) ThenBlock: {
-                            Gen_MarkModuleVar(sym)
-                            bind = "    PyMod.Fraction = AddressOf(AIMacro.FractionNew)\n"
+                        IfCondition EqualTo(StringCompare(breal, "Fraction"), 0) ThenBlock: {
+                            Gen_MarkModuleVar(bloc)
+                            bind = StringConcat("    PyMod.", bloc)
+                            bind = StringConcat(bind, " = AddressOf(AIMacro.FractionNew)\n")
                             IfCondition GreaterThan(Gen.indent, 0) ThenBlock: {
                                 Gen_EmitIndent()
-                                Gen_Emit("PyMod.Fraction = AddressOf(AIMacro.FractionNew)\n")
+                                Gen_Emit("PyMod.")
+                                Gen_Emit(bloc)
+                                Gen_Emit(" = AddressOf(AIMacro.FractionNew)\n")
                             } ElseBlock: {
                                 OOPGen_Init()
                                 Array.Push(OOPGen.class_init_code, bind)
                                 OOPGen.has_classes = 1
                             }
                         }
-                        IfCondition EqualTo(StringCompare(sym, "Decimal"), 0) ThenBlock: {
-                            Gen_MarkModuleVar(sym)
-                            bind = "    PyMod.Decimal = AddressOf(AIMacro.DecimalNew)\n"
+                        IfCondition EqualTo(StringCompare(breal, "Decimal"), 0) ThenBlock: {
+                            Gen_MarkModuleVar(bloc)
+                            bind = StringConcat("    PyMod.", bloc)
+                            bind = StringConcat(bind, " = AddressOf(AIMacro.DecimalNew)\n")
                             IfCondition GreaterThan(Gen.indent, 0) ThenBlock: {
                                 Gen_EmitIndent()
-                                Gen_Emit("PyMod.Decimal = AddressOf(AIMacro.DecimalNew)\n")
+                                Gen_Emit("PyMod.")
+                                Gen_Emit(bloc)
+                                Gen_Emit(" = AddressOf(AIMacro.DecimalNew)\n")
                             } ElseBlock: {
                                 OOPGen_Init()
                                 Array.Push(OOPGen.class_init_code, bind)
                                 OOPGen.has_classes = 1
                             }
                         }
-                        IfCondition EqualTo(StringCompare(sym, "UserList"), 0) ThenBlock: {
-                            Gen_MarkModuleVar(sym)
-                            bind = "    PyMod.UserList = AddressOf(AIMacro.UserListNew)\n"
+                        IfCondition EqualTo(StringCompare(breal, "UserList"), 0) ThenBlock: {
+                            Gen_MarkModuleVar(bloc)
+                            bind = StringConcat("    PyMod.", bloc)
+                            bind = StringConcat(bind, " = AddressOf(AIMacro.UserListNew)\n")
                             IfCondition GreaterThan(Gen.indent, 0) ThenBlock: {
                                 Gen_EmitIndent()
-                                Gen_Emit("PyMod.UserList = AddressOf(AIMacro.UserListNew)\n")
+                                Gen_Emit("PyMod.")
+                                Gen_Emit(bloc)
+                                Gen_Emit(" = AddressOf(AIMacro.UserListNew)\n")
                             } ElseBlock: {
                                 OOPGen_Init()
                                 Array.Push(OOPGen.class_init_code, bind)

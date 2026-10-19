@@ -1862,36 +1862,16 @@ def _desugar_same_dir_imports(src: str, src_path: str | None) -> str:
 
 
 def desugar_from_import_as(src: str) -> str:
-    """Rewrite `from M import X as Y` so the bound name is Y.
+    """Keep `from M import X as Y`.
 
-    AIMacro Parse_FromImport skips the alias and keeps X; codegen then marks
-    X while the body uses Y → Variable not found (html `_html5`).
-    Collapse to `from M import Y` (compile stubs ignore the real export name).
+    The compiler binds Y and still recognizes X, so Decimal as D stays Decimal.
     """
     try:
         tree = ast.parse(src)
     except SyntaxError:
         return src
-
-    class _FromAs(ast.NodeTransformer):
-        def visit_ImportFrom(self, node: ast.ImportFrom):
-            self.generic_visit(node)
-            changed = False
-            names = []
-            for a in node.names:
-                if a.asname:
-                    names.append(ast.alias(name=a.asname, asname=None))
-                    changed = True
-                else:
-                    names.append(a)
-            if not changed:
-                return node
-            return ast.ImportFrom(module=node.module, names=names, level=node.level)
-
-    new_tree = _FromAs().visit(tree)
-    ast.fix_missing_locations(new_tree)
     try:
-        return ast.unparse(new_tree) + "\n"
+        return ast.unparse(tree) + "\n"
     except Exception:
         return src
 

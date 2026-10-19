@@ -169,6 +169,29 @@ Function.AST_Type {
 // =============================================================================
 // IMPORT STATEMENT PARSING
 // =============================================================================
+// from M import X as Y → "Y@X". from M import X → "X".
+Function.Parse_FromSymbol {
+    Output: Address
+    Body: {
+        IfCondition NotEqual(Parse_Type(), Token.IDENTIFIER) ThenBlock: {
+            ReturnValue(0)
+        }
+        sym_name = Parse_CopyStr(Parse_Val())
+        Parse_Advance()
+        IfCondition EqualTo(Parse_Match(Token.AS), 1) ThenBlock: {
+            Parse_Advance()
+            IfCondition EqualTo(Parse_Match(Token.IDENTIFIER), 1) ThenBlock: {
+                alias = Parse_CopyStr(Parse_Val())
+                Parse_Advance()
+                spec = StringConcat(alias, "@")
+                spec = StringConcat(spec, sym_name)
+                ReturnValue(spec)
+            }
+        }
+        ReturnValue(sym_name)
+    }
+}
+
 // import a.b as c → "c@a.b". import a.b → "a.b". import a → "a".
 Function.Parse_ImportSpec {
     Output: Address
@@ -332,16 +355,8 @@ Function.Parse_FromImport {
             ReturnValue(0)
         }
         
-        sym_ptr = Parse_Val()
-        sym_name = Parse_CopyStr(sym_ptr)
+        sym_name = Parse_FromSymbol()
         Array.Push(symbols, sym_name)
-        Parse_Advance()
-        IfCondition EqualTo(Parse_Match(Token.AS), 1) ThenBlock: {
-            Parse_Advance()
-            IfCondition EqualTo(Parse_Match(Token.IDENTIFIER), 1) ThenBlock: {
-                Parse_Advance()
-            }
-        }
         
         // Additional symbols (comma-separated)
         WhileLoop EqualTo(1, 1) {
@@ -361,16 +376,8 @@ Function.Parse_FromImport {
                 BreakLoop
             }
             
-            sym_ptr = Parse_Val()
-            sym_name = Parse_CopyStr(sym_ptr)
+            sym_name = Parse_FromSymbol()
             Array.Push(symbols, sym_name)
-            Parse_Advance()
-            IfCondition EqualTo(Parse_Match(Token.AS), 1) ThenBlock: {
-                Parse_Advance()
-                IfCondition EqualTo(Parse_Match(Token.IDENTIFIER), 1) ThenBlock: {
-                    Parse_Advance()
-                }
-            }
         }
         }
         
