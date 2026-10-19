@@ -749,6 +749,37 @@ Function.AIMacro.IntPair {
     }
 }
 
+// 1 when an int subclass is compared with a float.
+Function.AIMacro.IntFloatPair {
+    Input: a: Address
+    Input: b: Address
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(AIMacro.IsIntSubclass(a), 1) ThenBlock: {
+            ReturnValue(Types.IsFloat(b))
+        }
+        IfCondition EqualTo(AIMacro.IsIntSubclass(b), 1) ThenBlock: {
+            ReturnValue(Types.IsFloat(a))
+        }
+        ReturnValue(0)
+    }
+}
+
+Function.AIMacro.NumFloatBits {
+    Input: v: Address
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(Types.IsFloat(v), 1) ThenBlock: {
+            ReturnValue(AIMacro.FloatBits(v))
+        }
+        IfCondition EqualTo(AIMacro.IsIntSubclass(v), 1) ThenBlock: {
+            ipv = AIMacro.IntPayload(v)
+            ReturnValue(Float_FromInt(ipv))
+        }
+        ReturnValue(Float_FromInt(AIMacro.UnboxIntZero(v)))
+    }
+}
+
 Function.AIMacro.IntSuper {
     Input: obj: Address
     Input: name: Address

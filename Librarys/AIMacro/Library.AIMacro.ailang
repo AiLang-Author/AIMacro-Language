@@ -1299,6 +1299,9 @@ Function.AIMacro.PyHash {
         IfCondition EqualTo(AIMacroUnary.hit, 1) ThenBlock: {
             ReturnValue(hv)
         }
+        IfCondition EqualTo(AIMacro.IsIntSubclass(a), 1) ThenBlock: {
+            ReturnValue(AIMacro.IntPayload(a))
+        }
         ReturnValue(a)
     }
 }
