@@ -1319,6 +1319,13 @@ Function.AIMacro.Repr {
         IfCondition EqualTo(Types.IsFloat(value), 1) ThenBlock: {
             ReturnValue(AIMacro.FloatStr(value))
         }
+        IfCondition EqualTo(Types.IsBigInt(value), 1) ThenBlock: {
+            ds = Dereference(Add(value, 16))
+            IfCondition EqualTo(Dereference(Add(value, 8)), 1) ThenBlock: {
+                ReturnValue(String.Concat("-", ds))
+            }
+            ReturnValue(ds)
+        }
         IfCondition EqualTo(AIMacro.IsExc(value), 1) ThenBlock: {
             ReturnValue(AIMacro.ExcStr(value))
         }

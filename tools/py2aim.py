@@ -3744,6 +3744,75 @@ class _GenSM:
             )
         )
 
+    def _send_or_stop(self, it_attr: str, dest, after_sid: int):
+        """Forward the value just sent. None uses next(), so a list still works."""
+        flag = f"_k{self.it_n}"
+        self.it_n += 1
+        self.add(
+            ast.Assign(
+                targets=[_gen_self_attr(flag, ast.Store())],
+                value=ast.Constant(value=0),
+            )
+        )
+        self.add(
+            ast.Try(
+                body=[
+                    ast.If(
+                        test=ast.Compare(
+                            left=_gen_self_attr("_sent", ast.Load()),
+                            ops=[ast.Is()],
+                            comparators=[ast.Constant(value=None)],
+                        ),
+                        body=[
+                            ast.Assign(
+                                targets=[dest],
+                                value=ast.Call(
+                                    func=ast.Name(id="next", ctx=ast.Load()),
+                                    args=[_gen_self_attr(it_attr, ast.Load())],
+                                    keywords=[],
+                                ),
+                            )
+                        ],
+                        orelse=[
+                            ast.Assign(
+                                targets=[dest],
+                                value=ast.Call(
+                                    func=ast.Attribute(
+                                        value=_gen_self_attr(it_attr, ast.Load()),
+                                        attr="send",
+                                        ctx=ast.Load(),
+                                    ),
+                                    args=[_gen_self_attr("_sent", ast.Load())],
+                                    keywords=[],
+                                ),
+                            )
+                        ],
+                    )
+                ],
+                handlers=[
+                    ast.ExceptHandler(
+                        type=ast.Name(id="StopIteration", ctx=ast.Load()),
+                        name=None,
+                        body=[
+                            ast.Assign(
+                                targets=[_gen_self_attr(flag, ast.Store())],
+                                value=ast.Constant(value=1),
+                            )
+                        ],
+                    )
+                ],
+                orelse=[],
+                finalbody=[],
+            )
+        )
+        self.add(
+            ast.If(
+                test=_gen_self_attr(flag, ast.Load()),
+                body=[self.set_s(after_sid), ast.Continue()],
+                orelse=[],
+            )
+        )
+
     def _yield_from(self, expr, target, rest, after):
         # for _v in expr: yield _v  then assign last sent
         it = f"_i{self.it_n}"
@@ -3759,13 +3828,17 @@ class _GenSM:
             )
         )
         head = self.news()
+        loop = self.news()
         after_yf = self.news()
         self.goto(head)
         old = self.cur
         self.cur = head
         tmp = f"_v{self.it_n}"
         self._next_or_stop(it, _gen_self_attr(tmp, ast.Store()), after_yf)
-        self.yield_to(_gen_self_attr(tmp, ast.Load()), head)
+        self.yield_to(_gen_self_attr(tmp, ast.Load()), loop)
+        self.cur = loop
+        self._send_or_stop(it, _gen_self_attr(tmp, ast.Store()), after_yf)
+        self.yield_to(_gen_self_attr(tmp, ast.Load()), loop)
         self.cur = after_yf
         if target is not None:
             self.add(
