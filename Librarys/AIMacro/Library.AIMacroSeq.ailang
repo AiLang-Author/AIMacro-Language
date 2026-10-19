@@ -1595,9 +1595,6 @@ Function.AIMacro.IterLen {
         IfCondition GreaterEqual(n, TypeMagic.HEAP_START) ThenBlock: {
             ReturnValue(0)
         }
-        IfCondition GreaterThan(n, 65536) ThenBlock: {
-            ReturnValue(65536)
-        }
         ReturnValue(n)
     }
 }
