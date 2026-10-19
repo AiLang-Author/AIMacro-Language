@@ -2401,7 +2401,11 @@ Function.AIMacro.SmartCall1 {
                 ReturnValue(0)
             }
             AIMacroBool.recdepth = Add(AIMacroBool.recdepth, 1)
-            rcall = CallIndirect(fn, carg)
+            IfCondition EqualTo(fn, AddressOf(AIMacro.FractionNew)) ThenBlock: {
+                rcall = CallIndirect(fn, carg, 1)
+            } ElseBlock: {
+                rcall = CallIndirect(fn, carg)
+            }
             AIMacroBool.recdepth = Subtract(AIMacroBool.recdepth, 1)
             ReturnValue(rcall)
         }
@@ -2707,7 +2711,11 @@ Function.AIMacro.SmartCallN {
                 a0 = AIMacro.IntZero()
             }
             IfCondition EqualTo(n, 1) ThenBlock: {
-                rcall = CallIndirect(fn, a0)
+                IfCondition EqualTo(fn, AddressOf(AIMacro.FractionNew)) ThenBlock: {
+                    rcall = CallIndirect(fn, a0, 1)
+                } ElseBlock: {
+                    rcall = CallIndirect(fn, a0)
+                }
             }
             ElseBlock: {
                 a1 = Array.Get(args, 1)
