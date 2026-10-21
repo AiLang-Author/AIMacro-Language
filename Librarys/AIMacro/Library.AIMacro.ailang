@@ -2292,6 +2292,12 @@ Function.AIMacro.Reversed {
         }
         IfCondition EqualTo(AIMacro.SafeIsHash(list), 1) ThenBlock: {
             cls_rv = Hash.Get(list, "__class__")
+            IfCondition EqualTo(AIMacro.LooksLikeString(cls_rv), 1) ThenBlock: {
+                IfCondition EqualTo(StringCompare(cls_rv, "range"), 0) ThenBlock: {
+                    items = AIMacro.RangeItems(list)
+                    ReturnValue(AIMacro.Reversed(items))
+                }
+            }
             IfCondition NotEqual(cls_rv, 0) ThenBlock: {
                 rev_slot = AIMacro.ClassAttrGet(cls_rv, "__reversed__")
                 IfCondition EqualTo(AIMacro.IsNone(rev_slot), 1) ThenBlock: {

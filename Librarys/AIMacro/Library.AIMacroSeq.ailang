@@ -1406,6 +1406,10 @@ Function.AIMacro.Iter {
                     IfCondition EqualTo(StringCompare(cls0, "range"), 0) ThenBlock: {
                         ReturnValue(AIMacro.RangeItems(iterable))
                     }
+                    got_items = Hash.Get(iterable, "__items__")
+                    IfCondition EqualTo(Array.IsArray(got_items), 1) ThenBlock: {
+                        ReturnValue(iterable)
+                    }
                     AIMacro.RaiseKind(5, "object is not iterable")
                     ReturnValue(AIMacro.EmptyList())
                 }
