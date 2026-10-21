@@ -609,9 +609,10 @@ Function.Gen_ForRange {
             }
         }
 
-        // Create internal loop counter name: lc<id> (loop counter)
+        // Bounds are raw integers. A literal 0 is a box, so unbox
+        // before the raw LessThan / GreaterThan loop test.
         Gen_EmitIndent()
-        Gen_Emit("lc")
+        Gen_Emit("lcs")
         Gen_Emit(loop_suffix)
         Gen_Emit(" = ")
         IfCondition EqualTo(num_args, 1) ThenBlock: {
@@ -620,18 +621,28 @@ Function.Gen_ForRange {
             Gen_Expr(start_arg)
         }
         Gen_Emit("\n")
-        
-        // Set stop value: ls<id> (loop stop)
         Gen_EmitIndent()
-        Gen_Emit("ls")
+        Gen_Emit("lc")
+        Gen_Emit(loop_suffix)
+        Gen_Emit(" = AIMacro.UnboxIntZero(lcs")
+        Gen_Emit(loop_suffix)
+        Gen_Emit(")\n")
+
+        Gen_EmitIndent()
+        Gen_Emit("lsp")
         Gen_Emit(loop_suffix)
         Gen_Emit(" = ")
         Gen_Expr(stop_arg)
         Gen_Emit("\n")
-        
-        // Set step value: lt<id> (loop step)
         Gen_EmitIndent()
-        Gen_Emit("lt")
+        Gen_Emit("ls")
+        Gen_Emit(loop_suffix)
+        Gen_Emit(" = AIMacro.UnboxIntZero(lsp")
+        Gen_Emit(loop_suffix)
+        Gen_Emit(")\n")
+
+        Gen_EmitIndent()
+        Gen_Emit("lst")
         Gen_Emit(loop_suffix)
         Gen_Emit(" = ")
         IfCondition EqualTo(num_args, 3) ThenBlock: {
@@ -640,6 +651,12 @@ Function.Gen_ForRange {
             Gen_Emit("1")
         }
         Gen_Emit("\n")
+        Gen_EmitIndent()
+        Gen_Emit("lt")
+        Gen_Emit(loop_suffix)
+        Gen_Emit(" = AIMacro.UnboxIntZero(lst")
+        Gen_Emit(loop_suffix)
+        Gen_Emit(")\n")
         
         // While loop - direction depends on step sign
         Gen_EmitIndent()

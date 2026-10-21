@@ -580,20 +580,23 @@ Function.AIMacro.RangeLen {
         IfCondition EqualTo(step, 0) ThenBlock: {
             ReturnValue(0)
         }
-        n = 0
-        current = start
         IfCondition GreaterThan(step, 0) ThenBlock: {
-            WhileLoop And(LessThan(current, stop), LessThan(n, 65536)) {
-                n = Add(n, 1)
-                current = Add(current, step)
+            IfCondition GreaterEqual(start, stop) ThenBlock: {
+                ReturnValue(0)
             }
-        } ElseBlock: {
-            WhileLoop And(GreaterThan(current, stop), LessThan(n, 65536)) {
-                n = Add(n, 1)
-                current = Add(current, step)
-            }
+            span = Subtract(stop, start)
+            span = Subtract(span, 1)
+            n = Divide(span, step)
+            ReturnValue(Add(n, 1))
         }
-        ReturnValue(n)
+        IfCondition LessEqual(start, stop) ThenBlock: {
+            ReturnValue(0)
+        }
+        span = Subtract(start, stop)
+        span = Subtract(span, 1)
+        step = Subtract(0, step)
+        n = Divide(span, step)
+        ReturnValue(Add(n, 1))
     }
 }
 
@@ -1575,6 +1578,20 @@ Function.AIMacro.StrContains {
             ReturnValue(1)
         }
         ReturnValue(0)
+    }
+}
+
+Function.AIMacro.StrRepeat {
+    Input: s: Address
+    Input: n: Integer
+    Output: Address
+    Body: {
+        n = AIMacro.Int(n)
+        n = AIMacro.UnboxIntZero(n)
+        IfCondition LessEqual(n, 0) ThenBlock: {
+            ReturnValue("")
+        }
+        ReturnValue(String.Repeat(s, n))
     }
 }
 

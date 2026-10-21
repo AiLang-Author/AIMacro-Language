@@ -733,11 +733,11 @@ Function.Gen_BinaryOp {
         IfCondition EqualTo(op, Token.STAR) ThenBlock: {
             left_is_str = Gen_InvolvesString(left)
             IfCondition EqualTo(left_is_str, 1) ThenBlock: {
-                Gen_Emit("String.Repeat(")
+                Gen_Emit("AIMacro.StrRepeat(")
                 Gen_Expr(left)
-                Gen_Emit(", AIMacro.Int(")
+                Gen_Emit(", ")
                 Gen_Expr(right)
-                Gen_Emit("))")
+                Gen_Emit(")")
                 ReturnValue(0)
             }
         }
