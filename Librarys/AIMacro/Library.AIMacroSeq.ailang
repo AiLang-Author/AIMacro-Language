@@ -1183,7 +1183,7 @@ Function.AIMacro.EnumerateFrom {
             }
         } ElseBlock: {
             n = 0
-            WhileLoop LessThan(n, 4096) {
+            WhileLoop LessThan(n, TypeMagic.HEAP_START) {
                 AIMacro.ExcEnter()
                 v = AIMacro.Next(it)
                 IfCondition EqualTo(AIMacro.ExcPending(), 1) ThenBlock: {
@@ -1203,6 +1203,9 @@ Function.AIMacro.EnumerateFrom {
                 Array.Push(items, pair)
                 i = Add(i, 1)
                 n = Add(n, 1)
+            }
+            IfCondition GreaterEqual(n, TypeMagic.HEAP_START) ThenBlock: {
+                AIMacro.RaiseKind(23, "MemoryError")
             }
         }
         h = Hash.Create(8)
