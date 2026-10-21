@@ -613,8 +613,8 @@ Function.AIMacro.RangeItems {
         IfCondition EqualTo(step, 0) ThenBlock: {
             step = 1
         }
-        span = Hash.Get(rng, "__span__")
-        IfCondition GreaterThan(span, 65536) ThenBlock: {
+        nlen = AIMacro.RangeLen(rng)
+        IfCondition GreaterEqual(nlen, TypeMagic.HEAP_START) ThenBlock: {
             AIMacro.RaiseKind(23, "MemoryError")
             ReturnValue(AIMacro.EmptyList())
         }
@@ -1065,6 +1065,12 @@ Function.AIMacro.ListFrom {
             ReturnValue(AIMacro.EmptyList())
         }
         IfCondition EqualTo(Hash.IsHash(iterable), 1) ThenBlock: {
+            cls_rng = Hash.Get(iterable, "__class__")
+            IfCondition EqualTo(AIMacro.LooksLikeString(cls_rng), 1) ThenBlock: {
+                IfCondition EqualTo(StringCompare(cls_rng, "range"), 0) ThenBlock: {
+                    ReturnValue(AIMacro.RangeItems(iterable))
+                }
+            }
             skip_unwrap = 0
             IfCondition EqualTo(OOP.MethodExists(iterable, "__iter__"), 1) ThenBlock: {
                 skip_unwrap = 1
@@ -1080,16 +1086,6 @@ Function.AIMacro.ListFrom {
                 wrapped = Hash.Get(iterable, "__int__")
                 IfCondition EqualTo(Array.IsArray(wrapped), 1) ThenBlock: {
                     ReturnValue(AIMacro.CopyArray(wrapped))
-                }
-                cls_r = Hash.Get(iterable, "__class__")
-                IfCondition NotEqual(cls_r, 0) ThenBlock: {
-                    IfCondition EqualTo(StringCompare(cls_r, "range"), 0) ThenBlock: {
-                        sp = Hash.Get(iterable, "__span__")
-                        IfCondition GreaterThan(sp, 65536) ThenBlock: {
-                            AIMacro.RaiseKind(23, "MemoryError")
-                            ReturnValue(AIMacro.EmptyList())
-                        }
-                    }
                 }
             }
         }
