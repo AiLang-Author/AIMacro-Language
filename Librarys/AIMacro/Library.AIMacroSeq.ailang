@@ -1293,6 +1293,49 @@ Function.AIMacro.Map {
     }
 }
 
+// filter(fn, iterable). None keeps truthy items. A non-list is read first.
+Function.AIMacro.Filter {
+    Input: fn: Address
+    Input: iterable: Address
+    Output: Address
+    Body: {
+        IfCondition EqualTo(iterable, 0) ThenBlock: {
+            ReturnValue(Array.Create(0))
+        }
+        IfCondition EqualTo(AIMacro.IsNone(iterable), 1) ThenBlock: {
+            ReturnValue(Array.Create(0))
+        }
+        IfCondition EqualTo(Array.IsArray(iterable), 0) ThenBlock: {
+            iterable = AIMacro.ListFrom(iterable)
+        }
+        n = Array.Size(iterable)
+        result = Array.Create(0)
+        i = 0
+        WhileLoop LessThan(i, n) {
+            item = Array.Get(iterable, i)
+            use_item = 0
+            IfCondition EqualTo(fn, 0) ThenBlock: {
+                use_item = 1
+            }
+            IfCondition EqualTo(AIMacro.IsNone(fn), 1) ThenBlock: {
+                use_item = 1
+            }
+            keep = 0
+            IfCondition EqualTo(use_item, 1) ThenBlock: {
+                keep = AIMacro.SmartBool(item)
+            } ElseBlock: {
+                called = AIMacro.SmartCall1(fn, item)
+                keep = AIMacro.SmartBool(called)
+            }
+            IfCondition EqualTo(keep, 1) ThenBlock: {
+                Array.Push(result, item)
+            }
+            i = Add(i, 1)
+        }
+        ReturnValue(result)
+    }
+}
+
 // =============================================================================
 // I/O FUNCTIONS
 // =============================================================================

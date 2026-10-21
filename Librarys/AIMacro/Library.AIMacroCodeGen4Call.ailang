@@ -1798,6 +1798,9 @@ Function.Gen_MapBuiltin {
         cmp = StringCompare(name, "map")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.Map") }
 
+        cmp = StringCompare(name, "filter")
+        IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.Filter") }
+
         cmp = StringCompare(name, "breakpoint")
         IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue("AIMacro.SmartCall") }
 
