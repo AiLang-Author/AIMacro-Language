@@ -1093,9 +1093,17 @@ Function.AIMacro.ListFrom {
         IfCondition EqualTo(AIMacro.ExcPending(), 1) ThenBlock: {
             ReturnValue(AIMacro.EmptyList())
         }
+        IfCondition EqualTo(Array.IsArray(it), 1) ThenBlock: {
+            ncopy = Array.Size(it)
+            IfCondition GreaterEqual(ncopy, TypeMagic.HEAP_START) ThenBlock: {
+                AIMacro.RaiseKind(23, "MemoryError")
+                ReturnValue(AIMacro.EmptyList())
+            }
+            ReturnValue(it)
+        }
         out = AIMacro.EmptyList()
         i = 0
-        WhileLoop LessThan(i, 4096) {
+        WhileLoop LessThan(i, TypeMagic.HEAP_START) {
             AIMacro.ExcEnter()
             v = AIMacro.Next(it)
             IfCondition EqualTo(AIMacro.ExcPending(), 1) ThenBlock: {
@@ -1111,6 +1119,9 @@ Function.AIMacro.ListFrom {
             AIMacro.ExcLeave()
             Array.Push(out, v)
             i = Add(i, 1)
+        }
+        IfCondition GreaterEqual(i, TypeMagic.HEAP_START) ThenBlock: {
+            AIMacro.RaiseKind(23, "MemoryError")
         }
         ReturnValue(out)
     }
