@@ -1275,7 +1275,7 @@ Function.AIMacro.Map {
             ReturnValue(Array.Create(0))
         }
         IfCondition EqualTo(Array.IsArray(iterable), 0) ThenBlock: {
-            ReturnValue(Array.Create(0))
+            iterable = AIMacro.ListFrom(iterable)
         }
         n = Array.Size(iterable)
         result = Array.Create(n)
