@@ -647,6 +647,9 @@ Function.AIMacro.SmartSum {
         IfCondition EqualTo(list, 0) ThenBlock: {
             ReturnValue(0)
         }
+        IfCondition EqualTo(AIMacro.SafeIsHash(list), 1) ThenBlock: {
+            list = AIMacro.ListFrom(list)
+        }
         
         is_tarray = Array.IsArray(list)
         IfCondition EqualTo(is_tarray, 1) ThenBlock: {
@@ -663,6 +666,7 @@ Function.AIMacro.SmartSum {
             } ElseBlock: {
                 item = Array.Get(list, i)
             }
+            item = AIMacro.UnboxIntZero(item)
             total = Add(total, item)
             i = Add(i, 1)
         }
