@@ -232,6 +232,9 @@ Function.AIMacro.TypedSorted {
         IfCondition EqualTo(list, 0) ThenBlock: {
             ReturnValue(Array.Create(0))
         }
+        IfCondition EqualTo(AIMacro.SafeIsHash(list), 1) ThenBlock: {
+            list = AIMacro.ListFrom(list)
+        }
         
         // Get size - handle both XArray and TArray input
         is_tarray = Array.IsArray(list)
