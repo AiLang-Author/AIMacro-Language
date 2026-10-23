@@ -1859,6 +1859,9 @@ Function.AIMacro.NumNeg {
                 ReturnValue(AIMacro.ComplexBox(Float_Sub(0, Dereference(Add(a, 8))), Float_Sub(0, Dereference(Add(a, 16)))))
             }
             IfCondition EqualTo(Dereference(a), TypeMagic.BIGINT) ThenBlock: {
+                IfCondition EqualTo(AIMacro.UnboxIntZero(a), 0) ThenBlock: {
+                    ReturnValue(0)
+                }
                 ReturnValue(AIMacro.BigIntBox(Subtract(1, Dereference(Add(a, 8))), Dereference(Add(a, 16))))
             }
             IfCondition EqualTo(Dereference(a), TypeMagic.FLOAT) ThenBlock: {

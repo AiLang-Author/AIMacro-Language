@@ -313,6 +313,9 @@ Function.AIMacro.TypedSortedKey {
         IfCondition EqualTo(list, 0) ThenBlock: {
             ReturnValue(Array.Create(0))
         }
+        IfCondition EqualTo(AIMacro.SafeIsHash(list), 1) ThenBlock: {
+            list = AIMacro.ListFrom(list)
+        }
         size = Array.Size(list)
         result = Array.Create(size)
         i = 0
@@ -1056,7 +1059,7 @@ Function.AIMacro.UnboxIntZero {
                 ReturnValue(v)
             }
             IfCondition EqualTo(sign, 1) ThenBlock: {
-                ReturnValue(v)
+                ReturnValue(Subtract(0, StringToNumber(digs)))
             }
             ReturnValue(StringToNumber(digs))
         }
