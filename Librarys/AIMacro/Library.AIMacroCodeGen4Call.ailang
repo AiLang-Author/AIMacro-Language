@@ -738,6 +738,46 @@ Function.Gen_CallExpr {
             ReturnValue(0)
         }
 
+        cmp = StringCompare(name, "min")
+        is_minmax = 0
+        mm_fn = "AIMacro.MinSeq"
+        IfCondition EqualTo(cmp, 0) ThenBlock: { is_minmax = 1 }
+        cmp = StringCompare(name, "max")
+        IfCondition EqualTo(cmp, 0) ThenBlock: {
+            is_minmax = 1
+            mm_fn = "AIMacro.MaxSeq"
+        }
+        IfCondition EqualTo(is_minmax, 1) ThenBlock: {
+            npos_mm = 0
+            nargs_mm = 0
+            nkw_mm = 0
+            IfCondition NotEqual(args, 0) ThenBlock: { nargs_mm = Array.Size(args) }
+            ii_mm = 0
+            WhileLoop LessThan(ii_mm, nargs_mm) {
+                IfCondition EqualTo(AST_Type(Array.Get(args, ii_mm)), Node.KW_ARG) ThenBlock: {
+                    nkw_mm = Add(nkw_mm, 1)
+                } ElseBlock: {
+                    npos_mm = Add(npos_mm, 1)
+                }
+                ii_mm = Add(ii_mm, 1)
+            }
+            IfCondition And(EqualTo(npos_mm, 1), EqualTo(nkw_mm, 0)) ThenBlock: {
+                one_mm = Gen_NthPosArg(args, 0)
+                Gen_Emit(mm_fn)
+                Gen_Emit("(")
+                IfCondition NotEqual(one_mm, 0) ThenBlock: {
+                    IfCondition EqualTo(Gen_HasCall(one_mm), 1) ThenBlock: {
+                        one_mm = Gen_FlattenExpr(one_mm)
+                    }
+                    Gen_Expr(one_mm)
+                } ElseBlock: {
+                    Gen_Emit("0")
+                }
+                Gen_Emit(")")
+                ReturnValue(0)
+            }
+        }
+
         cmp = StringCompare(name, "sorted")
         IfCondition EqualTo(cmp, 0) ThenBlock: {
             iterable = Gen_NthPosArg(args, 0)

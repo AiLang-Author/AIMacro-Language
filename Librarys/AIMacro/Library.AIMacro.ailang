@@ -2446,6 +2446,74 @@ Function.AIMacro.Min {
     }
 }
 
+Function.AIMacro.MinSeq {
+    Input: iterable: Address
+    Output: Address
+    Body: {
+        IfCondition EqualTo(iterable, 0) ThenBlock: {
+            AIMacro.RaiseKind(2, "min")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(AIMacro.IsNone(iterable), 1) ThenBlock: {
+            AIMacro.RaiseKind(2, "min")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(Array.IsArray(iterable), 0) ThenBlock: {
+            iterable = AIMacro.ListFrom(iterable)
+        }
+        n = Array.Size(iterable)
+        IfCondition EqualTo(n, 0) ThenBlock: {
+            AIMacro.RaiseKind(2, "min")
+            ReturnValue(0)
+        }
+        best = Array.Get(iterable, 0)
+        i = 1
+        WhileLoop LessThan(i, n) {
+            item = Array.Get(iterable, i)
+            lt = AIMacro.NumLt(item, best)
+            IfCondition EqualTo(AIMacro.SmartBool(lt), 1) ThenBlock: {
+                best = item
+            }
+            i = Add(i, 1)
+        }
+        ReturnValue(best)
+    }
+}
+
+Function.AIMacro.MaxSeq {
+    Input: iterable: Address
+    Output: Address
+    Body: {
+        IfCondition EqualTo(iterable, 0) ThenBlock: {
+            AIMacro.RaiseKind(2, "max")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(AIMacro.IsNone(iterable), 1) ThenBlock: {
+            AIMacro.RaiseKind(2, "max")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(Array.IsArray(iterable), 0) ThenBlock: {
+            iterable = AIMacro.ListFrom(iterable)
+        }
+        n = Array.Size(iterable)
+        IfCondition EqualTo(n, 0) ThenBlock: {
+            AIMacro.RaiseKind(2, "max")
+            ReturnValue(0)
+        }
+        best = Array.Get(iterable, 0)
+        i = 1
+        WhileLoop LessThan(i, n) {
+            item = Array.Get(iterable, i)
+            gt = AIMacro.NumGt(item, best)
+            IfCondition EqualTo(AIMacro.SmartBool(gt), 1) ThenBlock: {
+                best = item
+            }
+            i = Add(i, 1)
+        }
+        ReturnValue(best)
+    }
+}
+
 Function.AIMacro.Sum {
     Input: iterable: Address
     Output: Integer
