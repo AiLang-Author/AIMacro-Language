@@ -1537,6 +1537,11 @@ Function.Gen_FlattenExpr {
                 ReturnValue(Gen_MakeIdent(temp))
             }
             
+            mm_bound = Gen_BindMinMaxMany(call_name, args)
+            IfCondition NotEqual(mm_bound, 0) ThenBlock: {
+                ReturnValue(mm_bound)
+            }
+
             // Emit this call to a temp
             temp = Gen_TempName()
             Gen_EmitIndent()

@@ -324,6 +324,10 @@ Function.Gen_Node {
             IfCondition NotEqual(fold_ee, 0) ThenBlock: {
                 ReturnValue(0)
             }
+            mm_bound = Gen_BindMinMaxMany(cname, cargs)
+            IfCondition NotEqual(mm_bound, 0) ThenBlock: {
+                ReturnValue(0)
+            }
             IfCondition GreaterThan(cn, 3) ThenBlock: {
                 Gen_EmitPackedSmartCall(cname, cargs)
                 Gen_Emit("\n")

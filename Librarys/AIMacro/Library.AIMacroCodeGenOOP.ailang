@@ -697,12 +697,24 @@ Function.OOPGen_EmitClassattrsAssign {
                         }
                     }
                     IfCondition EqualTo(fv_t, Node.CALL) ThenBlock: {
-                        Gen_EmitIndent()
-                        Gen_Emit(fname)
-                        Gen_Emit(" = ")
-                        Gen_CallExpr(fval)
-                        Gen_Emit("\n")
-                        used_call = 1
+                        mm_name = ArrayGet(fval, 3)
+                        mm_args = ArrayGet(fval, 4)
+                        mm_bound = Gen_BindMinMaxMany(mm_name, mm_args)
+                        IfCondition NotEqual(mm_bound, 0) ThenBlock: {
+                            Gen_EmitIndent()
+                            Gen_Emit(fname)
+                            Gen_Emit(" = ")
+                            Gen_Expr(mm_bound)
+                            Gen_Emit("\n")
+                            used_call = 1
+                        } ElseBlock: {
+                            Gen_EmitIndent()
+                            Gen_Emit(fname)
+                            Gen_Emit(" = ")
+                            Gen_CallExpr(fval)
+                            Gen_Emit("\n")
+                            used_call = 1
+                        }
                     }
                     IfCondition EqualTo(used_call, 0) ThenBlock: {
                         fval = Gen_FlattenExpr(fval)

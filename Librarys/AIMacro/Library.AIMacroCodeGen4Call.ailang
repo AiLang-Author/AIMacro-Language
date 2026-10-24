@@ -271,6 +271,103 @@ Function.Gen_EmitPackedSmartCall {
     }
 }
 
+// min(a, b, c) and max(a, b, c). Two arguments stay AIMacro.Min / Max.
+// One argument stays the earlier MinSeq / MaxSeq emit. Keywords stay out.
+Function.Gen_MinMaxManyFn {
+    Input: name: Address
+    Input: args: Address
+    Output: Address
+    Body: {
+        IfCondition EqualTo(name, 0) ThenBlock: { ReturnValue(0) }
+        cmp_mm = StringCompare(name, "min")
+        is_min_mm = 0
+        is_max_mm = 0
+        IfCondition EqualTo(cmp_mm, 0) ThenBlock: { is_min_mm = 1 }
+        cmp_mm = StringCompare(name, "max")
+        IfCondition EqualTo(cmp_mm, 0) ThenBlock: { is_max_mm = 1 }
+        IfCondition And(EqualTo(is_min_mm, 0), EqualTo(is_max_mm, 0)) ThenBlock: {
+            ReturnValue(0)
+        }
+        n_mm = 0
+        IfCondition NotEqual(args, 0) ThenBlock: { n_mm = Array.Size(args) }
+        npos_mm2 = 0
+        nkw_mm2 = 0
+        nstar_mm = 0
+        i_mm2 = 0
+        WhileLoop LessThan(i_mm2, n_mm) {
+            a_mm = Array.Get(args, i_mm2)
+            at_mm = 0
+            IfCondition NotEqual(a_mm, 0) ThenBlock: {
+                at_mm = AST_Type(a_mm)
+            }
+            IfCondition EqualTo(at_mm, Node.KW_ARG) ThenBlock: {
+                nkw_mm2 = Add(nkw_mm2, 1)
+            } ElseBlock: {
+                IfCondition EqualTo(at_mm, Node.STARRED) ThenBlock: {
+                    nstar_mm = Add(nstar_mm, 1)
+                } ElseBlock: {
+                    npos_mm2 = Add(npos_mm2, 1)
+                }
+            }
+            i_mm2 = Add(i_mm2, 1)
+        }
+        IfCondition NotEqual(nkw_mm2, 0) ThenBlock: { ReturnValue(0) }
+        IfCondition NotEqual(nstar_mm, 0) ThenBlock: { ReturnValue(0) }
+        IfCondition LessThan(npos_mm2, 3) ThenBlock: { ReturnValue(0) }
+        IfCondition EqualTo(is_min_mm, 1) ThenBlock: {
+            ReturnValue("AIMacro.MinSeq")
+        }
+        ReturnValue("AIMacro.MaxSeq")
+    }
+}
+
+Function.Gen_BindMinMaxMany {
+    Input: name: Address
+    Input: args: Address
+    Output: Address
+    Body: {
+        fn_mm = Gen_MinMaxManyFn(name, args)
+        IfCondition EqualTo(fn_mm, 0) ThenBlock: { ReturnValue(0) }
+        n_mm = 0
+        IfCondition NotEqual(args, 0) ThenBlock: { n_mm = Array.Size(args) }
+        pack_mm = Gen_TempName()
+        Gen_EmitIndent()
+        Gen_Emit(pack_mm)
+        Gen_Emit(" = Array.Create(8)\n")
+        i_mm2 = 0
+        WhileLoop LessThan(i_mm2, n_mm) {
+            a_mm = Array.Get(args, i_mm2)
+            hc_mm = 0
+            IfCondition NotEqual(a_mm, 0) ThenBlock: {
+                hc_mm = Gen_HasCall(a_mm)
+            }
+            IfCondition EqualTo(hc_mm, 1) ThenBlock: {
+                a_mm = Gen_FlattenExpr(a_mm)
+            }
+            Gen_EmitIndent()
+            Gen_Emit("Array.Push(")
+            Gen_Emit(pack_mm)
+            Gen_Emit(", ")
+            IfCondition EqualTo(a_mm, 0) ThenBlock: {
+                Gen_Emit("0")
+            } ElseBlock: {
+                Gen_Expr(a_mm)
+            }
+            Gen_Emit(")\n")
+            i_mm2 = Add(i_mm2, 1)
+        }
+        temp_mm = Gen_TempName()
+        Gen_EmitIndent()
+        Gen_Emit(temp_mm)
+        Gen_Emit(" = ")
+        Gen_Emit(fn_mm)
+        Gen_Emit("(")
+        Gen_Emit(pack_mm)
+        Gen_Emit(")\n")
+        ReturnValue(Gen_MakeIdent(temp_mm))
+    }
+}
+
 Function.Gen_CallExpr {
     Input: node: Address
     Body: {
