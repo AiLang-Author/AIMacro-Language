@@ -2612,6 +2612,112 @@ Function.AIMacro.MaxSeqKey {
     }
 }
 
+Function.AIMacro.MinSeqDef {
+    Input: iterable: Address
+    Input: fallback: Address
+    Output: Address
+    Body: {
+        IfCondition EqualTo(iterable, 0) ThenBlock: {
+            AIMacro.RaiseKind(2, "min")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(AIMacro.IsNone(iterable), 1) ThenBlock: {
+            AIMacro.RaiseKind(5, "TypeError")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(Array.IsArray(iterable), 0) ThenBlock: {
+            iterable = AIMacro.ListFrom(iterable)
+        }
+        n = Array.Size(iterable)
+        IfCondition EqualTo(n, 0) ThenBlock: {
+            ReturnValue(fallback)
+        }
+        ReturnValue(AIMacro.MinSeq(iterable))
+    }
+}
+
+Function.AIMacro.MaxSeqDef {
+    Input: iterable: Address
+    Input: fallback: Address
+    Output: Address
+    Body: {
+        IfCondition EqualTo(iterable, 0) ThenBlock: {
+            AIMacro.RaiseKind(2, "max")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(AIMacro.IsNone(iterable), 1) ThenBlock: {
+            AIMacro.RaiseKind(5, "TypeError")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(Array.IsArray(iterable), 0) ThenBlock: {
+            iterable = AIMacro.ListFrom(iterable)
+        }
+        n = Array.Size(iterable)
+        IfCondition EqualTo(n, 0) ThenBlock: {
+            ReturnValue(fallback)
+        }
+        ReturnValue(AIMacro.MaxSeq(iterable))
+    }
+}
+
+Function.AIMacro.MinSeqKeyDef {
+    Input: iterable: Address
+    Input: keyfn: Address
+    Input: fallback: Address
+    Output: Address
+    Body: {
+        IfCondition EqualTo(iterable, 0) ThenBlock: {
+            AIMacro.RaiseKind(2, "min")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(AIMacro.IsNone(iterable), 1) ThenBlock: {
+            AIMacro.RaiseKind(5, "TypeError")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(Array.IsArray(iterable), 0) ThenBlock: {
+            iterable = AIMacro.ListFrom(iterable)
+        }
+        n = Array.Size(iterable)
+        IfCondition EqualTo(n, 0) ThenBlock: {
+            ReturnValue(fallback)
+        }
+        ReturnValue(AIMacro.MinSeqKey(iterable, keyfn))
+    }
+}
+
+Function.AIMacro.MaxSeqKeyDef {
+    Input: iterable: Address
+    Input: keyfn: Address
+    Input: fallback: Address
+    Output: Address
+    Body: {
+        IfCondition EqualTo(iterable, 0) ThenBlock: {
+            AIMacro.RaiseKind(2, "max")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(AIMacro.IsNone(iterable), 1) ThenBlock: {
+            AIMacro.RaiseKind(5, "TypeError")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(Array.IsArray(iterable), 0) ThenBlock: {
+            iterable = AIMacro.ListFrom(iterable)
+        }
+        n = Array.Size(iterable)
+        IfCondition EqualTo(n, 0) ThenBlock: {
+            ReturnValue(fallback)
+        }
+        ReturnValue(AIMacro.MaxSeqKey(iterable, keyfn))
+    }
+}
+
+Function.AIMacro.MinMaxBadDefault {
+    Output: Address
+    Body: {
+        AIMacro.RaiseKind(5, "TypeError")
+        ReturnValue(0)
+    }
+}
+
 Function.AIMacro.Sum {
     Input: iterable: Address
     Output: Integer

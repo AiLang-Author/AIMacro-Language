@@ -312,21 +312,38 @@ Function.Gen_MinMaxManyFn {
             i_mm2 = Add(i_mm2, 1)
         }
         IfCondition NotEqual(nstar_mm, 0) ThenBlock: { ReturnValue(0) }
-        key_only = 0
-        IfCondition EqualTo(nkw_mm2, 1) ThenBlock: {
+        key_node = 0
+        def_node = 0
+        IfCondition GreaterThan(nkw_mm2, 0) ThenBlock: {
             key_node = Gen_FindKw(args, "key")
-            IfCondition NotEqual(key_node, 0) ThenBlock: {
-                key_only = 1
-            }
+            def_node = Gen_FindKw(args, "default")
         }
-        IfCondition EqualTo(key_only, 1) ThenBlock: {
+        known_kw = 0
+        IfCondition NotEqual(key_node, 0) ThenBlock: { known_kw = Add(known_kw, 1) }
+        IfCondition NotEqual(def_node, 0) ThenBlock: { known_kw = Add(known_kw, 1) }
+        IfCondition NotEqual(known_kw, nkw_mm2) ThenBlock: { ReturnValue(0) }
+        IfCondition NotEqual(def_node, 0) ThenBlock: {
+            IfCondition NotEqual(npos_mm2, 1) ThenBlock: {
+                ReturnValue("AIMacro.MinMaxBadDefault")
+            }
+            IfCondition NotEqual(key_node, 0) ThenBlock: {
+                IfCondition EqualTo(is_min_mm, 1) ThenBlock: {
+                    ReturnValue("AIMacro.MinSeqKeyDef")
+                }
+                ReturnValue("AIMacro.MaxSeqKeyDef")
+            }
+            IfCondition EqualTo(is_min_mm, 1) ThenBlock: {
+                ReturnValue("AIMacro.MinSeqDef")
+            }
+            ReturnValue("AIMacro.MaxSeqDef")
+        }
+        IfCondition NotEqual(key_node, 0) ThenBlock: {
             IfCondition LessThan(npos_mm2, 1) ThenBlock: { ReturnValue(0) }
             IfCondition EqualTo(is_min_mm, 1) ThenBlock: {
                 ReturnValue("AIMacro.MinSeqKey")
             }
             ReturnValue("AIMacro.MaxSeqKey")
         }
-        IfCondition NotEqual(nkw_mm2, 0) ThenBlock: { ReturnValue(0) }
         IfCondition LessThan(npos_mm2, 3) ThenBlock: { ReturnValue(0) }
         IfCondition EqualTo(is_min_mm, 1) ThenBlock: {
             ReturnValue("AIMacro.MinSeq")
@@ -342,6 +359,76 @@ Function.Gen_BindMinMaxMany {
     Body: {
         fn_mm = Gen_MinMaxManyFn(name, args)
         IfCondition EqualTo(fn_mm, 0) ThenBlock: { ReturnValue(0) }
+        cmp_bad = StringCompare(fn_mm, "AIMacro.MinMaxBadDefault")
+        IfCondition EqualTo(cmp_bad, 0) ThenBlock: {
+            temp_bad = Gen_TempName()
+            Gen_EmitIndent()
+            Gen_Emit(temp_bad)
+            Gen_Emit(" = AIMacro.MinMaxBadDefault()\n")
+            ReturnValue(Gen_MakeIdent(temp_bad))
+        }
+        def_kind = 0
+        cmp_def = StringCompare(fn_mm, "AIMacro.MinSeqDef")
+        IfCondition EqualTo(cmp_def, 0) ThenBlock: { def_kind = 1 }
+        cmp_def = StringCompare(fn_mm, "AIMacro.MaxSeqDef")
+        IfCondition EqualTo(cmp_def, 0) ThenBlock: { def_kind = 1 }
+        cmp_def = StringCompare(fn_mm, "AIMacro.MinSeqKeyDef")
+        IfCondition EqualTo(cmp_def, 0) ThenBlock: { def_kind = 2 }
+        cmp_def = StringCompare(fn_mm, "AIMacro.MaxSeqKeyDef")
+        IfCondition EqualTo(cmp_def, 0) ThenBlock: { def_kind = 2 }
+        IfCondition GreaterThan(def_kind, 0) ThenBlock: {
+            one_d = Gen_NthPosArg(args, 0)
+            IfCondition NotEqual(one_d, 0) ThenBlock: {
+                hc_d = Gen_HasCall(one_d)
+                IfCondition EqualTo(hc_d, 1) ThenBlock: {
+                    one_d = Gen_FlattenExpr(one_d)
+                }
+            }
+            key_d = 0
+            IfCondition EqualTo(def_kind, 2) ThenBlock: {
+                key_d = Gen_FindKw(args, "key")
+                IfCondition NotEqual(key_d, 0) ThenBlock: {
+                    hc_d = Gen_HasCall(key_d)
+                    IfCondition EqualTo(hc_d, 1) ThenBlock: {
+                        key_d = Gen_FlattenExpr(key_d)
+                    }
+                }
+            }
+            def_d = Gen_FindKw(args, "default")
+            IfCondition NotEqual(def_d, 0) ThenBlock: {
+                hc_d = Gen_HasCall(def_d)
+                IfCondition EqualTo(hc_d, 1) ThenBlock: {
+                    def_d = Gen_FlattenExpr(def_d)
+                }
+            }
+            temp_d = Gen_TempName()
+            Gen_EmitIndent()
+            Gen_Emit(temp_d)
+            Gen_Emit(" = ")
+            Gen_Emit(fn_mm)
+            Gen_Emit("(")
+            IfCondition EqualTo(one_d, 0) ThenBlock: {
+                Gen_Emit("0")
+            } ElseBlock: {
+                Gen_Expr(one_d)
+            }
+            IfCondition EqualTo(def_kind, 2) ThenBlock: {
+                Gen_Emit(", ")
+                IfCondition EqualTo(key_d, 0) ThenBlock: {
+                    Gen_Emit("0")
+                } ElseBlock: {
+                    Gen_Expr(key_d)
+                }
+            }
+            Gen_Emit(", ")
+            IfCondition EqualTo(def_d, 0) ThenBlock: {
+                Gen_Emit("0")
+            } ElseBlock: {
+                Gen_Expr(def_d)
+            }
+            Gen_Emit(")\n")
+            ReturnValue(Gen_MakeIdent(temp_d))
+        }
         n_mm = 0
         IfCondition NotEqual(args, 0) ThenBlock: { n_mm = Array.Size(args) }
         is_keymm = 0
