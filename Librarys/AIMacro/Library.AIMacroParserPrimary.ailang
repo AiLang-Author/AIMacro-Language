@@ -507,9 +507,15 @@ Function.Parse_ArgList {
                 }
                 t = Parse_Type()
                 IfCondition EqualTo(t, Token.STAR) ThenBlock: {
+                    star_line = Parse_Line()
+                    star_col = Parse_Col()
                     Parse_Advance()
                     arg = Parse_Expr()
-                    Array.Push(args, arg)
+                    star_node = AST_Create(Node.STARRED, 1)
+                    ArraySet(star_node, 1, star_line)
+                    ArraySet(star_node, 2, star_col)
+                    ArraySet(star_node, 3, arg)
+                    Array.Push(args, star_node)
                     Parse_SkipNoise()
                     is_comma = Parse_Match(Token.COMMA)
                     IfCondition EqualTo(is_comma, 1) ThenBlock: {

@@ -2718,6 +2718,90 @@ Function.AIMacro.MinMaxBadDefault {
     }
 }
 
+Function.AIMacro.MinStar {
+    Input: args: Address
+    Input: keyfn: Address
+    Input: has_key: Integer
+    Input: fallback: Address
+    Input: has_def: Integer
+    Output: Address
+    Body: {
+        n = 0
+        IfCondition NotEqual(args, 0) ThenBlock: {
+            IfCondition EqualTo(Array.IsArray(args), 1) ThenBlock: {
+                n = Array.Size(args)
+            }
+        }
+        IfCondition EqualTo(n, 0) ThenBlock: {
+            AIMacro.RaiseKind(5, "TypeError")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(n, 1) ThenBlock: {
+            one = Array.Get(args, 0)
+            IfCondition EqualTo(has_def, 1) ThenBlock: {
+                IfCondition EqualTo(has_key, 1) ThenBlock: {
+                    ReturnValue(AIMacro.MinSeqKeyDef(one, keyfn, fallback))
+                }
+                ReturnValue(AIMacro.MinSeqDef(one, fallback))
+            }
+            IfCondition EqualTo(has_key, 1) ThenBlock: {
+                ReturnValue(AIMacro.MinSeqKey(one, keyfn))
+            }
+            ReturnValue(AIMacro.MinSeq(one))
+        }
+        IfCondition EqualTo(has_def, 1) ThenBlock: {
+            AIMacro.RaiseKind(5, "TypeError")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(has_key, 1) ThenBlock: {
+            ReturnValue(AIMacro.MinSeqKey(args, keyfn))
+        }
+        ReturnValue(AIMacro.MinSeq(args))
+    }
+}
+
+Function.AIMacro.MaxStar {
+    Input: args: Address
+    Input: keyfn: Address
+    Input: has_key: Integer
+    Input: fallback: Address
+    Input: has_def: Integer
+    Output: Address
+    Body: {
+        n = 0
+        IfCondition NotEqual(args, 0) ThenBlock: {
+            IfCondition EqualTo(Array.IsArray(args), 1) ThenBlock: {
+                n = Array.Size(args)
+            }
+        }
+        IfCondition EqualTo(n, 0) ThenBlock: {
+            AIMacro.RaiseKind(5, "TypeError")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(n, 1) ThenBlock: {
+            one = Array.Get(args, 0)
+            IfCondition EqualTo(has_def, 1) ThenBlock: {
+                IfCondition EqualTo(has_key, 1) ThenBlock: {
+                    ReturnValue(AIMacro.MaxSeqKeyDef(one, keyfn, fallback))
+                }
+                ReturnValue(AIMacro.MaxSeqDef(one, fallback))
+            }
+            IfCondition EqualTo(has_key, 1) ThenBlock: {
+                ReturnValue(AIMacro.MaxSeqKey(one, keyfn))
+            }
+            ReturnValue(AIMacro.MaxSeq(one))
+        }
+        IfCondition EqualTo(has_def, 1) ThenBlock: {
+            AIMacro.RaiseKind(5, "TypeError")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(has_key, 1) ThenBlock: {
+            ReturnValue(AIMacro.MaxSeqKey(args, keyfn))
+        }
+        ReturnValue(AIMacro.MaxSeq(args))
+    }
+}
+
 Function.AIMacro.Sum {
     Input: iterable: Address
     Output: Integer

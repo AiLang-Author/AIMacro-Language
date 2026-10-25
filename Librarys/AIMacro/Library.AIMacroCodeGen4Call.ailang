@@ -311,7 +311,6 @@ Function.Gen_MinMaxManyFn {
             }
             i_mm2 = Add(i_mm2, 1)
         }
-        IfCondition NotEqual(nstar_mm, 0) ThenBlock: { ReturnValue(0) }
         key_node = 0
         def_node = 0
         IfCondition GreaterThan(nkw_mm2, 0) ThenBlock: {
@@ -322,6 +321,12 @@ Function.Gen_MinMaxManyFn {
         IfCondition NotEqual(key_node, 0) ThenBlock: { known_kw = Add(known_kw, 1) }
         IfCondition NotEqual(def_node, 0) ThenBlock: { known_kw = Add(known_kw, 1) }
         IfCondition NotEqual(known_kw, nkw_mm2) ThenBlock: { ReturnValue(0) }
+        IfCondition NotEqual(nstar_mm, 0) ThenBlock: {
+            IfCondition EqualTo(is_min_mm, 1) ThenBlock: {
+                ReturnValue("AIMacro.MinStar")
+            }
+            ReturnValue("AIMacro.MaxStar")
+        }
         IfCondition NotEqual(def_node, 0) ThenBlock: {
             IfCondition NotEqual(npos_mm2, 1) ThenBlock: {
                 ReturnValue("AIMacro.MinMaxBadDefault")
@@ -428,6 +433,119 @@ Function.Gen_BindMinMaxMany {
             }
             Gen_Emit(")\n")
             ReturnValue(Gen_MakeIdent(temp_d))
+        }
+        is_star = 0
+        cmp_star = StringCompare(fn_mm, "AIMacro.MinStar")
+        IfCondition EqualTo(cmp_star, 0) ThenBlock: { is_star = 1 }
+        cmp_star = StringCompare(fn_mm, "AIMacro.MaxStar")
+        IfCondition EqualTo(cmp_star, 0) ThenBlock: { is_star = 1 }
+        IfCondition EqualTo(is_star, 1) ThenBlock: {
+            n_st = 0
+            IfCondition NotEqual(args, 0) ThenBlock: { n_st = Array.Size(args) }
+            pack_st = Gen_TempName()
+            Gen_EmitIndent()
+            Gen_Emit(pack_st)
+            Gen_Emit(" = Array.Create(8)\n")
+            i_st = 0
+            WhileLoop LessThan(i_st, n_st) {
+                a_st = Array.Get(args, i_st)
+                at_st = 0
+                IfCondition NotEqual(a_st, 0) ThenBlock: {
+                    at_st = AST_Type(a_st)
+                }
+                IfCondition EqualTo(at_st, Node.KW_ARG) ThenBlock: {
+                    i_st = Add(i_st, 1)
+                    ContinueLoop
+                }
+                IfCondition EqualTo(at_st, Node.STARRED) ThenBlock: {
+                    star_v = ArrayGet(a_st, 3)
+                    IfCondition NotEqual(star_v, 0) ThenBlock: {
+                        hc_st = Gen_HasCall(star_v)
+                        IfCondition EqualTo(hc_st, 1) ThenBlock: {
+                            star_v = Gen_FlattenExpr(star_v)
+                        }
+                    }
+                    Gen_EmitIndent()
+                    Gen_Emit("AIMacro.ListExtend(")
+                    Gen_Emit(pack_st)
+                    Gen_Emit(", ")
+                    IfCondition EqualTo(star_v, 0) ThenBlock: {
+                        Gen_Emit("0")
+                    } ElseBlock: {
+                        Gen_Expr(star_v)
+                    }
+                    Gen_Emit(")\n")
+                } ElseBlock: {
+                    IfCondition NotEqual(a_st, 0) ThenBlock: {
+                        hc_st = Gen_HasCall(a_st)
+                        IfCondition EqualTo(hc_st, 1) ThenBlock: {
+                            a_st = Gen_FlattenExpr(a_st)
+                        }
+                    }
+                    Gen_EmitIndent()
+                    Gen_Emit("Array.Push(")
+                    Gen_Emit(pack_st)
+                    Gen_Emit(", ")
+                    IfCondition EqualTo(a_st, 0) ThenBlock: {
+                        Gen_Emit("0")
+                    } ElseBlock: {
+                        Gen_Expr(a_st)
+                    }
+                    Gen_Emit(")\n")
+                }
+                i_st = Add(i_st, 1)
+            }
+            key_st = Gen_FindKw(args, "key")
+            has_key_st = 0
+            IfCondition NotEqual(key_st, 0) ThenBlock: {
+                has_key_st = 1
+                hc_st = Gen_HasCall(key_st)
+                IfCondition EqualTo(hc_st, 1) ThenBlock: {
+                    key_st = Gen_FlattenExpr(key_st)
+                }
+            }
+            def_st = Gen_FindKw(args, "default")
+            has_def_st = 0
+            IfCondition NotEqual(def_st, 0) ThenBlock: {
+                has_def_st = 1
+                hc_st = Gen_HasCall(def_st)
+                IfCondition EqualTo(hc_st, 1) ThenBlock: {
+                    def_st = Gen_FlattenExpr(def_st)
+                }
+            }
+            temp_st = Gen_TempName()
+            Gen_EmitIndent()
+            Gen_Emit(temp_st)
+            Gen_Emit(" = ")
+            Gen_Emit(fn_mm)
+            Gen_Emit("(")
+            Gen_Emit(pack_st)
+            Gen_Emit(", ")
+            IfCondition EqualTo(key_st, 0) ThenBlock: {
+                Gen_Emit("0")
+            } ElseBlock: {
+                Gen_Expr(key_st)
+            }
+            Gen_Emit(", ")
+            IfCondition EqualTo(has_key_st, 1) ThenBlock: {
+                Gen_Emit("1")
+            } ElseBlock: {
+                Gen_Emit("0")
+            }
+            Gen_Emit(", ")
+            IfCondition EqualTo(def_st, 0) ThenBlock: {
+                Gen_Emit("0")
+            } ElseBlock: {
+                Gen_Expr(def_st)
+            }
+            Gen_Emit(", ")
+            IfCondition EqualTo(has_def_st, 1) ThenBlock: {
+                Gen_Emit("1")
+            } ElseBlock: {
+                Gen_Emit("0")
+            }
+            Gen_Emit(")\n")
+            ReturnValue(Gen_MakeIdent(temp_st))
         }
         n_mm = 0
         IfCondition NotEqual(args, 0) ThenBlock: { n_mm = Array.Size(args) }

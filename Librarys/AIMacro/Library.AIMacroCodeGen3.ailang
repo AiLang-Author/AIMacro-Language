@@ -2685,6 +2685,17 @@ Function.Gen_FlattenExpr {
         IfCondition EqualTo(t, Node.DICT_LIT) ThenBlock: {
             ReturnValue(Gen_CreateDictLiteral(node))
         }
+
+        // Call star: keep the wrapper so min/max can unpack. Other calls
+        // emit the inner value and stay on the old one-argument path.
+        IfCondition EqualTo(t, Node.STARRED) ThenBlock: {
+            star_in = ArrayGet(node, 3)
+            IfCondition NotEqual(star_in, 0) ThenBlock: {
+                star_flat = Gen_FlattenExpr(star_in)
+                ArraySet(node, 3, star_flat)
+            }
+            ReturnValue(node)
+        }
         
         // Default - return as-is
         ReturnValue(node)

@@ -291,6 +291,12 @@ Function.Gen_Expr {
             ReturnValue(0)
         }
 
+        // *expr in a call that is not min/max: pass the container through.
+        IfCondition EqualTo(t, Node.STARRED) ThenBlock: {
+            Gen_Expr(ArrayGet(node, 3))
+            ReturnValue(0)
+        }
+
         Gen_Emit("0")
     }
 }
