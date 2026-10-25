@@ -2514,6 +2514,104 @@ Function.AIMacro.MaxSeq {
     }
 }
 
+Function.AIMacro.MinSeqKey {
+    Input: iterable: Address
+    Input: keyfn: Address
+    Output: Address
+    Body: {
+        IfCondition EqualTo(iterable, 0) ThenBlock: {
+            AIMacro.RaiseKind(2, "min")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(AIMacro.IsNone(iterable), 1) ThenBlock: {
+            AIMacro.RaiseKind(2, "min")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(Array.IsArray(iterable), 0) ThenBlock: {
+            iterable = AIMacro.ListFrom(iterable)
+        }
+        n = Array.Size(iterable)
+        IfCondition EqualTo(n, 0) ThenBlock: {
+            AIMacro.RaiseKind(2, "min")
+            ReturnValue(0)
+        }
+        best = Array.Get(iterable, 0)
+        use_key = 1
+        IfCondition EqualTo(keyfn, 0) ThenBlock: { use_key = 0 }
+        IfCondition EqualTo(use_key, 1) ThenBlock: {
+            IfCondition EqualTo(AIMacro.IsNone(keyfn), 1) ThenBlock: { use_key = 0 }
+        }
+        bk = best
+        IfCondition EqualTo(use_key, 1) ThenBlock: {
+            bk = AIMacro.KeyOf(best, keyfn)
+        }
+        i = 1
+        WhileLoop LessThan(i, n) {
+            item = Array.Get(iterable, i)
+            ik = item
+            IfCondition EqualTo(use_key, 1) ThenBlock: {
+                ik = AIMacro.KeyOf(item, keyfn)
+            }
+            lt = AIMacro.NumLt(ik, bk)
+            IfCondition EqualTo(AIMacro.SmartBool(lt), 1) ThenBlock: {
+                best = item
+                bk = ik
+            }
+            i = Add(i, 1)
+        }
+        ReturnValue(best)
+    }
+}
+
+Function.AIMacro.MaxSeqKey {
+    Input: iterable: Address
+    Input: keyfn: Address
+    Output: Address
+    Body: {
+        IfCondition EqualTo(iterable, 0) ThenBlock: {
+            AIMacro.RaiseKind(2, "max")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(AIMacro.IsNone(iterable), 1) ThenBlock: {
+            AIMacro.RaiseKind(2, "max")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(Array.IsArray(iterable), 0) ThenBlock: {
+            iterable = AIMacro.ListFrom(iterable)
+        }
+        n = Array.Size(iterable)
+        IfCondition EqualTo(n, 0) ThenBlock: {
+            AIMacro.RaiseKind(2, "max")
+            ReturnValue(0)
+        }
+        best = Array.Get(iterable, 0)
+        use_key = 1
+        IfCondition EqualTo(keyfn, 0) ThenBlock: { use_key = 0 }
+        IfCondition EqualTo(use_key, 1) ThenBlock: {
+            IfCondition EqualTo(AIMacro.IsNone(keyfn), 1) ThenBlock: { use_key = 0 }
+        }
+        bk = best
+        IfCondition EqualTo(use_key, 1) ThenBlock: {
+            bk = AIMacro.KeyOf(best, keyfn)
+        }
+        i = 1
+        WhileLoop LessThan(i, n) {
+            item = Array.Get(iterable, i)
+            ik = item
+            IfCondition EqualTo(use_key, 1) ThenBlock: {
+                ik = AIMacro.KeyOf(item, keyfn)
+            }
+            gt = AIMacro.NumGt(ik, bk)
+            IfCondition EqualTo(AIMacro.SmartBool(gt), 1) ThenBlock: {
+                best = item
+                bk = ik
+            }
+            i = Add(i, 1)
+        }
+        ReturnValue(best)
+    }
+}
+
 Function.AIMacro.Sum {
     Input: iterable: Address
     Output: Integer
