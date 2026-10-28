@@ -817,7 +817,9 @@ Function.Gen_SliceAccess {
             is_string = Gen_IsStringVar(var_name)
         }
         IfCondition EqualTo(expr_type, Node.STR_LIT) ThenBlock: {
-            is_string = 1
+            IfCondition EqualTo(Gen_IsBytesLit(expr), 0) ThenBlock: {
+                is_string = 1
+            }
         }
         
         IfCondition EqualTo(is_string, 1) ThenBlock: {

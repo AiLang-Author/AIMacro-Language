@@ -24,7 +24,10 @@ FixedPool.Parse {
     "err": Initialize=0, CanChange=True      
     "err_line": Initialize=0, CanChange=True  
     "err_col": Initialize=0, CanChange=True   
-    "err_msg": Initialize=0, CanChange=True  
+    "err_msg": Initialize=0, CanChange=True
+    // Bytes-prefix flag and string text. Locals do not survive the next call.
+    "bytes_flag": Initialize=0, CanChange=True
+    "str_lit": Initialize=0, CanChange=True
 }
 
 // =============================================================================
@@ -38,6 +41,8 @@ Function.Parse_Init {
         Parse.err_line = 0
         Parse.err_col = 0
         Parse.err_msg = 0
+        Parse.bytes_flag = 0
+        Parse.str_lit = 0
         TypeAnno_Init()
     }
 }

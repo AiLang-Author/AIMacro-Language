@@ -49,19 +49,15 @@ Function.Gen_Expr {
         }
         
         IfCondition EqualTo(t, Node.STR_LIT) ThenBlock: {
-            str = ArrayGet(node, 3)
-            is_blit = 0
-            IfCondition GreaterEqual(Array.Size(node), 5) ThenBlock: {
-                IfCondition EqualTo(ArrayGet(node, 4), 1) ThenBlock: {
-                    is_blit = 1
-                }
-            }
-            IfCondition EqualTo(is_blit, 1) ThenBlock: {
+            // Slot 4 is 1 for a bytes literal. Array.Size is not the element count.
+            IfCondition EqualTo(ArrayGet(node, 4), 1) ThenBlock: {
+                str = ArrayGet(node, 3)
                 Gen_Emit("AIMacro.Bytes(\"")
                 Gen_EmitEscaped(str)
                 Gen_Emit("\")")
                 ReturnValue(0)
             }
+            str = ArrayGet(node, 3)
             Gen_Emit("\"")
             Gen_EmitEscaped(str)
             Gen_Emit("\"")
@@ -461,6 +457,24 @@ Function.Gen_FlattenStringConcat {
 }
 
 
+// Slot 4 is 1 on a bytes literal. It is not a str for concat or slices.
+Function.Gen_IsBytesLit {
+    Input: node: Address
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(node, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition NotEqual(AST_Type(node), Node.STR_LIT) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(ArrayGet(node, 4), 1) ThenBlock: {
+            ReturnValue(1)
+        }
+        ReturnValue(0)
+    }
+}
+
 // =============================================================================
 // CHECK IF EXPRESSION INVOLVES STRINGS
 // Recursively checks if an expression contains string literals or string operations
@@ -477,6 +491,9 @@ Function.Gen_InvolvesString {
         t = AST_Type(node)
         
         IfCondition EqualTo(t, Node.STR_LIT) ThenBlock: {
+            IfCondition EqualTo(Gen_IsBytesLit(node), 1) ThenBlock: {
+                ReturnValue(0)
+            }
             ReturnValue(1)
         }
         
@@ -578,6 +595,9 @@ Function.Gen_GetStringStatus {
         
         // String literal - definitely a string
         IfCondition EqualTo(t, Node.STR_LIT) ThenBlock: {
+            IfCondition EqualTo(Gen_IsBytesLit(node), 1) ThenBlock: {
+                ReturnValue(0)
+            }
             ReturnValue(1)
         }
         

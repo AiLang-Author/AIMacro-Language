@@ -880,6 +880,9 @@ Function.AIMacro.NumAdd {
                 IfCondition Or(EqualTo(StringCompare(ca, "tuple"), 0), EqualTo(StringCompare(ca, "UserList"), 0)) ThenBlock: {
                     ReturnValue(AIMacro.WrapSeq(outc, ca))
                 }
+                IfCondition Or(EqualTo(StringCompare(ca, "bytes"), 0), EqualTo(StringCompare(ca, "bytearray"), 0)) ThenBlock: {
+                    ReturnValue(AIMacro.WrapSeq(outc, ca))
+                }
             }
             ReturnValue(outc)
         }

@@ -746,7 +746,9 @@ Function.Gen_IndexAccess {
             }
         }
         IfCondition EqualTo(expr_type, Node.STR_LIT) ThenBlock: {
-            is_string_access = 1
+            IfCondition EqualTo(Gen_IsBytesLit(expr), 0) ThenBlock: {
+                is_string_access = 1
+            }
         }
         
         // DICT INDEXING

@@ -94,6 +94,7 @@ FixedPool.Token {
     "FROM": Initialize=201
     "FSTRING": Initialize=202
     "FLOAT": Initialize=203
+    "BSTRING": Initialize=209
     "LAMBDA": Initialize=204
     "ASSERT": Initialize=205
     "DEL": Initialize=206
@@ -218,7 +219,7 @@ Function.Lex_Free {
                 v = Array.Get(Lex.tok_vals, i)
                 t = Array.Get(Lex.tok_types, i)
                 // Only free if it's a string or identifier (allocated)
-                IfCondition Or(EqualTo(t, Token.STRING), EqualTo(t, Token.IDENTIFIER)) ThenBlock: {
+                IfCondition Or(EqualTo(t, Token.STRING), Or(EqualTo(t, Token.IDENTIFIER), EqualTo(t, Token.BSTRING))) ThenBlock: {
                     IfCondition NotEqual(v, 0) ThenBlock: {
                         Deallocate(v, 0)
                     }
@@ -1161,10 +1162,35 @@ Function.Lex_Tokenize {
             is_alpha = Lex_IsAlpha(ch)
             IfCondition EqualTo(is_alpha, 1) ThenBlock: {
                 next_ch = Lex_Peek(1)
+                third_ch = Lex_Peek(2)
                 is_fstr = 0
+                is_bstr = 0
+                bskip = 1
                 IfCondition Or(EqualTo(ch, 102), EqualTo(ch, 70)) ThenBlock: {
                     IfCondition Or(EqualTo(next_ch, 34), EqualTo(next_ch, 39)) ThenBlock: {
                         is_fstr = 1
+                    }
+                }
+                // b" B" br" rb" (any case) sit against the quote. r" and u" stay strings.
+                IfCondition EqualTo(is_fstr, 0) ThenBlock: {
+                    IfCondition Or(EqualTo(ch, 98), EqualTo(ch, 66)) ThenBlock: {
+                        IfCondition Or(EqualTo(next_ch, 34), EqualTo(next_ch, 39)) ThenBlock: {
+                            is_bstr = 1
+                        }
+                        IfCondition Or(EqualTo(next_ch, 114), EqualTo(next_ch, 82)) ThenBlock: {
+                            IfCondition Or(EqualTo(third_ch, 34), EqualTo(third_ch, 39)) ThenBlock: {
+                                is_bstr = 1
+                                bskip = 2
+                            }
+                        }
+                    }
+                    IfCondition Or(EqualTo(ch, 114), EqualTo(ch, 82)) ThenBlock: {
+                        IfCondition Or(EqualTo(next_ch, 98), EqualTo(next_ch, 66)) ThenBlock: {
+                            IfCondition Or(EqualTo(third_ch, 34), EqualTo(third_ch, 39)) ThenBlock: {
+                                is_bstr = 1
+                                bskip = 2
+                            }
+                        }
                     }
                 }
                 IfCondition EqualTo(is_fstr, 1) ThenBlock: {
@@ -1172,13 +1198,22 @@ Function.Lex_Tokenize {
                     fstr = Lex_ReadFString()
                     Lex_Emit(Token.FSTRING, fstr)
                 } ElseBlock: {
-                    ident = Lex_ReadIdent()
-                    kw = Lex_MatchKW(ident)
-                    IfCondition EqualTo(kw, Token.IDENTIFIER) ThenBlock: {
-                        Lex_Emit(Token.IDENTIFIER, ident)
+                    IfCondition EqualTo(is_bstr, 1) ThenBlock: {
+                        Lex_Advance()
+                        IfCondition EqualTo(bskip, 2) ThenBlock: {
+                            Lex_Advance()
+                        }
+                        str = Lex_ReadString()
+                        Lex_Emit(Token.BSTRING, str)
                     } ElseBlock: {
-                        Lex_EmitSimple(kw)
-                        Deallocate(ident, 0)
+                        ident = Lex_ReadIdent()
+                        kw = Lex_MatchKW(ident)
+                        IfCondition EqualTo(kw, Token.IDENTIFIER) ThenBlock: {
+                            Lex_Emit(Token.IDENTIFIER, ident)
+                        } ElseBlock: {
+                            Lex_EmitSimple(kw)
+                            Deallocate(ident, 0)
+                        }
                     }
                 }
                 ContinueLoop

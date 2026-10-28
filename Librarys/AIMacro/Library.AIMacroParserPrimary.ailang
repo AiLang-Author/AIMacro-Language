@@ -42,6 +42,25 @@ Function.Parse_Primary {
             ReturnValue(result)
         }
         
+        // Bytes literal. The lexer already consumed the b/br/rb prefix.
+        IfCondition EqualTo(t, Token.BSTRING) ThenBlock: {
+            node = Parse_MakeBytesLit(Parse_Val())
+            Parse_Advance()
+            WhileLoop EqualTo(1, 1) {
+                right = Parse_TryStringConcatPiece()
+                IfCondition EqualTo(right, 0) ThenBlock: {
+                    BreakLoop
+                }
+                bin = AST_Create(Node.BINARY_OP, 3)
+                ArraySet(bin, 3, node)
+                ArraySet(bin, 4, Token.PLUS)
+                ArraySet(bin, 5, right)
+                node = bin
+            }
+            result = Parse_Postfix(node)
+            ReturnValue(result)
+        }
+
         // String (implicit concat: "a" "b")
         IfCondition Or(EqualTo(t, Token.STRING), EqualTo(t, Token.FSTRING)) ThenBlock: {
             IfCondition EqualTo(t, Token.FSTRING) ThenBlock: {
@@ -127,13 +146,16 @@ Function.Parse_Primary {
                 is_prefix = Parse_IsStringPrefix(name_ptr)
             }
             IfCondition EqualTo(is_prefix, 1) ThenBlock: {
-                is_blit = Parse_IsBytesPrefix(name_ptr)
+                // Park the prefix and the text. A later call clobbers a local.
+                Parse.str_lit = Parse_Val()
+                Parse.bytes_flag = Parse_IsBytesPrefix(Parse.str_lit)
                 Parse_Advance()
+                Parse.str_lit = Parse_Val()
                 IfCondition EqualTo(Parse_Type(), Token.FSTRING) ThenBlock: {
-                    node = Parse_FString(Parse_Val())
+                    node = Parse_FString(Parse.str_lit)
                     Parse_Advance()
                 } ElseBlock: {
-                    node = Parse_MakePrefixedStr(Parse_Val(), is_blit)
+                    node = Parse_MakePrefixedStr()
                     Parse_Advance()
                 }
                 WhileLoop EqualTo(1, 1) {

@@ -279,7 +279,9 @@ Function.Gen_EmitSmartIndexAccess {
             }
         }
         IfCondition EqualTo(expr_type, Node.STR_LIT) ThenBlock: {
-            is_string_access = 1
+            IfCondition EqualTo(Gen_IsBytesLit(expr), 0) ThenBlock: {
+                is_string_access = 1
+            }
         }
         
         // Check for negative index
@@ -2367,7 +2369,9 @@ Function.Gen_FlattenExpr {
                 is_string_index = Gen_IsStringVar(var_name)
             }
             IfCondition EqualTo(expr_type, Node.STR_LIT) ThenBlock: {
-                is_string_index = 1
+                IfCondition EqualTo(Gen_IsBytesLit(expr), 0) ThenBlock: {
+                    is_string_index = 1
+                }
             }
             
             // Check for negative index (UNARY_OP with MINUS on NUM_LIT)
@@ -2472,7 +2476,9 @@ Function.Gen_FlattenExpr {
                 is_string = Gen_IsStringVar(ArrayGet(expr, 3))
             }
             IfCondition EqualTo(expr_type, Node.STR_LIT) ThenBlock: {
-                is_string = 1
+                IfCondition EqualTo(Gen_IsBytesLit(expr), 0) ThenBlock: {
+                    is_string = 1
+                }
             }
             temp = Gen_TempName()
             IfCondition EqualTo(is_string, 1) ThenBlock: {

@@ -199,6 +199,13 @@ Function.AIMacro.ListSlice {
         IfCondition EqualTo(list, 0) ThenBlock: {
             ReturnValue(AIMacro.EmptyList())
         }
+        IfCondition EqualTo(AIMacro.SafeIsHash(list), 1) ThenBlock: {
+            w = Hash.Get(list, "__list__")
+            IfCondition EqualTo(Array.IsArray(w), 1) ThenBlock: {
+                inner = AIMacro.ListSlice(w, start, end_idx, step)
+                ReturnValue(AIMacro.SliceWrap(list, inner))
+            }
+        }
         IfCondition EqualTo(AIMacro.LooksLikeString(list), 1) ThenBlock: {
             ReturnValue(AIMacro.StringSlice(list, start, end_idx, step))
         }
@@ -692,6 +699,10 @@ Function.AIMacro.SliceWrap {
         ca = Hash.Get(container, "__class__")
         IfCondition EqualTo(ca, 0) ThenBlock: {
             ReturnValue(sliced)
+        }
+        IfCondition EqualTo(StringCompare(ca, "bytes"), 0) ThenBlock: {
+            w = AIMacro.WrapSeq(sliced, ca)
+            ReturnValue(w)
         }
         IfCondition Or(EqualTo(StringCompare(ca, "tuple"), 0), EqualTo(StringCompare(ca, "bytearray"), 0)) ThenBlock: {
             w = AIMacro.WrapSeq(sliced, ca)

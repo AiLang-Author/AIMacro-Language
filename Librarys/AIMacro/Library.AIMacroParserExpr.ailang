@@ -1253,19 +1253,32 @@ Function.Parse_IsBytesPrefix {
     }
 }
 
-// Slot 4 is 1 when the literal is bytes. Ordinary strings stay one field.
-Function.Parse_MakePrefixedStr {
+// Always a bytes literal. The text is parked before AST_Create. Slot 4 is 1.
+Function.Parse_MakeBytesLit {
     Input: val: Address
-    Input: is_bytes: Integer
+    Output: Address
+    Body: {
+        Parse.str_lit = val
+        Parse.bytes_flag = 1
+        node = AST_Create(Node.STR_LIT, 2)
+        ArraySet(node, 3, Parse.str_lit)
+        ArraySet(node, 4, 1)
+        ReturnValue(node)
+    }
+}
+
+// Slot 4 is 1 when the literal is bytes. Ordinary strings stay one field.
+// Reads Parse.str_lit and Parse.bytes_flag. A parameter would not survive AST_Create.
+Function.Parse_MakePrefixedStr {
     Output: Address
     Body: {
         nfields = 1
-        IfCondition EqualTo(is_bytes, 1) ThenBlock: {
+        IfCondition EqualTo(Parse.bytes_flag, 1) ThenBlock: {
             nfields = 2
         }
         node = AST_Create(Node.STR_LIT, nfields)
-        ArraySet(node, 3, val)
-        IfCondition EqualTo(is_bytes, 1) ThenBlock: {
+        ArraySet(node, 3, Parse.str_lit)
+        IfCondition EqualTo(Parse.bytes_flag, 1) ThenBlock: {
             ArraySet(node, 4, 1)
         }
         ReturnValue(node)
@@ -1278,6 +1291,11 @@ Function.Parse_TryStringConcatPiece {
     Output: Address
     Body: {
         t = Parse_Type()
+        IfCondition EqualTo(t, Token.BSTRING) ThenBlock: {
+            node = Parse_MakeBytesLit(Parse_Val())
+            Parse_Advance()
+            ReturnValue(node)
+        }
         IfCondition Or(EqualTo(t, Token.STRING), EqualTo(t, Token.FSTRING)) ThenBlock: {
             IfCondition EqualTo(t, Token.FSTRING) ThenBlock: {
                 node = Parse_FString(Parse_Val())
@@ -1295,14 +1313,16 @@ Function.Parse_TryStringConcatPiece {
             IfCondition Or(EqualTo(next_t, Token.STRING), EqualTo(next_t, Token.FSTRING)) ThenBlock: {
                 is_prefix = Parse_IsStringPrefix(name_ptr)
                 IfCondition EqualTo(is_prefix, 1) ThenBlock: {
-                    is_blit = Parse_IsBytesPrefix(name_ptr)
+                    Parse.str_lit = Parse_Val()
+                    Parse.bytes_flag = Parse_IsBytesPrefix(Parse.str_lit)
                     Parse_Advance()
+                    Parse.str_lit = Parse_Val()
                     IfCondition EqualTo(Parse_Type(), Token.FSTRING) ThenBlock: {
-                        node = Parse_FString(Parse_Val())
+                        node = Parse_FString(Parse.str_lit)
                         Parse_Advance()
                         ReturnValue(node)
                     }
-                    node = Parse_MakePrefixedStr(Parse_Val(), is_blit)
+                    node = Parse_MakePrefixedStr()
                     Parse_Advance()
                     ReturnValue(node)
                 }

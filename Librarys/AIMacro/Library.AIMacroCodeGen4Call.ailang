@@ -2057,13 +2057,8 @@ Function.Gen_EmitPrintChunk {
         }
         arg_type = AST_Type(arg)
         IfCondition EqualTo(arg_type, Node.STR_LIT) ThenBlock: {
-            is_blit = 0
-            IfCondition GreaterEqual(Array.Size(arg), 5) ThenBlock: {
-                IfCondition EqualTo(ArrayGet(arg, 4), 1) ThenBlock: {
-                    is_blit = 1
-                }
-            }
-            IfCondition EqualTo(is_blit, 0) ThenBlock: {
+            // Slot 4 is 1 for a bytes literal. Those fall through to SmartPrint.
+            IfCondition EqualTo(ArrayGet(arg, 4), 0) ThenBlock: {
                 str = ArrayGet(arg, 3)
                 Gen_Emit("PrintMessage(\"")
                 Gen_EmitEscaped(str)
