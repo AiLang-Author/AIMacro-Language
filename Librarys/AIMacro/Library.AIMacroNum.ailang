@@ -2167,7 +2167,7 @@ Function.AIMacro.HasBinMethod {
     Input: name: Address
     Output: Integer
     Body: {
-        IfCondition EqualTo(Hash.IsHash(obj), 0) ThenBlock: {
+        IfCondition EqualTo(AIMacro.SafeIsHash(obj), 0) ThenBlock: {
             ReturnValue(0)
         }
         cls = Hash.Get(obj, "__class__")
@@ -2647,10 +2647,14 @@ Function.AIMacro.IsPyNumber {
         IfCondition EqualTo(AIMacro.SafeIsArray(v), 1) ThenBlock: {
             ReturnValue(0)
         }
-        IfCondition EqualTo(Hash.IsHash(v), 1) ThenBlock: {
+        IfCondition EqualTo(AIMacro.SafeIsHash(v), 1) ThenBlock: {
             ReturnValue(0)
         }
         IfCondition And(GreaterEqual(v, -4000000), LessThan(v, 4000000)) ThenBlock: {
+            ReturnValue(1)
+        }
+        // 2147483647 is a raw int. CanDeref is 0, so it is not an object.
+        IfCondition EqualTo(Types.CanDeref(v), 0) ThenBlock: {
             ReturnValue(1)
         }
         ReturnValue(0)

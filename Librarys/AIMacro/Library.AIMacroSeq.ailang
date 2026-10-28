@@ -847,7 +847,7 @@ Function.AIMacro.CallBinMethod {
     Input: other: Address
     Output: Address
     Body: {
-        IfCondition EqualTo(Hash.IsHash(obj), 0) ThenBlock: {
+        IfCondition EqualTo(AIMacro.SafeIsHash(obj), 0) ThenBlock: {
             ReturnValue(AIMacro.GetNotImpl())
         }
         cls = Hash.Get(obj, "__class__")
@@ -1050,8 +1050,10 @@ Function.AIMacro.NumIMul {
     Input: b: Address
     Output: Address
     Body: {
-        IfCondition EqualTo(Array.IsArray(a), 1) ThenBlock: {
-            ReturnValue(AIMacro.ListIMul(a, b))
+        IfCondition EqualTo(Types.CanDeref(a), 1) ThenBlock: {
+            IfCondition EqualTo(Array.IsArray(a), 1) ThenBlock: {
+                ReturnValue(AIMacro.ListIMul(a, b))
+            }
         }
         ReturnValue(AIMacro.NumMul(a, b))
     }
@@ -1064,7 +1066,7 @@ Function.AIMacro.ListFrom {
         IfCondition Or(EqualTo(iterable, 0), EqualTo(AIMacro.IsNone(iterable), 1)) ThenBlock: {
             ReturnValue(AIMacro.EmptyList())
         }
-        IfCondition EqualTo(Hash.IsHash(iterable), 1) ThenBlock: {
+        IfCondition EqualTo(AIMacro.SafeIsHash(iterable), 1) ThenBlock: {
             cls_rng = Hash.Get(iterable, "__class__")
             IfCondition EqualTo(AIMacro.LooksLikeString(cls_rng), 1) ThenBlock: {
                 IfCondition EqualTo(StringCompare(cls_rng, "range"), 0) ThenBlock: {
@@ -1424,8 +1426,10 @@ Function.AIMacro.Iter {
             }
             ReturnValue(AIMacro.CopyArray(Hash.Keys(iterable)))
         }
-        IfCondition EqualTo(Array.IsArray(iterable), 1) ThenBlock: {
-            ReturnValue(AIMacro.CopyArray(iterable))
+        IfCondition EqualTo(Types.CanDeref(iterable), 1) ThenBlock: {
+            IfCondition EqualTo(Array.IsArray(iterable), 1) ThenBlock: {
+                ReturnValue(AIMacro.CopyArray(iterable))
+            }
         }
         IfCondition EqualTo(AIMacro.LooksLikeString(iterable), 1) ThenBlock: {
             n = StringLength(iterable)
@@ -1562,7 +1566,9 @@ Function.AIMacro.SmartBool {
         IfCondition EqualTo(Types.IsBool(value), 1) ThenBlock: {
             ReturnValue(AIMacro.BoolVal(value))
         }
-        IfCondition And(GreaterEqual(value, TypeMagic.PTR_MIN), EqualTo(Hash.IsHash(value), 1)) ThenBlock: {
+        // And() is not short-circuit. Hash.IsHash(2147483647) reads the int.
+        IfCondition EqualTo(Types.CanDeref(value), 1) ThenBlock: {
+            IfCondition EqualTo(Hash.IsHash(value), 1) ThenBlock: {
             // leftover RaiseKind instances store integer ExcKind in
             // __class__. OOP.MethodExists Hash.Gets that as a class
             // name and SEGVs. Only OOP objects have a string class.
@@ -1571,6 +1577,7 @@ Function.AIMacro.SmartBool {
                 IfCondition Or(EqualTo(OOP.MethodExists(value, "__bool__"), 1), EqualTo(OOP.MethodExists(value, "__len__"), 1)) ThenBlock: {
                     ReturnValue(AIMacro.BoolVal(AIMacro.Bool(value)))
                 }
+            }
             }
         }
         IfCondition EqualTo(Types.IsFloat(value), 1) ThenBlock: {
@@ -1606,6 +1613,10 @@ Function.AIMacro.SmartBool {
             }
         }
         IfCondition LessThan(value, 4000000) ThenBlock: {
+            ReturnValue(1)
+        }
+        // A raw int in the pointer-looking band is truthy. IsFile would read it.
+        IfCondition EqualTo(Types.CanDeref(value), 0) ThenBlock: {
             ReturnValue(1)
         }
         IfCondition EqualTo(AIMacro.IsFile(value), 1) ThenBlock: {

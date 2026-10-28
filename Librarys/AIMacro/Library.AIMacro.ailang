@@ -114,7 +114,9 @@ Function.AIMacro.SmartLen {
         IfCondition EqualTo(AIMacro.IsNone(container), 1) ThenBlock: {
             ReturnValue(AIMacro.IntZero())
         }
-        IfCondition And(GreaterEqual(container, TypeMagic.PTR_MIN), EqualTo(Hash.IsHash(container), 1)) ThenBlock: {
+        // And() is not short-circuit, so a raw int was passed to Hash.IsHash.
+        IfCondition EqualTo(Types.CanDeref(container), 1) ThenBlock: {
+            IfCondition EqualTo(Hash.IsHash(container), 1) ThenBlock: {
             wlen = Hash.Get(container, "__list__")
             IfCondition EqualTo(Array.IsArray(wlen), 1) ThenBlock: {
                 ReturnValue(Array.Size(wlen))
@@ -144,9 +146,10 @@ Function.AIMacro.SmartLen {
                 ReturnValue(n)
             }
             ReturnValue(Hash.Size(container))
-        }
-        IfCondition EqualTo(Array.IsArray(container), 1) ThenBlock: {
-            ReturnValue(Array.Size(container))
+            }
+            IfCondition EqualTo(Array.IsArray(container), 1) ThenBlock: {
+                ReturnValue(Array.Size(container))
+            }
         }
         IfCondition EqualTo(AIMacro.LooksLikeString(container), 1) ThenBlock: {
             ReturnValue(StringLength(container))
@@ -2458,8 +2461,15 @@ Function.AIMacro.MinSeq {
             AIMacro.RaiseKind(2, "min")
             ReturnValue(0)
         }
-        IfCondition EqualTo(Array.IsArray(iterable), 0) ThenBlock: {
+        is_arr = 0
+        IfCondition EqualTo(Types.CanDeref(iterable), 1) ThenBlock: {
+            is_arr = Array.IsArray(iterable)
+        }
+        IfCondition EqualTo(is_arr, 0) ThenBlock: {
             iterable = AIMacro.ListFrom(iterable)
+            IfCondition EqualTo(AIMacro.ExcPending(), 1) ThenBlock: {
+                ReturnValue(0)
+            }
         }
         n = Array.Size(iterable)
         IfCondition EqualTo(n, 0) ThenBlock: {
@@ -2492,8 +2502,15 @@ Function.AIMacro.MaxSeq {
             AIMacro.RaiseKind(2, "max")
             ReturnValue(0)
         }
-        IfCondition EqualTo(Array.IsArray(iterable), 0) ThenBlock: {
+        is_arr = 0
+        IfCondition EqualTo(Types.CanDeref(iterable), 1) ThenBlock: {
+            is_arr = Array.IsArray(iterable)
+        }
+        IfCondition EqualTo(is_arr, 0) ThenBlock: {
             iterable = AIMacro.ListFrom(iterable)
+            IfCondition EqualTo(AIMacro.ExcPending(), 1) ThenBlock: {
+                ReturnValue(0)
+            }
         }
         n = Array.Size(iterable)
         IfCondition EqualTo(n, 0) ThenBlock: {
