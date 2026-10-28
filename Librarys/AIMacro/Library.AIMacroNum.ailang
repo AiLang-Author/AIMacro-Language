@@ -1851,7 +1851,9 @@ Function.AIMacro.NumNeg {
             ipn = AIMacro.IntPayload(a)
             ReturnValue(AIMacro.IntOrBox(Subtract(0, ipn)))
         }
-        IfCondition And(GreaterEqual(a, TypeMagic.HEAP_START), LessThan(a, 140737488355328)) ThenBlock: {
+        // CanDeref refuses raw ints that sit in the pointer-looking band
+        // (2147483647 is 2^31-1). A wide HEAP_START check dereferenced those.
+        IfCondition EqualTo(Types.CanDeref(a), 1) ThenBlock: {
             IfCondition EqualTo(Dereference(a), TypeMagic.BOOL) ThenBlock: {
                 ReturnValue(Subtract(0, Dereference(Add(a, 8))))
             }
