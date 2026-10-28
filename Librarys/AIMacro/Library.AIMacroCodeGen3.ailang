@@ -2498,7 +2498,7 @@ Function.Gen_FlattenExpr {
                 IfCondition EqualTo(is_string, 1) ThenBlock: {
                     Gen_Emit("StringLength(")
                 } ElseBlock: {
-                    Gen_Emit("Array.Size(")
+                    Gen_Emit("AIMacro.SeqLen(")
                 }
                 Gen_Expr(expr)
                 Gen_Emit(")")

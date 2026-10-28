@@ -503,6 +503,10 @@ Function.Gen_InvolvesString {
             IfCondition EqualTo(cmp, 0) ThenBlock: {
                 ReturnValue(1)
             }
+            cmp = StringCompare(call_name, "repr")
+            IfCondition EqualTo(cmp, 0) ThenBlock: {
+                ReturnValue(1)
+            }
             cmp = StringCompare(call_name, "input")
             IfCondition EqualTo(cmp, 0) ThenBlock: {
                 ReturnValue(1)
@@ -615,6 +619,8 @@ Function.Gen_GetStringStatus {
             
             // Known string functions
             cmp = StringCompare(call_name, "str")
+            IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
+            cmp = StringCompare(call_name, "repr")
             IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }
             cmp = StringCompare(call_name, "input")
             IfCondition EqualTo(cmp, 0) ThenBlock: { ReturnValue(1) }

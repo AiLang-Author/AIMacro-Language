@@ -1550,6 +1550,33 @@ Function.AIMacro.Str {
                         ReturnValue(sp)
                     }
                 }
+                // Builtin exceptions store an integer kind in __class__ and
+                // a tuple in args. One argument stringifies that argument.
+                // Several arguments stringify the tuple. Zero arguments are
+                // empty. A string already stored in args is the message.
+                cls_e = Hash.Get(value, "__class__")
+                IfCondition GreaterEqual(cls_e, 1) ThenBlock: {
+                    IfCondition LessThan(cls_e, 41) ThenBlock: {
+                        ea2 = Hash.Get(value, "args")
+                        IfCondition EqualTo(AIMacro.LooksLikeString(ea2), 1) ThenBlock: {
+                            ReturnValue(ea2)
+                        }
+                        IfCondition EqualTo(AIMacro.SafeIsHash(ea2), 1) ThenBlock: {
+                            lst_e = Hash.Get(ea2, "__list__")
+                            IfCondition EqualTo(Array.IsArray(lst_e), 1) ThenBlock: {
+                                narg = Array.Size(lst_e)
+                                IfCondition EqualTo(narg, 0) ThenBlock: {
+                                    ReturnValue("")
+                                }
+                                IfCondition EqualTo(narg, 1) ThenBlock: {
+                                    one_e = Array.Get(lst_e, 0)
+                                    ReturnValue(AIMacro.Str(one_e))
+                                }
+                                ReturnValue(AIMacro.Repr(ea2))
+                            }
+                        }
+                    }
+                }
                 ea = Hash.Get(value, "args")
                 IfCondition EqualTo(AIMacro.LooksLikeString(ea), 1) ThenBlock: {
                     ReturnValue(ea)

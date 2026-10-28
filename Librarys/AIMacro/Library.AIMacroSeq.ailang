@@ -445,6 +445,34 @@ Function.AIMacro.ListDelSlice {
 }
 
 // String slice
+// Omitted slice ends used to call Array.Size. On a string that reads
+// past the bytes and faults. Strings report their character length.
+Function.AIMacro.SeqLen {
+    Input: obj: Address
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(obj, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(Types.CanDeref(obj), 1) ThenBlock: {
+            IfCondition EqualTo(Array.IsArray(obj), 1) ThenBlock: {
+                ReturnValue(Array.Size(obj))
+            }
+            IfCondition EqualTo(Hash.IsHash(obj), 1) ThenBlock: {
+                w = Hash.Get(obj, "__list__")
+                IfCondition EqualTo(Array.IsArray(w), 1) ThenBlock: {
+                    ReturnValue(Array.Size(w))
+                }
+                ReturnValue(Hash.Size(obj))
+            }
+        }
+        IfCondition EqualTo(AIMacro.LooksLikeString(obj), 1) ThenBlock: {
+            ReturnValue(StringLength(obj))
+        }
+        ReturnValue(0)
+    }
+}
+
 Function.AIMacro.StringSlice {
     Input: str: Address
     Input: start: Integer
