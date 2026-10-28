@@ -15,7 +15,7 @@ LibraryImport.AIMacro.AIMacroExtraOS
 LibraryImport.AIMacro.AIMacroExtraCall
 LibraryImport.AIMacro.AIMacroExtraStdlib
 
-// bytes() / bytearray() hold ints 0..255. b"..." stays a string.
+// bytes() / bytearray() hold ints 0..255. b"..." is Bytes of that text.
 // A missing argument and None are empty. An integer is that many zeros.
 // A string contributes its bytes. A byte outside 0..255 is ValueError.
 // A non-int element, or an object that is not a sequence, is TypeError.

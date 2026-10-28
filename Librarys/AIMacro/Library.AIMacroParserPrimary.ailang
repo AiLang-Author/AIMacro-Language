@@ -127,13 +127,13 @@ Function.Parse_Primary {
                 is_prefix = Parse_IsStringPrefix(name_ptr)
             }
             IfCondition EqualTo(is_prefix, 1) ThenBlock: {
+                is_blit = Parse_IsBytesPrefix(name_ptr)
                 Parse_Advance()
                 IfCondition EqualTo(Parse_Type(), Token.FSTRING) ThenBlock: {
                     node = Parse_FString(Parse_Val())
                     Parse_Advance()
                 } ElseBlock: {
-                    node = AST_Create(Node.STR_LIT, 1)
-                    ArraySet(node, 3, Parse_Val())
+                    node = Parse_MakePrefixedStr(Parse_Val(), is_blit)
                     Parse_Advance()
                 }
                 WhileLoop EqualTo(1, 1) {

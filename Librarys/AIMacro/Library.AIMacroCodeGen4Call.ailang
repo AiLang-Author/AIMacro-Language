@@ -2057,11 +2057,19 @@ Function.Gen_EmitPrintChunk {
         }
         arg_type = AST_Type(arg)
         IfCondition EqualTo(arg_type, Node.STR_LIT) ThenBlock: {
-            str = ArrayGet(arg, 3)
-            Gen_Emit("PrintMessage(\"")
-            Gen_EmitEscaped(str)
-            Gen_Emit("\")")
-            ReturnValue(0)
+            is_blit = 0
+            IfCondition GreaterEqual(Array.Size(arg), 5) ThenBlock: {
+                IfCondition EqualTo(ArrayGet(arg, 4), 1) ThenBlock: {
+                    is_blit = 1
+                }
+            }
+            IfCondition EqualTo(is_blit, 0) ThenBlock: {
+                str = ArrayGet(arg, 3)
+                Gen_Emit("PrintMessage(\"")
+                Gen_EmitEscaped(str)
+                Gen_Emit("\")")
+                ReturnValue(0)
+            }
         }
         IfCondition EqualTo(arg_type, Node.NUM_LIT) ThenBlock: {
             val = ArrayGet(arg, 3)
