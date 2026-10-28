@@ -164,6 +164,122 @@ Function.AIMacro.DictUpdate {
     }
 }
 
+// Copy n bytes from a buffer that may hold several NUL-separated entries.
+Function.AIMacro.OsCopyBytes {
+    Input: src: Address
+    Input: start: Integer
+    Input: n: Integer
+    Output: Address
+    Body: {
+        out = Allocate(Add(n, 1))
+        i = 0
+        WhileLoop LessThan(i, n) {
+            SetByte(out, i, GetByte(src, Add(start, i)))
+            i = Add(i, 1)
+        }
+        SetByte(out, n, 0)
+        ReturnValue(out)
+    }
+}
+
+// Process environment. /proc/self/environ is KEY=VALUE separated by NUL.
+Function.AIMacro.OsEnviron {
+    Output: Address
+    Body: {
+        h = Hash.Create(64)
+        fd = SystemCall(2, "/proc/self/environ", 0, 420)
+        IfCondition LessThan(fd, 0) ThenBlock: {
+            ReturnValue(h)
+        }
+        cap = 65536
+        buf = Allocate(Add(cap, 1))
+        total = SystemCall(0, fd, buf, cap)
+        SystemCall(3, fd)
+        IfCondition LessThan(total, 0) ThenBlock: {
+            ReturnValue(h)
+        }
+        off = 0
+        WhileLoop LessThan(off, total) {
+            start = off
+            WhileLoop LessThan(off, total) {
+                ch = GetByte(buf, off)
+                IfCondition EqualTo(ch, 0) ThenBlock: {
+                    BreakLoop
+                }
+                off = Add(off, 1)
+            }
+            IfCondition LessThan(off, total) ThenBlock: {
+                eq = start
+                found = 0
+                WhileLoop LessThan(eq, off) {
+                    IfCondition EqualTo(GetByte(buf, eq), 61) ThenBlock: {
+                        found = 1
+                        BreakLoop
+                    }
+                    eq = Add(eq, 1)
+                }
+                IfCondition EqualTo(found, 1) ThenBlock: {
+                    klen = Subtract(eq, start)
+                    IfCondition GreaterThan(klen, 0) ThenBlock: {
+                        vlen = Subtract(off, Add(eq, 1))
+                        key = AIMacro.OsCopyBytes(buf, start, klen)
+                        val = AIMacro.OsCopyBytes(buf, Add(eq, 1), vlen)
+                        Hash.Set(h, key, val)
+                    }
+                }
+            }
+            off = Add(off, 1)
+        }
+        ReturnValue(h)
+    }
+}
+
+// os.environ / posix.environ. The dict stays on the module so later writes stick.
+Function.AIMacro.OsEnvironLookup {
+    Input: obj: Address
+    Input: field: Address
+    Output: Address
+    Body: {
+        IfCondition EqualTo(AIMacro.SafeIsHash(obj), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(AIMacro.LooksLikeString(field), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition NotEqual(StringCompare(field, "environ"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        cls = Hash.Get(obj, "__class__")
+        IfCondition EqualTo(AIMacro.LooksLikeString(cls), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition NotEqual(StringCompare(cls, "module"), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        mname = Hash.Get(obj, "__name__")
+        IfCondition EqualTo(AIMacro.LooksLikeString(mname), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        is_os = 0
+        IfCondition EqualTo(StringCompare(mname, "os"), 0) ThenBlock: {
+            is_os = 1
+        }
+        IfCondition EqualTo(StringCompare(mname, "posix"), 0) ThenBlock: {
+            is_os = 1
+        }
+        IfCondition EqualTo(is_os, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        cur = Hash.Get(obj, "environ")
+        IfCondition EqualTo(AIMacro.SafeIsHash(cur), 1) ThenBlock: {
+            ReturnValue(cur)
+        }
+        d = AIMacro.OsEnviron()
+        Hash.Set(obj, "environ", d)
+        ReturnValue(d)
+    }
+}
+
 Function.AIMacro.GetOpt {
     Input: args: Address
     Output: Address

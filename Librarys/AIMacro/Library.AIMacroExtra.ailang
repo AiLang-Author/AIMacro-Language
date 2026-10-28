@@ -1111,6 +1111,10 @@ Function.AIMacro.ObjectGet {
             Array.Push(gargs, field)
             ReturnValue(OOP.MethodCall(obj, "__getattr__", gargs))
         }
+        // os.environ is filled on the miss path. Two calls: the first caches.
+        IfCondition NotEqual(AIMacro.OsEnvironLookup(obj, field), 0) ThenBlock: {
+            ReturnValue(AIMacro.OsEnvironLookup(obj, field))
+        }
         ReturnValue(0)
     }
 }

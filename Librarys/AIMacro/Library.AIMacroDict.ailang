@@ -111,6 +111,11 @@ Function.DictGen_Update {
     Input: dict: Address
     Input: other: Address
     Body: {
+        // {**None} is TypeError. Hash.Items would read a non-dict as a pointer.
+        IfCondition EqualTo(AIMacro.SafeIsHash(other), 0) ThenBlock: {
+            AIMacro.RaiseKind(5, "TypeError")
+            ReturnValue(0)
+        }
         // Get items from other dict
         items = Hash.Items(other)
         n = Array.Size(items)
