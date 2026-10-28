@@ -1146,9 +1146,11 @@ Function.AIMacro.NumBitOr {
             AIMacro.RaiseKind(5, "TypeError")
             ReturnValue(0)
         }
-        IfCondition And(GreaterEqual(a, TypeMagic.HEAP_START), LessThan(a, 140737488355328)) ThenBlock: {
+        // CanDeref refuses raw ints in the pointer-looking band.
+        // 2147483647 sits there and is not a bool object.
+        IfCondition EqualTo(Types.CanDeref(a), 1) ThenBlock: {
             IfCondition EqualTo(Dereference(a), TypeMagic.BOOL) ThenBlock: {
-                IfCondition And(GreaterEqual(b, TypeMagic.HEAP_START), LessThan(b, 140737488355328)) ThenBlock: {
+                IfCondition EqualTo(Types.CanDeref(b), 1) ThenBlock: {
                     IfCondition EqualTo(Dereference(b), TypeMagic.BOOL) ThenBlock: {
                         IfCondition EqualTo(BitwiseOr(Dereference(Add(a, 8)), Dereference(Add(b, 8))), 0) ThenBlock: {
                             ReturnValue(AIMacro.FalseVal())
@@ -1189,9 +1191,9 @@ Function.AIMacro.NumBitXor {
             AIMacro.RaiseKind(5, "TypeError")
             ReturnValue(0)
         }
-        IfCondition And(GreaterEqual(a, TypeMagic.HEAP_START), LessThan(a, 140737488355328)) ThenBlock: {
+        IfCondition EqualTo(Types.CanDeref(a), 1) ThenBlock: {
             IfCondition EqualTo(Dereference(a), TypeMagic.BOOL) ThenBlock: {
-                IfCondition And(GreaterEqual(b, TypeMagic.HEAP_START), LessThan(b, 140737488355328)) ThenBlock: {
+                IfCondition EqualTo(Types.CanDeref(b), 1) ThenBlock: {
                     IfCondition EqualTo(Dereference(b), TypeMagic.BOOL) ThenBlock: {
                         IfCondition EqualTo(BitwiseXor(Dereference(Add(a, 8)), Dereference(Add(b, 8))), 0) ThenBlock: {
                             ReturnValue(AIMacro.FalseVal())
@@ -1232,9 +1234,9 @@ Function.AIMacro.NumBitAnd {
             AIMacro.RaiseKind(5, "TypeError")
             ReturnValue(0)
         }
-        IfCondition And(GreaterEqual(a, TypeMagic.HEAP_START), LessThan(a, 140737488355328)) ThenBlock: {
+        IfCondition EqualTo(Types.CanDeref(a), 1) ThenBlock: {
             IfCondition EqualTo(Dereference(a), TypeMagic.BOOL) ThenBlock: {
-                IfCondition And(GreaterEqual(b, TypeMagic.HEAP_START), LessThan(b, 140737488355328)) ThenBlock: {
+                IfCondition EqualTo(Types.CanDeref(b), 1) ThenBlock: {
                     IfCondition EqualTo(Dereference(b), TypeMagic.BOOL) ThenBlock: {
                         IfCondition EqualTo(BitwiseAnd(Dereference(Add(a, 8)), Dereference(Add(b, 8))), 0) ThenBlock: {
                             ReturnValue(AIMacro.FalseVal())

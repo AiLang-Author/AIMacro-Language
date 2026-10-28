@@ -1579,6 +1579,11 @@ Function.AIMacro.ListStorage {
         IfCondition EqualTo(obj, 0) ThenBlock: {
             ReturnValue(0)
         }
+        // CanDeref refuses raw ints in the pointer-looking band.
+        // Array.IsArray(2147483647) reads that int as a pointer.
+        IfCondition EqualTo(Types.CanDeref(obj), 0) ThenBlock: {
+            ReturnValue(0)
+        }
         IfCondition EqualTo(Array.IsArray(obj), 1) ThenBlock: {
             ReturnValue(obj)
         }
