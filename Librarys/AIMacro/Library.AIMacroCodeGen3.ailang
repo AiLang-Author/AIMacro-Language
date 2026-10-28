@@ -2533,14 +2533,21 @@ Function.Gen_FlattenExpr {
             
             // Classify PLUS on the original nodes. Flattened temps can
             // inherit a stale string mark (t0/t1 reuse) and mis-emit Concat
-            // for False+False.
+            // for False+False. Concat only when both sides are strings.
+            // One string plus a non-string is NumAdd, which raises TypeError.
+            left_stat = Gen_GetStringStatus(left)
+            right_stat = Gen_GetStringStatus(right)
             left_is_str = Gen_InvolvesString(left)
             right_is_str = Gen_InvolvesString(right)
             flat_left = Gen_FlattenExpr(left)
             flat_right = Gen_FlattenExpr(right)
             is_string_op = Or(EqualTo(left_is_str, 1), EqualTo(right_is_str, 1))
+            both_str = 0
+            IfCondition And(EqualTo(left_stat, 1), EqualTo(right_stat, 1)) ThenBlock: {
+                both_str = 1
+            }
             
-            IfCondition And(EqualTo(op, Token.PLUS), EqualTo(is_string_op, 1)) ThenBlock: {
+            IfCondition And(EqualTo(op, Token.PLUS), EqualTo(both_str, 1)) ThenBlock: {
                 // String concat - extract to temp
                 temp = Gen_TempName()
                 Gen_MarkStringVar(temp)

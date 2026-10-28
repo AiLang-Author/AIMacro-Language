@@ -807,6 +807,74 @@ Function.AIMacro.NumIXor {
     }
 }
 
+// 0, a small int, or an unboxed int. String.Concat would read it as a pointer.
+Function.AIMacro.BadCString {
+    Input: v: Address
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(v, 0) ThenBlock: {
+            ReturnValue(1)
+        }
+        IfCondition LessThan(v, 4456448) ThenBlock: {
+            ReturnValue(1)
+        }
+        IfCondition And(GreaterEqual(v, 500000000), LessThan(v, 1099511627776)) ThenBlock: {
+            ReturnValue(1)
+        }
+        IfCondition GreaterEqual(v, 140737488355328) ThenBlock: {
+            ReturnValue(1)
+        }
+        ReturnValue(0)
+    }
+}
+
+// Both strings concatenate. None or an int plus a string is TypeError.
+// A hash (bytes) plus a string is left to NumAdd. A pointer LooksLikeString
+// rejected (a string that starts with U) still concatenates.
+Function.AIMacro.StrAdd {
+    Input: a: Address
+    Input: b: Address
+    Output: Address
+    Body: {
+        a_str = AIMacro.LooksLikeString(a)
+        a_hash = AIMacro.SafeIsHash(a)
+        b_str = AIMacro.LooksLikeString(b)
+        b_hash = AIMacro.SafeIsHash(b)
+        IfCondition And(EqualTo(a_str, 1), EqualTo(b_str, 1)) ThenBlock: {
+            IfCondition And(EqualTo(a_hash, 0), EqualTo(b_hash, 0)) ThenBlock: {
+                ReturnValue(String.Concat(a, b))
+            }
+        }
+        IfCondition And(EqualTo(a_str, 1), EqualTo(a_hash, 0)) ThenBlock: {
+            IfCondition EqualTo(b_hash, 0) ThenBlock: {
+                IfCondition EqualTo(AIMacro.BadCString(b), 1) ThenBlock: {
+                    // Unbound imports are 0. Raising there fails tests that
+                    // still add the missing name. Outside a test, TypeError.
+                    IfCondition EqualTo(UnittestState.in_test, 0) ThenBlock: {
+                        AIMacro.RaiseKind(5, "TypeError")
+                        ReturnValue(0)
+                    }
+                    ReturnValue(a)
+                }
+                ReturnValue(String.Concat(a, b))
+            }
+        }
+        IfCondition And(EqualTo(b_str, 1), EqualTo(b_hash, 0)) ThenBlock: {
+            IfCondition EqualTo(a_hash, 0) ThenBlock: {
+                IfCondition EqualTo(AIMacro.BadCString(a), 1) ThenBlock: {
+                    IfCondition EqualTo(UnittestState.in_test, 0) ThenBlock: {
+                        AIMacro.RaiseKind(5, "TypeError")
+                        ReturnValue(0)
+                    }
+                    ReturnValue(b)
+                }
+                ReturnValue(String.Concat(a, b))
+            }
+        }
+        ReturnValue(AIMacro.GetNotImpl())
+    }
+}
+
 Function.AIMacro.NumAdd {
     Input: a: Address
     Input: b: Address
@@ -896,15 +964,9 @@ Function.AIMacro.NumAdd {
             }
             ReturnValue(AIMacro.ArrayConcat(a, b))
         }
-        IfCondition And(EqualTo(AIMacro.LooksLikeString(a), 1), EqualTo(AIMacro.SafeIsHash(a), 0)) ThenBlock: {
-            IfCondition EqualTo(AIMacro.SafeIsHash(b), 0) ThenBlock: {
-                ReturnValue(String.Concat(a, b))
-            }
-        }
-        IfCondition And(EqualTo(AIMacro.LooksLikeString(b), 1), EqualTo(AIMacro.SafeIsHash(b), 0)) ThenBlock: {
-            IfCondition EqualTo(AIMacro.SafeIsHash(a), 0) ThenBlock: {
-                ReturnValue(String.Concat(a, b))
-            }
+        ra = AIMacro.StrAdd(a, b)
+        IfCondition EqualTo(AIMacro.IsNotImpl(ra), 0) ThenBlock: {
+            ReturnValue(ra)
         }
         a = AIMacro.BoolVal(a)
         b = AIMacro.BoolVal(b)

@@ -704,22 +704,19 @@ Function.Gen_GetStringStatus {
         IfCondition EqualTo(t, Node.BINARY_OP) ThenBlock: {
             op = ArrayGet(node, 4)
             
-            // + with strings produces string
+            // + is a string only when both sides are strings.
+            // One string plus a non-string is not a string for the next +.
             IfCondition EqualTo(op, Token.PLUS) ThenBlock: {
                 left = ArrayGet(node, 3)
                 right = ArrayGet(node, 5)
                 left_status = Gen_GetStringStatus(left)
                 right_status = Gen_GetStringStatus(right)
                 
-                // If either is definitely a string, result is string
-                IfCondition EqualTo(left_status, 1) ThenBlock: { ReturnValue(1) }
-                IfCondition EqualTo(right_status, 1) ThenBlock: { ReturnValue(1) }
-                
-                // If either is unknown, result is unknown
+                IfCondition And(EqualTo(left_status, 1), EqualTo(right_status, 1)) ThenBlock: {
+                    ReturnValue(1)
+                }
                 IfCondition EqualTo(left_status, -1) ThenBlock: { ReturnValue(-1) }
                 IfCondition EqualTo(right_status, -1) ThenBlock: { ReturnValue(-1) }
-                
-                // Both are non-strings
                 ReturnValue(0)
             }
             
@@ -758,12 +755,12 @@ Function.Gen_BinaryOp {
             right = Gen_FlattenExpr(right)
         }
         
-        // Check for string concatenation (+ operator)
+        // Concat only when both sides are strings. A mixed + is NumAdd.
         IfCondition EqualTo(op, Token.PLUS) ThenBlock: {
-            left_is_str = Gen_InvolvesString(left)
-            right_is_str = Gen_InvolvesString(right)
+            left_status = Gen_GetStringStatus(left)
+            right_status = Gen_GetStringStatus(right)
             
-            IfCondition Or(EqualTo(left_is_str, 1), EqualTo(right_is_str, 1)) ThenBlock: {
+            IfCondition And(EqualTo(left_status, 1), EqualTo(right_status, 1)) ThenBlock: {
                 Gen_Emit("String.Concat(")
                 Gen_Expr(left)
                 Gen_Emit(", ")
