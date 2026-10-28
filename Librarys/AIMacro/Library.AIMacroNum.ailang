@@ -1372,7 +1372,9 @@ Function.AIMacro.NumPow {
         // EqualTo(result, 16) passed and PrintNumber(result) SIGSEGV'd.
         a = AIMacro.UnboxIntZero(AIMacro.BoolVal(a))
         b = AIMacro.UnboxIntZero(AIMacro.BoolVal(b))
-        IfCondition And(GreaterEqual(a, TypeMagic.HEAP_START), LessThan(a, 140737488355328)) ThenBlock: {
+        // CanDeref refuses raw ints in the pointer-looking band.
+        // 2147483647 ** 0 used to read that int as an object.
+        IfCondition EqualTo(Types.CanDeref(a), 1) ThenBlock: {
             IfCondition EqualTo(Dereference(a), TypeMagic.BOOL) ThenBlock: {
                 a = Dereference(Add(a, 8))
             } ElseBlock: {
@@ -1382,7 +1384,7 @@ Function.AIMacro.NumPow {
                 ReturnValue(AIMacro.NumPowRest(a, b))
             }
         }
-        IfCondition And(GreaterEqual(b, TypeMagic.HEAP_START), LessThan(b, 140737488355328)) ThenBlock: {
+        IfCondition EqualTo(Types.CanDeref(b), 1) ThenBlock: {
             IfCondition EqualTo(Dereference(b), TypeMagic.BOOL) ThenBlock: {
                 b = Dereference(Add(b, 8))
             } ElseBlock: {
