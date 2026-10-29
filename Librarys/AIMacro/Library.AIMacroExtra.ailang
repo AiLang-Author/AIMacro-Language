@@ -1422,6 +1422,13 @@ Function.AIMacro.Strip {
     Input: chars: Address
     Output: Address
     Body: {
+        // Same band as InPtrHole. A call here would drop str, so compare in place.
+        IfCondition GreaterEqual(str, 16777216) ThenBlock: {
+            IfCondition LessThan(str, 500000000) ThenBlock: {
+                AIMacro.RaiseKind(14, "'int' object has no attribute 'strip'")
+                ReturnValue(0)
+            }
+        }
         IfCondition EqualTo(str, 0) ThenBlock: {
             ReturnValue("")
         }

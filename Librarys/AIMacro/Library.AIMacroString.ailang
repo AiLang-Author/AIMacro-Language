@@ -320,6 +320,26 @@ Function.String.Contains {
     }
 }
 
+// StringIndexOf has no start index, and a call drops the haystack pointer.
+// The scan below is GetByte only. Lengths and cursors stay in the pool.
+FixedPool.RepSt {
+    "src": Initialize=0, CanChange=True
+    "olds": Initialize=0, CanChange=True
+    "news": Initialize=0, CanChange=True
+    "slen": Initialize=0, CanChange=True
+    "olen": Initialize=0, CanChange=True
+    "nlen": Initialize=0, CanChange=True
+    "lim": Initialize=0, CanChange=True
+    "out": Initialize=0, CanChange=True
+    "spos": Initialize=0, CanChange=True
+    "dpos": Initialize=0, CanChange=True
+    "j": Initialize=0, CanChange=True
+    "match": Initialize=0, CanChange=True
+    "ca": Initialize=0, CanChange=True
+    "cb": Initialize=0, CanChange=True
+    "cap": Initialize=0, CanChange=True
+}
+
 // =============================================================================
 // REPLACE
 // =============================================================================
@@ -329,85 +349,79 @@ Function.String.Replace {
     Input: new_sub: Address
     Output: Address
     Body: {
-        IfCondition EqualTo(str, 0) ThenBlock: {
+        RepSt.src = str
+        RepSt.olds = old_sub
+        RepSt.news = new_sub
+        IfCondition EqualTo(RepSt.src, 0) ThenBlock: {
             result = Allocate(1)
             SetByte(result, 0, 0)
             ReturnValue(result)
         }
-        
-        str_len = StringLength(str)
-        old_len = StringLength(old_sub)
-        new_len = StringLength(new_sub)
-        
-        IfCondition EqualTo(old_len, 0) ThenBlock: {
-            // Can't replace empty string, return copy
-            result = Allocate(Add(str_len, 1))
+        RepSt.slen = StringLength(RepSt.src)
+        RepSt.olen = 0
+        IfCondition NotEqual(RepSt.olds, 0) ThenBlock: {
+            RepSt.olen = StringLength(RepSt.olds)
+        }
+        RepSt.nlen = 0
+        IfCondition NotEqual(RepSt.news, 0) ThenBlock: {
+            RepSt.nlen = StringLength(RepSt.news)
+        }
+        IfCondition EqualTo(RepSt.olen, 0) ThenBlock: {
+            result = Allocate(Add(RepSt.slen, 1))
             i = 0
-            WhileLoop LessThan(i, str_len) {
-                c = GetByte(str, i)
+            WhileLoop LessThan(i, RepSt.slen) {
+                c = GetByte(RepSt.src, i)
                 SetByte(result, i, c)
                 i = Add(i, 1)
             }
-            SetByte(result, str_len, 0)
+            SetByte(result, RepSt.slen, 0)
             ReturnValue(result)
         }
-        
-        // Count occurrences first to size result
-        count = 0
-        pos = 0
-        WhileLoop LessThan(pos, str_len) {
-            found = StringIndexOf(str, old_sub, pos)
-            IfCondition LessThan(found, 0) ThenBlock: {
-                BreakLoop
-            }
-            count = Add(count, 1)
-            pos = Add(found, old_len)
+        RepSt.lim = Subtract(RepSt.slen, RepSt.olen)
+        RepSt.cap = RepSt.slen
+        IfCondition GreaterThan(RepSt.nlen, RepSt.olen) ThenBlock: {
+            RepSt.cap = Multiply(RepSt.slen, RepSt.nlen)
         }
-        
-        // Calculate result size
-        size_diff = Subtract(new_len, old_len)
-        result_len = Add(str_len, Multiply(count, size_diff))
-        result = Allocate(Add(result_len, 1))
-        
-        // Build result
-        src_pos = 0
-        dst_pos = 0
-        WhileLoop LessThan(src_pos, str_len) {
-            found = StringIndexOf(str, old_sub, src_pos)
-            
-            IfCondition LessThan(found, 0) ThenBlock: {
-                // Copy rest of string
-                WhileLoop LessThan(src_pos, str_len) {
-                    c = GetByte(str, src_pos)
-                    SetByte(result, dst_pos, c)
-                    src_pos = Add(src_pos, 1)
-                    dst_pos = Add(dst_pos, 1)
+        RepSt.out = Allocate(Add(RepSt.cap, 1))
+        RepSt.spos = 0
+        RepSt.dpos = 0
+        WhileLoop LessEqual(RepSt.spos, RepSt.lim) {
+            RepSt.j = 0
+            RepSt.match = 1
+            WhileLoop LessThan(RepSt.j, RepSt.olen) {
+                RepSt.ca = GetByte(RepSt.src, Add(RepSt.spos, RepSt.j))
+                RepSt.cb = GetByte(RepSt.olds, RepSt.j)
+                IfCondition NotEqual(RepSt.ca, RepSt.cb) ThenBlock: {
+                    RepSt.match = 0
+                    RepSt.j = RepSt.olen
+                } ElseBlock: {
+                    RepSt.j = Add(RepSt.j, 1)
                 }
-                BreakLoop
             }
-            
-            // Copy up to match
-            WhileLoop LessThan(src_pos, found) {
-                c = GetByte(str, src_pos)
-                SetByte(result, dst_pos, c)
-                src_pos = Add(src_pos, 1)
-                dst_pos = Add(dst_pos, 1)
+            IfCondition EqualTo(RepSt.match, 1) ThenBlock: {
+                RepSt.j = 0
+                WhileLoop LessThan(RepSt.j, RepSt.nlen) {
+                    RepSt.ca = GetByte(RepSt.news, RepSt.j)
+                    SetByte(RepSt.out, RepSt.dpos, RepSt.ca)
+                    RepSt.dpos = Add(RepSt.dpos, 1)
+                    RepSt.j = Add(RepSt.j, 1)
+                }
+                RepSt.spos = Add(RepSt.spos, RepSt.olen)
+            } ElseBlock: {
+                RepSt.ca = GetByte(RepSt.src, RepSt.spos)
+                SetByte(RepSt.out, RepSt.dpos, RepSt.ca)
+                RepSt.dpos = Add(RepSt.dpos, 1)
+                RepSt.spos = Add(RepSt.spos, 1)
             }
-            
-            // Copy replacement
-            j = 0
-            WhileLoop LessThan(j, new_len) {
-                c = GetByte(new_sub, j)
-                SetByte(result, dst_pos, c)
-                dst_pos = Add(dst_pos, 1)
-                j = Add(j, 1)
-            }
-            
-            src_pos = Add(found, old_len)
         }
-        
-        SetByte(result, dst_pos, 0)
-        ReturnValue(result)
+        WhileLoop LessThan(RepSt.spos, RepSt.slen) {
+            RepSt.ca = GetByte(RepSt.src, RepSt.spos)
+            SetByte(RepSt.out, RepSt.dpos, RepSt.ca)
+            RepSt.dpos = Add(RepSt.dpos, 1)
+            RepSt.spos = Add(RepSt.spos, 1)
+        }
+        SetByte(RepSt.out, RepSt.dpos, 0)
+        ReturnValue(RepSt.out)
     }
 }
 

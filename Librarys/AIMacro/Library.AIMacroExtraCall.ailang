@@ -160,6 +160,150 @@ Function.AIMacro.InitMethodSkip {
     }
 }
 
+// Method-call expressions go through MethodCall, not the codegen string
+// helpers. Keep the receiver in the pool: StringCompare drops a live local.
+FixedPool.StrMeth {
+    "hit": Initialize=0, CanChange=True
+    "val": Initialize=0, CanChange=True
+    "fr": Initialize=0, CanChange=True
+    "nm": Initialize=0, CanChange=True
+    "arg": Initialize=0, CanChange=True
+    "a0": Initialize=0, CanChange=True
+    "a1": Initialize=0, CanChange=True
+    "kind": Initialize=0, CanChange=True
+    "n": Initialize=0, CanChange=True
+}
+
+Function.AIMacro.StrMethodTry {
+    Input: obj: Address
+    Input: method_name: Address
+    Input: args: Address
+    Output: Integer
+    Body: {
+        StrMeth.fr = obj
+        StrMeth.nm = method_name
+        StrMeth.arg = args
+        StrMeth.hit = 0
+        StrMeth.val = 0
+        StrMeth.kind = 0
+        StrMeth.n = 0
+        StrMeth.a0 = 0
+        StrMeth.a1 = 0
+        IfCondition EqualTo(StringCompare(StrMeth.nm, "strip"), 0) ThenBlock: {
+            StrMeth.kind = 1
+        }
+        IfCondition EqualTo(StringCompare(StrMeth.nm, "lstrip"), 0) ThenBlock: {
+            StrMeth.kind = 2
+        }
+        IfCondition EqualTo(StringCompare(StrMeth.nm, "rstrip"), 0) ThenBlock: {
+            StrMeth.kind = 3
+        }
+        IfCondition EqualTo(StringCompare(StrMeth.nm, "replace"), 0) ThenBlock: {
+            StrMeth.kind = 4
+        }
+        IfCondition EqualTo(StringCompare(StrMeth.nm, "find"), 0) ThenBlock: {
+            StrMeth.kind = 5
+        }
+        IfCondition EqualTo(StringCompare(StrMeth.nm, "join"), 0) ThenBlock: {
+            StrMeth.kind = 6
+        }
+        IfCondition EqualTo(StringCompare(StrMeth.nm, "upper"), 0) ThenBlock: {
+            StrMeth.kind = 7
+        }
+        IfCondition EqualTo(StringCompare(StrMeth.nm, "lower"), 0) ThenBlock: {
+            StrMeth.kind = 8
+        }
+        IfCondition EqualTo(StrMeth.kind, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        // 123456789 is in the CanDeref hole. Do not GetByte it.
+        IfCondition EqualTo(AIMacro.InPtrHole(StrMeth.fr), 1) ThenBlock: {
+            StrMeth.val = String.Concat("'int' object has no attribute '", StrMeth.nm)
+            StrMeth.val = String.Concat(StrMeth.val, "'")
+            AIMacro.RaiseKind(14, StrMeth.val)
+            StrMeth.val = 0
+            StrMeth.hit = 1
+            ReturnValue(1)
+        }
+        IfCondition EqualTo(AIMacro.LooksLikeString(StrMeth.fr), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition NotEqual(StrMeth.arg, 0) ThenBlock: {
+            StrMeth.n = Array.Size(StrMeth.arg)
+        }
+        IfCondition GreaterThan(StrMeth.n, 0) ThenBlock: {
+            StrMeth.a0 = Array.Get(StrMeth.arg, 0)
+        }
+        IfCondition GreaterThan(StrMeth.n, 1) ThenBlock: {
+            StrMeth.a1 = Array.Get(StrMeth.arg, 1)
+        }
+        IfCondition EqualTo(StrMeth.kind, 1) ThenBlock: {
+            StrMeth.val = AIMacro.Strip(StrMeth.fr, StrMeth.a0)
+            StrMeth.hit = 1
+            ReturnValue(1)
+        }
+        IfCondition EqualTo(StrMeth.kind, 2) ThenBlock: {
+            IfCondition EqualTo(StrMeth.n, 0) ThenBlock: {
+                StrMeth.val = String.LStrip(StrMeth.fr)
+                StrMeth.hit = 1
+                ReturnValue(1)
+            }
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StrMeth.kind, 3) ThenBlock: {
+            IfCondition EqualTo(StrMeth.n, 0) ThenBlock: {
+                StrMeth.val = String.RStrip(StrMeth.fr)
+                StrMeth.hit = 1
+                ReturnValue(1)
+            }
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StrMeth.kind, 4) ThenBlock: {
+            IfCondition EqualTo(StrMeth.n, 2) ThenBlock: {
+                StrMeth.val = String.Replace(StrMeth.fr, StrMeth.a0, StrMeth.a1)
+                StrMeth.hit = 1
+                ReturnValue(1)
+            }
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StrMeth.kind, 5) ThenBlock: {
+            IfCondition EqualTo(StrMeth.n, 1) ThenBlock: {
+                StrMeth.val = String.Find(StrMeth.fr, StrMeth.a0)
+                StrMeth.hit = 1
+                ReturnValue(1)
+            }
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StrMeth.kind, 6) ThenBlock: {
+            IfCondition GreaterThan(StrMeth.n, 0) ThenBlock: {
+                IfCondition EqualTo(AIMacro.SafeIsArray(StrMeth.a0), 1) ThenBlock: {
+                    StrMeth.val = String.Join(StrMeth.fr, StrMeth.a0)
+                    StrMeth.hit = 1
+                    ReturnValue(1)
+                }
+            }
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StrMeth.kind, 7) ThenBlock: {
+            IfCondition EqualTo(StrMeth.n, 0) ThenBlock: {
+                StrMeth.val = String.Upper(StrMeth.fr)
+                StrMeth.hit = 1
+                ReturnValue(1)
+            }
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(StrMeth.kind, 8) ThenBlock: {
+            IfCondition EqualTo(StrMeth.n, 0) ThenBlock: {
+                StrMeth.val = String.Lower(StrMeth.fr)
+                StrMeth.hit = 1
+                ReturnValue(1)
+            }
+            ReturnValue(0)
+        }
+        ReturnValue(0)
+    }
+}
+
 Function.AIMacro.MethodShim {
     Input: obj: Address
     Input: method_name: Address
@@ -1795,6 +1939,10 @@ Function.AIMacro.MethodShim {
             iut2 = Hash.Create(4)
             ReturnValue(iut2)
         }
+        AIMacro.StrMethodTry(obj, method_name, args)
+        IfCondition EqualTo(StrMeth.hit, 1) ThenBlock: {
+            ReturnValue(StrMeth.val)
+        }
         // in_test unknown method: RaiseKind 8 is a silent UnittestRun skip
         // (same as MethodSkip). Import-time still prints and returns 0.
         IfCondition EqualTo(UnittestState.in_test, 1) ThenBlock: {
@@ -2037,7 +2185,11 @@ Function.AIMacro.MethodCall {
             ReturnValue(AIMacro.TemplateSafeSub(obj, a0s))
         }
         IfCondition EqualTo(func_addr, 0) ThenBlock: {
-            fn = AIMacro.ObjectGet(obj, method_name)
+            fn = 0
+            // A mid-range int is not an object. ObjectGet would Array.IsArray it.
+            IfCondition EqualTo(AIMacro.InPtrHole(MethGate.fr), 0) ThenBlock: {
+                fn = AIMacro.ObjectGet(MethGate.fr, method_name)
+            }
             // ELF function pointers start at 0x400000. ObjectGet integer
             // stubs (getrefcount=2) are not callables; MethodShim handles them.
             IfCondition And(NotEqual(fn, 0), GreaterEqual(fn, 4194304)) ThenBlock: {
