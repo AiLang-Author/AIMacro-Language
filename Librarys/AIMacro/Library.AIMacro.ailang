@@ -104,6 +104,23 @@ Function.AIMacro.TypedListPop {
 // SMART LEN - Works with both XArray and TArray
 // Checks magic number to determine which size function to call
 // =============================================================================
+// CanDeref is 1 for [4000000, 500000000). The loaded image sits at the
+// bottom of that band (these ELFs end near 5MB). A raw int at or above
+// 16MB, such as 123456789, is not a string or a code address.
+Function.AIMacro.InPtrHole {
+    Input: value: Address
+    Output: Integer
+    Body: {
+        IfCondition LessThan(value, 16777216) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition GreaterEqual(value, 500000000) ThenBlock: {
+            ReturnValue(0)
+        }
+        ReturnValue(1)
+    }
+}
+
 Function.AIMacro.SmartLen {
     Input: container: Address
     Output: Integer
@@ -112,6 +129,10 @@ Function.AIMacro.SmartLen {
             ReturnValue(AIMacro.IntZero())
         }
         IfCondition EqualTo(AIMacro.IsNone(container), 1) ThenBlock: {
+            ReturnValue(AIMacro.IntZero())
+        }
+        IfCondition EqualTo(AIMacro.InPtrHole(container), 1) ThenBlock: {
+            AIMacro.RaiseKind(5, "object of type 'int' has no len()")
             ReturnValue(AIMacro.IntZero())
         }
         // And() is not short-circuit, so a raw int was passed to Hash.IsHash.
@@ -2512,6 +2533,10 @@ Function.AIMacro.MinSeq {
             AIMacro.RaiseKind(2, "min")
             ReturnValue(0)
         }
+        IfCondition EqualTo(AIMacro.InPtrHole(iterable), 1) ThenBlock: {
+            AIMacro.RaiseKind(5, "'int' object is not iterable")
+            ReturnValue(0)
+        }
         is_arr = 0
         IfCondition EqualTo(Types.CanDeref(iterable), 1) ThenBlock: {
             is_arr = Array.IsArray(iterable)
@@ -2551,6 +2576,10 @@ Function.AIMacro.MaxSeq {
         }
         IfCondition EqualTo(AIMacro.IsNone(iterable), 1) ThenBlock: {
             AIMacro.RaiseKind(2, "max")
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(AIMacro.InPtrHole(iterable), 1) ThenBlock: {
+            AIMacro.RaiseKind(5, "'int' object is not iterable")
             ReturnValue(0)
         }
         is_arr = 0

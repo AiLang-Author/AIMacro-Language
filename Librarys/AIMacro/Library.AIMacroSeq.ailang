@@ -825,6 +825,9 @@ Function.AIMacro.SafeIsHash {
         IfCondition EqualTo(v, 0) ThenBlock: {
             ReturnValue(0)
         }
+        IfCondition EqualTo(AIMacro.InPtrHole(v), 1) ThenBlock: {
+            ReturnValue(0)
+        }
         IfCondition EqualTo(Types.CanDeref(v), 0) ThenBlock: {
             ReturnValue(0)
         }
@@ -837,6 +840,9 @@ Function.AIMacro.SafeIsArray {
     Output: Integer
     Body: {
         IfCondition EqualTo(v, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(AIMacro.InPtrHole(v), 1) ThenBlock: {
             ReturnValue(0)
         }
         IfCondition EqualTo(Types.CanDeref(v), 0) ThenBlock: {
@@ -1117,6 +1123,10 @@ Function.AIMacro.ListFrom {
     Output: Address
     Body: {
         IfCondition Or(EqualTo(iterable, 0), EqualTo(AIMacro.IsNone(iterable), 1)) ThenBlock: {
+            ReturnValue(AIMacro.EmptyList())
+        }
+        IfCondition EqualTo(AIMacro.InPtrHole(iterable), 1) ThenBlock: {
+            AIMacro.RaiseKind(5, "'int' object is not iterable")
             ReturnValue(AIMacro.EmptyList())
         }
         IfCondition EqualTo(AIMacro.SafeIsHash(iterable), 1) ThenBlock: {
@@ -1403,6 +1413,10 @@ Function.AIMacro.Iter {
     Body: {
         IfCondition Or(EqualTo(iterable, 0), EqualTo(AIMacro.IsNone(iterable), 1)) ThenBlock: {
             AIMacro.RaiseKind(5, "iter() arg is not iterable")
+            ReturnValue(AIMacro.EmptyList())
+        }
+        IfCondition EqualTo(AIMacro.InPtrHole(iterable), 1) ThenBlock: {
+            AIMacro.RaiseKind(5, "'int' object is not iterable")
             ReturnValue(AIMacro.EmptyList())
         }
         IfCondition EqualTo(AIMacro.SafeIsHash(iterable), 1) ThenBlock: {
