@@ -2567,12 +2567,10 @@ Function.Gen_FlattenExpr {
                 Gen_MarkStringVar(temp)
                 Gen_EmitIndent()
                 Gen_Emit(temp)
-                Gen_Emit(" = String.Repeat(")
+                Gen_Emit(" = AIMacro.StrRepeat(")
                 Gen_Expr(flat_left)
                 Gen_Emit(", ")
-                Gen_Emit("AIMacro.Int(")
                 Gen_Expr(flat_right)
-                Gen_Emit(")")
                 Gen_Emit(")\n")
                 ReturnValue(Gen_MakeIdent(temp))
             }

@@ -1056,6 +1056,22 @@ Function.AIMacro.NumMul {
     Input: b: Address
     Output: Address
     Body: {
+        // A container times a bigint must not enter method lookup or the
+        // bigint product. 2**63-1 is MemoryError. A wider count is OverflowError.
+        IfCondition EqualTo(Types.IsBigInt(b), 1) ThenBlock: {
+            IfCondition Or(EqualTo(AIMacro.LooksLikeString(a), 1), Or(EqualTo(AIMacro.SafeIsArray(a), 1), EqualTo(AIMacro.SafeIsHash(a), 1))) ThenBlock: {
+                IfCondition NotEqual(AIMacro.RepeatRaise(b), 0) ThenBlock: {
+                    ReturnValue(a)
+                }
+            }
+        }
+        IfCondition EqualTo(Types.IsBigInt(a), 1) ThenBlock: {
+            IfCondition Or(EqualTo(AIMacro.LooksLikeString(b), 1), Or(EqualTo(AIMacro.SafeIsArray(b), 1), EqualTo(AIMacro.SafeIsHash(b), 1))) ThenBlock: {
+                IfCondition NotEqual(AIMacro.RepeatRaise(a), 0) ThenBlock: {
+                    ReturnValue(b)
+                }
+            }
+        }
         IfCondition Or(EqualTo(AIMacro.SafeIsHash(a), 1), EqualTo(AIMacro.SafeIsHash(b), 1)) ThenBlock: {
             ra = AIMacro.CallBinMethod(a, "__mul__", b)
             IfCondition EqualTo(AIMacro.IsNotImpl(ra), 0) ThenBlock: {
@@ -1156,15 +1172,25 @@ Function.AIMacro.NumMul {
         }
         IfCondition EqualTo(Types.IsBigInt(b), 1) ThenBlock: {
             IfCondition Or(EqualTo(AIMacro.LooksLikeString(a), 1), EqualTo(Array.IsArray(a), 1)) ThenBlock: {
-                AIMacro.RaiseKind(22, "OverflowError")
-                ReturnValue(a)
+                IfCondition NotEqual(AIMacro.RepeatRaise(b), 0) ThenBlock: {
+                    ReturnValue(a)
+                }
             }
         }
         IfCondition EqualTo(Types.IsBigInt(a), 1) ThenBlock: {
             IfCondition Or(EqualTo(AIMacro.LooksLikeString(b), 1), EqualTo(Array.IsArray(b), 1)) ThenBlock: {
-                AIMacro.RaiseKind(22, "OverflowError")
-                ReturnValue(b)
+                IfCondition NotEqual(AIMacro.RepeatRaise(a), 0) ThenBlock: {
+                    ReturnValue(b)
+                }
             }
+        }
+        IfCondition And(EqualTo(AIMacro.LooksLikeString(a), 1), And(EqualTo(Types.CanDeref(b), 0), GreaterEqual(b, TypeMagic.PTR_MIN))) ThenBlock: {
+            AIMacro.RaiseKind(23, "MemoryError")
+            ReturnValue(a)
+        }
+        IfCondition And(EqualTo(AIMacro.LooksLikeString(b), 1), And(EqualTo(Types.CanDeref(a), 0), GreaterEqual(a, TypeMagic.PTR_MIN))) ThenBlock: {
+            AIMacro.RaiseKind(23, "MemoryError")
+            ReturnValue(b)
         }
         IfCondition And(EqualTo(AIMacro.LooksLikeString(a), 1), GreaterThan(AIMacro.AsIndex(b), 10000)) ThenBlock: {
             AIMacro.RaiseKind(22, "OverflowError")

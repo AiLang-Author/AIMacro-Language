@@ -749,6 +749,10 @@ Function.AIMacro.AsIndex {
         IfCondition And(GreaterEqual(v, 0), LessThan(v, 4000000)) ThenBlock: {
             ReturnValue(v)
         }
+        // A raw int in the pointer band is not a hash. Hash.IsHash would fault.
+        IfCondition And(EqualTo(Types.CanDeref(v), 0), GreaterEqual(v, 4000000)) ThenBlock: {
+            ReturnValue(1073741824)
+        }
         IfCondition EqualTo(Types.IsBigInt(v), 1) ThenBlock: {
             digs = Dereference(Add(v, 16))
             IfCondition GreaterThan(StringLength(digs), 9) ThenBlock: {
@@ -886,6 +890,9 @@ Function.AIMacro.CallBinMethod {
     Input: other: Address
     Output: Address
     Body: {
+        // Method lookup hashes ClassRegistry.registry. That slot stays 0
+        // until the first class, and Hash.Get of 0 faults.
+        OOP.EnsureInit()
         IfCondition EqualTo(AIMacro.SafeIsHash(obj), 0) ThenBlock: {
             ReturnValue(AIMacro.GetNotImpl())
         }
@@ -1045,12 +1052,19 @@ Function.AIMacro.ListIMul {
                 }
             }
         } ElseBlock: {
+            // 2**63-1 is a raw int in the pointer band. Do not read it as an object.
+            IfCondition EqualTo(Types.CanDeref(times), 0) ThenBlock: {
+                AIMacro.RaiseKind(23, "MemoryError")
+                ReturnValue(lst)
+            }
             IfCondition EqualTo(Types.IsFloat(times), 1) ThenBlock: {
                 n = Float_ToInt(AIMacro.FloatBits(times))
             } ElseBlock: {
                 IfCondition EqualTo(Types.IsBigInt(times), 1) ThenBlock: {
-                    AIMacro.RaiseKind(22, "OverflowError")
-                    ReturnValue(lst)
+                    IfCondition NotEqual(AIMacro.RepeatRaise(times), 0) ThenBlock: {
+                        ReturnValue(lst)
+                    }
+                    n = AIMacro.AsIndex(times)
                 } ElseBlock: {
                     n = AIMacro.AsIndex(times)
                 }
@@ -1688,17 +1702,105 @@ Function.AIMacro.StrContains {
     }
 }
 
+// Locals live across a call get smashed. The count stays in this pool.
+FixedPool.RepSt {
+    "n": Initialize=0, CanChange=True
+    "digs": Initialize=0, CanChange=True
+    "ln": Initialize=0, CanChange=True
+    "cmp": Initialize=0, CanChange=True
+    "s": Initialize=0, CanChange=True
+}
+
+// 22 when the count does not fit in a signed int. 23 when it fits but
+// the repeat is too large to allocate. 0 when the caller can repeat.
+Function.AIMacro.RepeatFault {
+    Input: n: Address
+    Output: Integer
+    Body: {
+        IfCondition EqualTo(n, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        RepSt.n = n
+        IfCondition EqualTo(Types.CanDeref(RepSt.n), 0) ThenBlock: {
+            IfCondition GreaterEqual(RepSt.n, TypeMagic.PTR_MIN) ThenBlock: {
+                ReturnValue(23)
+            }
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(Types.IsBigInt(RepSt.n), 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition EqualTo(Dereference(Add(RepSt.n, 8)), 1) ThenBlock: {
+            ReturnValue(0)
+        }
+        RepSt.digs = Dereference(Add(RepSt.n, 16))
+        IfCondition EqualTo(RepSt.digs, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        RepSt.ln = StringLength(RepSt.digs)
+        IfCondition GreaterThan(RepSt.ln, 19) ThenBlock: {
+            ReturnValue(22)
+        }
+        IfCondition LessThan(RepSt.ln, 8) ThenBlock: {
+            ReturnValue(0)
+        }
+        IfCondition LessThan(RepSt.ln, 19) ThenBlock: {
+            ReturnValue(23)
+        }
+        RepSt.digs = Dereference(Add(RepSt.n, 16))
+        RepSt.cmp = StringCompare(RepSt.digs, "9223372036854775807")
+        IfCondition GreaterThan(RepSt.cmp, 0) ThenBlock: {
+            ReturnValue(22)
+        }
+        ReturnValue(23)
+    }
+}
+
+Function.AIMacro.RepeatRaise {
+    Input: n: Address
+    Output: Integer
+    Body: {
+        RepSt.cmp = AIMacro.RepeatFault(n)
+        IfCondition EqualTo(RepSt.cmp, 22) ThenBlock: {
+            AIMacro.RaiseKind(22, "OverflowError")
+            ReturnValue(22)
+        }
+        IfCondition EqualTo(RepSt.cmp, 23) ThenBlock: {
+            AIMacro.RaiseKind(23, "MemoryError")
+            ReturnValue(23)
+        }
+        ReturnValue(0)
+    }
+}
+
 Function.AIMacro.StrRepeat {
     Input: s: Address
     Input: n: Integer
     Output: Address
     Body: {
-        n = AIMacro.Int(n)
-        n = AIMacro.UnboxIntZero(n)
-        IfCondition LessEqual(n, 0) ThenBlock: {
+        RepSt.s = s
+        RepSt.n = AIMacro.Int(n)
+        RepSt.n = AIMacro.UnboxIntZero(RepSt.n)
+        IfCondition LessEqual(RepSt.n, 0) ThenBlock: {
             ReturnValue("")
         }
-        ReturnValue(String.Repeat(s, n))
+        IfCondition NotEqual(AIMacro.RepeatRaise(RepSt.n), 0) ThenBlock: {
+            ReturnValue("")
+        }
+        IfCondition EqualTo(Types.CanDeref(RepSt.n), 1) ThenBlock: {
+            IfCondition EqualTo(Types.IsBigInt(RepSt.n), 1) ThenBlock: {
+                IfCondition EqualTo(Dereference(Add(RepSt.n, 8)), 1) ThenBlock: {
+                    ReturnValue("")
+                }
+                RepSt.digs = Dereference(Add(RepSt.n, 16))
+                RepSt.n = StringToNumber(RepSt.digs)
+            }
+        }
+        IfCondition GreaterEqual(RepSt.n, TypeMagic.PTR_MIN) ThenBlock: {
+            AIMacro.RaiseKind(23, "MemoryError")
+            ReturnValue("")
+        }
+        ReturnValue(String.Repeat(RepSt.s, RepSt.n))
     }
 }
 
