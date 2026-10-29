@@ -14,6 +14,8 @@ The grind is CPython 3.11 `Lib/test` regrtest (568 files on this box). Pass is E
 
 - **test:** run=242, compile=8, transpile=8
 
+`test_unary.py` was rechecked after the integer-minus-float fix and now passes. The living database is 311 pass and 257 fail. That recheck is not a new full-suite timing.
+
 ## Compared with 2026-10-12
 
 The October 12 database was 318 pass and 250 fail (run 167, compile 80, transpile 3). This run gained 22 passes and lost 30. Compile failures fell from 80 to 8. Net pass is down 8 because files that used to die in the compiler now run and still fail, and 30 former passes broke. The queue is [BACKLOG.md](BACKLOG.md). Speed is parked.

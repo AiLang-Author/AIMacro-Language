@@ -281,6 +281,7 @@ test_turtle.py
 test_type_annotations.py
 test_type_cache.py
 test_ucn.py
+test_unary.py
 test_unicode_file.py
 test_unicodedata.py
 test_univnewlines.py

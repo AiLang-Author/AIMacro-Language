@@ -1,12 +1,16 @@
 # AIMacro backlog
 
-Score from the 2026-10-29 `--full` run. 568 files, **310 pass**, 258 fail, 2140 seconds. Database: `results/grind_db.json`. October 12 was 318 pass / 250 fail. This run gained 22 and lost 30. Compile failures went from 80 to 8.
+Score from the 2026-10-29 `--full` run, plus one recheck. 568 files, **311 pass**, 257 fail. The full run was 310 pass / 258 fail in 2140 seconds. Database: `results/grind_db.json`. October 12 was 318 pass / 250 fail. That run gained 22 and lost 30. Compile failures went from 80 to 8.
 
 Work one row at a time. Prove it with one small program that matches CPython, then the 59-file isolation set. Do not start a module just because a test file imports it. Speed stays parked.
 
+## Done
+
+- **`0 - 2.0`** (`test_unary.py`). Literal `0` is a bigint, and `NumAdd` used to stringify the other operand. `0 - 2.0` is `-2.0`, and `-2j == 0 - 2j` is true. The file was rechecked and passes. LCD `/tmp/clos-lcd/neg1.py`.
+
 ## Now
 
-1. **`0 - 2.0` is wrong** (`test_unary.py`, `UnaryOpTestCase.test_negative`). Literal `0` is a bigint. `NumAdd` handles a bigint before a float, so the float box is turned into a decimal pointer (`126342706233832`). Unary `-2.0` already prints `-2.0`. The next assert in that method is `0 - 2j`. LCD `/tmp/clos-lcd/neg1.py`.
+1. **`test_time.py` aborts on `Exception: division by zero`.** It was a pass on October 12. The exception leaves the file instead of failing one test. Next after that are the other rows in the regression table.
 
 ## Regressions (were pass on October 12)
 
@@ -39,7 +43,6 @@ Take these after the float subtract, one file at a time. The symptom is the reco
 | `test_syntax.py` | run rc=1 | line continuation / indented statement |
 | `test_time.py` | run rc=1 | Exception: division by zero (aborts the file) |
 | `test_typechecks.py` | run rc=1 | 5 ran, 2 failed |
-| `test_unary.py` | run rc=1 | `test_negative` (row 1 above) |
 | `test_userlist.py` | run rc=1 | 9 ran, 5 failed |
 | `test_utf8source.py` | run rc=1 | 3 ran, 3 failed |
 | `test_uu.py` | run rc=1 | TypeError |

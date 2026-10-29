@@ -50,8 +50,47 @@ Function.AIMacro.ToFloatBits {
         IfCondition EqualTo(AIMacro.IsNone(value), 1) ThenBlock: {
             ReturnValue(0)
         }
+        IfCondition EqualTo(Types.IsBigInt(value), 1) ThenBlock: {
+            ReturnValue(AIMacro.BigIntToFloatBits(value))
+        }
         value = AIMacro.BoolVal(value)
         ReturnValue(Float_FromInt(value))
+    }
+}
+
+// Digit string to IEEE bits. A long bigint must not become Float_FromInt of its pointer.
+Function.AIMacro.BigIntToFloatBits {
+    Input: value: Address
+    Output: Integer
+    Body: {
+        sign = Dereference(Add(value, 8))
+        digs = Dereference(Add(value, 16))
+        IfCondition EqualTo(digs, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        ln = StringLength(digs)
+        IfCondition LessEqual(ln, 18) ThenBlock: {
+            n = StringToNumber(digs)
+            IfCondition EqualTo(sign, 1) ThenBlock: {
+                n = Subtract(0, n)
+            }
+            ReturnValue(Float_FromInt(n))
+        }
+        bits = 0
+        i = 0
+        ten = Float_FromInt(10)
+        WhileLoop LessThan(i, ln) {
+            ch = GetByte(digs, i)
+            ch = Subtract(ch, 48)
+            ch = Float_FromInt(ch)
+            bits = Float_Mul(bits, ten)
+            bits = Float_Add(bits, ch)
+            i = Add(i, 1)
+        }
+        IfCondition EqualTo(sign, 1) ThenBlock: {
+            bits = Float_Sub(0, bits)
+        }
+        ReturnValue(bits)
     }
 }
 
@@ -896,6 +935,26 @@ Function.AIMacro.NumAdd {
             ReturnValue(AIMacro.IntOrBox(Add(ipa, ipb)))
         }
         IfCondition Or(EqualTo(Types.IsBigInt(a), 1), EqualTo(Types.IsBigInt(b), 1)) ThenBlock: {
+            // Literal 0 is a bigint. BigIntFromInt of the other side would
+            // stringify a float or complex pointer (0 - 2.0 printed that pointer).
+            IfCondition Or(EqualTo(Types.IsComplex(a), 1), EqualTo(Types.IsComplex(b), 1)) ThenBlock: {
+                ra = AIMacro.ToFloatBits(a)
+                rb = AIMacro.ToFloatBits(b)
+                ia = 0
+                ib = 0
+                IfCondition EqualTo(Types.IsComplex(a), 1) ThenBlock: {
+                    ra = Dereference(Add(a, 8))
+                    ia = Dereference(Add(a, 16))
+                }
+                IfCondition EqualTo(Types.IsComplex(b), 1) ThenBlock: {
+                    rb = Dereference(Add(b, 8))
+                    ib = Dereference(Add(b, 16))
+                }
+                ReturnValue(AIMacro.ComplexBox(Float_Add(ra, rb), Float_Add(ia, ib)))
+            }
+            IfCondition Or(EqualTo(Types.IsFloat(a), 1), EqualTo(Types.IsFloat(b), 1)) ThenBlock: {
+                ReturnValue(AIMacro.FloatBox(Float_Add(AIMacro.ToFloatBits(a), AIMacro.ToFloatBits(b))))
+            }
             da = a
             db = b
             IfCondition EqualTo(Types.IsBigInt(da), 0) ThenBlock: {
