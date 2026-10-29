@@ -1826,6 +1826,696 @@ Function.AIMacro.HexStr {
     }
 }
 
+// Format state lives here. A local does not survive the next call.
+// hit 1 means IntFormat produced FmtSt.out. Return value 1 means
+// "not an integer", which is not a string pointer.
+FixedPool.FmtSt {
+    "fill": Initialize=32, CanChange=True
+    "align": Initialize=0, CanChange=True
+    "sign": Initialize=0, CanChange=True
+    "zero": Initialize=0, CanChange=True
+    "alt": Initialize=0, CanChange=True
+    "width": Initialize=0, CanChange=True
+    "group": Initialize=0, CanChange=True
+    "typ": Initialize=0, CanChange=True
+    "base": Initialize=10, CanChange=True
+    "upper": Initialize=0, CanChange=True
+    "neg": Initialize=0, CanChange=True
+    "isbig": Initialize=0, CanChange=True
+    "ft": Initialize=0, CanChange=True
+    "num": Initialize=0, CanChange=True
+    "sigs": Initialize=0, CanChange=True
+    "pref": Initialize=0, CanChange=True
+    "core": Initialize=0, CanChange=True
+    "out": Initialize=0, CanChange=True
+    "hit": Initialize=0, CanChange=True
+    "every": Initialize=3, CanChange=True
+    "total": Initialize=0, CanChange=True
+    "guard": Initialize=0, CanChange=True
+    "tmp": Initialize=0, CanChange=True
+    "pad": Initialize=0, CanChange=True
+    "spec": Initialize=0, CanChange=True
+    "raw": Initialize=0, CanChange=True
+}
+
+Function.AIMacro.FmtRep {
+    Input: ch: Integer
+    Input: n: Integer
+    Output: Address
+    Body: {
+        IfCondition LessEqual(n, 0) ThenBlock: {
+            ReturnValue("")
+        }
+        IfCondition GreaterThan(n, 100000) ThenBlock: {
+            AIMacro.RaiseKind(23, "MemoryError")
+            ReturnValue("")
+        }
+        buf = Allocate(Add(n, 1))
+        i = 0
+        WhileLoop LessThan(i, n) {
+            SetByte(buf, i, ch)
+            i = Add(i, 1)
+        }
+        SetByte(buf, n, 0)
+        ReturnValue(buf)
+    }
+}
+
+Function.AIMacro.FmtGroup {
+    Input: digits: Address
+    Input: sep: Integer
+    Input: every: Integer
+    Output: Address
+    Body: {
+        IfCondition EqualTo(digits, 0) ThenBlock: {
+            ReturnValue("0")
+        }
+        n = StringLength(digits)
+        IfCondition LessEqual(every, 0) ThenBlock: {
+            ReturnValue(digits)
+        }
+        IfCondition LessEqual(n, every) ThenBlock: {
+            ReturnValue(digits)
+        }
+        seps = Divide(Subtract(n, 1), every)
+        total = Add(n, seps)
+        buf = Allocate(Add(total, 1))
+        di = Subtract(n, 1)
+        bi = Subtract(total, 1)
+        run = 0
+        WhileLoop GreaterEqual(di, 0) {
+            SetByte(buf, bi, GetByte(digits, di))
+            bi = Subtract(bi, 1)
+            di = Subtract(di, 1)
+            run = Add(run, 1)
+            IfCondition EqualTo(run, every) ThenBlock: {
+                IfCondition GreaterEqual(di, 0) ThenBlock: {
+                    SetByte(buf, bi, sep)
+                    bi = Subtract(bi, 1)
+                    run = 0
+                }
+            }
+        }
+        SetByte(buf, total, 0)
+        ReturnValue(buf)
+    }
+}
+
+Function.AIMacro.FmtBase {
+    Input: n: Integer
+    Input: base: Integer
+    Input: upper: Integer
+    Output: Address
+    Body: {
+        IfCondition EqualTo(n, 0) ThenBlock: {
+            ReturnValue("0")
+        }
+        FmtSt.num = n
+        FmtSt.base = base
+        FmtSt.upper = upper
+        FmtSt.core = ""
+        WhileLoop GreaterThan(FmtSt.num, 0) {
+            d = Modulo(FmtSt.num, FmtSt.base)
+            FmtSt.num = Divide(FmtSt.num, FmtSt.base)
+            ch = Add(48, d)
+            IfCondition GreaterThan(d, 9) ThenBlock: {
+                ch = Add(87, d)
+                IfCondition EqualTo(FmtSt.upper, 1) ThenBlock: {
+                    ch = Add(55, d)
+                }
+            }
+            FmtSt.tmp = AIMacro.Chr(ch)
+            FmtSt.core = String.Concat(FmtSt.tmp, FmtSt.core)
+        }
+        ReturnValue(FmtSt.core)
+    }
+}
+
+Function.AIMacro.FmtFail {
+    Input: msg: Address
+    Output: Address
+    Body: {
+        AIMacro.RaiseKind(2, msg)
+        FmtSt.hit = 1
+        FmtSt.out = ""
+        ReturnValue("")
+    }
+}
+
+Function.AIMacro.FmtWith {
+    Input: msg: Address
+    Input: ch: Integer
+    Output: Address
+    Body: {
+        one = AIMacro.Chr(ch)
+        tail = String.Concat(one, "'.")
+        full = String.Concat(msg, tail)
+        ReturnValue(AIMacro.FmtFail(full))
+    }
+}
+
+Function.AIMacro.FmtParse {
+    Input: spec: Address
+    Output: Integer
+    Body: {
+        FmtSt.fill = 32
+        FmtSt.align = 0
+        FmtSt.sign = 0
+        FmtSt.zero = 0
+        FmtSt.alt = 0
+        FmtSt.width = 0
+        FmtSt.group = 0
+        FmtSt.typ = 0
+        FmtSt.base = 10
+        FmtSt.upper = 0
+        FmtSt.ft = 0
+        FmtSt.every = 3
+        IfCondition EqualTo(spec, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        n = StringLength(spec)
+        IfCondition EqualTo(n, 0) ThenBlock: {
+            ReturnValue(0)
+        }
+        i = 0
+        c = GetByte(spec, 0)
+        IfCondition GreaterThan(n, 1) ThenBlock: {
+            c2 = GetByte(spec, 1)
+            is_al = 0
+            IfCondition EqualTo(c2, 60) ThenBlock: { is_al = 1 }
+            IfCondition EqualTo(c2, 62) ThenBlock: { is_al = 1 }
+            IfCondition EqualTo(c2, 61) ThenBlock: { is_al = 1 }
+            IfCondition EqualTo(c2, 94) ThenBlock: { is_al = 1 }
+            IfCondition EqualTo(is_al, 1) ThenBlock: {
+                FmtSt.fill = c
+                FmtSt.align = c2
+                i = 2
+            }
+        }
+        IfCondition EqualTo(i, 0) ThenBlock: {
+            is_al = 0
+            IfCondition EqualTo(c, 60) ThenBlock: { is_al = 1 }
+            IfCondition EqualTo(c, 62) ThenBlock: { is_al = 1 }
+            IfCondition EqualTo(c, 61) ThenBlock: { is_al = 1 }
+            IfCondition EqualTo(c, 94) ThenBlock: { is_al = 1 }
+            IfCondition EqualTo(is_al, 1) ThenBlock: {
+                FmtSt.align = c
+                i = 1
+            }
+        }
+        IfCondition LessThan(i, n) ThenBlock: {
+            c = GetByte(spec, i)
+            is_sg = 0
+            IfCondition EqualTo(c, 43) ThenBlock: { is_sg = 1 }
+            IfCondition EqualTo(c, 45) ThenBlock: { is_sg = 1 }
+            IfCondition EqualTo(c, 32) ThenBlock: { is_sg = 1 }
+            IfCondition EqualTo(is_sg, 1) ThenBlock: {
+                FmtSt.sign = c
+                i = Add(i, 1)
+            }
+        }
+        IfCondition LessThan(i, n) ThenBlock: {
+            c = GetByte(spec, i)
+            IfCondition EqualTo(c, 122) ThenBlock: {
+                AIMacro.FmtFail("Negative zero coercion (z) not allowed in integer format specifier")
+                ReturnValue(2)
+            }
+        }
+        IfCondition LessThan(i, n) ThenBlock: {
+            c = GetByte(spec, i)
+            IfCondition EqualTo(c, 35) ThenBlock: {
+                FmtSt.alt = 1
+                i = Add(i, 1)
+            }
+        }
+        IfCondition LessThan(i, n) ThenBlock: {
+            c = GetByte(spec, i)
+            IfCondition EqualTo(c, 48) ThenBlock: {
+                FmtSt.zero = 1
+                i = Add(i, 1)
+            }
+        }
+        WhileLoop LessThan(i, n) {
+            c = GetByte(spec, i)
+            IfCondition LessThan(c, 48) ThenBlock: {
+                BreakLoop
+            }
+            IfCondition GreaterThan(c, 57) ThenBlock: {
+                BreakLoop
+            }
+            FmtSt.width = Add(Multiply(FmtSt.width, 10), Subtract(c, 48))
+            i = Add(i, 1)
+        }
+        IfCondition LessThan(i, n) ThenBlock: {
+            c = GetByte(spec, i)
+            is_g = 0
+            IfCondition EqualTo(c, 44) ThenBlock: { is_g = 1 }
+            IfCondition EqualTo(c, 95) ThenBlock: { is_g = 1 }
+            IfCondition EqualTo(is_g, 1) ThenBlock: {
+                FmtSt.group = c
+                i = Add(i, 1)
+            }
+        }
+        IfCondition LessThan(i, n) ThenBlock: {
+            c = GetByte(spec, i)
+            IfCondition EqualTo(c, 46) ThenBlock: {
+                AIMacro.FmtFail("Precision not allowed in integer format specifier")
+                ReturnValue(2)
+            }
+        }
+        IfCondition LessThan(i, n) ThenBlock: {
+            FmtSt.typ = GetByte(spec, i)
+            i = Add(i, 1)
+            IfCondition LessThan(i, n) ThenBlock: {
+                AIMacro.FmtFail("Invalid format specifier")
+                ReturnValue(2)
+            }
+        }
+        ReturnValue(0)
+    }
+}
+
+Function.AIMacro.FmtCheck {
+    Output: Integer
+    Body: {
+        t = FmtSt.typ
+        ok = 0
+        IfCondition EqualTo(t, 0) ThenBlock: { ok = 1 }
+        IfCondition EqualTo(t, 100) ThenBlock: { ok = 1 }
+        IfCondition EqualTo(t, 110) ThenBlock: { ok = 1 }
+        IfCondition EqualTo(t, 98) ThenBlock: { ok = 1 }
+        IfCondition EqualTo(t, 111) ThenBlock: { ok = 1 }
+        IfCondition EqualTo(t, 120) ThenBlock: { ok = 1 }
+        IfCondition EqualTo(t, 88) ThenBlock: { ok = 1 }
+        IfCondition EqualTo(t, 99) ThenBlock: { ok = 1 }
+        IfCondition EqualTo(t, 101) ThenBlock: { ok = 1 }
+        IfCondition EqualTo(t, 69) ThenBlock: { ok = 1 }
+        IfCondition EqualTo(t, 102) ThenBlock: { ok = 1 }
+        IfCondition EqualTo(t, 70) ThenBlock: { ok = 1 }
+        IfCondition EqualTo(t, 103) ThenBlock: { ok = 1 }
+        IfCondition EqualTo(t, 71) ThenBlock: { ok = 1 }
+        IfCondition EqualTo(t, 37) ThenBlock: { ok = 1 }
+        IfCondition EqualTo(ok, 0) ThenBlock: {
+            // A local held across Concat is dropped. The spec char has to
+            // live in the pool or the message becomes a raw pointer.
+            FmtSt.tmp = AIMacro.Chr(t)
+            FmtSt.core = String.Concat("Unknown format code '", FmtSt.tmp)
+            FmtSt.pref = String.Concat(FmtSt.core, "' for object of type 'int'")
+            AIMacro.FmtFail(FmtSt.pref)
+            ReturnValue(2)
+        }
+        IfCondition EqualTo(t, 99) ThenBlock: {
+            IfCondition NotEqual(FmtSt.sign, 0) ThenBlock: {
+                AIMacro.FmtFail("Sign not allowed with integer format specifier 'c'")
+                ReturnValue(2)
+            }
+            IfCondition EqualTo(FmtSt.alt, 1) ThenBlock: {
+                AIMacro.FmtFail("Alternate form (#) not allowed with integer format specifier 'c'")
+                ReturnValue(2)
+            }
+        }
+        IfCondition EqualTo(FmtSt.group, 44) ThenBlock: {
+            allow = 0
+            IfCondition EqualTo(t, 0) ThenBlock: { allow = 1 }
+            IfCondition EqualTo(t, 100) ThenBlock: { allow = 1 }
+            IfCondition EqualTo(allow, 0) ThenBlock: {
+                shown = t
+                IfCondition EqualTo(t, 0) ThenBlock: { shown = 100 }
+                AIMacro.FmtWith("Cannot specify ',' with '", shown)
+                ReturnValue(2)
+            }
+        }
+        IfCondition EqualTo(FmtSt.group, 95) ThenBlock: {
+            bad = 0
+            IfCondition EqualTo(t, 99) ThenBlock: { bad = 1 }
+            IfCondition EqualTo(t, 110) ThenBlock: { bad = 1 }
+            IfCondition EqualTo(bad, 1) ThenBlock: {
+                AIMacro.FmtWith("Cannot specify '_' with '", t)
+                ReturnValue(2)
+            }
+        }
+        IfCondition EqualTo(t, 98) ThenBlock: { FmtSt.base = 2 }
+        IfCondition EqualTo(t, 111) ThenBlock: { FmtSt.base = 8 }
+        IfCondition EqualTo(t, 120) ThenBlock: { FmtSt.base = 16 }
+        IfCondition EqualTo(t, 88) ThenBlock: {
+            FmtSt.base = 16
+            FmtSt.upper = 1
+        }
+        IfCondition NotEqual(FmtSt.base, 10) ThenBlock: {
+            IfCondition EqualTo(FmtSt.group, 95) ThenBlock: {
+                FmtSt.every = 4
+            }
+        }
+        is_ft = 0
+        IfCondition EqualTo(t, 101) ThenBlock: { is_ft = 1 }
+        IfCondition EqualTo(t, 69) ThenBlock: { is_ft = 1 }
+        IfCondition EqualTo(t, 102) ThenBlock: { is_ft = 1 }
+        IfCondition EqualTo(t, 70) ThenBlock: { is_ft = 1 }
+        IfCondition EqualTo(t, 103) ThenBlock: { is_ft = 1 }
+        IfCondition EqualTo(t, 71) ThenBlock: { is_ft = 1 }
+        IfCondition EqualTo(t, 37) ThenBlock: { is_ft = 1 }
+        FmtSt.ft = is_ft
+        ReturnValue(0)
+    }
+}
+
+Function.AIMacro.FmtMeasure {
+    Output: Integer
+    Body: {
+        FmtSt.out = FmtSt.core
+        IfCondition NotEqual(FmtSt.group, 0) ThenBlock: {
+            FmtSt.out = AIMacro.FmtGroup(FmtSt.core, FmtSt.group, FmtSt.every)
+        }
+        sl = 0
+        IfCondition NotEqual(FmtSt.sigs, 0) ThenBlock: {
+            sl = StringLength(FmtSt.sigs)
+        }
+        pl = 0
+        IfCondition NotEqual(FmtSt.pref, 0) ThenBlock: {
+            pl = StringLength(FmtSt.pref)
+        }
+        bl = StringLength(FmtSt.out)
+        FmtSt.total = Add(sl, Add(pl, bl))
+        ReturnValue(FmtSt.total)
+    }
+}
+
+Function.AIMacro.FmtJoin {
+    Output: Address
+    Body: {
+        FmtSt.pad = 0
+        IfCondition EqualTo(FmtSt.align, 61) ThenBlock: {
+            FmtSt.pad = 1
+        }
+        IfCondition EqualTo(FmtSt.zero, 1) ThenBlock: {
+            IfCondition EqualTo(FmtSt.align, 0) ThenBlock: {
+                FmtSt.pad = 1
+                FmtSt.fill = 48
+            }
+        }
+        IfCondition EqualTo(FmtSt.pad, 1) ThenBlock: {
+            FmtSt.guard = 0
+            WhileLoop LessThan(FmtSt.guard, 10000) {
+                AIMacro.FmtMeasure()
+                IfCondition GreaterEqual(FmtSt.total, FmtSt.width) ThenBlock: {
+                    BreakLoop
+                }
+                FmtSt.tmp = AIMacro.FmtRep(FmtSt.fill, 1)
+                FmtSt.core = String.Concat(FmtSt.tmp, FmtSt.core)
+                FmtSt.guard = Add(FmtSt.guard, 1)
+            }
+        }
+        AIMacro.FmtMeasure()
+        IfCondition NotEqual(FmtSt.pref, 0) ThenBlock: {
+            IfCondition GreaterThan(StringLength(FmtSt.pref), 0) ThenBlock: {
+                FmtSt.out = String.Concat(FmtSt.pref, FmtSt.out)
+            }
+        }
+        IfCondition NotEqual(FmtSt.sigs, 0) ThenBlock: {
+            IfCondition GreaterThan(StringLength(FmtSt.sigs), 0) ThenBlock: {
+                FmtSt.out = String.Concat(FmtSt.sigs, FmtSt.out)
+            }
+        }
+        IfCondition EqualTo(FmtSt.pad, 0) ThenBlock: {
+            bl = StringLength(FmtSt.out)
+            IfCondition LessThan(bl, FmtSt.width) ThenBlock: {
+                FmtSt.guard = Subtract(FmtSt.width, bl)
+                IfCondition EqualTo(FmtSt.align, 60) ThenBlock: {
+                    FmtSt.tmp = AIMacro.FmtRep(FmtSt.fill, FmtSt.guard)
+                    FmtSt.out = String.Concat(FmtSt.out, FmtSt.tmp)
+                }
+                IfCondition EqualTo(FmtSt.align, 94) ThenBlock: {
+                    FmtSt.total = Divide(FmtSt.guard, 2)
+                    FmtSt.num = Subtract(FmtSt.guard, FmtSt.total)
+                    FmtSt.tmp = AIMacro.FmtRep(FmtSt.fill, FmtSt.total)
+                    FmtSt.pref = AIMacro.FmtRep(FmtSt.fill, FmtSt.num)
+                    FmtSt.out = String.Concat(FmtSt.tmp, FmtSt.out)
+                    FmtSt.out = String.Concat(FmtSt.out, FmtSt.pref)
+                }
+                side = 0
+                IfCondition EqualTo(FmtSt.align, 60) ThenBlock: { side = 1 }
+                IfCondition EqualTo(FmtSt.align, 94) ThenBlock: { side = 1 }
+                IfCondition EqualTo(side, 0) ThenBlock: {
+                    FmtSt.tmp = AIMacro.FmtRep(FmtSt.fill, FmtSt.guard)
+                    FmtSt.out = String.Concat(FmtSt.tmp, FmtSt.out)
+                }
+            }
+        }
+        ReturnValue(FmtSt.out)
+    }
+}
+
+Function.AIMacro.FmtUtf8 {
+    Input: n: Integer
+    Output: Address
+    Body: {
+        IfCondition LessThan(n, 128) ThenBlock: {
+            ReturnValue(AIMacro.Chr(n))
+        }
+        IfCondition LessThan(n, 2048) ThenBlock: {
+            b0 = Add(192, Divide(n, 64))
+            b1 = Add(128, Modulo(n, 64))
+            buf = Allocate(3)
+            SetByte(buf, 0, b0)
+            SetByte(buf, 1, b1)
+            SetByte(buf, 2, 0)
+            ReturnValue(buf)
+        }
+        IfCondition LessThan(n, 65536) ThenBlock: {
+            b0 = Add(224, Divide(n, 4096))
+            b1 = Add(128, Modulo(Divide(n, 64), 64))
+            b2 = Add(128, Modulo(n, 64))
+            buf = Allocate(4)
+            SetByte(buf, 0, b0)
+            SetByte(buf, 1, b1)
+            SetByte(buf, 2, b2)
+            SetByte(buf, 3, 0)
+            ReturnValue(buf)
+        }
+        b0 = Add(240, Divide(n, 262144))
+        b1 = Add(128, Modulo(Divide(n, 4096), 64))
+        b2 = Add(128, Modulo(Divide(n, 64), 64))
+        b3 = Add(128, Modulo(n, 64))
+        buf = Allocate(5)
+        SetByte(buf, 0, b0)
+        SetByte(buf, 1, b1)
+        SetByte(buf, 2, b2)
+        SetByte(buf, 3, b3)
+        SetByte(buf, 4, 0)
+        ReturnValue(buf)
+    }
+}
+
+// 1 means the value is not an int. Any other return is the formatted text.
+// The receiver is copied into FmtSt before any call. A live local does not
+// survive LooksLikeString.
+Function.AIMacro.IntFormat {
+    Input: obj: Address
+    Input: spec: Address
+    Output: Address
+    Body: {
+        FmtSt.num = obj
+        FmtSt.spec = spec
+        FmtSt.hit = 0
+        FmtSt.out = 1
+        // CanDeref is 0 below 4000000, in [500000000, 2^40), and at or above 2^47.
+        // It is 1 for [4000000, 500000000). 123456789 is a raw int in that hole.
+        // LooksLikeString GetBytes it. Heap objects are not in the hole, and
+        // code addresses are, so this stays local to format.
+        FmtSt.raw = 0
+        IfCondition EqualTo(Types.CanDeref(FmtSt.num), 0) ThenBlock: {
+            FmtSt.raw = 1
+        }
+        IfCondition GreaterEqual(FmtSt.num, 4000000) ThenBlock: {
+            IfCondition LessThan(FmtSt.num, 500000000) ThenBlock: {
+                FmtSt.raw = 1
+            }
+        }
+        IfCondition EqualTo(FmtSt.raw, 0) ThenBlock: {
+            IfCondition EqualTo(AIMacro.LooksLikeString(FmtSt.num), 1) ThenBlock: {
+                ReturnValue(1)
+            }
+            IfCondition EqualTo(Types.IsFloat(FmtSt.num), 1) ThenBlock: {
+                ReturnValue(1)
+            }
+            IfCondition EqualTo(Types.IsComplex(FmtSt.num), 1) ThenBlock: {
+                ReturnValue(1)
+            }
+            IfCondition EqualTo(AIMacro.SafeIsArray(FmtSt.num), 1) ThenBlock: {
+                ReturnValue(1)
+            }
+            IfCondition EqualTo(AIMacro.SafeIsHash(FmtSt.num), 1) ThenBlock: {
+                ReturnValue(1)
+            }
+            IfCondition EqualTo(Types.IsBool(FmtSt.num), 1) ThenBlock: {
+                FmtSt.raw = 2
+            }
+            IfCondition EqualTo(Types.IsBigInt(FmtSt.num), 1) ThenBlock: {
+                FmtSt.raw = 2
+            }
+            IfCondition EqualTo(FmtSt.raw, 0) ThenBlock: {
+                ReturnValue(1)
+            }
+        }
+        IfCondition NotEqual(FmtSt.spec, 0) ThenBlock: {
+            IfCondition EqualTo(AIMacro.LooksLikeString(FmtSt.spec), 0) ThenBlock: {
+                AIMacro.RaiseKind(5, "__format__() argument 1 must be str, not int")
+                FmtSt.hit = 1
+                FmtSt.out = ""
+                ReturnValue("")
+            }
+        }
+        pr = AIMacro.FmtParse(FmtSt.spec)
+        IfCondition NotEqual(pr, 0) ThenBlock: {
+            ReturnValue("")
+        }
+        ck = AIMacro.FmtCheck()
+        IfCondition NotEqual(ck, 0) ThenBlock: {
+            ReturnValue("")
+        }
+        FmtSt.neg = 0
+        FmtSt.isbig = 0
+        // raw 1 is an unboxed int. IsBigInt would dereference the hole.
+        // (0) is IntZero, a bigint box. Digit length <= 6 unboxes to a raw
+        // int so 0b and 0x still format. A longer digit string stays boxed.
+        IfCondition EqualTo(FmtSt.raw, 2) ThenBlock: {
+            IfCondition EqualTo(Types.IsBigInt(FmtSt.num), 1) ThenBlock: {
+                FmtSt.tmp = AIMacro.UnboxIntZero(FmtSt.num)
+                IfCondition EqualTo(Types.IsBigInt(FmtSt.tmp), 1) ThenBlock: {
+                    FmtSt.isbig = 1
+                    FmtSt.num = FmtSt.tmp
+                    IfCondition EqualTo(Dereference(Add(FmtSt.num, 8)), 1) ThenBlock: {
+                        FmtSt.neg = 1
+                    }
+                    FmtSt.core = Dereference(Add(FmtSt.num, 16))
+                    IfCondition EqualTo(FmtSt.core, 0) ThenBlock: {
+                        FmtSt.core = "0"
+                    }
+                }
+                IfCondition EqualTo(FmtSt.isbig, 0) ThenBlock: {
+                    FmtSt.num = FmtSt.tmp
+                    FmtSt.raw = 1
+                }
+            }
+        }
+        IfCondition EqualTo(FmtSt.isbig, 0) ThenBlock: {
+            IfCondition EqualTo(FmtSt.raw, 2) ThenBlock: {
+                IfCondition EqualTo(Types.IsBool(FmtSt.num), 1) ThenBlock: {
+                    FmtSt.num = AIMacro.BoolVal(FmtSt.num)
+                }
+            }
+            IfCondition LessThan(FmtSt.num, 0) ThenBlock: {
+                FmtSt.neg = 1
+                FmtSt.num = Subtract(0, FmtSt.num)
+            }
+        }
+        IfCondition EqualTo(FmtSt.isbig, 1) ThenBlock: {
+            IfCondition NotEqual(FmtSt.base, 10) ThenBlock: {
+                AIMacro.RaiseKind(22, "int too large to format")
+                FmtSt.hit = 1
+                FmtSt.out = ""
+                ReturnValue("")
+            }
+        }
+        IfCondition EqualTo(FmtSt.typ, 37) ThenBlock: {
+            IfCondition EqualTo(FmtSt.isbig, 0) ThenBlock: {
+                FmtSt.num = Multiply(FmtSt.num, 100)
+            }
+        }
+        IfCondition EqualTo(FmtSt.typ, 99) ThenBlock: {
+            IfCondition EqualTo(FmtSt.isbig, 1) ThenBlock: {
+                IfCondition GreaterThan(StringLength(FmtSt.core), 6) ThenBlock: {
+                    AIMacro.RaiseKind(22, "%c arg not in range(0x110000)")
+                    FmtSt.hit = 1
+                    FmtSt.out = ""
+                    ReturnValue("")
+                }
+                FmtSt.num = StringToNumber(FmtSt.core)
+            }
+            IfCondition EqualTo(FmtSt.neg, 1) ThenBlock: {
+                AIMacro.RaiseKind(22, "%c arg not in range(0x110000)")
+                FmtSt.hit = 1
+                FmtSt.out = ""
+                ReturnValue("")
+            }
+            IfCondition GreaterThan(FmtSt.num, 1114111) ThenBlock: {
+                AIMacro.RaiseKind(22, "%c arg not in range(0x110000)")
+                FmtSt.hit = 1
+                FmtSt.out = ""
+                ReturnValue("")
+            }
+            FmtSt.core = AIMacro.FmtUtf8(FmtSt.num)
+            FmtSt.group = 0
+            FmtSt.alt = 0
+        }
+        IfCondition NotEqual(FmtSt.typ, 99) ThenBlock: {
+            IfCondition EqualTo(FmtSt.isbig, 0) ThenBlock: {
+                FmtSt.core = AIMacro.FmtBase(FmtSt.num, FmtSt.base, FmtSt.upper)
+            }
+        }
+        FmtSt.sigs = ""
+        IfCondition EqualTo(FmtSt.neg, 1) ThenBlock: {
+            FmtSt.sigs = "-"
+        }
+        IfCondition EqualTo(FmtSt.neg, 0) ThenBlock: {
+            IfCondition EqualTo(FmtSt.sign, 43) ThenBlock: {
+                FmtSt.sigs = "+"
+            }
+            IfCondition EqualTo(FmtSt.sign, 32) ThenBlock: {
+                FmtSt.sigs = " "
+            }
+        }
+        IfCondition EqualTo(FmtSt.typ, 99) ThenBlock: {
+            FmtSt.sigs = ""
+        }
+        FmtSt.pref = ""
+        IfCondition EqualTo(FmtSt.alt, 1) ThenBlock: {
+            IfCondition EqualTo(FmtSt.base, 2) ThenBlock: { FmtSt.pref = "0b" }
+            IfCondition EqualTo(FmtSt.base, 8) ThenBlock: { FmtSt.pref = "0o" }
+            IfCondition EqualTo(FmtSt.base, 16) ThenBlock: {
+                FmtSt.pref = "0x"
+                IfCondition EqualTo(FmtSt.upper, 1) ThenBlock: {
+                    FmtSt.pref = "0X"
+                }
+            }
+        }
+        IfCondition EqualTo(FmtSt.ft, 1) ThenBlock: {
+            FmtSt.tmp = ".000000"
+            IfCondition EqualTo(FmtSt.typ, 37) ThenBlock: {
+                FmtSt.tmp = ".000000%"
+            }
+            plain = 0
+            IfCondition EqualTo(FmtSt.typ, 103) ThenBlock: { plain = 1 }
+            IfCondition EqualTo(FmtSt.typ, 71) ThenBlock: { plain = 1 }
+            IfCondition EqualTo(plain, 0) ThenBlock: {
+                FmtSt.core = String.Concat(FmtSt.core, FmtSt.tmp)
+            }
+            FmtSt.group = 0
+            FmtSt.pref = ""
+        }
+        AIMacro.FmtJoin()
+        FmtSt.hit = 1
+        ReturnValue(FmtSt.out)
+    }
+}
+
+Function.AIMacro.IntFormatTry {
+    Input: obj: Address
+    Input: args: Address
+    Output: Address
+    Body: {
+        FmtSt.num = obj
+        FmtSt.tmp = args
+        FmtSt.spec = ""
+        IfCondition NotEqual(FmtSt.tmp, 0) ThenBlock: {
+            IfCondition GreaterThan(Array.Size(FmtSt.tmp), 0) ThenBlock: {
+                FmtSt.spec = Array.Get(FmtSt.tmp, 0)
+            }
+        }
+        ReturnValue(AIMacro.IntFormat(FmtSt.num, FmtSt.spec))
+    }
+}
+
 Function.AIMacro.PercentFormat {
     Input: fmt: Address
     Input: val: Address
@@ -1900,7 +2590,12 @@ Function.AIMacro.StringFormat1 {
     Input: a0: Address
     Output: Address
     Body: {
-        // Stub: compile-legal stand-in for str.format / %-format
+        // format(int, spec) shares this entry with str.format(arg).
+        // A string template stays the template. An int is formatted.
+        FmtSt.out = AIMacro.IntFormat(fmt, a0)
+        IfCondition NotEqual(FmtSt.out, 1) ThenBlock: {
+            ReturnValue(FmtSt.out)
+        }
         ReturnValue(fmt)
     }
 }

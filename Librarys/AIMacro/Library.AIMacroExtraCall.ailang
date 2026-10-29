@@ -15,6 +15,7 @@ LibraryImport.AIMacro.AIMacroUnittest
 LibraryImport.AIMacro.AIMacroFormat
 LibraryImport.AIMacro.AIMacroDict
 LibraryImport.AIMacro.AIMacroExtra
+LibraryImport.AIMacro.AIMacroNum
 
 
 Function.AIMacro.InitMethodSkip {
@@ -1807,6 +1808,13 @@ Function.AIMacro.MethodShim {
     }
 }
 
+// MethodCall must not grow a local. The hash gate and format result stay here.
+FixedPool.MethGate {
+    "ok": Initialize=0, CanChange=True
+    "fr": Initialize=0, CanChange=True
+    "arg": Initialize=0, CanChange=True
+}
+
 Function.AIMacro.MethodCall {
     Input: obj: Address
     Input: method_name: Address
@@ -1859,9 +1867,29 @@ Function.AIMacro.MethodCall {
             ReturnValue(1)
         }
         func_addr = 0
+        // int.__format__ must return before Hash.IsHash. And() is not
+        // short-circuit, so a raw 123456789 used to be dereferenced here.
+        // Copy the receiver before StringCompare; a call drops a live local.
+        MethGate.fr = obj
+        MethGate.arg = args
+        IfCondition EqualTo(StringCompare(method_name, "__format__"), 0) ThenBlock: {
+            MethGate.ok = AIMacro.IntFormatTry(MethGate.fr, MethGate.arg)
+            IfCondition NotEqual(MethGate.ok, 1) ThenBlock: {
+                ReturnValue(MethGate.ok)
+            }
+        }
+        // StringCompare drops a live parameter. The hash body still reads obj.
+        obj = MethGate.fr
+        args = MethGate.arg
         // RaiseKind hashes store integer ExcKind in __class__. MethodLookup
         // Hash.Gets ClassRegistry with that integer: strlen(15).
-        IfCondition And(GreaterEqual(obj, 4000000000), EqualTo(Hash.IsHash(obj), 1)) ThenBlock: {
+        MethGate.ok = 0
+        IfCondition GreaterEqual(obj, 4000000000) ThenBlock: {
+            IfCondition EqualTo(Hash.IsHash(obj), 1) ThenBlock: {
+                MethGate.ok = 1
+            }
+        }
+        IfCondition EqualTo(MethGate.ok, 1) ThenBlock: {
             IfCondition NotEqual(Hash.Get(obj, "__super__"), 0) ThenBlock: {
                 sinst = Hash.Get(obj, "__self__")
                 scls = Hash.Get(obj, "__thisclass__")

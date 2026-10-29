@@ -1513,6 +1513,11 @@ Function.AIMacro.Len {
 }
 
 
+FixedPool.ExcHold {
+    "arg": Initialize=0, CanChange=True
+    "obj": Initialize=0, CanChange=True
+}
+
 Function.AIMacro.Str {
     Input: value: Address
     Output: Address
@@ -1569,8 +1574,27 @@ Function.AIMacro.Str {
                                     ReturnValue("")
                                 }
                                 IfCondition EqualTo(narg, 1) ThenBlock: {
-                                    one_e = Array.Get(lst_e, 0)
-                                    ReturnValue(AIMacro.Str(one_e))
+                                    // LooksLikeString rejects a first byte of 85 ('U').
+                                    // The message is still the text. A live local does
+                                    // not survive that call, so the arg stays in the pool.
+                                    ExcHold.arg = Array.Get(lst_e, 0)
+                                    IfCondition EqualTo(AIMacro.LooksLikeString(ExcHold.arg), 1) ThenBlock: {
+                                        ReturnValue(ExcHold.arg)
+                                    }
+                                    IfCondition EqualTo(Types.CanDeref(ExcHold.arg), 1) ThenBlock: {
+                                        ExcHold.obj = 0
+                                        IfCondition EqualTo(Types.IsBigInt(ExcHold.arg), 1) ThenBlock: { ExcHold.obj = 1 }
+                                        IfCondition EqualTo(Types.IsBool(ExcHold.arg), 1) ThenBlock: { ExcHold.obj = 1 }
+                                        IfCondition EqualTo(Types.IsFloat(ExcHold.arg), 1) ThenBlock: { ExcHold.obj = 1 }
+                                        IfCondition EqualTo(Array.IsArray(ExcHold.arg), 1) ThenBlock: { ExcHold.obj = 1 }
+                                        IfCondition EqualTo(Hash.IsHash(ExcHold.arg), 1) ThenBlock: { ExcHold.obj = 1 }
+                                        IfCondition EqualTo(ExcHold.obj, 0) ThenBlock: {
+                                            IfCondition EqualTo(GetByte(ExcHold.arg, 0), 85) ThenBlock: {
+                                                ReturnValue(ExcHold.arg)
+                                            }
+                                        }
+                                    }
+                                    ReturnValue(AIMacro.Str(ExcHold.arg))
                                 }
                                 ReturnValue(AIMacro.Repr(ea2))
                             }
