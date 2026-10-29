@@ -1,17 +1,18 @@
 # AIMacro Status Scorecard
 
-**Last updated:** 2026-09-26. Tip is `grokasaurus2` merged to `main` (codegen overnight + empty_module + exception names). Grokbot is **off** the workflow. `AIMacro/restore_staging/` is deleted.
+**Last updated:** 2026-10-29. Tip is `main`. The full CPython regrtest was re-run with `--full`.
 
 ## Grind (this box, py3.11 / 568 Lib/test)
 
 | Gate | Result |
 |------|--------|
-| CPython `Lib/test` regrtest | **19/568** (16 from full run + 3 from batch 10) |
-| Hash | **922** |
+| CPython `Lib/test` regrtest | **310/568** pass, 258 fail, 0 skip, 2140 s |
+| Fail stages | run 242, compile 8, transpile 8 |
+| October 12 | 318 pass / 250 fail (compile was 80) |
 
-Pass is TestCase methods actually run. ran-0 is FAIL. Passing files are
-removed from the grind (`results/pass.txt`). Current batch is
-`results/batch10.txt`. `--full` when remaining is empty.
+Pass is TestCase methods actually run. ran-0 is FAIL. Passing files are listed in `results/pass.txt` (310 lines). The living database is `results/grind_db.json`. The knock-off queue is [BACKLOG.md](BACKLOG.md). The table is [CONFORMANCE.md](CONFORMANCE.md).
+
+Speed is parked. Compiler optimization and later code optimization own that.
 
 ## Notes
 
