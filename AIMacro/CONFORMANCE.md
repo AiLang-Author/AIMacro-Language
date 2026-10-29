@@ -14,7 +14,7 @@ The grind is CPython 3.11 `Lib/test` regrtest (568 files on this box). Pass is E
 
 - **test:** run=242, compile=8, transpile=8
 
-`test_unary.py` was rechecked after the integer-minus-float fix and now passes. The living database is 311 pass and 257 fail. That recheck is not a new full-suite timing.
+`test_unary.py` was rechecked after the integer-minus-float fix and now passes. `test_time.py` was rechecked after the class-body order fix and now passes. The living database is 312 pass and 256 fail. Those rechecks are not a new full-suite timing.
 
 ## Compared with 2026-10-12
 

@@ -257,6 +257,7 @@ test_textwrap.py
 test_thread.py
 test_threadedtempfile.py
 test_threadsignals.py
+test_time.py
 test_timeit.py
 test_timeout.py
 test_tix.py

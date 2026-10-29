@@ -270,7 +270,10 @@ Function.Gen_Program {
                 }
             } ElseBlock: {
                 IfCondition EqualTo(t, Node.CLASS_DEF) ThenBlock: {
+                    OOPGen.at_module_class = 1
                     Gen_Node(decl)
+                    OOPGen.at_module_class = 0
+                    Array.Push(toplevel, decl)
                     Gen_BufferGlobalEnumExports(decl, toplevel)
                 } ElseBlock: {
                     Array.Push(toplevel, decl)
@@ -387,7 +390,27 @@ Function.Gen_Program {
                 IfCondition EqualTo(AST_Type(top_item), Node.FUNCTION) ThenBlock: {
                     Gen_EmitFuncDecoBind(top_item)
                 } ElseBlock: {
-                    Gen_Node(top_item)
+                    IfCondition EqualTo(AST_Type(top_item), Node.CLASS_DEF) ThenBlock: {
+                        ca_name = ArrayGet(top_item, 3)
+                        ca_n = 0
+                        IfCondition NotEqual(OOPGen.src_classattr_cls, 0) ThenBlock: {
+                            ca_n = Array.Size(OOPGen.src_classattr_cls)
+                        }
+                        ca_i = 0
+                        WhileLoop LessThan(ca_i, ca_n) {
+                            ca_hit = StringCompare(ca_name, Array.Get(OOPGen.src_classattr_cls, ca_i))
+                            IfCondition EqualTo(ca_hit, 0) ThenBlock: {
+                                Gen_EmitIndent()
+                                Gen_Emit(Array.Get(OOPGen.src_classattr_fn, ca_i))
+                                Gen_Emit("()\n")
+                                Array.Set(OOPGen.src_classattr_cls, ca_i, "")
+                                BreakLoop
+                            }
+                            ca_i = Add(ca_i, 1)
+                        }
+                    } ElseBlock: {
+                        Gen_Node(top_item)
+                    }
                 }
                 i = Add(i, 1)
             }

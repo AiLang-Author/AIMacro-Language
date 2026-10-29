@@ -322,6 +322,25 @@ Function.AIMacro.MethodShim {
                 a1 = Array.Get(args, 1)
             }
         }
+        // math.ceil(x). A positive fraction adds 1, so this matches
+        // Float_ToInt toward 0 and toward -inf. Integers stay themselves.
+        IfCondition EqualTo(StringCompare(method_name, "ceil"), 0) ThenBlock: {
+            IfCondition LessThan(n, 1) ThenBlock: {
+                AIMacro.RaiseKind(5, "TypeError")
+                ReturnValue(0)
+            }
+            IfCondition EqualTo(Types.IsFloat(a0), 1) ThenBlock: {
+                a1 = AIMacro.FloatBits(a0)
+                n = Float_ToInt(a1)
+                a0 = Float_FromInt(n)
+                a1 = Float_Sub(a1, a0)
+                IfCondition EqualTo(Float_Gt(a1, 0), 1) ThenBlock: {
+                    n = Add(n, 1)
+                }
+                ReturnValue(AIMacro.IntOrBox(n))
+            }
+            ReturnValue(a0)
+        }
         IfCondition EqualTo(UnittestState.in_test, 1) ThenBlock: {
             lsms = AIMacro.LooksLikeString(method_name)
             IfCondition EqualTo(lsms, 1) ThenBlock: {

@@ -6,12 +6,12 @@
 
 | Gate | Result |
 |------|--------|
-| CPython `Lib/test` regrtest | **311/568** pass, 257 fail, 0 skip |
-| Full run 2026-10-29 | 310 pass / 258 fail in 2140 s, then `test_unary.py` rechecked pass |
+| CPython `Lib/test` regrtest | **312/568** pass, 256 fail, 0 skip |
+| Full run 2026-10-29 | 310 pass / 258 fail in 2140 s, then `test_unary.py` and `test_time.py` rechecked pass |
 | Fail stages at the full run | run 242, compile 8, transpile 8 |
 | October 12 | 318 pass / 250 fail (compile was 80) |
 
-Pass is TestCase methods actually run. ran-0 is FAIL. Passing files are listed in `results/pass.txt` (311 lines). The living database is `results/grind_db.json`. The knock-off queue is [BACKLOG.md](BACKLOG.md). The table is [CONFORMANCE.md](CONFORMANCE.md).
+Pass is TestCase methods actually run. ran-0 is FAIL. Passing files are listed in `results/pass.txt` (312 lines). The living database is `results/grind_db.json`. The knock-off queue is [BACKLOG.md](BACKLOG.md). The table is [CONFORMANCE.md](CONFORMANCE.md).
 
 Speed is parked. Compiler optimization and later code optimization own that.
 

@@ -33,6 +33,9 @@ FixedPool.OOPGen {
     "class_renames_to": Initialize=0
     "in_classattrs": Initialize=0
     "classattrs_fns": Initialize=0
+    "at_module_class": Initialize=0
+    "src_classattr_cls": Initialize=0
+    "src_classattr_fn": Initialize=0
     "classattr_assigned": Initialize=0
     "class_method_names": Initialize=0
     "fn_hoisted_classes": Initialize=0
@@ -78,12 +81,15 @@ Function.OOPGen_Init {
         OOPGen.class_renames_from = Array.Create(32)
         OOPGen.class_renames_to = Array.Create(32)
         OOPGen.classattrs_fns = Array.Create(32)
+        OOPGen.src_classattr_cls = Array.Create(32)
+        OOPGen.src_classattr_fn = Array.Create(32)
         OOPGen.classattr_assigned = Array.Create(16)
         OOPGen.class_method_names = Array.Create(16)
         OOPGen.fn_hoisted_classes = Array.Create(32)
         OOPGen.temp_counter = 0
         OOPGen.has_classes = 0
         OOPGen.in_classattrs = 0
+        OOPGen.at_module_class = 0
         OOPGen.initialized = 1
         
         ReturnValue(1)
@@ -115,6 +121,7 @@ Function.OOPGen_Reset {
             OOPGen.current_method = 0
             OOPGen.current_receiver = 0
             OOPGen.in_classattrs = 0
+            OOPGen.at_module_class = 0
             OOPGen.temp_counter = 0
             IfCondition NotEqual(OOPGen.emitted_methods, 0) ThenBlock: {
                 Array.Clear(OOPGen.emitted_methods)
@@ -130,6 +137,12 @@ Function.OOPGen_Reset {
             }
             IfCondition NotEqual(OOPGen.classattrs_fns, 0) ThenBlock: {
                 Array.Clear(OOPGen.classattrs_fns)
+            }
+            IfCondition NotEqual(OOPGen.src_classattr_cls, 0) ThenBlock: {
+                Array.Clear(OOPGen.src_classattr_cls)
+            }
+            IfCondition NotEqual(OOPGen.src_classattr_fn, 0) ThenBlock: {
+                Array.Clear(OOPGen.src_classattr_fn)
             }
             IfCondition NotEqual(OOPGen.classattr_assigned, 0) ThenBlock: {
                 Array.Clear(OOPGen.classattr_assigned)
@@ -174,6 +187,14 @@ Function.OOPGen_Free {
         IfCondition NotEqual(OOPGen.fn_hoisted_classes, 0) ThenBlock: {
             Array.Destroy(OOPGen.fn_hoisted_classes)
             OOPGen.fn_hoisted_classes = 0
+        }
+        IfCondition NotEqual(OOPGen.src_classattr_cls, 0) ThenBlock: {
+            Array.Destroy(OOPGen.src_classattr_cls)
+            OOPGen.src_classattr_cls = 0
+        }
+        IfCondition NotEqual(OOPGen.src_classattr_fn, 0) ThenBlock: {
+            Array.Destroy(OOPGen.src_classattr_fn)
+            OOPGen.src_classattr_fn = 0
         }
         OOPGen.initialized = 0
     }
@@ -829,15 +850,23 @@ Function.OOPGen_ClassDef {
         }
         
         attr_fn = StringConcat(class_name, "___classattrs")
-        IfCondition NotEqual(OOPGen.classattrs_fns, 0) ThenBlock: {
-            suf = 2
-            taken = Gen_NameInArray(attr_fn, OOPGen.classattrs_fns)
-            WhileLoop EqualTo(taken, 1) {
-                attr_fn = StringConcat(class_name, "___classattrs_")
-                attr_fn = StringConcat(attr_fn, NumberToString(suf))
-                suf = Add(suf, 1)
+        suf = 2
+        WhileLoop EqualTo(1, 1) {
+            taken = 0
+            IfCondition NotEqual(OOPGen.classattrs_fns, 0) ThenBlock: {
                 taken = Gen_NameInArray(attr_fn, OOPGen.classattrs_fns)
             }
+            IfCondition EqualTo(taken, 0) ThenBlock: {
+                IfCondition NotEqual(OOPGen.src_classattr_fn, 0) ThenBlock: {
+                    taken = Gen_NameInArray(attr_fn, OOPGen.src_classattr_fn)
+                }
+            }
+            IfCondition EqualTo(taken, 0) ThenBlock: {
+                BreakLoop
+            }
+            attr_fn = StringConcat(class_name, "___classattrs_")
+            attr_fn = StringConcat(attr_fn, NumberToString(suf))
+            suf = Add(suf, 1)
         }
         // A class hoisted out of a function already ClassAttrSet its
         // assigns there (real params and locals). Repeating them here
@@ -930,13 +959,24 @@ Function.OOPGen_ClassDef {
         
         OOPGen_EmitClassRegistration(class_name, parent, bases, body)
         IfCondition EqualTo(has_attr, 1) ThenBlock: {
-            attr_call = StringConcat("    ", attr_fn)
-            attr_call = StringConcat(attr_call, "()\n")
-            Array.Push(OOPGen.class_init_code, attr_call)
-            IfCondition EqualTo(OOPGen.classattrs_fns, 0) ThenBlock: {
-                OOPGen.classattrs_fns = Array.Create(32)
+            // Module classes run at the class statement. Early ClassInit
+            // still sees PyMod fields as 0 (SEC_TO_NS / test_time).
+            IfCondition EqualTo(OOPGen.at_module_class, 1) ThenBlock: {
+                IfCondition EqualTo(OOPGen.src_classattr_cls, 0) ThenBlock: {
+                    OOPGen.src_classattr_cls = Array.Create(32)
+                    OOPGen.src_classattr_fn = Array.Create(32)
+                }
+                Array.Push(OOPGen.src_classattr_cls, class_name)
+                Array.Push(OOPGen.src_classattr_fn, attr_fn)
+            } ElseBlock: {
+                attr_call = StringConcat("    ", attr_fn)
+                attr_call = StringConcat(attr_call, "()\n")
+                Array.Push(OOPGen.class_init_code, attr_call)
+                IfCondition EqualTo(OOPGen.classattrs_fns, 0) ThenBlock: {
+                    OOPGen.classattrs_fns = Array.Create(32)
+                }
+                Array.Push(OOPGen.classattrs_fns, attr_fn)
             }
-            Array.Push(OOPGen.classattrs_fns, attr_fn)
         }
         
         class_info = Array.Create(3)

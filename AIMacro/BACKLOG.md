@@ -1,20 +1,21 @@
 # AIMacro backlog
 
-Score from the 2026-10-29 `--full` run, plus one recheck. 568 files, **311 pass**, 257 fail. The full run was 310 pass / 258 fail in 2140 seconds. Database: `results/grind_db.json`. October 12 was 318 pass / 250 fail. That run gained 22 and lost 30. Compile failures went from 80 to 8.
+Score from the 2026-10-29 `--full` run, plus rechecks. 568 files, **312 pass**, 256 fail. The full run was 310 pass / 258 fail in 2140 seconds. Database: `results/grind_db.json`. October 12 was 318 pass / 250 fail. That run gained 22 and lost 30. Compile failures went from 80 to 8.
 
 Work one row at a time. Prove it with one small program that matches CPython, then the 59-file isolation set. Do not start a module just because a test file imports it. Speed stays parked.
 
 ## Done
 
 - **`0 - 2.0`** (`test_unary.py`). Literal `0` is a bigint, and `NumAdd` used to stringify the other operand. `0 - 2.0` is `-2.0`, and `-2j == 0 - 2j` is true. The file was rechecked and passes. LCD `/tmp/clos-lcd/neg1.py`.
+- **`test_time.py` class body.** `TestCPyTime.OVERFLOW_SECONDS` is `math.ceil((2**63 + 1) / SEC_TO_NS)`. That class body used to run before `SEC_TO_NS` was assigned, so the division was by zero and the file aborted. The class body now runs at the class statement, and `math.ceil` of that quotient is 9223372037. The file was rechecked and passes. LCD `/tmp/clos-lcd/time1.py`.
 
 ## Now
 
-1. **`test_time.py` aborts on `Exception: division by zero`.** It was a pass on October 12. The exception leaves the file instead of failing one test. Next after that are the other rows in the regression table.
+1. **`test_binop.py`** run rc=1, 12 ran, 4 failed. It was a pass on October 12. Next after that are the other rows in the regression table.
 
 ## Regressions (were pass on October 12)
 
-Take these after the float subtract, one file at a time. The symptom is the recorded tail, not a root cause.
+Take these one file at a time. The symptom is the recorded tail, not a root cause.
 
 | File | Stage | Tail |
 |------|-------|------|
@@ -41,7 +42,6 @@ Take these after the float subtract, one file at a time. The symptom is the reco
 | `test_scope.py` | run rc=1 | 40 ran, 2 failed |
 | `test_string.py` | run rc=1 | `test_override_format_field` |
 | `test_syntax.py` | run rc=1 | line continuation / indented statement |
-| `test_time.py` | run rc=1 | Exception: division by zero (aborts the file) |
 | `test_typechecks.py` | run rc=1 | 5 ran, 2 failed |
 | `test_userlist.py` | run rc=1 | 9 ran, 5 failed |
 | `test_utf8source.py` | run rc=1 | 3 ran, 3 failed |
